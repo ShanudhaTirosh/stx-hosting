@@ -279,6 +279,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal', \App\Livewire\Portal\ServicesList::class)->name('portal.index');
     Route::get('/portal/services', \App\Livewire\Portal\ServicesList::class)->name('portal.services');
     Route::get('/portal/services/{uuid}', \App\Livewire\Portal\ServiceDetail::class)->name('portal.service.detail');
+    Route::get('/portal/apps', \App\Livewire\Portal\Apps\AppList::class)->name('portal.apps');
+    Route::get('/portal/apps/{uuid}', \App\Livewire\Portal\Apps\AppDetail::class)->name('portal.apps.detail');
+    Route::get('/portal/databases', \App\Livewire\Portal\Databases\DatabaseList::class)->name('portal.databases');
     Route::get('/portal/billing', \App\Livewire\Portal\BillingOverview::class)->name('portal.billing');
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');
 
