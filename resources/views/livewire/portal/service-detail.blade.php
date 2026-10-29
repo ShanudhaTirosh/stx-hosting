@@ -22,12 +22,28 @@
         <div class="bg-neutral-950 p-4 rounded-lg border border-neutral-800 space-y-3 font-mono text-xs">
             <div class="flex items-center justify-between">
                 <span class="text-neutral-500">Connection Command:</span>
-                <span class="text-purple-300 select-all font-bold">ssh root@{{ $service->ip_address }}</span>
+                <span class="text-purple-300 select-all font-bold">ssh root@{{ $service->ip_address }} {{ ($service->network_config['ssh_port'] ?? 22) != 22 ? '-p ' . ($service->network_config['ssh_port']) : '' }}</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-neutral-500">SSH Port:</span>
-                <span class="text-white">22</span>
+                <span class="text-neutral-500">IPv4 Address:</span>
+                <span class="text-white select-all">{{ $service->ip_address }}</span>
             </div>
+            @if(!empty($service->network_config['ipv6']))
+            <div class="flex items-center justify-between">
+                <span class="text-neutral-500">IPv6 Address:</span>
+                <span class="text-white select-all">{{ $service->network_config['ipv6'] }}</span>
+            </div>
+            @endif
+            <div class="flex items-center justify-between">
+                <span class="text-neutral-500">SSH Port:</span>
+                <span class="text-white">{{ $service->network_config['ssh_port'] ?? 22 }}</span>
+            </div>
+            @if(!empty($service->network_config['datacenter']))
+            <div class="flex items-center justify-between">
+                <span class="text-neutral-500">Location:</span>
+                <span class="text-white">{{ $service->network_config['datacenter'] }}</span>
+            </div>
+            @endif
             <div class="flex items-center justify-between">
                 <span class="text-neutral-500">Default Username:</span>
                 <span class="text-white">root</span>
