@@ -141,3 +141,4 @@ class NativeStatusMonitorSeeder extends Seeder
         );
     }
 }
+

@@ -23,3 +23,4 @@ class MonitorCheck extends BaseModel
         return $this->belongsTo(Monitor::class, 'monitor_id');
     }
 }
+

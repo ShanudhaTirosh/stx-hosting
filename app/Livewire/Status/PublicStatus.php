@@ -38,3 +38,4 @@ class PublicStatus extends Component
         ])->layout('layouts.base', ['title' => 'System Status & Infrastructure Health — STX Enterprises']);
     }
 }
+

@@ -58,3 +58,4 @@ class Monitor extends BaseModel
         return $history;
     }
 }
+

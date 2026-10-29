@@ -15,3 +15,4 @@ class SystemIncident extends BaseModel
         'created_at' => 'datetime',
     ];
 }
+
