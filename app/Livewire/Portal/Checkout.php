@@ -220,3 +220,4 @@ class Checkout extends Component
         return view('livewire.portal.checkout');
     }
 }
+
