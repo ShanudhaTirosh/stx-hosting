@@ -272,6 +272,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     Route::get('/admin', AdminIndex::class)->name('admin.index');
     Route::get('/admin/billing/proofs', \App\Livewire\Admin\Billing\ProofReviewQueue::class)->name('admin.billing.proofs');
+    Route::get('/admin/inventory/vps', \App\Livewire\Admin\Inventory\VpsInventoryStudio::class)->name('admin.inventory.vps');
+    Route::get('/admin/operations/provisioning', \App\Livewire\Admin\Operations\ProvisioningQueue::class)->name('admin.operations.provisioning');
+
+    // Customer Self-Service Portal
+    Route::get('/portal', \App\Livewire\Portal\ServicesList::class)->name('portal.index');
+    Route::get('/portal/services', \App\Livewire\Portal\ServicesList::class)->name('portal.services');
+    Route::get('/portal/services/{uuid}', \App\Livewire\Portal\ServiceDetail::class)->name('portal.service.detail');
+    Route::get('/portal/billing', \App\Livewire\Portal\BillingOverview::class)->name('portal.billing');
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');
 
     Route::get('/subscription', SubscriptionShow::class)->name('subscription.show');
