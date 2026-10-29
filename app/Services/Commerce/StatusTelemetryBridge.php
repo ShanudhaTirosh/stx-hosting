@@ -54,5 +54,49 @@ class StatusTelemetryBridge
             return false;
         }
     }
+
+    /**
+     * Deactivate or remove a probe by IP address when service is terminated.
+     */
+    public static function deactivateProbe(string $ipAddress): bool
+    {
+        $statusBaseUrl = config('services.status.url', env('STATUS_APP_URL', 'http://localhost:3003'));
+        $adminPassword = config('services.status.admin_password', env('STATUS_ADMIN_PASSWORD', 'changeme'));
+
+        try {
+            $loginRes = Http::timeout(3)->post("{$statusBaseUrl}/api/admin/auth/login", [
+                'password' => $adminPassword,
+            ]);
+
+            if (! $loginRes->successful()) {
+                return false;
+            }
+
+            $cookies = $loginRes->cookies();
+
+            // List monitors to find matching host
+            $listRes = Http::timeout(3)
+                ->withCookies($cookies->toArray(), parse_url($statusBaseUrl, PHP_URL_HOST))
+                ->get("{$statusBaseUrl}/api/admin/monitors");
+
+            if ($listRes->successful()) {
+                $monitors = $listRes->json('monitors') ?? [];
+                foreach ($monitors as $m) {
+                    if (($m['host'] ?? '') === $ipAddress) {
+                        Http::timeout(3)
+                            ->withCookies($cookies->toArray(), parse_url($statusBaseUrl, PHP_URL_HOST))
+                            ->delete("{$statusBaseUrl}/api/admin/monitors/{$m['id']}");
+                        Log::info("Deactivated status probe for {$ipAddress} (ID: {$m['id']})");
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::warning("Status telemetry deactivate error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 

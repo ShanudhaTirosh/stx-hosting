@@ -164,3 +164,125 @@ test('customer can view service and reveal encrypted root password by confirming
         ->assertDispatched('success');
 });
 
+test('administrator can fulfill order via direct manual details entry without pre-existing pool inventory', function () {
+    $admin = User::factory()->create();
+    $customer = User::factory()->create();
+    $team = Team::factory()->create();
+    $team->members()->attach($customer->id, ['role' => 'owner']);
+
+    $cx22Variant = ProductVariant::where('slug', 'cx22')->firstOrFail();
+    $tier = $cx22Variant->pricingTiers()->firstOrFail();
+
+    $order = Order::create([
+        'team_id' => $team->id,
+        'user_id' => $customer->id,
+        'status' => 'payment_verified',
+        'subtotal_cents' => $tier->price_cents,
+        'total_cents' => $tier->price_cents,
+        'currency' => 'USD',
+    ]);
+
+    $order->items()->create([
+        'product_variant_id' => $cx22Variant->id,
+        'pricing_tier_id' => $tier->id,
+        'quantity' => 1,
+        'unit_price_cents' => $tier->price_cents,
+        'total_price_cents' => $tier->price_cents,
+        'hostname' => 'manual-custom-vps.shanutechx.internal',
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test(ProvisioningQueue::class)
+        ->call('selectOrder', $order->id)
+        ->set('fulfillmentMode', 'direct')
+        ->set('manual_ipv4', '198.51.100.77')
+        ->set('manual_ssh_port', 2222)
+        ->set('manual_provider', 'Contabo')
+        ->set('manual_datacenter', 'Singapore (SIN1)')
+        ->set('temporaryRootPassword', 'DirectManualSecretPass#88')
+        ->set('osImage', 'ubuntu-24-04')
+        ->call('fulfill', $order->id)
+        ->assertDispatched('success');
+
+    $service = ServiceInstance::where('order_id', $order->id)->firstOrFail();
+    expect($service->status)->toBe('active');
+    expect($service->ip_address)->toBe('198.51.100.77');
+    expect($service->os_image)->toBe('ubuntu-24-04');
+    expect($service->network_config['provider'])->toBe('Contabo');
+    expect($service->network_config['ssh_port'])->toBe(2222);
+    expect($service->network_config['datacenter'])->toBe('Singapore (SIN1)');
+
+    $cred = $service->credentials()->firstOrFail();
+    expect($cred->getDecryptedSecret())->toBe('DirectManualSecretPass#88');
+    expect($cred->ssh_port)->toBe(2222);
+});
+
+test('multi-tenant boundary isolates service instances between different teams', function () {
+    $userA = User::factory()->create();
+    $teamA = Team::factory()->create();
+    $teamA->members()->attach($userA->id, ['role' => 'owner']);
+
+    $userB = User::factory()->create();
+    $teamB = Team::factory()->create();
+    $teamB->members()->attach($userB->id, ['role' => 'owner']);
+
+    $cx22Variant = ProductVariant::where('slug', 'cx22')->firstOrFail();
+
+    $serviceA = ServiceInstance::create([
+        'team_id' => $teamA->id,
+        'user_id' => $userA->id,
+        'product_variant_id' => $cx22Variant->id,
+        'service_type' => 'vps',
+        'status' => 'active',
+        'name' => 'Team A Confidential VPS',
+        'hostname' => 'confidential.team-a.io',
+        'ip_address' => '198.51.100.88',
+        'os_image' => 'debian-12',
+    ]);
+
+    // Acting as User B (Tenant B)
+    $this->actingAs($userB);
+    session(['currentTeam' => $teamB]);
+
+    // User B attempting to view User A's service detail should fail authorization (403)
+    Livewire::test(ServiceDetail::class, ['uuid' => $serviceA->uuid])
+        ->assertForbidden();
+});
+
+test('decommission vps action transitions instance to terminated and releases inventory node', function () {
+    $customer = User::factory()->create();
+    $team = Team::factory()->create();
+    $cx22Variant = ProductVariant::where('slug', 'cx22')->firstOrFail();
+
+    $node = VpsInventory::create([
+        'ipv4_address' => '198.51.100.99',
+        'vcpu' => 2,
+        'ram_mb' => 4096,
+        'disk_gb' => 40,
+        'datacenter' => 'fsn1',
+        'status' => 'allocated',
+    ]);
+
+    $service = ServiceInstance::create([
+        'team_id' => $team->id,
+        'user_id' => $customer->id,
+        'product_variant_id' => $cx22Variant->id,
+        'vps_inventory_id' => $node->id,
+        'service_type' => 'vps',
+        'status' => 'active',
+        'name' => 'Terminating Node',
+        'hostname' => 'term.customer.io',
+        'ip_address' => '198.51.100.99',
+        'os_image' => 'debian-12',
+    ]);
+
+    \App\Actions\Commerce\DecommissionVpsAction::run($service, 'Customer requested shutdown');
+
+    $service->refresh();
+    expect($service->status)->toBe('terminated');
+
+    $node->refresh();
+    expect($node->status)->toBe('available');
+});
+

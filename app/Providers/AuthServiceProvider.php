@@ -143,6 +143,11 @@ class AuthServiceProvider extends ServiceProvider
         CloudInitScript::class => CloudInitScriptPolicy::class,
         Tag::class => TagPolicy::class,
 
+        // Commerce & Hosting Policies
+        \App\Models\Commerce\Order::class => \App\Policies\Commerce\OrderPolicy::class,
+        \App\Models\Commerce\Invoice::class => \App\Policies\Commerce\InvoicePolicy::class,
+        \App\Models\Commerce\ServiceInstance::class => \App\Policies\Commerce\ServiceInstancePolicy::class,
+
     ];
 
     /**

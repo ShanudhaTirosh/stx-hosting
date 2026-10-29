@@ -84,6 +84,14 @@ class ProofReviewQueue extends Component
                     'user_agent' => request()->userAgent(),
                     'created_at' => now(),
                 ]);
+                // Dispatch notification
+                if ($invoice->user) {
+                    try {
+                        $invoice->user->notify(new \App\Notifications\Commerce\PaymentApprovedNotification($invoice->order, $invoice));
+                    } catch (\Throwable $e) {
+                        logger()->warning("Could not send PaymentApprovedNotification: {$e->getMessage()}");
+                    }
+                }
             });
 
             $this->dispatch('success', 'Payment proof approved successfully. Invoice marked as paid.');

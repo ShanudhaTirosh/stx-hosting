@@ -98,5 +98,13 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('force-password-reset', function (Request $request) {
             return Limit::perMinute(15)->by($request->user()->id);
         });
+
+        RateLimiter::for('commerce-orders', function (Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by($request->user()?->id ?: client_ip($request));
+        });
+
+        RateLimiter::for('commerce-proofs', function (Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perHour(20)->by($request->user()?->id ?: client_ip($request));
+        });
     }
 }

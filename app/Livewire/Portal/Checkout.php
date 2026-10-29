@@ -209,6 +209,12 @@ class Checkout extends Component
                 'depositor_name' => $this->depositorName,
             ]);
 
+            try {
+                $user->notify(new \App\Notifications\Commerce\OrderPlacedNotification($order, $invoice));
+            } catch (\Throwable $e) {
+                logger()->warning("Could not send OrderPlacedNotification: {$e->getMessage()}");
+            }
+
             session()->flash('success', "Order placed successfully! Invoice {$invoiceNumber} has been submitted with your payment proof. Our operations team will verify the payment and provision your server within our 24-72 hour SLA.");
 
             return redirect()->route('portal.billing');

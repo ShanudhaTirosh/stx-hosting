@@ -470,8 +470,8 @@ Route::group([
 ], function () {
     Route::get('/products', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'index']);
     Route::get('/products/{slug}', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'show']);
-    Route::post('/orders', [\App\Http\Controllers\Api\Commerce\OrderCheckoutController::class, 'store']);
-    Route::post('/invoices/{uuid}/proof', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'store']);
+    Route::post('/orders', [\App\Http\Controllers\Api\Commerce\OrderCheckoutController::class, 'store'])->middleware('throttle:commerce-orders');
+    Route::post('/invoices/{uuid}/proof', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'store'])->middleware('throttle:commerce-proofs');
     Route::get('/payment-proofs/{uuid}/view', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'viewFile'])->name('api.commercial.proof.view');
 });
 

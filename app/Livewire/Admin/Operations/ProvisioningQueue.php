@@ -145,6 +145,15 @@ class ProvisioningQueue extends Component
                 // 4. Register with Status telemetry platform
                 StatusTelemetryBridge::registerVpsProbe($service);
 
+                // 4b. Notify customer of active VPS delivery
+                if ($order->user) {
+                    try {
+                        $order->user->notify(new \App\Notifications\Commerce\ServiceDeliveredNotification($service));
+                    } catch (\Throwable $e) {
+                        logger()->warning("Could not send ServiceDeliveredNotification: {$e->getMessage()}");
+                    }
+                }
+
                 // 5. Record audit log
                 CommerceAuditLog::create([
                     'user_id' => auth()->id(),
