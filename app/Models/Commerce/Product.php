@@ -30,3 +30,4 @@ class Product extends BaseModel
         return $query->where('category', $category);
     }
 }
+

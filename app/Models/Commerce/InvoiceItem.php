@@ -25,3 +25,4 @@ class InvoiceItem extends Model
         return $this->belongsTo(OrderItem::class);
     }
 }
+

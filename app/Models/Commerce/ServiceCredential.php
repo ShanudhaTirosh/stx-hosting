@@ -30,3 +30,4 @@ class ServiceCredential extends BaseModel
         return Crypt::decryptString($this->encrypted_secret);
     }
 }
+

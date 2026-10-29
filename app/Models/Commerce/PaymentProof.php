@@ -36,3 +36,4 @@ class PaymentProof extends BaseModel
         return $query->where('status', 'pending_review');
     }
 }
+

@@ -66,3 +66,4 @@ class Invoice extends BaseModel
         return $query->where('status', 'paid');
     }
 }
+

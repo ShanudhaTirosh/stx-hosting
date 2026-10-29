@@ -31,3 +31,4 @@ class OrderItem extends BaseModel
         return $this->belongsTo(PricingTier::class);
     }
 }
+

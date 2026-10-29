@@ -170,3 +170,4 @@ class PaymentProofController extends Controller
         );
     }
 }
+

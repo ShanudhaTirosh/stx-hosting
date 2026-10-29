@@ -84,3 +84,4 @@ test('server-side pricing validation cannot be bypassed by client payload', func
     // Server enforces canonical price from database, ignoring spoofed client price
     expect($order->total_cents)->toBe($tier->price_cents);
 });
+

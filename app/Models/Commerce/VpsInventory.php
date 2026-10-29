@@ -27,3 +27,4 @@ class VpsInventory extends BaseModel
         return $query->where('status', 'available');
     }
 }
+

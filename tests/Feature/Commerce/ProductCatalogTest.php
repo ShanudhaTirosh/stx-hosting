@@ -87,3 +87,4 @@ test('public catalog api converts currency to LKR when requested', function () {
     expect($lkrPlans[0]['currency'])->toBe('LKR');
     expect($lkrPlans[0]['price'])->toBe(2400.00);
 });
+

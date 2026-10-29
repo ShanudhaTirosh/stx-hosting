@@ -102,3 +102,4 @@ class ProductCatalogController extends Controller
         ];
     }
 }
+

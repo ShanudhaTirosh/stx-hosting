@@ -48,3 +48,4 @@ class ServiceInstance extends BaseModel
         return $this->hasMany(ServiceCredential::class);
     }
 }
+

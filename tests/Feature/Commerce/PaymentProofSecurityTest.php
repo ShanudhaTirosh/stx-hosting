@@ -132,3 +132,4 @@ test('administrator can approve payment proof in review queue marking invoice as
     expect($proof->reviewed_by_user_id)->toBe($admin->id);
     expect($invoice->transactions()->count())->toBe(1);
 });
+

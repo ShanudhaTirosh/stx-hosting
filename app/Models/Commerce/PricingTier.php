@@ -27,3 +27,4 @@ class PricingTier extends BaseModel
         return $this->hasMany(PriceHistory::class);
     }
 }
+

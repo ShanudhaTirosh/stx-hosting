@@ -42,3 +42,4 @@ class CommerceAuditLog extends Model
         ]);
     }
 }
+

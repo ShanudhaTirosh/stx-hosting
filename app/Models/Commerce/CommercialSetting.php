@@ -33,3 +33,4 @@ class CommercialSetting extends Model
         );
     }
 }
+

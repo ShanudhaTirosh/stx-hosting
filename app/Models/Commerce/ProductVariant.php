@@ -29,3 +29,4 @@ class ProductVariant extends BaseModel
         return $this->hasMany(PricingTier::class);
     }
 }
+

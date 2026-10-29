@@ -26,3 +26,4 @@ class PaymentTransaction extends BaseModel
         return $this->belongsTo(PaymentProof::class);
     }
 }
+

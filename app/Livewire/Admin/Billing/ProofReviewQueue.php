@@ -172,3 +172,4 @@ class ProofReviewQueue extends Component
         ]);
     }
 }
+
