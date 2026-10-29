@@ -136,3 +136,4 @@ class VpsInventoryStudio extends Component
         ]);
     }
 }
+

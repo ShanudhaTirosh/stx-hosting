@@ -163,3 +163,4 @@ test('customer can view service and reveal encrypted root password by confirming
         ->assertSet('revealedPassword', 'DecryptedRootSecret9988!')
         ->assertDispatched('success');
 });
+
