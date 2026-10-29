@@ -27,3 +27,4 @@ class InvoiceViewController extends Controller
         ]);
     }
 }
+

@@ -26,3 +26,4 @@
 
     <p>Once your transfer is complete, please upload your deposit receipt or transaction screenshot in your portal. Our operations team verifies receipts and provisions your server within our <strong>24 to 72 hour SLA</strong>.</p>
 </x-emails.stx-layout>
+

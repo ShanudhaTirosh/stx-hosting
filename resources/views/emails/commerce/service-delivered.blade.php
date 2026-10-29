@@ -26,3 +26,4 @@
 
     <p>If you need assistance configuring your server, setting up reverse DNS (PTR), or installing applications, our support desk is standing by 24/7.</p>
 </x-emails.stx-layout>
+

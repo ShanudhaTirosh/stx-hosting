@@ -18,3 +18,4 @@
 
     <p>Thank you for partnering with STX Enterprises!</p>
 </x-emails.stx-layout>
+
