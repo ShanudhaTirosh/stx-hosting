@@ -1,3 +1,9 @@
+status/.next
+status/node_modules
+web/.next
+webmail/.next
+web/node_modules
+webmail/node_modules
 /.phpunit.cache
 /node_modules
 /public/build
