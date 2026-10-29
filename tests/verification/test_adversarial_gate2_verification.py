@@ -321,39 +321,68 @@ def run_tests():
     # =========================================================================
     print("\n--- TEST 3: Polyglot Payload Neutralization via Image Re-encoding ---")
     
-    # 1. Create a 1x1 valid PNG containing malicious PHP payload in an ancillary chunk
+    # Scenario A: Malformed polyglot (magic bytes + PHP shellcode, but invalid image structure)
     png_signature = b"\x89PNG\r\n\x1a\n"
     ihdr_data = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
     ihdr_crc = b"\x90wS\xde"
     ihdr_chunk = struct.pack(">I", len(ihdr_data)) + b"IHDR" + ihdr_data + ihdr_crc
-    
     malicious_php = b"<?php system($_GET['cmd']); /* Malicious Shellcode */ ?>"
     custom_chunk = struct.pack(">I", len(malicious_php)) + b"tEXt" + malicious_php + b"\x00\x00\x00\x00"
     iend_chunk = struct.pack(">I", 0) + b"IEND" + b"\xaeB`\x82"
-    
     raw_polyglot = png_signature + ihdr_chunk + custom_chunk + iend_chunk
     
-    # Verify raw polyglot has payload
-    assert b"<?php" in raw_polyglot, "Raw polyglot must contain PHP shellcode"
+    # Naive magic-byte check passes:
+    magic_byte_passed = raw_polyglot.startswith(b"\x89PNG\r\n\x1a\n")
+    print(f"Scenario A - Naive magic byte check: {magic_byte_passed} (Contains PHP: {b'<?php' in raw_polyglot})")
     
-    # 2. Simulate server-side re-encoding pipeline: imagecreatefromstring -> imagepng
-    # In Python, PIL.Image.open + save to memory buffer performs the exact same pure pixel reconstruction
-    img = Image.open(io.BytesIO(raw_polyglot))
-    sanitized_buffer = io.BytesIO()
-    img.save(sanitized_buffer, format="PNG")
-    sanitized_bytes = sanitized_buffer.getvalue()
+    # In PHP GD: imagecreatefromstring($raw_polyglot) returns FALSE on malformed structure
+    # In PIL: Image.open raises UnidentifiedImageError or corrupt error
+    rejected_by_parser = False
+    try:
+        img = Image.open(io.BytesIO(raw_polyglot))
+        img.verify()
+    except Exception as e:
+        rejected_by_parser = True
+        print(f"Scenario A - Image parser rejected malformed polyglot: {e}")
     
-    has_php_in_sanitized = b"<?php" in sanitized_bytes
-    is_valid_png = sanitized_bytes.startswith(b"\x89PNG\r\n\x1a\n")
-    
-    print(f"Original Polyglot Size: {len(raw_polyglot)} bytes (Contains PHP: {b'<?php' in raw_polyglot})")
-    print(f"Sanitized Image Size:   {len(sanitized_bytes)} bytes (Contains PHP: {has_php_in_sanitized})")
-    print(f"Sanitized File is Valid PNG: {is_valid_png}")
-    
-    if not has_php_in_sanitized and is_valid_png:
-        record_pass("Image Re-encoding Pipeline proven: PHP shellcode completely purged while image validity preserved.")
+    if magic_byte_passed and rejected_by_parser:
+        record_pass("Scenario A Defense Proven: Image parsing rejects malformed magic-byte polyglots before storage.")
     else:
-        record_fail("Image Re-encoding Pipeline failed: PHP shellcode survived in re-encoded output!")
+        record_fail("Scenario A Defense Failed: Malformed polyglot was not rejected by parser.")
+
+    # Scenario B: Fully valid PNG with malicious PHP embedded in ancillary metadata chunk
+    from PIL import PngImagePlugin
+    base_img = Image.new('RGB', (10, 10), color='blue')
+    png_info = PngImagePlugin.PngInfo()
+    png_info.add_text("Author", "attacker")
+    png_info.add_text("Comment", "<?php system($_GET['cmd']); ?>")
+    
+    valid_polyglot_buf = io.BytesIO()
+    base_img.save(valid_polyglot_buf, format="PNG", pnginfo=png_info)
+    valid_polyglot_bytes = valid_polyglot_buf.getvalue()
+    
+    has_php_in_valid_polyglot = b"<?php" in valid_polyglot_bytes
+    print(f"Scenario B - Valid PNG with embedded PHP comment: {has_php_in_valid_polyglot} (Size: {len(valid_polyglot_bytes)} bytes)")
+    
+    # Now simulate server-side pure pixel re-encoding pipeline (imagecreatefromstring -> imagepng):
+    # Pure pixel re-encoding reads the pixel array and creates a fresh image buffer without source metadata chunks
+    decoded_img = Image.open(io.BytesIO(valid_polyglot_bytes))
+    reencoded_img = Image.new(decoded_img.mode, decoded_img.size)
+    reencoded_img.putdata(list(decoded_img.getdata()))
+    
+    reencoded_buf = io.BytesIO()
+    reencoded_img.save(reencoded_buf, format="PNG")
+    clean_bytes = reencoded_buf.getvalue()
+    
+    has_php_in_clean = b"<?php" in clean_bytes
+    is_valid_clean_png = clean_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+    print(f"Scenario B - Re-encoded Image Size: {len(clean_bytes)} bytes (Contains PHP: {has_php_in_clean})")
+    
+    if has_php_in_valid_polyglot and not has_php_in_clean and is_valid_clean_png:
+        record_pass("Scenario B Defense Proven: Re-encoding stripped all ancillary metadata chunks and purged PHP shellcode.")
+    else:
+        record_fail("Scenario B Defense Failed: PHP shellcode survived re-encoding!")
+
 
     # =========================================================================
     # TEST 4: Blast-Radius & Error Propagation in Decommissioning Scripts
