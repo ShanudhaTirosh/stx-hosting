@@ -61,3 +61,4 @@ fi
 
 echo "[SUCCESS] VM ${VMID} sanitized and decommissioned cleanly."
 exit 0
+

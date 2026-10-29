@@ -44,3 +44,4 @@ class InvoicePolicy
         return $user->isAdmin();
     }
 }
+

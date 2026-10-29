@@ -283,6 +283,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal/apps/{uuid}', \App\Livewire\Portal\Apps\AppDetail::class)->name('portal.apps.detail');
     Route::get('/portal/databases', \App\Livewire\Portal\Databases\DatabaseList::class)->name('portal.databases');
     Route::get('/portal/billing', \App\Livewire\Portal\BillingOverview::class)->name('portal.billing');
+    Route::get('/portal/invoices/{uuid}', [\App\Http\Controllers\Commerce\InvoiceViewController::class, 'show'])->name('portal.invoices.show');
+    Route::get('/invoices/{uuid}', [\App\Http\Controllers\Commerce\InvoiceViewController::class, 'show'])->name('invoices.show');
     Route::get('/portal/checkout', \App\Livewire\Portal\Checkout::class)->name('portal.checkout');
     Route::get('/orders', \App\Livewire\Portal\Checkout::class)->name('orders.checkout');
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');

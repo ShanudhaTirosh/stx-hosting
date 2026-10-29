@@ -28,12 +28,12 @@ class PaymentApprovedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Payment Approved for Invoice {$this->invoice->invoice_number} - STX Hosting")
-            ->greeting("Hello {$notifiable->name},")
-            ->line("Great news! Your payment receipt for Invoice {$this->invoice->invoice_number} has been verified and approved by our billing team.")
-            ->line("Your order has been prioritized in our provisioning queue.")
-            ->line("Our systems engineers will order and configure your VPS instance. You will receive an activation email as soon as your server credentials are ready in your portal.")
-            ->action('Track Order Status', url('/portal/services'))
-            ->line('Thank you for choosing STX Hosting.');
+            ->subject("Payment Approved for Invoice {$this->invoice->invoice_number} - STX Enterprises")
+            ->view('emails.commerce.payment-approved', [
+                'order' => $this->order,
+                'invoice' => $this->invoice,
+                'notifiable' => $notifiable,
+            ]);
     }
 }
+

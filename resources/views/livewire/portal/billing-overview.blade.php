@@ -23,7 +23,10 @@
                 @forelse ($invoices as $invoice)
                     <tr class="hover:bg-neutral-800/50 transition-all font-mono">
                         <td class="p-4 font-bold text-white">
-                            {{ $invoice->invoice_number }}
+                            <a href="{{ route('portal.invoices.show', $invoice->uuid) }}" target="_blank" class="text-purple-400 hover:text-purple-300 hover:underline flex items-center gap-1.5">
+                                {{ $invoice->invoice_number }}
+                                <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            </a>
                         </td>
                         <td class="p-4 text-neutral-400">
                             {{ $invoice->created_at->format('M d, Y') }}
@@ -43,15 +46,19 @@
                             </span>
                         </td>
                         <td class="p-4 text-right">
-                            @if ($invoice->proofs->count() > 0)
-                                <span class="text-neutral-400 text-[11px]">Submitted ({{ $invoice->proofs->count() }})</span>
-                            @elseif ($invoice->status === 'unpaid')
-                                <a href="http://localhost:3000/pricing" target="_blank" class="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-sans font-bold">
-                                    Upload Receipt
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('portal.invoices.show', $invoice->uuid) }}" target="_blank" class="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-[10px] font-sans font-bold flex items-center gap-1 transition-all">
+                                    <svg class="w-3 h-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                    View / Print
                                 </a>
-                            @else
-                                <span class="text-neutral-500 text-[11px]">-</span>
-                            @endif
+                                @if ($invoice->proofs->count() > 0)
+                                    <span class="text-neutral-400 text-[11px] font-mono">Submitted ({{ $invoice->proofs->count() }})</span>
+                                @elseif (in_array($invoice->status, ['unpaid', 'payment_pending']))
+                                    <a href="{{ route('portal.checkout') }}?invoice={{ $invoice->uuid }}" class="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-sans font-bold">
+                                        Upload Slip
+                                    </a>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
