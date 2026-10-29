@@ -77,3 +77,4 @@ class AppList extends Component
         ]);
     }
 }
+

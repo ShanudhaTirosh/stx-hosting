@@ -100,3 +100,4 @@ test('customer can deploy a managed database and decrypt database password', fun
         ->call('revealPassword')
         ->assertDispatched('success');
 });
+
