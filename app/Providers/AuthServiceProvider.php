@@ -158,9 +158,9 @@ class AuthServiceProvider extends ServiceProvider
         // Register gates for resource creation policy
         Gate::define('createAnyResource', [ResourceCreatePolicy::class, 'createAny']);
 
-        // Register gate for terminal access
+        // Register gate for terminal access (Restricted exclusively to Instance Administrators)
         Gate::define('canAccessTerminal', function ($user) {
-            return $user->isAdmin() || $user->isOwner();
+            return $user->isInstanceAdmin();
         });
     }
 }

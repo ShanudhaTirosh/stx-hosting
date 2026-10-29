@@ -464,12 +464,18 @@ Route::group([
 // =========================================================================
 Route::get('/products', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'index']);
 Route::get('/products/{slug}', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'show']);
+Route::get('/status', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
+Route::get('/status/public', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
+Route::post('/status/subscribe', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'subscribe']);
 
 Route::group([
     'prefix' => 'v1',
 ], function () {
     Route::get('/products', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'index']);
     Route::get('/products/{slug}', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'show']);
+    Route::get('/status', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
+    Route::get('/status/public', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
+    Route::post('/status/subscribe', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'subscribe']);
     Route::post('/orders', [\App\Http\Controllers\Api\Commerce\OrderCheckoutController::class, 'store'])->middleware('throttle:commerce-orders');
     Route::post('/invoices/{uuid}/proof', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'store'])->middleware('throttle:commerce-proofs');
     Route::get('/payment-proofs/{uuid}/view', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'viewFile'])->name('api.commercial.proof.view');

@@ -48,11 +48,13 @@
                 <div class="app-topbar-brand flex items-center gap-2 h-full shrink-0 border-r border-black/[0.06] bg-neutral-50 dark:border-white/[0.04] dark:bg-app transition-[width] duration-200"
                     :class="collapsed ? 'w-(--sidebar-collapsed-w) justify-center px-0 border-b' : 'w-56 px-4'">
                     <div class="flex items-baseline gap-1.5 min-w-0">
-                        <a href="/" {{ wireNavigate() }} title="Coolify"
+                        <a href="/" {{ wireNavigate() }} title="STX Enterprises"
                             class="flex shrink-0 items-center hover:opacity-80 transition-opacity">
-                            <img x-show="collapsed" x-cloak src="/coolify-logo.svg" alt="Coolify"
+                            <img x-show="collapsed" x-cloak src="/coolify-logo.svg" alt="STX Enterprises"
                                 class="size-5" />
-                            <span x-show="!collapsed" class="text-[15px] font-semibold tracking-tight text-black dark:text-white">Coolify</span>
+                            <span x-show="!collapsed" class="text-[15px] font-bold tracking-tight text-black dark:text-white flex items-center gap-1">
+                                <span class="text-cyan-400 font-extrabold">STX</span> Enterprises
+                            </span>
                         </a>
                         <x-version x-show="!collapsed" title="v{{ config('constants.coolify.version') }}"
                             class="min-w-0 truncate !text-[10.5px] font-medium text-neutral-400 dark:text-fg-faint !opacity-100 hover:!opacity-100 dark:hover:text-fg hover:text-black" />
@@ -140,7 +142,7 @@
                 <div class="flex min-w-0 flex-1 items-center gap-2.5">
                     <a href="/"
                         class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 transition-opacity hover:opacity-80 dark:bg-white/[0.06]">
-                        <img src="/coolify-logo.svg" alt="Coolify" class="w-[18px] h-[18px]" />
+                        <img src="/coolify-logo.svg" alt="STX Enterprises" class="w-[18px] h-[18px]" />
                     </a>
                     <div class="min-w-0" x-data="{ collapsed: false }">
                         <livewire:switch-team />

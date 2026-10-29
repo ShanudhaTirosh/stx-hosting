@@ -47,7 +47,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Coolify'),
+    'name' => env('APP_NAME', 'STX Enterprises'),
 
     /*
     |--------------------------------------------------------------------------
