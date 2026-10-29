@@ -271,6 +271,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/deployments/{uuid}', [DeployController::class, 'deployment_by_uuid'])->middleware(['api.ability:read']);
     });
     Route::get('/admin', AdminIndex::class)->name('admin.index');
+    Route::get('/admin/billing/proofs', \App\Livewire\Admin\Billing\ProofReviewQueue::class)->name('admin.billing.proofs');
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');
 
     Route::get('/subscription', SubscriptionShow::class)->name('subscription.show');

@@ -42,6 +42,13 @@ return [
             'throw' => false,
         ],
 
+        'payment_proofs' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/payment_proofs'),
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

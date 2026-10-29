@@ -459,6 +459,22 @@ Route::group([
     Route::post('/sentinel/push', [SentinelController::class, 'push']);
 });
 
+// =========================================================================
+// Commercial Hosting & Storefront API Routes
+// =========================================================================
+Route::get('/products', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'index']);
+Route::get('/products/{slug}', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'show']);
+
+Route::group([
+    'prefix' => 'v1',
+], function () {
+    Route::get('/products', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'index']);
+    Route::get('/products/{slug}', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'show']);
+    Route::post('/orders', [\App\Http\Controllers\Api\Commerce\OrderCheckoutController::class, 'store']);
+    Route::post('/invoices/{uuid}/proof', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'store']);
+    Route::get('/payment-proofs/{uuid}/view', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'viewFile'])->name('api.commercial.proof.view');
+});
+
 Route::any('/{any}', function () {
     return response()->json(['message' => 'Not found.', 'docs' => 'https://coolify.io/docs'], 404);
 })->where('any', '.*');
