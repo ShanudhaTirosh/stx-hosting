@@ -262,6 +262,11 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
         return $new_team;
     }
 
+    public function personalTeam(): ?Team
+    {
+        return $this->teams()->where('personal_team', true)->first();
+    }
+
     public function createToken(string $name, array $abilities = ['read'], ?DateTimeInterface $expiresAt = null, ?int $teamId = null)
     {
         $plainTextToken = sprintf(
@@ -367,20 +372,14 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
 
     public function isInstanceAdmin()
     {
-        $found_root_team = $this->teams->filter(function ($team) {
-            if ($team->id == 0) {
-                $role = $team->pivot->role;
-                if ($role !== 'admin' && $role !== 'owner') {
-                    return false;
-                }
-
-                return true;
-            }
-
+        $root_team = $this->teams()->where('teams.id', 0)->first();
+        if (! $root_team) {
             return false;
-        });
+        }
 
-        return $found_root_team->count() > 0;
+        $role = data_get($root_team, 'pivot.role');
+
+        return $role === 'admin' || $role === 'owner';
     }
 
     public function currentTeam(): ?Team

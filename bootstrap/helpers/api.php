@@ -31,6 +31,10 @@ function getTeamIdFromToken()
     $token = $user?->currentAccessToken();
     $teamId = data_get($token, 'team_id');
 
+    if ($token instanceof \Laravel\Sanctum\TransientToken) {
+        $teamId = session('currentTeam')?->id ?? $user->currentTeam()?->id;
+    }
+
     if (! $user || is_null($teamId) || ! $user->teams()->where('teams.id', $teamId)->exists()) {
         return null;
     }

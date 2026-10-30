@@ -239,7 +239,7 @@ final class ServerTransferCoverage
             'version' => 'The Coolify version that created the variable; the target sets its own.',
         ],
         Application::class => [
-            'environment_id' => self::LINKED, 'destination_type' => self::LINKED, 'destination_id' => self::LINKED,
+            'team_id' => self::TEAM, 'environment_id' => self::LINKED, 'destination_type' => self::LINKED, 'destination_id' => self::LINKED,
             'source_type' => self::LINKED, 'source_id' => self::LINKED, 'private_key_id' => self::LINKED,
         ],
         ApplicationSetting::class => ['application_id' => self::LINKED],
@@ -269,7 +269,7 @@ final class ServerTransferCoverage
         ServiceApplication::class => ['service_id' => self::LINKED],
         ServiceDatabase::class => ['service_id' => self::LINKED],
         StandalonePostgresql::class => [
-            'destination_type' => self::LINKED, 'destination_id' => self::LINKED, 'environment_id' => self::LINKED,
+            'team_id' => self::TEAM, 'destination_type' => self::LINKED, 'destination_id' => self::LINKED, 'environment_id' => self::LINKED,
             'config_hash' => 'Calculated again when the target starts the database.',
         ],
         StandaloneMysql::class => [

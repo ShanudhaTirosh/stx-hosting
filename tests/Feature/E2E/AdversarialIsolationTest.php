@@ -8,6 +8,7 @@ use App\Models\PrivateKey;
 use App\Models\StandalonePostgresql;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\Server;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 
@@ -15,6 +16,12 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     InstanceSettings::forceCreate(['id' => 0]);
+    Server::forceCreate([
+        'id' => 0,
+        'name' => 'localhost',
+        'ip' => '127.0.0.1',
+        'team_id' => 0,
+    ]);
 });
 
 /*

@@ -7,6 +7,7 @@ use App\Models\Team;
 use App\Models\TemplatePermission;
 use App\Models\User;
 use App\Services\RbacService;
+use App\Models\Server;
 use App\Services\TemplateAccessService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -15,6 +16,12 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     InstanceSettings::forceCreate(['id' => 0]);
+    Server::forceCreate([
+        'id' => 0,
+        'name' => 'localhost',
+        'ip' => '127.0.0.1',
+        'team_id' => 0,
+    ]);
 });
 
 /*

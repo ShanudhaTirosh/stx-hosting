@@ -11,12 +11,19 @@ use App\Models\InstanceSettings;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\EntitlementService;
+use App\Models\Server;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     InstanceSettings::forceCreate(['id' => 0]);
+    Server::forceCreate([
+        'id' => 0,
+        'name' => 'localhost',
+        'ip' => '127.0.0.1',
+        'team_id' => 0,
+    ]);
 });
 
 /*

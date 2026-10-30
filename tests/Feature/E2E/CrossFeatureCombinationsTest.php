@@ -12,12 +12,19 @@ use App\Services\LimitCheckResult;
 use App\Services\LimitEnforcementService;
 use App\Services\RbacService;
 use App\Services\TemplateAccessService;
+use App\Models\Server;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     InstanceSettings::forceCreate(['id' => 0]);
+    Server::forceCreate([
+        'id' => 0,
+        'name' => 'localhost',
+        'ip' => '127.0.0.1',
+        'team_id' => 0,
+    ]);
 });
 
 /*

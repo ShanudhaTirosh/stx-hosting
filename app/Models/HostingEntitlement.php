@@ -28,6 +28,7 @@ class HostingEntitlement extends Model
         'team_id',
         'hosting_product_id',
         'hosting_plan_id',
+        'product_type',
         'status',
         'granted_by',
         'expires_at',
@@ -40,7 +41,7 @@ class HostingEntitlement extends Model
         'hosting_plan_id'    => 'integer',
         'granted_by'         => 'integer',
         'expires_at'         => 'datetime',
-        'status'             => EntitlementStatus::class,
+        'status'             => 'string',
         'metadata'           => 'array',
     ];
 

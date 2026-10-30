@@ -4,7 +4,9 @@ namespace Tests\Feature\Hosting;
 
 use App\Enums\Role;
 use App\Models\Application;
+use App\Models\Environment;
 use App\Models\InstanceSettings;
+use App\Models\Project;
 use App\Models\Server;
 use App\Models\Team;
 use App\Models\User;
@@ -16,6 +18,12 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     InstanceSettings::forceCreate(['id' => 0]);
+    Server::forceCreate([
+        'id' => 0,
+        'name' => 'localhost',
+        'ip' => '127.0.0.1',
+        'team_id' => 0,
+    ]);
 });
 
 /*
@@ -280,7 +288,9 @@ test('[F07-T1-2] ApplicationPolicy validates team ownership on mutation', functi
     $team->members()->attach($user->id, ['role' => 'owner']);
 
     $otherTeam = Team::factory()->create();
-    $otherApp = Application::factory()->create(['team_id' => $otherTeam->id]);
+    $project = Project::factory()->create(['team_id' => $otherTeam->id]);
+    $environment = Environment::factory()->create(['project_id' => $project->id]);
+    $otherApp = Application::factory()->create(['environment_id' => $environment->id]);
 
     expect(Gate::forUser($user)->allows('update', $otherApp))->toBeFalse();
 });
@@ -387,7 +397,9 @@ test('[F06-T2-1] IDOR parameter enumeration on application UUID is rejected', fu
     $clientTeam->members()->attach($client->id, ['role' => 'owner']);
 
     $victimTeam = Team::factory()->create();
-    $victimApp = Application::factory()->create(['team_id' => $victimTeam->id]);
+    $project = Project::factory()->create(['team_id' => $victimTeam->id]);
+    $environment = Environment::factory()->create(['project_id' => $project->id]);
+    $victimApp = Application::factory()->create(['environment_id' => $environment->id]);
 
     $this->actingAs($client);
     session(['currentTeam' => $clientTeam]);

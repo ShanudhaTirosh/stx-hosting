@@ -12,7 +12,10 @@ class EnsureTokenBelongsToCurrentTeamMember
     {
         $user = $request->user();
         $token = $user?->currentAccessToken();
-        $teamId = $token?->team_id;
+        $teamId = data_get($token, 'team_id');
+        if ($token instanceof \Laravel\Sanctum\TransientToken) {
+            $teamId = session('currentTeam')?->id ?? $user->currentTeam()?->id;
+        }
 
         if (! $user || ! $token || is_null($teamId)) {
             return response()->json(['message' => 'Invalid token.'], 401);

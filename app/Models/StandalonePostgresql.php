@@ -18,6 +18,7 @@ class StandalonePostgresql extends BaseModel
     use Auditable, ClearsGlobalSearchCache, HasDatabaseHealthCheck, HasFactory, HasLogRedactionSetting, HasMetrics, HasSafeStringAttribute, HasSecretManager, SoftDeletes;
 
     protected $fillable = [
+        'team_id',
         'uuid',
         'name',
         'description',

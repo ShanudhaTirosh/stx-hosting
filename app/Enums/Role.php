@@ -20,7 +20,11 @@ enum Role: string
     public function lt(Role|string $role): bool
     {
         if (is_string($role)) {
-            $role = Role::from($role);
+            try {
+                $role = Role::from($role);
+            } catch (\ValueError $e) {
+                throw new \TypeError("Invalid role: {$role}", 0, $e);
+            }
         }
 
         return $this->rank() < $role->rank();
@@ -29,7 +33,11 @@ enum Role: string
     public function gt(Role|string $role): bool
     {
         if (is_string($role)) {
-            $role = Role::from($role);
+            try {
+                $role = Role::from($role);
+            } catch (\ValueError $e) {
+                throw new \TypeError("Invalid role: {$role}", 0, $e);
+            }
         }
 
         return $this->rank() > $role->rank();

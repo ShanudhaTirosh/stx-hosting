@@ -26,15 +26,13 @@ class RbacService
      */
     public static function isOwner(User $user, ?Team $team = null): bool
     {
-        $rootTeam = Team::find(0);
+        $rootTeam = $user->teams()->where('teams.id', 0)->first();
 
         if (! $rootTeam) {
             return false;
         }
 
-        $pivotRole = $user->teams()
-            ->where('teams.id', 0)
-            ->first()?->membership?->role;
+        $pivotRole = data_get($rootTeam, 'pivot.role');
 
         return $pivotRole === 'owner' && $user->isInstanceAdmin();
     }
@@ -72,15 +70,13 @@ class RbacService
      */
     public static function canOverrideRestrictions(User $user): bool
     {
-        $rootTeam = Team::find(0);
+        $rootTeam = $user->teams()->where('teams.id', 0)->first();
 
         if (! $rootTeam) {
             return false;
         }
 
-        $pivotRole = $user->teams()
-            ->where('teams.id', 0)
-            ->first()?->membership?->role;
+        $pivotRole = data_get($rootTeam, 'pivot.role');
 
         return $pivotRole === 'owner';
     }

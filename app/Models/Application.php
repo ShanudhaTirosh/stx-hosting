@@ -151,6 +151,7 @@ class Application extends BaseModel
     ];
 
     protected $fillable = [
+        'team_id',
         'name',
         'description',
         'fqdn',

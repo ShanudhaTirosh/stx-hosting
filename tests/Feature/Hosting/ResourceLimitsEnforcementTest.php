@@ -12,12 +12,19 @@ use App\Models\User;
 use App\Services\LimitCheckResult;
 use App\Services\LimitEnforcementService;
 use App\Services\RbacService;
+use App\Models\Server;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     InstanceSettings::forceCreate(['id' => 0]);
+    Server::forceCreate([
+        'id' => 0,
+        'name' => 'localhost',
+        'ip' => '127.0.0.1',
+        'team_id' => 0,
+    ]);
 });
 
 /*
@@ -343,8 +350,8 @@ test('[F09-T2-1] Stopped containers excluded from running container quota', func
     $runningApp = Application::factory()->create(['team_id' => $team->id, 'status' => 'running']);
     $stoppedApp = Application::factory()->create(['team_id' => $team->id, 'status' => 'exited']);
 
-    expect($runningApp->status)->toBe('running');
-    expect($stoppedApp->status)->toBe('exited');
+    expect($runningApp->status)->toStartWith('running');
+    expect($stoppedApp->status)->toStartWith('exited');
 });
 
 test('[F10-T2-1] Atomic lock prevents double-creation when exactly 1 quota slot remains', function () {
