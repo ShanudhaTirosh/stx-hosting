@@ -31,6 +31,16 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 |
 */
 
+if (! file_exists(__DIR__.'/../vendor/autoload.php')) {
+    http_response_code(503);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 'initializing',
+        'message' => 'STX Enterprises platform is initializing dependencies. Please wait a moment...',
+    ]);
+    exit(0);
+}
+
 require __DIR__.'/../vendor/autoload.php';
 
 /*
