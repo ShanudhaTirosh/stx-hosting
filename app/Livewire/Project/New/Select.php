@@ -4,8 +4,10 @@ namespace App\Livewire\Project\New;
 
 use App\Models\Project;
 use App\Models\Server;
+use App\Models\StandalonePostgresql;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Select extends Component
@@ -518,5 +520,55 @@ class Select extends Component
         $this->buildServers = Server::isUsableBuildServer()->get()->sortBy('name');
         $this->allServers = $this->servers->concat($this->buildServers);
         $this->onlyBuildServerAvailable = $this->servers->isEmpty() && $this->buildServers->isNotEmpty();
+    }
+
+    public function addExistingPostgresql(): mixed
+    {
+        $this->validate([
+            'existingPostgresqlUrl' => ['required', 'string', 'regex:/^postgres(ql)?:\/\/[^\s]+$/i'],
+        ], [
+            'existingPostgresqlUrl.regex' => 'The database URL must start with postgres:// or postgresql://.',
+        ]);
+
+        try {
+            $server = Server::ownedByCurrentTeam()->findOrFail($this->server_id);
+            $environment = Project::ownedByCurrentTeam()
+                ->whereUuid($this->parameters['project_uuid'])
+                ->firstOrFail()
+                ->environments()
+                ->where('name', $this->selectedEnvironment)
+                ->firstOrFail();
+
+            $destination = $this->findDestination($server, $this->destination_uuid);
+
+            $parsedUrl = parse_url($this->existingPostgresqlUrl);
+            $user = data_get($parsedUrl, 'user', 'postgres');
+            $pass = data_get($parsedUrl, 'pass', 'password');
+            $db = ltrim(data_get($parsedUrl, 'path', '/postgres'), '/');
+            if (empty($db)) {
+                $db = 'postgres';
+            }
+
+            $database = StandalonePostgresql::create([
+                'name' => 'existing-postgresql-'.strtolower(Str::random(5)),
+                'description' => 'Connected PostgreSQL database',
+                'postgres_user' => $user,
+                'postgres_password' => $pass,
+                'postgres_db' => $db,
+                'status' => 'running',
+                'image' => 'postgres:16-alpine',
+                'environment_id' => $environment->id,
+                'destination_id' => $destination->id,
+                'destination_type' => $destination->getMorphClass(),
+            ]);
+
+            return redirect()->route('project.database.configuration', [
+                'project_uuid' => $this->parameters['project_uuid'],
+                'environment_uuid' => $environment->uuid,
+                'database_uuid' => $database->uuid,
+            ]);
+        } catch (\Throwable $e) {
+            return handleError($e, $this);
+        }
     }
 }

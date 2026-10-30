@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Commerce;
 
+use App\Actions\Commerce\DecommissionVpsAction;
 use App\Livewire\Admin\Operations\ProvisioningQueue;
 use App\Livewire\Portal\ServiceDetail;
 use App\Livewire\Portal\ServicesList;
 use App\Models\Commerce\Order;
-use App\Models\Commerce\PricingTier;
 use App\Models\Commerce\ProductVariant;
 use App\Models\Commerce\ServiceCredential;
 use App\Models\Commerce\ServiceInstance;
@@ -17,7 +17,6 @@ use App\Models\User;
 use App\Services\Commerce\VpsAllocationService;
 use Database\Seeders\HostingCatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Crypt;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -28,7 +27,7 @@ beforeEach(function () {
 });
 
 test('vps allocation service locates and matches next available node with sufficient specs', function () {
-    $service = new VpsAllocationService();
+    $service = new VpsAllocationService;
 
     $node1 = VpsInventory::create([
         'ipv4_address' => '198.51.100.10',
@@ -59,6 +58,7 @@ test('administrator can fulfill order in provisioning queue allocating node and 
     $admin = User::factory()->create();
     $customer = User::factory()->create();
     $team = Team::factory()->create();
+    $team->members()->attach($admin->id, ['role' => 'admin']);
     $team->members()->attach($customer->id, ['role' => 'owner']);
 
     $cx22Variant = ProductVariant::where('slug', 'cx22')->firstOrFail();
@@ -135,7 +135,7 @@ test('customer can view service and reveal encrypted root password by confirming
         'os_image' => 'debian-12',
     ]);
 
-    $cred = new ServiceCredential();
+    $cred = new ServiceCredential;
     $cred->service_instance_id = $service->id;
     $cred->credential_type = 'root_password';
     $cred->username = 'root';
@@ -168,6 +168,7 @@ test('administrator can fulfill order via direct manual details entry without pr
     $admin = User::factory()->create();
     $customer = User::factory()->create();
     $team = Team::factory()->create();
+    $team->members()->attach($admin->id, ['role' => 'admin']);
     $team->members()->attach($customer->id, ['role' => 'owner']);
 
     $cx22Variant = ProductVariant::where('slug', 'cx22')->firstOrFail();
@@ -277,7 +278,7 @@ test('decommission vps action transitions instance to terminated and releases in
         'os_image' => 'debian-12',
     ]);
 
-    \App\Actions\Commerce\DecommissionVpsAction::run($service, 'Customer requested shutdown');
+    DecommissionVpsAction::run($service, 'Customer requested shutdown');
 
     $service->refresh();
     expect($service->status)->toBe('terminated');
@@ -285,4 +286,3 @@ test('decommission vps action transitions instance to terminated and releases in
     $node->refresh();
     expect($node->status)->toBe('available');
 });
-

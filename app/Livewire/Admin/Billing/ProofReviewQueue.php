@@ -7,6 +7,7 @@ use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\Invoice;
 use App\Models\Commerce\PaymentProof;
 use App\Models\Commerce\PaymentTransaction;
+use App\Notifications\Commerce\PaymentApprovedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -17,8 +18,24 @@ class ProofReviewQueue extends Component
     use WithPagination;
 
     public ?int $selectedProofId = null;
+
     public string $rejectionReason = '';
+
     public string $filterStatus = 'pending_review';
+
+    public function mount(): void
+    {
+        $user = auth()->user();
+        abort_unless(
+            $user && (
+                $user->isInstanceAdmin() ||
+                $user->isAdmin() ||
+                (($teamId = currentTeam()?->id) && $user->isAdminOfTeam($teamId)) ||
+                $user->teams()->wherePivotIn('role', ['admin', 'owner'])->exists()
+            ),
+            403
+        );
+    }
 
     public function selectProof(int $proofId): void
     {
@@ -42,7 +59,7 @@ class ProofReviewQueue extends Component
                     'invoice_id' => $invoice->id,
                     'payment_proof_id' => $proof->id,
                     'gateway' => $proof->payment_method,
-                    'transaction_id' => $proof->transaction_reference ?: ('MANUAL-' . strtoupper(Str::random(10))),
+                    'transaction_id' => $proof->transaction_reference ?: ('MANUAL-'.strtoupper(Str::random(10))),
                     'amount_cents' => $invoice->total_cents,
                     'currency' => $invoice->currency,
                     'status' => 'successful',
@@ -87,7 +104,7 @@ class ProofReviewQueue extends Component
                 // Dispatch notification
                 if ($invoice->user) {
                     try {
-                        $invoice->user->notify(new \App\Notifications\Commerce\PaymentApprovedNotification($invoice->order, $invoice));
+                        $invoice->user->notify(new PaymentApprovedNotification($invoice->order, $invoice));
                     } catch (\Throwable $e) {
                         logger()->warning("Could not send PaymentApprovedNotification: {$e->getMessage()}");
                     }
@@ -97,7 +114,7 @@ class ProofReviewQueue extends Component
             $this->dispatch('success', 'Payment proof approved successfully. Invoice marked as paid.');
             $this->selectedProofId = null;
         } catch (\Throwable $e) {
-            $this->dispatch('error', 'Approval failed: ' . $e->getMessage());
+            $this->dispatch('error', 'Approval failed: '.$e->getMessage());
         }
     }
 
@@ -148,7 +165,7 @@ class ProofReviewQueue extends Component
             $this->selectedProofId = null;
             $this->rejectionReason = '';
         } catch (\Throwable $e) {
-            $this->dispatch('error', 'Rejection failed: ' . $e->getMessage());
+            $this->dispatch('error', 'Rejection failed: '.$e->getMessage());
         }
     }
 
@@ -180,4 +197,3 @@ class ProofReviewQueue extends Component
         ]);
     }
 }
-

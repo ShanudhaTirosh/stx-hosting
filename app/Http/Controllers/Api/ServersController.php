@@ -211,12 +211,17 @@ class ServersController extends Controller
     )]
     public function server_by_uuid(Request $request)
     {
+        $uuid = $request->route('uuid') ?? request()->uuid;
+        if (! is_string($uuid) || ! preg_match('/^[a-zA-Z0-9_-]{1,64}$/', $uuid)) {
+            return response()->json(['message' => 'Invalid UUID format.'], 400);
+        }
+
         $with_resources = $request->query('resources');
         $teamId = getTeamIdFromToken();
         if (is_null($teamId)) {
             return invalidTokenResponse();
         }
-        $server = ModelsServer::whereTeamId($teamId)->whereUuid(request()->uuid)->first();
+        $server = ModelsServer::whereTeamId($teamId)->whereUuid($uuid)->first();
         if (is_null($server)) {
             return response()->json(['message' => 'Server not found.'], 404);
         }
@@ -294,11 +299,16 @@ class ServersController extends Controller
     )]
     public function resources_by_server(Request $request)
     {
+        $uuid = $request->route('uuid') ?? request()->uuid;
+        if (! is_string($uuid) || ! preg_match('/^[a-zA-Z0-9_-]{1,64}$/', $uuid)) {
+            return response()->json(['message' => 'Invalid UUID format.'], 400);
+        }
+
         $teamId = getTeamIdFromToken();
         if (is_null($teamId)) {
             return invalidTokenResponse();
         }
-        $server = ModelsServer::whereTeamId($teamId)->whereUuid(request()->uuid)->first();
+        $server = ModelsServer::whereTeamId($teamId)->whereUuid($uuid)->first();
         if (is_null($server)) {
             return response()->json(['message' => 'Server not found.'], 404);
         }
@@ -362,11 +372,16 @@ class ServersController extends Controller
     )]
     public function domains_by_server(Request $request)
     {
+        $uuid = $request->route('uuid') ?? request()->uuid;
+        if (! is_string($uuid) || ! preg_match('/^[a-zA-Z0-9_-]{1,64}$/', $uuid)) {
+            return response()->json(['message' => 'Invalid UUID format.'], 400);
+        }
+
         $teamId = getTeamIdFromToken();
         if (is_null($teamId)) {
             return invalidTokenResponse();
         }
-        $server = ModelsServer::whereTeamId($teamId)->whereUuid($request->route('uuid'))->first();
+        $server = ModelsServer::whereTeamId($teamId)->whereUuid($uuid)->first();
         if (is_null($server)) {
             return response()->json(['message' => 'Server not found.'], 404);
         }

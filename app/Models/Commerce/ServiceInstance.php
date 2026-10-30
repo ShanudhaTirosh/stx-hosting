@@ -13,10 +13,30 @@ class ServiceInstance extends BaseModel
     protected $guarded = [];
 
     protected $casts = [
+        'network_config' => 'array',
         'activated_at' => 'datetime',
         'renews_at' => 'datetime',
         'suspended_at' => 'datetime',
     ];
+
+    public function getNetworkConfigAttribute($value): ?array
+    {
+        if ($value) {
+            return is_string($value) ? json_decode($value, true) : $value;
+        }
+
+        $inventory = $this->vpsInventory;
+        $cred = $this->credentials()->where('credential_type', 'root_password')->first();
+        if ($inventory || $cred) {
+            return [
+                'provider' => $inventory?->provider ?? 'custom',
+                'datacenter' => $inventory?->datacenter ?? 'unknown',
+                'ssh_port' => $cred?->ssh_port ?? 22,
+            ];
+        }
+
+        return null;
+    }
 
     public function team(): BelongsTo
     {
@@ -48,4 +68,3 @@ class ServiceInstance extends BaseModel
         return $this->hasMany(ServiceCredential::class);
     }
 }
-

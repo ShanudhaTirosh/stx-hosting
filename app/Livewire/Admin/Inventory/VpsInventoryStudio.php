@@ -12,27 +12,53 @@ class VpsInventoryStudio extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $statusFilter = 'all';
 
     // New node form state
     public bool $showCreateModal = false;
+
     public string $ipv4_address = '';
+
     public string $ipv6_address = '';
+
     public string $gateway = '';
+
     public string $subnet_mask = '';
+
     public string $mac_address = '';
+
     public int $vcpu = 2;
+
     public int $ram_mb = 4096;
+
     public int $disk_gb = 40;
+
     public string $datacenter = 'fsn1';
+
     public string $provider = 'hetzner';
+
     public string $admin_notes = '';
+
+    public function mount(): void
+    {
+        $user = auth()->user();
+        abort_unless(
+            $user && (
+                $user->isInstanceAdmin() ||
+                $user->isAdmin() ||
+                (($teamId = currentTeam()?->id) && $user->isAdminOfTeam($teamId)) ||
+                $user->teams()->wherePivotIn('role', ['admin', 'owner'])->exists()
+            ),
+            403
+        );
+    }
 
     public function openCreateModal(): void
     {
         $this->reset([
             'ipv4_address', 'ipv6_address', 'gateway', 'subnet_mask',
-            'mac_address', 'vcpu', 'ram_mb', 'disk_gb', 'admin_notes'
+            'mac_address', 'vcpu', 'ram_mb', 'disk_gb', 'admin_notes',
         ]);
         $this->vcpu = 2;
         $this->ram_mb = 4096;
@@ -120,8 +146,8 @@ class VpsInventoryStudio extends Component
         if ($this->search !== '') {
             $query->where(function ($q) {
                 $q->where('ipv4_address', 'like', "%{$this->search}%")
-                  ->orWhere('datacenter', 'like', "%{$this->search}%")
-                  ->orWhere('provider', 'like', "%{$this->search}%");
+                    ->orWhere('datacenter', 'like', "%{$this->search}%")
+                    ->orWhere('provider', 'like', "%{$this->search}%");
             });
         }
 
@@ -136,4 +162,3 @@ class VpsInventoryStudio extends Component
         ]);
     }
 }
-

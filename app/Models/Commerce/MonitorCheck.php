@@ -2,10 +2,10 @@
 
 namespace App\Models\Commerce;
 
-use App\Models\BaseModel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class MonitorCheck extends BaseModel
+class MonitorCheck extends Model
 {
     protected $table = 'monitor_checks';
 
@@ -23,4 +23,3 @@ class MonitorCheck extends BaseModel
         return $this->belongsTo(Monitor::class, 'monitor_id');
     }
 }
-

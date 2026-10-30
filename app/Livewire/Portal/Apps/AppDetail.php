@@ -10,10 +10,15 @@ use Livewire\Component;
 class AppDetail extends Component
 {
     public string $uuid;
+
     public string $newDomain = '';
+
     public string $envKey = '';
+
     public string $envValue = '';
+
     public array $envVars = [];
+
     public array $domains = [];
 
     public function mount(string $uuid): void
@@ -25,11 +30,11 @@ class AppDetail extends Component
     public function loadAppData(): void
     {
         $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)
-            ->where('team_id', $team->id)
-            ->firstOrFail();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
 
-        $this->domains = [$service->hostname];
+        $this->domains = array_unique(array_filter([$service->hostname, ...data_get($service->network_config, 'custom_domains', [])]));
+        $this->envVars = data_get($service->network_config, 'env_vars', []);
     }
 
     public function addDomain(): void
@@ -39,9 +44,8 @@ class AppDetail extends Component
         ]);
 
         $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)
-            ->where('team_id', $team->id)
-            ->firstOrFail();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
 
         // Pre-flight DNS verification against server IP
         $serverIp = $service->ip_address ?: '127.0.0.1';
@@ -50,6 +54,14 @@ class AppDetail extends Component
         if (! in_array($this->newDomain, $this->domains)) {
             $this->domains[] = $this->newDomain;
         }
+
+        $config = $service->network_config ?? [];
+        $customDomains = data_get($config, 'custom_domains', []);
+        if (! in_array($this->newDomain, $customDomains)) {
+            $customDomains[] = $this->newDomain;
+        }
+        $config['custom_domains'] = $customDomains;
+        $service->update(['network_config' => $config]);
 
         CommerceAuditLog::create([
             'user_id' => auth()->id(),
@@ -74,19 +86,73 @@ class AppDetail extends Component
             'envValue' => 'required|string',
         ]);
 
-        $this->envVars[$this->envKey] = $this->envValue;
+        $team = currentTeam();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+
+        $config = $service->network_config ?? [];
+        $envVars = data_get($config, 'env_vars', []);
+        $envVars[$this->envKey] = $this->envValue;
+        $config['env_vars'] = $envVars;
+        $service->update(['network_config' => $config]);
+
+        $this->envVars = $envVars;
+        $savedKey = $this->envKey;
         $this->envKey = '';
         $this->envValue = '';
-        $this->dispatch('success', 'Environment variable staged.');
+
+        CommerceAuditLog::create([
+            'user_id' => auth()->id(),
+            'team_id' => $team->id,
+            'action' => 'app.env_added',
+            'target_type' => ServiceInstance::class,
+            'target_id' => $service->id,
+            'payload' => ['key' => $savedKey],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+
+        $this->dispatch('success', 'Environment variable staged and persisted.');
     }
 
     public function restart(): void
     {
+        $team = currentTeam();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+
+        CommerceAuditLog::create([
+            'user_id' => auth()->id(),
+            'team_id' => $team->id,
+            'action' => 'app.restart_triggered',
+            'target_type' => ServiceInstance::class,
+            'target_id' => $service->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+
         $this->dispatch('success', 'Restart signal sent to application container.');
     }
 
     public function redeploy(): void
     {
+        $team = currentTeam();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+
+        CommerceAuditLog::create([
+            'user_id' => auth()->id(),
+            'team_id' => $team->id,
+            'action' => 'app.redeploy_queued',
+            'target_type' => ServiceInstance::class,
+            'target_id' => $service->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+
         $this->dispatch('success', 'Rebuild and deploy job queued.');
     }
 
@@ -95,12 +161,12 @@ class AppDetail extends Component
         $team = currentTeam();
         $service = ServiceInstance::with('productVariant')
             ->where('uuid', $this->uuid)
-            ->where('team_id', $team->id)
             ->firstOrFail();
+
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
 
         return view('livewire.portal.apps.app-detail', [
             'service' => $service,
         ]);
     }
 }
-

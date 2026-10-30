@@ -8,6 +8,7 @@ use App\Models\Commerce\Order;
 use App\Models\Commerce\OrderItem;
 use App\Models\Commerce\PaymentProof;
 use App\Models\Commerce\ProductVariant;
+use App\Notifications\Commerce\OrderPlacedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -19,19 +20,45 @@ class Checkout extends Component
     use WithFileUploads;
 
     public array $cartPlanIds = [];
+
     public ?ProductVariant $selectedVariant = null;
+
     public string $billingType = '30-day';
+
     public string $currency = 'USD';
+
     public int $totalAmountCents = 0;
 
     // Payment proof upload
     public $proofFile;
+
     public string $bankReference = '';
+
     public string $depositorName = '';
+
     public string $notes = '';
+
+    public ?string $invoiceUuid = null;
+
+    public ?Invoice $existingInvoice = null;
 
     public function mount(): void
     {
+        $this->invoiceUuid = request()->query('invoice');
+        if ($this->invoiceUuid) {
+            $this->existingInvoice = Invoice::with(['order.items.productVariant', 'items'])->where('uuid', $this->invoiceUuid)->first();
+            if ($this->existingInvoice) {
+                $item = $this->existingInvoice->order?->items?->first();
+                if ($item?->productVariant) {
+                    $this->selectedVariant = $item->productVariant;
+                }
+                $this->currency = $this->existingInvoice->currency;
+                $this->totalAmountCents = $this->existingInvoice->total_cents;
+
+                return;
+            }
+        }
+
         $planIdParam = request()->query('planId') ?? request()->query('plan');
         $planIdsParam = request()->query('planIds');
 
@@ -42,7 +69,7 @@ class Checkout extends Component
         }
 
         // Default or find first variant
-        if (!empty($this->cartPlanIds)) {
+        if (! empty($this->cartPlanIds)) {
             $first = $this->cartPlanIds[0];
             $this->selectedVariant = ProductVariant::with(['product', 'pricingTiers'])
                 ->where('id', $first)
@@ -50,7 +77,7 @@ class Checkout extends Component
                 ->first();
         }
 
-        if (!$this->selectedVariant) {
+        if (! $this->selectedVariant) {
             $this->selectedVariant = ProductVariant::with(['product', 'pricingTiers'])->first();
         }
 
@@ -71,8 +98,9 @@ class Checkout extends Component
 
     private function recalculate(): void
     {
-        if (!$this->selectedVariant) {
+        if (! $this->selectedVariant) {
             $this->totalAmountCents = 0;
+
             return;
         }
 
@@ -82,8 +110,8 @@ class Checkout extends Component
             ->first() ?? $this->selectedVariant->pricingTiers->first();
 
         if ($tier) {
-            $this->totalAmountCents = ($this->currency === 'LKR') 
-                ? $tier->price_lkr_cents 
+            $this->totalAmountCents = ($this->currency === 'LKR')
+                ? $tier->price_lkr_cents
                 : $tier->price_cents;
         } else {
             $this->totalAmountCents = 1500; // default fallback $15.00
@@ -101,66 +129,77 @@ class Checkout extends Component
         $user = auth()->user();
         $team = currentTeam();
 
-        if (!$team) {
+        if (! $team) {
             session()->flash('error', 'No active team found for this user account.');
+
             return;
         }
 
         return DB::transaction(function () use ($user, $team) {
-            // 1. Create Order
-            $order = Order::create([
-                'uuid' => (string) Str::uuid(),
-                'user_id' => $user->id,
-                'team_id' => $team->id,
-                'status' => 'payment_submitted',
-                'currency' => $this->currency,
-                'subtotal_cents' => $this->totalAmountCents,
-                'tax_cents' => 0,
-                'discount_cents' => 0,
-                'total_cents' => $this->totalAmountCents,
-                'customer_notes' => $this->notes ?: 'Order placed via self-service portal checkout.',
-            ]);
+            if ($this->existingInvoice) {
+                $invoice = $this->existingInvoice;
+                $order = $invoice->order;
+                $invoice->update(['status' => 'payment_pending']);
+                if ($order) {
+                    $order->update(['status' => 'payment_submitted']);
+                }
+                $invoiceNumber = $invoice->invoice_number;
+            } else {
+                // 1. Create Order
+                $order = Order::create([
+                    'uuid' => (string) Str::uuid(),
+                    'user_id' => $user->id,
+                    'team_id' => $team->id,
+                    'status' => 'payment_submitted',
+                    'currency' => $this->currency,
+                    'subtotal_cents' => $this->totalAmountCents,
+                    'tax_cents' => 0,
+                    'discount_cents' => 0,
+                    'total_cents' => $this->totalAmountCents,
+                    'customer_notes' => $this->notes ?: 'Order placed via self-service portal checkout.',
+                ]);
 
-            // 2. Create Order Item
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_variant_id' => $this->selectedVariant ? $this->selectedVariant->id : null,
-                'item_type' => 'vps',
-                'description' => ($this->selectedVariant ? $this->selectedVariant->name : 'Cloud VPS Node') . " ({$this->billingType} term)",
-                'quantity' => 1,
-                'unit_price_cents' => $this->totalAmountCents,
-                'total_price_cents' => $this->totalAmountCents,
-            ]);
+                // 2. Create Order Item
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_variant_id' => $this->selectedVariant ? $this->selectedVariant->id : null,
+                    'item_type' => 'vps',
+                    'description' => ($this->selectedVariant ? $this->selectedVariant->name : 'Cloud VPS Node')." ({$this->billingType} term)",
+                    'quantity' => 1,
+                    'unit_price_cents' => $this->totalAmountCents,
+                    'total_price_cents' => $this->totalAmountCents,
+                ]);
 
-            // 3. Create Invoice
-            $invoiceNumber = 'INV-' . strtoupper(Str::random(8));
-            $invoice = Invoice::create([
-                'uuid' => (string) Str::uuid(),
-                'order_id' => $order->id,
-                'user_id' => $user->id,
-                'team_id' => $team->id,
-                'invoice_number' => $invoiceNumber,
-                'status' => 'payment_pending',
-                'currency' => $this->currency,
-                'subtotal_cents' => $this->totalAmountCents,
-                'tax_cents' => 0,
-                'total_cents' => $this->totalAmountCents,
-                'due_at' => now()->addDays(2),
-            ]);
+                // 3. Create Invoice
+                $invoiceNumber = 'INV-'.strtoupper(Str::random(8));
+                $invoice = Invoice::create([
+                    'uuid' => (string) Str::uuid(),
+                    'order_id' => $order->id,
+                    'user_id' => $user->id,
+                    'team_id' => $team->id,
+                    'invoice_number' => $invoiceNumber,
+                    'status' => 'payment_pending',
+                    'currency' => $this->currency,
+                    'subtotal_cents' => $this->totalAmountCents,
+                    'tax_cents' => 0,
+                    'total_cents' => $this->totalAmountCents,
+                    'due_at' => now()->addDays(2),
+                ]);
 
-            InvoiceItem::create([
-                'invoice_id' => $invoice->id,
-                'description' => ($this->selectedVariant ? $this->selectedVariant->name : 'Cloud VPS Node') . " ({$this->billingType} term)",
-                'quantity' => 1,
-                'unit_price_cents' => $this->totalAmountCents,
-                'total_price_cents' => $this->totalAmountCents,
-            ]);
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'description' => ($this->selectedVariant ? $this->selectedVariant->name : 'Cloud VPS Node')." ({$this->billingType} term)",
+                    'quantity' => 1,
+                    'unit_price_cents' => $this->totalAmountCents,
+                    'total_price_cents' => $this->totalAmountCents,
+                ]);
+            }
 
             // 4. Store Payment Proof
             $tempPath = $this->proofFile->getRealPath();
             $sha256 = hash_file('sha256', $tempPath);
             $mimeType = $this->proofFile->getMimeType();
-            $storedName = 'proof_' . Str::random(24) . '.' . $this->proofFile->getClientOriginalExtension();
+            $storedName = 'proof_'.Str::random(24).'.'.$this->proofFile->getClientOriginalExtension();
             $storagePath = "payment_proofs/{$storedName}";
 
             // Pure-pixel re-encoding for raster images to scrub polyglots
@@ -197,20 +236,21 @@ class Checkout extends Component
             PaymentProof::create([
                 'uuid' => (string) Str::uuid(),
                 'invoice_id' => $invoice->id,
-                'team_id' => $team->id,
                 'user_id' => $user->id,
+                'payment_method' => 'bank_transfer',
+                'transaction_reference' => $this->bankReference ?: null,
                 'file_path' => $storagePath,
-                'sha256_hash' => $sha256,
-                'original_filename' => $this->proofFile->getClientOriginalName(),
-                'mime_type' => $mimeType,
+                'file_mime' => $mimeType,
                 'file_size_bytes' => $this->proofFile->getSize(),
-                'status' => 'pending',
-                'bank_reference' => $this->bankReference,
-                'depositor_name' => $this->depositorName,
+                'sha256_hash' => $sha256,
+                'status' => 'pending_review',
+                'admin_notes' => $this->depositorName ? "Depositor: {$this->depositorName}".($this->notes ? " | Notes: {$this->notes}" : '') : ($this->notes ? "Notes: {$this->notes}" : null),
             ]);
 
             try {
-                $user->notify(new \App\Notifications\Commerce\OrderPlacedNotification($order, $invoice));
+                if ($order) {
+                    $user->notify(new OrderPlacedNotification($order, $invoice));
+                }
             } catch (\Throwable $e) {
                 logger()->warning("Could not send OrderPlacedNotification: {$e->getMessage()}");
             }
@@ -226,4 +266,3 @@ class Checkout extends Component
         return view('livewire.portal.checkout');
     }
 }
-

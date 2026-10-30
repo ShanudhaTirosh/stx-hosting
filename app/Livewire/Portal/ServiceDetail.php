@@ -10,14 +10,21 @@ use Livewire\Component;
 class ServiceDetail extends Component
 {
     public string $uuid;
+
     public ?string $revealedPassword = null;
+
     public string $accountPassword = '';
+
     public bool $showPasswordModal = false;
+
     public string $ptrRecord = '';
 
     public function mount(string $uuid): void
     {
         $this->uuid = $uuid;
+        $team = currentTeam();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
     }
 
     public function openPasswordModal(): void
@@ -35,13 +42,13 @@ class ServiceDetail extends Component
         $user = auth()->user();
         if (! Hash::check($this->accountPassword, $user->password)) {
             $this->addError('accountPassword', 'Incorrect account password.');
+
             return;
         }
 
         $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)
-            ->where('team_id', $team->id)
-            ->firstOrFail();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
 
         $rootCred = $service->credentials()
             ->where('credential_type', 'root_password')
@@ -50,6 +57,7 @@ class ServiceDetail extends Component
         if (! $rootCred) {
             $this->dispatch('error', 'No stored root password found for this instance.');
             $this->showPasswordModal = false;
+
             return;
         }
 
@@ -78,9 +86,8 @@ class ServiceDetail extends Component
         ]);
 
         $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)
-            ->where('team_id', $team->id)
-            ->firstOrFail();
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
 
         CommerceAuditLog::create([
             'user_id' => auth()->id(),
@@ -103,12 +110,12 @@ class ServiceDetail extends Component
         $team = currentTeam();
         $service = ServiceInstance::with(['productVariant.product', 'credentials', 'order'])
             ->where('uuid', $this->uuid)
-            ->where('team_id', $team->id)
             ->firstOrFail();
+
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
 
         return view('livewire.portal.service-detail', [
             'service' => $service,
         ]);
     }
 }
-

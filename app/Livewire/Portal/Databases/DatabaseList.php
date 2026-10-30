@@ -12,12 +12,17 @@ use Livewire\Component;
 class DatabaseList extends Component
 {
     public bool $showCreateModal = false;
+
     public string $dbName = '';
+
     public string $engine = 'postgresql';
+
     public ?int $selectedVariantId = null;
 
     public ?int $revealingServiceId = null;
+
     public string $accountPassword = '';
+
     public ?string $revealedDbPassword = null;
 
     public function openCreateModal(): void
@@ -69,10 +74,14 @@ class DatabaseList extends Component
         $user = auth()->user();
         if (! Hash::check($this->accountPassword, $user->password)) {
             $this->addError('accountPassword', 'Incorrect account password.');
+
             return;
         }
 
+        $team = currentTeam();
         $service = ServiceInstance::findOrFail($this->revealingServiceId);
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to database instance.');
+
         $cred = $service->credentials()->where('credential_type', 'db_password')->first();
 
         if ($cred) {
@@ -85,7 +94,13 @@ class DatabaseList extends Component
 
     public function triggerBackup(int $serviceId): void
     {
+        $team = currentTeam();
         $service = ServiceInstance::findOrFail($serviceId);
+        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to database instance.');
+
+        $config = $service->network_config ?? [];
+        $config['last_backup_at'] = now()->toIso8601String();
+        $service->update(['network_config' => $config]);
 
         CommerceAuditLog::create([
             'user_id' => auth()->id(),
@@ -93,6 +108,7 @@ class DatabaseList extends Component
             'action' => 'database.backup_triggered',
             'target_type' => ServiceInstance::class,
             'target_id' => $service->id,
+            'payload' => ['backup_timestamp' => now()->toIso8601String()],
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
             'created_at' => now(),
@@ -124,4 +140,3 @@ class DatabaseList extends Component
         ]);
     }
 }
-

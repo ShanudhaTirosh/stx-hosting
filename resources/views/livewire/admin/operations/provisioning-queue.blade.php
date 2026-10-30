@@ -236,10 +236,16 @@
                 <div class="pt-4 border-t border-neutral-800 flex justify-end">
                     <button 
                         wire:click="fulfill({{ $selectedOrder->id }})"
-                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded shadow transition-all flex items-center gap-2 text-xs"
+                        wire:loading.attr="disabled"
+                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded shadow transition-all flex items-center gap-2 text-xs"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Deliver VPS & Credentials to Customer
+                        <span wire:loading.remove wire:target="fulfill" class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Deliver VPS & Credentials to Customer
+                        </span>
+                        <span wire:loading wire:target="fulfill">
+                            Provisioning & Delivering...
+                        </span>
                     </button>
                 </div>
             </div>

@@ -116,6 +116,11 @@ class Index extends Component
         return null;
     }
 
+    public function help(): void
+    {
+        $this->dispatch('open-help-modal');
+    }
+
     public function render()
     {
         return view('livewire.subscription.index');

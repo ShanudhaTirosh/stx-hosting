@@ -71,7 +71,7 @@
 
     <!-- Deploy Modal -->
     @if ($showDeployModal)
-        <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" @keydown.escape.window="$wire.set('showDeployModal', false)" @click.self="$wire.set('showDeployModal', false)">
             <div class="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl overflow-y-auto max-h-[90vh]">
                 <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
                     <div>

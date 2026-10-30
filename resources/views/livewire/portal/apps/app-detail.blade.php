@@ -9,11 +9,21 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button wire:click="restart" class="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs rounded transition-all">
-                Restart
+            <button 
+                wire:click="restart" 
+                wire:loading.attr="disabled"
+                class="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 text-white font-bold text-xs rounded transition-all"
+            >
+                <span wire:loading.remove wire:target="restart">Restart</span>
+                <span wire:loading wire:target="restart">Restarting...</span>
             </button>
-            <button wire:click="redeploy" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded transition-all">
-                Redeploy
+            <button 
+                wire:click="redeploy" 
+                wire:loading.attr="disabled"
+                class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold text-xs rounded transition-all"
+            >
+                <span wire:loading.remove wire:target="redeploy">Redeploy</span>
+                <span wire:loading wire:target="redeploy">Redeploying...</span>
             </button>
         </div>
     </div>

@@ -4,10 +4,10 @@ namespace App\Livewire\Admin\Operations;
 
 use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\Order;
-use App\Models\Commerce\OrderItem;
 use App\Models\Commerce\ServiceCredential;
 use App\Models\Commerce\ServiceInstance;
 use App\Models\Commerce\VpsInventory;
+use App\Notifications\Commerce\ServiceDeliveredNotification;
 use App\Services\Commerce\StatusTelemetryBridge;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -18,13 +18,18 @@ class ProvisioningQueue extends Component
     use WithPagination;
 
     public ?int $selectedOrderId = null;
+
     public string $fulfillmentMode = 'direct'; // 'direct' or 'pool'
 
     // Direct manual entry fields
     public string $manual_ipv4 = '';
+
     public string $manual_ipv6 = '';
+
     public int $manual_ssh_port = 22;
+
     public string $manual_provider = 'Custom Provider';
+
     public string $manual_datacenter = 'Germany';
 
     // Pool allocation fields
@@ -32,7 +37,29 @@ class ProvisioningQueue extends Component
 
     // Common fields
     public string $temporaryRootPassword = '';
+
     public string $osImage = 'debian-12';
+
+    public function mount(): void
+    {
+        $user = auth()->user();
+        abort_unless(
+            $user && (
+                $user->isInstanceAdmin() ||
+                $user->isAdmin() ||
+                (($teamId = currentTeam()?->id) && $user->isAdminOfTeam($teamId)) ||
+                $user->teams()->wherePivotIn('role', ['admin', 'owner'])->exists()
+            ),
+            403
+        );
+    }
+
+    public function updatedSelectedNodeId($value): void
+    {
+        if ($value) {
+            $this->fulfillmentMode = 'pool';
+        }
+    }
 
     public function selectOrder(int $orderId): void
     {
@@ -50,6 +77,9 @@ class ProvisioningQueue extends Component
 
     public function fulfill(int $orderId): void
     {
+        if ($this->selectedNodeId) {
+            $this->fulfillmentMode = 'pool';
+        }
         if ($this->fulfillmentMode === 'pool') {
             $this->validate([
                 'selectedNodeId' => 'required|exists:vps_inventory,id',
@@ -126,12 +156,17 @@ class ProvisioningQueue extends Component
                     'ip_address' => $allocatedIpv4,
                     'ipv6_address' => $allocatedIpv6,
                     'os_image' => $this->osImage,
+                    'network_config' => [
+                        'provider' => $this->fulfillmentMode === 'pool' ? ($node->provider ?? 'Hetzner') : $this->manual_provider,
+                        'datacenter' => $this->fulfillmentMode === 'pool' ? ($node->datacenter ?? 'fsn1') : $this->manual_datacenter,
+                        'ssh_port' => $sshPort,
+                    ],
                     'activated_at' => now(),
                     'renews_at' => now()->addDays(30),
                 ]);
 
                 // 2. Encrypt and store root credentials
-                $cred = new ServiceCredential();
+                $cred = new ServiceCredential;
                 $cred->service_instance_id = $service->id;
                 $cred->credential_type = 'root_password';
                 $cred->username = 'root';
@@ -148,7 +183,7 @@ class ProvisioningQueue extends Component
                 // 4b. Notify customer of active VPS delivery
                 if ($order->user) {
                     try {
-                        $order->user->notify(new \App\Notifications\Commerce\ServiceDeliveredNotification($service));
+                        $order->user->notify(new ServiceDeliveredNotification($service));
                     } catch (\Throwable $e) {
                         logger()->warning("Could not send ServiceDeliveredNotification: {$e->getMessage()}");
                     }
@@ -177,7 +212,7 @@ class ProvisioningQueue extends Component
             $this->dispatch('success', 'VPS details delivered to customer! Status probe registered.');
             $this->selectedOrderId = null;
         } catch (\Throwable $e) {
-            $this->dispatch('error', 'Fulfillment failed: ' . $e->getMessage());
+            $this->dispatch('error', 'Fulfillment failed: '.$e->getMessage());
         }
     }
 

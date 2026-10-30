@@ -52,7 +52,10 @@ test('customer can upload valid payment receipt transitioning invoice to payment
         'due_at' => now()->addDays(7),
     ]);
 
-    $fakeImage = UploadedFile::fake()->image('receipt.png', 400, 300);
+    $fakeImage = UploadedFile::fake()->createWithContent(
+        'receipt.png',
+        base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')
+    );
 
     $response = $this->postJson("/api/v1/invoices/{$invoice->uuid}/proof", [
         'proof_file' => $fakeImage,
@@ -79,6 +82,7 @@ test('customer can upload valid payment receipt transitioning invoice to payment
 test('administrator can approve payment proof in review queue marking invoice as paid', function () {
     $admin = User::factory()->create();
     $team = Team::factory()->create();
+    $team->members()->attach($admin->id, ['role' => 'admin']);
     $customer = User::factory()->create();
 
     $order = Order::create([
@@ -132,4 +136,3 @@ test('administrator can approve payment proof in review queue marking invoice as
     expect($proof->reviewed_by_user_id)->toBe($admin->id);
     expect($invoice->transactions()->count())->toBe(1);
 });
-

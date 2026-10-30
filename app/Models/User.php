@@ -276,7 +276,7 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
             'token' => hash('sha256', $plainTextToken),
             'abilities' => $abilities,
             'expires_at' => $expiresAt,
-            'team_id' => $teamId ?? session('currentTeam')->id,
+            'team_id' => $teamId ?? session('currentTeam')?->id ?? $this->currentTeam()?->id ?? $this->personalTeam()?->id ?? $this->teams()->first()?->id,
         ]);
 
         return new NewAccessToken($token, $token->getKey().'|'.$plainTextToken);

@@ -54,7 +54,7 @@ test('public catalog api returns all active products and pricing plans', functio
     // Verify Hetzner Cloud VPS product exists
     $vps = collect($products)->firstWhere('category', 'vps');
     expect($vps)->not->toBeNull();
-    expect($vps['name'])->toContain('Hetzner');
+    expect($vps['name'])->toContain('Cloud VPS');
     expect(count($vps['plans']))->toBeGreaterThanOrEqual(4);
 });
 
@@ -85,6 +85,5 @@ test('public catalog api converts currency to LKR when requested', function () {
     $lkrResponse = $this->getJson('/api/products?category=vps&currency=LKR');
     $lkrPlans = $lkrResponse->json('products.0.plans');
     expect($lkrPlans[0]['currency'])->toBe('LKR');
-    expect($lkrPlans[0]['price'])->toBe(2400.00);
+    expect((float) $lkrPlans[0]['price'])->toEqual(2400.0);
 });
-

@@ -75,9 +75,11 @@
                         @if ($selectedProof->status === 'pending_review')
                             <button 
                                 wire:click="approve({{ $selectedProof->id }})"
-                                class="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded shadow transition-all"
+                                wire:loading.attr="disabled"
+                                class="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded shadow transition-all"
                             >
-                                Approve Payment
+                                <span wire:loading.remove wire:target="approve">Approve Payment</span>
+                                <span wire:loading wire:target="approve">Approving...</span>
                             </button>
                         @endif
                     </div>
@@ -156,9 +158,11 @@
                             />
                             <button 
                                 wire:click="reject({{ $selectedProof->id }})" 
-                                class="px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded shadow transition-all"
+                                wire:loading.attr="disabled"
+                                class="px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 rounded shadow transition-all"
                             >
-                                Reject Slip
+                                <span wire:loading.remove wire:target="reject">Reject Slip</span>
+                                <span wire:loading wire:target="reject">Rejecting...</span>
                             </button>
                         </div>
                         @error('rejectionReason')

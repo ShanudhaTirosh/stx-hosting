@@ -85,7 +85,7 @@
 
     <!-- Create Database Modal -->
     @if ($showCreateModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" @keydown.escape.window="$wire.set('showCreateModal', false)" @click.self="$wire.set('showCreateModal', false)">
             <div class="bg-neutral-900 border border-neutral-700 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
                 <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
                     <h3 class="text-base font-bold text-white">Deploy Managed Database</h3>
@@ -120,7 +120,14 @@
 
                 <div class="flex justify-end gap-2 pt-3 border-t border-neutral-800">
                     <button wire:click="$set('showCreateModal', false)" class="px-4 py-2 bg-neutral-800 text-neutral-300 rounded text-xs">Cancel</button>
-                    <button wire:click="createDatabase" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded text-xs">Deploy Database</button>
+                    <button 
+                        wire:click="createDatabase" 
+                        wire:loading.attr="disabled"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold rounded text-xs flex items-center gap-2"
+                    >
+                        <span wire:loading.remove wire:target="createDatabase">Deploy Database</span>
+                        <span wire:loading wire:target="createDatabase">Deploying...</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -128,7 +135,7 @@
 
     <!-- Password Modal -->
     @if ($revealingServiceId)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" @keydown.escape.window="$wire.set('revealingServiceId', null)" @click.self="$wire.set('revealingServiceId', null)">
             <div class="bg-neutral-900 border border-neutral-700 rounded-xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
                 <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
                     <h3 class="text-sm font-bold text-white uppercase tracking-wider">Reveal Database Password</h3>
@@ -159,7 +166,14 @@
 
                     <div class="flex justify-end gap-2 pt-2 border-t border-neutral-800">
                         <button wire:click="$set('revealingServiceId', null)" class="px-3 py-1.5 bg-neutral-800 text-neutral-300 rounded text-xs">Cancel</button>
-                        <button wire:click="revealPassword" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded text-xs">Decrypt</button>
+                        <button 
+                            wire:click="revealPassword" 
+                            wire:loading.attr="disabled"
+                            class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold rounded text-xs"
+                        >
+                            <span wire:loading.remove wire:target="revealPassword">Decrypt</span>
+                            <span wire:loading wire:target="revealPassword">Decrypting...</span>
+                        </button>
                     </div>
                 @endif
             </div>

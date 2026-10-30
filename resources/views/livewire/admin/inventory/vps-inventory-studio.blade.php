@@ -112,7 +112,7 @@
 
     <!-- Registration Modal -->
     @if ($showCreateModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4" @keydown.escape.window="$wire.set('showCreateModal', false)" @click.self="$wire.set('showCreateModal', false)">
             <div class="bg-neutral-900 border border-neutral-700 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
                 <div class="flex items-center justify-between border-b border-neutral-800 pb-3">
                     <h3 class="text-lg font-bold text-white">Register VPS Inventory Node</h3>
@@ -173,7 +173,14 @@
 
                 <div class="flex justify-end gap-2 pt-2 border-t border-neutral-800">
                     <button wire:click="$set('showCreateModal', false)" class="px-4 py-2 bg-neutral-800 text-neutral-300 rounded text-xs hover:bg-neutral-700">Cancel</button>
-                    <button wire:click="saveNode" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded text-xs">Save & Make Available</button>
+                    <button 
+                        wire:click="saveNode" 
+                        wire:loading.attr="disabled"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold rounded text-xs flex items-center gap-2"
+                    >
+                        <span wire:loading.remove wire:target="saveNode">Save & Make Available</span>
+                        <span wire:loading wire:target="saveNode">Saving Node...</span>
+                    </button>
                 </div>
             </div>
         </div>

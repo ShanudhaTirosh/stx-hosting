@@ -33,7 +33,7 @@ class DecommissionVpsAction
                 if ($inventory) {
                     $inventory->update([
                         'status' => 'available',
-                        'admin_notes' => "Decommissioned on " . now()->toIso8601String() . " [Reason: {$reason}]",
+                        'admin_notes' => 'Decommissioned on '.now()->toIso8601String()." [Reason: {$reason}]",
                     ]);
                 }
             }
@@ -48,8 +48,8 @@ class DecommissionVpsAction
                 'user_id' => auth()->id(),
                 'team_id' => $service->team_id,
                 'action' => 'service.decommission',
-                'resource_type' => 'service_instance',
-                'resource_id' => $service->id,
+                'target_type' => 'service_instance',
+                'target_id' => $service->id,
                 'payload' => [
                     'ip_address' => $service->ip_address,
                     'reason' => $reason,
@@ -59,4 +59,3 @@ class DecommissionVpsAction
         });
     }
 }
-

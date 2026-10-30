@@ -45,6 +45,7 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
             $table->string('ipv6_address', 45)->nullable();
             $table->string('os_image', 64)->default('debian-12');
+            $table->json('network_config')->nullable();
             $table->timestamp('activated_at')->nullable();
             $table->timestamp('renews_at')->nullable();
             $table->timestamp('suspended_at')->nullable();
@@ -98,4 +99,3 @@ return new class extends Migration
         Schema::dropIfExists('vps_inventory');
     }
 };
-
