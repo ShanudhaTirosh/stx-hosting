@@ -89,8 +89,8 @@ Every feature identified during the survey phase is mapped to an assigned milest
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Test Suite Baseline & Core Bug Resolutions | Fix existing test failures, audit/repair broken UI routes, buttons, forms, and validation states (R1, R7) | none | PLANNED |
-| M2 | Three-Tier RBAC Architecture & Tenant Isolation | Implement Owner, Administrator, Client roles, policies, gates, middleware, and strict tenant isolation (R2, R6) | M1 | PLANNED |
+| M1 | Test Suite Baseline & Core Bug Resolutions | Fix existing test failures, audit/repair broken UI routes, buttons, forms, and validation states (R1, R7) | none | DONE |
+| M2 | Three-Tier RBAC Architecture & Tenant Isolation | Implement Owner, Administrator, Client roles, policies, gates, middleware, and strict tenant isolation (R2, R6) | M1 | IN_PROGRESS |
 | M3 | Centralized Client Restrictions & Server-Side Limits | Global defaults, custom client/plan limits, server-side blocking on creation/deployment, Owner/Admin bypass (R3, R6) | M2 | PLANNED |
 | M4 | Purchase-Based Hosting & Entitlements Management | Products, plans, orders, invoices, entitlements lifecycle, quota unlocking, and admin controls (R4, R6) | M3 | PLANNED |
 | M5 | Deployment Template & Catalog Access Control | Template permissions, plan bindings, category restrictions, client catalog filtering, deployment gating (R5, R6) | M4 | PLANNED |
