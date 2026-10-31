@@ -73,9 +73,9 @@ return [
 
         'apps' => [
             [
-                'key' => env('PUSHER_APP_KEY', 'coolify'),
-                'secret' => env('PUSHER_APP_SECRET', 'coolify'),
-                'app_id' => env('PUSHER_APP_ID', 'coolify'),
+                'key' => env('PUSHER_APP_KEY', 'stx'),
+                'secret' => env('PUSHER_APP_SECRET', 'stx'),
+                'app_id' => env('PUSHER_APP_ID', 'stx'),
                 'allowed_origins' => ['*'],
                 'ping_interval' => 60,
                 'activity_timeout' => 30,

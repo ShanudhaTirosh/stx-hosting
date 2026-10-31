@@ -266,7 +266,7 @@ class ServiceApplicationsController extends Controller
                         'is_force_https_enabled' => new OA\Property(property: 'is_force_https_enabled', type: 'boolean', nullable: true),
                         'is_permanent_redirect_enabled' => new OA\Property(property: 'is_permanent_redirect_enabled', type: 'boolean', nullable: true, description: 'Use permanent redirects (301/308) instead of temporary (302/307) for the HTTP to HTTPS and www redirects. Defaults to false.'),
                         'redirect' => new OA\Property(property: 'redirect', type: 'string', enum: ['both', 'www', 'non-www'], description: 'How to handle www and non-www domains. "www" redirects non-www to www, "non-www" redirects www to non-www. Both need a www and a non-www domain in url.'),
-                        'max_restart_count' => new OA\Property(property: 'max_restart_count', type: 'integer', minimum: 0, nullable: true, description: 'Maximum Docker restart count before Coolify stops the container. Set to 0 to disable the limit.'),
+                        'max_restart_count' => new OA\Property(property: 'max_restart_count', type: 'integer', minimum: 0, nullable: true, description: 'Maximum Docker restart count before STX Hosting stops the container. Set to 0 to disable the limit.'),
                     ]
                 )
             )

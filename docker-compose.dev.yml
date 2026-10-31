@@ -27,9 +27,9 @@ services:
       PUSHER_PORT: "${PUSHER_PORT:-6001}"
       PUSHER_BACKEND_PORT: "${PUSHER_BACKEND_PORT:-6001}"
       PUSHER_SCHEME: "${PUSHER_SCHEME:-http}"
-      PUSHER_APP_ID: "${PUSHER_APP_ID:-coolify}"
-      PUSHER_APP_KEY: "${PUSHER_APP_KEY:-coolify}"
-      PUSHER_APP_SECRET: "${PUSHER_APP_SECRET:-coolify}"
+      PUSHER_APP_ID: "${PUSHER_APP_ID:-stx}"
+      PUSHER_APP_KEY: "${PUSHER_APP_KEY:-stx}"
+      PUSHER_APP_SECRET: "${PUSHER_APP_SECRET:-stx}"
     healthcheck:
       test: curl -sf http://127.0.0.1:8080/api/health || exit 1
       interval: 15s
@@ -39,8 +39,8 @@ services:
     volumes:
       - .:/var/www/html/:cached
       - dev_backups_data:/var/www/html/storage/app/backups
-      - ./docker/coolify-terminal/terminal-server.js:/terminal/terminal-server.js
-      - ./docker/coolify-terminal/terminal-utils.js:/terminal/terminal-utils.js
+      - ./docker/stx-terminal/terminal-server.js:/terminal/terminal-server.js
+      - ./docker/stx-terminal/terminal-utils.js:/terminal/terminal-utils.js
       - ./docker/development/etc/s6-overlay/scripts/init-setup.sh:/etc/s6-overlay/scripts/init-setup.sh:ro
     networks:
       - coolify
@@ -51,9 +51,9 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_USER: "${DB_USERNAME:-coolify}"
+      POSTGRES_USER: "${DB_USERNAME:-stx}"
       POSTGRES_PASSWORD: "${DB_PASSWORD:-password}"
-      POSTGRES_DB: "${DB_DATABASE:-coolify}"
+      POSTGRES_DB: "${DB_DATABASE:-stx}"
       POSTGRES_HOST_AUTH_METHOD: "trust"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
@@ -78,7 +78,7 @@ services:
   vite:
     image: node:24-alpine
     pull_policy: always
-    container_name: coolify-vite
+    container_name: stx-vite
     working_dir: /var/www/html
     environment:
       # Set VITE_HOST in .env to a browser-reachable IP/hostname for LAN/Tailscale access
@@ -93,27 +93,27 @@ services:
     networks:
       - coolify
   testing-host:
-    image: coolify-testing-host:dev
+    image: stx-testing-host:dev
     pull_policy: never
     build:
       context: .
       dockerfile: ./docker/testing-host/Dockerfile
     init: true
-    container_name: coolify-testing-host
+    container_name: stx-testing-host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - dev_coolify_data:/data/coolify
-      - dev_coolify_data:/var/lib/docker/volumes/coolify_dev_coolify_data/_data
-      - dev_backups_data:/data/coolify/backups
-      - dev_postgres_data:/data/coolify/_volumes/database
-      - dev_redis_data:/data/coolify/_volumes/redis
-      - dev_minio_data:/data/coolify/_volumes/minio
+      - dev_stx_data:/data/stx
+      - dev_stx_data:/var/lib/docker/volumes/stx_dev_stx_data/_data
+      - dev_backups_data:/data/stx/backups
+      - dev_postgres_data:/data/stx/_volumes/database
+      - dev_redis_data:/data/stx/_volumes/redis
+      - dev_minio_data:/data/stx/_volumes/minio
     networks:
       - coolify
   mailpit:
     image: axllent/mailpit:latest
     pull_policy: always
-    container_name: coolify-mail
+    container_name: stx-mail
     ports:
       - "${FORWARD_MAILPIT_PORT:-1025}:1025"
       - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
@@ -122,7 +122,7 @@ services:
   minio:
     image: coollabsio/maxio:latest
     pull_policy: always
-    container_name: coolify-minio
+    container_name: stx-minio
     ports:
       - "${FORWARD_MINIO_PORT:-9000}:9000"
       - "${FORWARD_MINIO_PORT_CONSOLE:-9001}:9001"
@@ -136,14 +136,14 @@ services:
   minio-init:
     image: ghcr.io/coollabsio/mx:0.1.0
     pull_policy: always
-    container_name: coolify-minio-init
+    container_name: stx-minio-init
     restart: no
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c "
       echo 'Waiting for MinIO to be ready...';
-      until mc alias set local http://coolify-minio:9000 minioadmin minioadmin 2>/dev/null; do
+      until mc alias set local http://stx-minio:9000 minioadmin minioadmin 2>/dev/null; do
         echo 'MinIO not ready yet, waiting...';
         sleep 2;
       done;
@@ -158,7 +158,7 @@ volumes:
   dev_backups_data:
   dev_postgres_data:
   dev_redis_data:
-  dev_coolify_data:
+  dev_stx_data:
   dev_minio_data:
 
 networks:

@@ -52,7 +52,7 @@ However, because STX Hosting was architected as an internal DevOps control plane
 ## 2. STX Hosting REST API Surface & Authentication Architecture
 
 ### 2.1 API Endpoint Structure & Protocol
-- **Base URL**: `https://<coolify-instance>/api/v1`
+- **Base URL**: `https://<stx-instance>/api/v1`
 - **Route Definitions**: `routes/api.php:1-120`
 - **Controller Directory**: `app/Http/Controllers/Api/`
 - **Payload Requirements**: All write operations (`POST`, `PATCH`, `PUT`) require `Content-Type: application/json` and non-empty valid JSON.
@@ -110,7 +110,7 @@ if ($teamId !== null && ! $request->user()->isAdminOfTeam((int) $teamId)) {
     1. Validates SSH connectivity and verifies supported Linux distribution (Ubuntu, Debian, CentOS, RHEL, Fedora, Alpine, Rocky, AlmaLinux, Arch).
     2. Installs required system packages (`curl`, `wget`, `git`, `jq`).
     3. Detects or installs Docker Engine and Docker Compose.
-    4. Creates the `coolify` Docker network.
+    4. Creates the `stx` Docker network.
     5. Starts the selected reverse proxy (`Traefik` or `Caddy`).
     6. Starts the `Sentinel` host telemetry agent.
     7. Dispatches `ServerValidated` and `ServerReachabilityChanged` events.
@@ -297,8 +297,8 @@ To guarantee that master STX Hosting API keys, cloud provider tokens, SSH privat
                                           |
                                           v
 +-----------------------------------------------------------------------------------+
-|                     TIER 3: COOLIFY CORE ORCHESTRATION ENGINE                     |
-|  - Isolated on Internal Network (e.g. `http://coolify:8000` or loopback)          |
+|                     TIER 3: STX HOSTING CORE ORCHESTRATION ENGINE                     |
+|  - Isolated on Internal Network (e.g. `http://stx:8000` or loopback)          |
 |  - Executes Docker container lifecycles, Traefik SSL routing, and backups         |
 |  - Multiplexes SSH connections to managed host nodes and VPS instances            |
 |  - Localhost Server (ID 0) and Internal DB (ID 0) Strictly Protected              |
@@ -360,7 +360,7 @@ To guarantee that master STX Hosting API keys, cloud provider tokens, SSH privat
 |---|---|---|---|---|
 | 1 | Server Registration | Duplicate IP address provided | STX Hosting returns HTTP 400: `"A server with this IP/Domain is already in use."` | Gateway checks server inventory table before dispatching registration. |
 | 2 | Server Deletion | Server still contains running resources | STX Hosting returns HTTP 400: `"Server has resources. Use ?force=true to delete..."` | Gateway must cascade-delete all child resources before server decommissioning. |
-| 3 | Localhost Protection | Attempting to delete Server ID 0 (`is_coolify_host`) | STX Hosting returns HTTP 400: `"Local server cannot be deleted."` | Sentinel Server ID 0 is strictly excluded from any customer allocation logic. |
+| 3 | Localhost Protection | Attempting to delete Server ID 0 (`is_stx_host`) | STX Hosting returns HTTP 400: `"Local server cannot be deleted."` | Sentinel Server ID 0 is strictly excluded from any customer allocation logic. |
 | 4 | Project Deletion | Project contains environments with active resources | STX Hosting returns HTTP 400: `"Project has resources, so it cannot be deleted."` | Deprovisioning workflow verifies child resources are stopped and removed. |
 | 5 | Domain Collisions | Domain assigned to another application | STX Hosting returns HTTP 409 Conflict with conflict metadata. | Catch 409 in Gateway; return clear error to customer asking for verification. |
 | 6 | Transferred Server | Server marked as transferred away | STX Hosting returns HTTP 422: `"This server was transferred to another STX Hosting instance..."` | Prevent lifecycle actions on transferred servers (`Server::isTransferredAway()`). |

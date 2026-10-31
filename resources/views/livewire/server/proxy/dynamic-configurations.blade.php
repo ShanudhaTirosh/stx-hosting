@@ -34,9 +34,9 @@
                             @php
                                 $displayName = str_replace('|', '.', $fileName);
                                 $isManagedConfiguration = in_array($displayName, [
-                                    'coolify.yaml',
+                                    'stx.yaml',
                                     'Caddyfile',
-                                    'coolify.caddy',
+                                    'stx.caddy',
                                     'default_redirect_503.yaml',
                                     'default_redirect_503.caddy',
                                 ]);

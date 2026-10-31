@@ -1,7 +1,7 @@
 # Deliverable D: Database Models, REST API Specification & Security Architecture
 **Document Reference**: `docs/hosting-platform/04-database-api-security.md`  
 **Requirement Mapping**: R3 (Hosting Products Specification and Security Architecture)  
-**System Ecosystem**: ShanuTechX Commercial Hosting Platform (`web`, `status`, `webmail`, `coolify`)  
+**System Ecosystem**: ShanuTechX Commercial Hosting Platform (`web`, `status`, `webmail`, `stx`)  
 **Status**: Production Architecture Baseline  
 **Author**: ShanuTechX Platform Architecture & Systems Engineering  
 **Revision**: 1.0.0 (October 2026)  
@@ -12,7 +12,7 @@
 
 This specification establishes the authoritative data models, application programming interfaces, and security isolation architecture powering the ShanuTechX Commercial Hosting Platform. 
 
-To bridge the public marketing storefront (`web`), the real-time telemetry status platform (`status`), and the STX Hosting container orchestration engine (`coolify`), the system implements:
+To bridge the public marketing storefront (`web`), the real-time telemetry status platform (`status`), and the STX Hosting container orchestration engine (`stx`), the system implements:
 1. **A production-grade PostgreSQL 16 relational database schema** comprising 15 normalized tables, strict referential constraints, granular indexes, and auditable ledger mechanics.
 2. **A comprehensive OpenAPI 3.0 REST API contract** enabling programmatic customer interactions, storefront dynamic plan queries, and administrative queue operations.
 3. **A zero-trust infrastructure security architecture** enforcing hardware-level tenant boundary isolation, cryptographic credential vaulting (AES-256-GCM), tamper-proof payment proof handling, and protection against privilege escalation.
@@ -436,8 +436,8 @@ CREATE TABLE service_instances (
     terminated_at TIMESTAMP WITH TIME ZONE,
     vps_inventory_id BIGINT REFERENCES vps_inventory(id) ON DELETE SET NULL,
     hetzner_server_id BIGINT,                     -- Used for Phase 2 automated cloud VMs
-    coolify_project_uuid VARCHAR(64),             -- Used for App Hosting PaaS
-    coolify_app_uuid VARCHAR(64),                 -- Used for App Hosting PaaS
+    stx_project_uuid VARCHAR(64),             -- Used for App Hosting PaaS
+    stx_app_uuid VARCHAR(64),                 -- Used for App Hosting PaaS
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -446,7 +446,7 @@ CREATE TABLE service_instances (
 CREATE INDEX idx_services_team_status ON service_instances(team_id, status);
 CREATE INDEX idx_services_user_status ON service_instances(user_id, status);
 CREATE INDEX idx_services_due_date ON service_instances(status, next_due_date);
-CREATE INDEX idx_services_coolify_app ON service_instances(coolify_app_uuid);
+CREATE INDEX idx_services_stx_app ON service_instances(stx_app_uuid);
 
 -- -----------------------------------------------------------------------------
 -- 14. Table: service_credentials

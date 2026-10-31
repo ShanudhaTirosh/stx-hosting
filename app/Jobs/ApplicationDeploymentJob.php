@@ -54,7 +54,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
 
     public const BUILD_TIME_ENV_PATH = '/artifacts/build-time.env';
 
-    private const BUILD_FINGERPRINT_LABEL = 'coolify.build-fingerprint';
+    private const BUILD_FINGERPRINT_LABEL = 'stx.build-fingerprint';
 
     public const BUILD_TIME_SHELL_ENV_PATH = '/artifacts/build-time-shell.env';
 
@@ -66,9 +66,9 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
 
     private const RAILPACK_REPOSITORY_CONFIG_PATH = 'railpack.json';
 
-    private const RAILPACK_GENERATED_CONFIG_PATH = '.coolify/railpack.generated.json';
+    private const RAILPACK_GENERATED_CONFIG_PATH = '.stx/railpack.generated.json';
 
-    private const CONTAINER_REMOVE_TIMEOUT_MARKER = '__COOLIFY_CONTAINER_REMOVE_TIMEOUT__';
+    private const CONTAINER_REMOVE_TIMEOUT_MARKER = '__STX_CONTAINER_REMOVE_TIMEOUT__';
 
     private const DOCKER_CLIENT_ENV_KEYS = [
         'BUILDKIT_HOST',
@@ -336,7 +336,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
         $ips = collect([]);
         foreach ($containers as $container) {
             $containerName = data_get($container, 'Name');
-            if ($containerName === 'coolify-proxy') {
+            if ($containerName === 'stx-proxy' || $containerName === 'coolify-proxy') {
                 continue;
             }
             if (isGeneratedContainerName($containerName)) {
@@ -3202,7 +3202,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
 
         $env_flags = $this->generate_docker_env_flags_for_secrets();
         $buildxMetadataVolume = isDev() && $this->server->isLocalhost()
-            ? '-v coolify-buildx:/root/.docker/buildx'
+            ? '-v stx-buildx:/root/.docker/buildx'
             : "-v {$this->serverUserHomeDir}/.docker/buildx:/root/.docker/buildx";
         if ($this->use_build_server) {
             if ($this->dockerConfigFileExists === 'NOK') {
@@ -3355,7 +3355,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
                 $url = $domains->map(fn (string $domain) => Url::fromString($domain)->withPort(null)->__toString())->implode(',');
                 $fqdn = $this->hostsFromFqdn($fqdn);
                 if ((int) $this->application->compose_parsing_version >= 3) {
-                    $this->coolify_variables .= 'COOLIFY_URL='.escapeShellValue($url).' ';
+                    $this->coolify_variables .= 'STX_URL='.escapeShellValue($url).' STX_FQDN='.escapeShellValue($fqdn).' COOLIFY_URL='.escapeShellValue($url).' ';
                     $this->coolify_variables .= 'COOLIFY_FQDN='.escapeShellValue($fqdn).' ';
                 } else {
                     $this->coolify_variables .= 'COOLIFY_URL='.escapeShellValue($fqdn).' ';
@@ -3364,9 +3364,9 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
             }
         }
         if (isset($this->application->git_branch)) {
-            $this->coolify_variables .= 'COOLIFY_BRANCH='.escapeShellValue($this->application->git_branch).' ';
+            $this->coolify_variables .= 'STX_BRANCH='.escapeShellValue($this->application->git_branch).' COOLIFY_BRANCH='.escapeShellValue($this->application->git_branch).' ';
         }
-        $this->coolify_variables .= 'COOLIFY_RESOURCE_UUID='.escapeShellValue($this->application->uuid).' ';
+        $this->coolify_variables .= 'STX_RESOURCE_UUID='.escapeShellValue($this->application->uuid).' COOLIFY_RESOURCE_UUID='.escapeShellValue($this->application->uuid).' ';
     }
 
     private function validDomainsFromFqdn(?string $fqdn): Collection
@@ -3448,7 +3448,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
         $private_key = data_get($this->application, 'private_key.private_key');
         if ($private_key) {
             $private_key = base64_encode($private_key);
-            $customSshKeyLocation = "/root/.ssh/id_rsa_coolify_{$this->deployment_uuid}";
+            $customSshKeyLocation = "/root/.ssh/id_rsa_stx_{$this->deployment_uuid}";
             $this->execute_remote_command(
                 [
                     executeInDocker($this->deployment_uuid, 'mkdir -p /root/.ssh'),
@@ -4249,6 +4249,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
         $publishDir = $publishDir ? "/{$publishDir}" : '';
         $dockerfile = base64_encode("FROM {$this->staticImage()}
 WORKDIR /usr/share/nginx/html/
+LABEL stx.deploymentId={$this->deployment_uuid}
 LABEL coolify.deploymentId={$this->deployment_uuid}
 COPY --from={$this->build_image_name} /app{$publishDir} .
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
@@ -4294,29 +4295,36 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             if ($this->deployedPreviewVariables()->where('key', 'COOLIFY_FQDN')->isEmpty()) {
                 if ((int) $this->application->compose_parsing_version >= 3) {
                     $coolify_envs->put('COOLIFY_URL', $this->preview->fqdn);
+                    $coolify_envs->put('STX_URL', $this->preview->fqdn);
                 } else {
                     $coolify_envs->put('COOLIFY_FQDN', $this->preview->fqdn);
+                    $coolify_envs->put('STX_FQDN', $this->preview->fqdn);
                 }
             }
             if ($this->deployedPreviewVariables()->where('key', 'COOLIFY_URL')->isEmpty()) {
                 $url = $this->hostsFromFqdn($this->preview->fqdn);
                 if ((int) $this->application->compose_parsing_version >= 3) {
                     $coolify_envs->put('COOLIFY_FQDN', $url);
+                    $coolify_envs->put('STX_FQDN', $url);
                 } else {
                     $coolify_envs->put('COOLIFY_URL', $url);
+                    $coolify_envs->put('STX_URL', $url);
                 }
             }
             if ($this->application->build_pack !== 'dockercompose' || $this->application->compose_parsing_version === '1' || $this->application->compose_parsing_version === '2') {
                 if ($this->deployedPreviewVariables()->where('key', 'COOLIFY_BRANCH')->isEmpty()) {
                     $coolify_envs->put('COOLIFY_BRANCH', $local_branch);
+                    $coolify_envs->put('STX_BRANCH', $local_branch);
                 }
                 if ($this->deployedPreviewVariables()->where('key', 'COOLIFY_RESOURCE_UUID')->isEmpty()) {
                     $coolify_envs->put('COOLIFY_RESOURCE_UUID', $this->application->uuid);
+                    $coolify_envs->put('STX_RESOURCE_UUID', $this->application->uuid);
                 }
                 // Only add COOLIFY_CONTAINER_NAME for runtime (not build-time) - it changes every deployment and breaks Docker cache
                 if (! $forBuildTime) {
                     if ($this->deployedPreviewVariables()->where('key', 'COOLIFY_CONTAINER_NAME')->isEmpty()) {
                         $coolify_envs->put('COOLIFY_CONTAINER_NAME', $this->container_name);
+                        $coolify_envs->put('STX_CONTAINER_NAME', $this->container_name);
                     }
                 }
             }
@@ -4341,29 +4349,36 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             if ($this->application->environment_variables->where('key', 'COOLIFY_FQDN')->isEmpty()) {
                 if ((int) $this->application->compose_parsing_version >= 3) {
                     $coolify_envs->put('COOLIFY_URL', $this->application->fqdn);
+                    $coolify_envs->put('STX_URL', $this->application->fqdn);
                 } else {
                     $coolify_envs->put('COOLIFY_FQDN', $this->application->fqdn);
+                    $coolify_envs->put('STX_FQDN', $this->application->fqdn);
                 }
             }
             if ($this->application->environment_variables->where('key', 'COOLIFY_URL')->isEmpty()) {
                 $url = $this->hostsFromFqdn($this->application->fqdn);
                 if ((int) $this->application->compose_parsing_version >= 3) {
                     $coolify_envs->put('COOLIFY_FQDN', $url);
+                    $coolify_envs->put('STX_FQDN', $url);
                 } else {
                     $coolify_envs->put('COOLIFY_URL', $url);
+                    $coolify_envs->put('STX_URL', $url);
                 }
             }
             if ($this->application->build_pack !== 'dockercompose' || $this->application->compose_parsing_version === '1' || $this->application->compose_parsing_version === '2') {
                 if ($this->application->environment_variables->where('key', 'COOLIFY_BRANCH')->isEmpty()) {
                     $coolify_envs->put('COOLIFY_BRANCH', $local_branch);
+                    $coolify_envs->put('STX_BRANCH', $local_branch);
                 }
                 if ($this->application->environment_variables->where('key', 'COOLIFY_RESOURCE_UUID')->isEmpty()) {
                     $coolify_envs->put('COOLIFY_RESOURCE_UUID', $this->application->uuid);
+                    $coolify_envs->put('STX_RESOURCE_UUID', $this->application->uuid);
                 }
                 // Only add COOLIFY_CONTAINER_NAME for runtime (not build-time) - it changes every deployment and breaks Docker cache
                 if (! $forBuildTime) {
                     if ($this->application->environment_variables->where('key', 'COOLIFY_CONTAINER_NAME')->isEmpty()) {
                         $coolify_envs->put('COOLIFY_CONTAINER_NAME', $this->container_name);
+                        $coolify_envs->put('STX_CONTAINER_NAME', $this->container_name);
                     }
                 }
             }
@@ -4850,7 +4865,8 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
         }
         $dockerfile = base64_encode("FROM {$this->staticImage()}
         WORKDIR /usr/share/nginx/html/
-        LABEL coolify.deploymentId={$this->deployment_uuid}
+        LABEL stx.deploymentId={$this->deployment_uuid}
+LABEL coolify.deploymentId={$this->deployment_uuid}
         COPY . .
         RUN rm -f /usr/share/nginx/html/nginx.conf
         RUN rm -f /usr/share/nginx/html/Dockerfile
@@ -5051,6 +5067,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             $publishDir = $publishDir ? "/{$publishDir}" : '';
             $dockerfile = base64_encode("FROM {$this->staticImage()}
 WORKDIR /usr/share/nginx/html/
+LABEL stx.deploymentId={$this->deployment_uuid}
 LABEL coolify.deploymentId={$this->deployment_uuid}
 COPY --from=$this->build_image_name /app{$publishDir} .
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf");

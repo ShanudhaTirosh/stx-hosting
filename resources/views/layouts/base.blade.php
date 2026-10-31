@@ -492,7 +492,7 @@
             const EchoConstructor = typeof Echo === 'function' ? Echo : Echo.default;
             window.Echo = new EchoConstructor({
                 broadcaster: 'reverb',
-                key: "{{ config('constants.pusher.app_key') }}" || 'coolify',
+                key: "{{ config('constants.pusher.app_key') }}" || 'stx',
                 wsHost: "{{ config('constants.pusher.host') }}" || window.location.hostname,
                 wsPort: "{{ getRealtime() }}",
                 wssPort: "{{ getRealtime() }}",

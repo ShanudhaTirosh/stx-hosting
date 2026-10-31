@@ -11,15 +11,15 @@ class ConfigureCloudflared
 {
     use AsAction;
 
-    public const DIRECTORY = '/data/coolify/cloudflared';
+    public const DIRECTORY = '/data/stx/cloudflared';
 
     public function handle(Server $server, string $cloudflare_token, string $ssh_domain): Activity
     {
         try {
             $config = [
                 'services' => [
-                    'coolify-cloudflared' => [
-                        'container_name' => 'coolify-cloudflared',
+                    'stx-cloudflared' => [
+                        'container_name' => 'stx-cloudflared',
                         'image' => 'cloudflare/cloudflared:latest',
                         'restart' => RESTART_MODE,
                         'network_mode' => 'host',
@@ -47,9 +47,9 @@ class ConfigureCloudflared
                 'echo Pulling latest Cloudflare Tunnel image.',
                 'docker compose pull',
                 'echo Stopping existing Cloudflare Tunnel container.',
-                'docker rm -f coolify-cloudflared || true',
+                'docker rm -f stx-cloudflared || true',
                 'echo Starting new Cloudflare Tunnel container.',
-                'docker compose up --wait --wait-timeout 180 --remove-orphans || docker logs coolify-cloudflared',
+                'docker compose up --wait --wait-timeout 180 --remove-orphans || docker logs stx-cloudflared',
             ]);
 
             return remote_process($commands, $server, callEventOnFinish: 'CloudflareTunnelChanged', callEventData: [

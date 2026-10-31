@@ -125,15 +125,15 @@ mount_path_for_major() {
 }
 
 current_postgres_mount_name() {
-    docker inspect coolify-db --format '{{range .Mounts}}{{if or (eq .Destination "/var/lib/postgresql/data") (eq .Destination "/var/lib/postgresql")}}{{.Name}}{{end}}{{end}}' 2>/dev/null
+    docker inspect stx 2>/dev/null || docker inspect coolify-db --format '{{range .Mounts}}{{if or (eq .Destination "/var/lib/postgresql/data") (eq .Destination "/var/lib/postgresql")}}{{.Name}}{{end}}{{end}}' 2>/dev/null
 }
 
 current_postgres_mount_path() {
-    docker inspect coolify-db --format '{{range .Mounts}}{{if or (eq .Destination "/var/lib/postgresql/data") (eq .Destination "/var/lib/postgresql")}}{{.Destination}}{{end}}{{end}}' 2>/dev/null
+    docker inspect stx 2>/dev/null || docker inspect coolify-db --format '{{range .Mounts}}{{if or (eq .Destination "/var/lib/postgresql/data") (eq .Destination "/var/lib/postgresql")}}{{.Destination}}{{end}}{{end}}' 2>/dev/null
 }
 
 current_postgres_image() {
-    docker inspect coolify-db --format '{{.Config.Image}}' 2>/dev/null
+    docker inspect stx 2>/dev/null || docker inspect coolify-db --format '{{.Config.Image}}' 2>/dev/null
 }
 
 current_coolify_image_tag() {
@@ -141,7 +141,7 @@ current_coolify_image_tag() {
     local image_without_digest
     local last_segment
 
-    image=$(docker inspect coolify --format '{{.Config.Image}}' 2>/dev/null || true)
+    image=$(docker inspect stx 2>/dev/null || docker inspect coolify --format '{{.Config.Image}}' 2>/dev/null || true)
     image_without_digest="${image%@*}"
     last_segment="${image_without_digest##*/}"
 

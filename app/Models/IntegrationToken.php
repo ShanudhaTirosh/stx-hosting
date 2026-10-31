@@ -101,7 +101,7 @@ class IntegrationToken extends BaseModel
             'permissionGroupKeys' => json_encode($permissions),
             'accountId' => '*',
             'zoneId' => 'all',
-            'name' => in_array('tunnel', $capabilities, true) ? 'Coolify DNS and Tunnel Management' : 'Coolify DNS Management',
+            'name' => in_array('tunnel', $capabilities, true) ? 'STX DNS and Tunnel Management' : 'STX DNS Management',
         ], '', '&', PHP_QUERY_RFC3986);
     }
 

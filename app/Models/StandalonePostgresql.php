@@ -349,7 +349,7 @@ class StandalonePostgresql extends BaseModel
                 if ($this->enable_ssl) {
                     $url .= "?sslmode={$this->ssl_mode}";
                     if (in_array($this->ssl_mode, ['verify-ca', 'verify-full'])) {
-                        $url .= '&sslrootcert=/etc/ssl/certs/coolify-ca.crt';
+                        $url .= '&sslrootcert=/etc/ssl/certs/stx-ca.crt';
                     }
                 }
 
@@ -374,7 +374,7 @@ class StandalonePostgresql extends BaseModel
                     if ($this->enable_ssl) {
                         $url .= "?sslmode={$this->ssl_mode}";
                         if (in_array($this->ssl_mode, ['verify-ca', 'verify-full'])) {
-                            $url .= '&sslrootcert=/etc/ssl/certs/coolify-ca.crt';
+                            $url .= '&sslrootcert=/etc/ssl/certs/stx-ca.crt';
                         }
                     }
 

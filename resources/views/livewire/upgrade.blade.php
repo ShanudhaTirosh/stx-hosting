@@ -124,7 +124,7 @@
                                         <div class="flex flex-col gap-3">
                                             <p class="text-[12px] leading-5" style="color: var(--coollabs-subtle)">
                                                 Check the logs on the server at
-                                                <span class="font-mono text-neutral-700 dark:text-fg">/data/coolify/source/upgrade*</span>.
+                                                <span class="font-mono text-neutral-700 dark:text-fg">/data/stx/source/upgrade*</span>.
                                             </p>
                                             <div
                                                 class="flex flex-wrap justify-end gap-2 border-t border-neutral-200 pt-4 dark:border-white/[0.08]">
@@ -150,7 +150,7 @@
                                             href="https://stxhosting.com/docs/upgrade" target="_blank"
                                             rel="noopener noreferrer">upgrade guide</a>
                                         or the logs on the server at
-                                        <span class="font-mono text-neutral-700 dark:text-fg">/data/coolify/source/upgrade*</span>.
+                                        <span class="font-mono text-neutral-700 dark:text-fg">/data/stx/source/upgrade*</span>.
                                     </p>
 
                                     <div

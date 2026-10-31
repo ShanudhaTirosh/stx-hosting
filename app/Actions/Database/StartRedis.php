@@ -168,8 +168,8 @@ class StartRedis
                 [
                     [
                         'type' => 'bind',
-                        'source' => '/data/coolify/ssl/coolify-ca.crt',
-                        'target' => '/etc/redis/certs/coolify-ca.crt',
+                        'source' => '/data/stx/ssl/stx-ca.crt',
+                        'target' => '/etc/redis/certs/stx-ca.crt',
                         'read_only' => true,
                     ],
                 ]
@@ -313,7 +313,7 @@ class StartRedis
                 '--tls-port 6380',
                 '--tls-cert-file /etc/redis/certs/server.crt',
                 '--tls-key-file /etc/redis/certs/server.key',
-                '--tls-ca-cert-file /etc/redis/certs/coolify-ca.crt',
+                '--tls-ca-cert-file /etc/redis/certs/stx-ca.crt',
                 '--tls-auth-clients optional',
             ];
         }

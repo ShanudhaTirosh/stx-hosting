@@ -35,7 +35,7 @@
                 <div class="mt-4">
                     <p class="mb-1.5 text-xs font-medium text-neutral-500 dark:text-fg-dim">Read-only bind mount</p>
                     <x-forms.copy-input
-                        text="- /data/coolify/ssl/coolify-ca.crt:/etc/ssl/certs/coolify-ca.crt:ro" />
+                        text="- /data/stx/ssl/stx-ca.crt:/etc/ssl/certs/coolify-ca.crt:ro" />
                 </div>
             </x-application.settings-section>
 
@@ -51,10 +51,10 @@
                         @can('update', $server)
                             <x-modal-confirmation title="Confirm changing of CA Certificate?"
                                 buttonTitle="Save certificate" submitAction="saveCaCertificate" :actions="[
-                                    'This overwrites /data/coolify/ssl/coolify-ca.crt with your custom certificate.',
+                                    'This overwrites /data/stx/ssl/stx-ca.crt with your custom certificate.',
                                     'Database certificates on this server will be regenerated and signed with the custom CA.',
                                     'You must redeploy affected databases and resources.',
-                                ]" confirmationText="/data/coolify/ssl/coolify-ca.crt"
+                                ]" confirmationText="/data/stx/ssl/stx-ca.crt"
                                 shortConfirmationLabel="CA Certificate Path"
                                 step3ButtonText="Save Certificate" />
                             <x-modal-confirmation title="Confirm Regenerate Certificate?"
@@ -62,7 +62,7 @@
                                     'This replaces the current CA certificate with a newly generated certificate.',
                                     'Database certificates on this server will be regenerated and signed with the new CA.',
                                     'You must redeploy affected databases and resources.',
-                                ]" confirmationText="/data/coolify/ssl/coolify-ca.crt"
+                                ]" confirmationText="/data/stx/ssl/stx-ca.crt"
                                 shortConfirmationLabel="CA Certificate Path"
                                 step3ButtonText="Regenerate Certificate" />
                         @endcan

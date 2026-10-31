@@ -14,7 +14,7 @@ class UpdateCloudflared
     /**
      * Pulls the latest cloudflared image and recreates the container from its existing Compose file.
      *
-     * Coolify usually reaches the server through this tunnel, so the recreate runs detached on the
+     * STX Hosting usually reaches the server through this tunnel, so the recreate runs detached on the
      * server: the SSH session ends before the old connector stops, and the tunnel reconnects after it.
      */
     public function handle(Server $server): Activity

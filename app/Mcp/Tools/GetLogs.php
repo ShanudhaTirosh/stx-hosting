@@ -166,7 +166,7 @@ class GetLogs extends Tool
         if ($serverMeta['is_reachable'] === false) {
             return $this->failurePayload(
                 reason: 'server_unreachable',
-                message: 'Destination server is not reachable from Coolify; cannot fetch live logs.',
+                message: 'Destination server is not reachable from STX Hosting; cannot fetch live logs.',
                 resourceType: $resourceType,
                 uuid: $uuid,
                 status: $status,

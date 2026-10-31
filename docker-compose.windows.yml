@@ -1,16 +1,16 @@
 services:
-  coolify-testing-host:
+  stx-testing-host:
     init: true
     image: "ghcr.io/stxhosting/testing-host:latest"
     pull_policy: always
-    container_name: coolify-testing-host
+    container_name: stx-testing-host
     volumes:
       - //var/run/docker.sock://var/run/docker.sock
       - ./:/data/stx
   coolify:
     image: "ghcr.io/stxhosting/platform:latest"
     pull_policy: always
-    container_name: coolify
+    container_name: stx
     restart: always
     working_dir: /var/www/html
     extra_hosts:
@@ -70,25 +70,25 @@ services:
   postgres:
     image: postgres:15-alpine
     pull_policy: always
-    container_name: coolify-db
+    container_name: stx-db
     restart: always
     env_file:
       - .env
     volumes:
-      - coolify-db:/var/lib/postgresql/data
+      - stx-db:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: "${DB_USERNAME}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      POSTGRES_DB: "${DB_DATABASE:-coolify}"
+      POSTGRES_DB: "${DB_DATABASE:-stx}"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}", "-d", "${DB_DATABASE:-coolify}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}", "-d", "${DB_DATABASE:-stx}" ]
       interval: 5s
       retries: 10
       timeout: 2s
   redis:
     image: redis:7-alpine
     pull_policy: always
-    container_name: coolify-redis
+    container_name: stx-redis
     restart: always
     command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     env_file:
@@ -96,7 +96,7 @@ services:
     environment:
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
     volumes:
-      - coolify-redis:/data
+      - stx-redis:/data
     healthcheck:
       test: redis-cli ping
       interval: 5s
@@ -104,7 +104,7 @@ services:
       timeout: 2s
 
 volumes:
-  coolify-db:
-    name: coolify-db
-  coolify-redis:
-    name: coolify-redis
+  stx-db:
+    name: stx-db
+  stx-redis:
+    name: stx-redis

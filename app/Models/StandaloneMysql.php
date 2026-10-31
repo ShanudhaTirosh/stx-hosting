@@ -329,7 +329,7 @@ class StandaloneMysql extends BaseModel
                 if ($this->enable_ssl) {
                     $url .= "?ssl-mode={$this->ssl_mode}";
                     if (in_array($this->ssl_mode, ['VERIFY_CA', 'VERIFY_IDENTITY'])) {
-                        $url .= '&ssl-ca=/etc/ssl/certs/coolify-ca.crt';
+                        $url .= '&ssl-ca=/etc/ssl/certs/stx-ca.crt';
                     }
                 }
 
@@ -354,7 +354,7 @@ class StandaloneMysql extends BaseModel
                     if ($this->enable_ssl) {
                         $url .= "?ssl-mode={$this->ssl_mode}";
                         if (in_array($this->ssl_mode, ['VERIFY_CA', 'VERIFY_IDENTITY'])) {
-                            $url .= '&ssl-ca=/etc/ssl/certs/coolify-ca.crt';
+                            $url .= '&ssl-ca=/etc/ssl/certs/stx-ca.crt';
                         }
                     }
 

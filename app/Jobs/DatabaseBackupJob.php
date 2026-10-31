@@ -321,7 +321,7 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
             $this->backup_dir = backup_dir().'/databases/'.str($this->team->name)->slug().'-'.$this->team->id.'/'.$this->directory_name;
             if ($this->database instanceof StandalonePostgresql && $this->database->isInstanceDatabase()) {
                 $databasesToBackup = ['coolify'];
-                $this->directory_name = $this->container_name = 'coolify-db';
+                $this->directory_name = $this->container_name = 'stx-db';
                 $ip = Str::slug($this->server->ip);
                 $this->backup_dir = backup_dir().'/coolify'."/coolify-db-$ip";
             }
@@ -991,7 +991,7 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
 
     private function getFullImageName(): string
     {
-        $helperImage = coolifyHelperImage();
+        $helperImage = stxHelperImage();
         $latestVersion = getHelperVersion();
 
         return "{$helperImage}:{$latestVersion}";

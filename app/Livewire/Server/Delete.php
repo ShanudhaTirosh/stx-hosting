@@ -47,7 +47,7 @@ class Delete extends Component
             $this->delete_from_hostinger = in_array('delete_from_hostinger', $selectedActions);
             $this->force_delete_resources = in_array('force_delete_resources', $selectedActions);
         }
-        // Another Coolify instance manages a transferred server. This instance deletes only its own records:
+        // Another STX Hosting instance manages a transferred server. This instance deletes only its own records:
         // never the VM, and never the containers that the other instance runs.
         $isArchive = $this->server->isTransferredAway();
         if ($isArchive) {
@@ -60,7 +60,7 @@ class Delete extends Component
         try {
             $this->authorize('delete', $this->server);
             if ($this->server->is_coolify_host) {
-                $this->dispatch('error', 'The Coolify host server cannot be deleted.');
+                $this->dispatch('error', 'The STX Hosting host server cannot be deleted.');
 
                 return;
             }

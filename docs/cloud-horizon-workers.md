@@ -96,7 +96,7 @@ Do these steps on one node at a time. Do not flush Redis or clear queues.
    must exist before the new scheduler runs):
 
    ```bash
-   docker exec coolify php artisan migrate --force
+   docker exec stx php artisan migrate --force
    ```
 
 2. Optional: set the `HORIZON_*_PROCESSES` variables in the node's `.env`.
@@ -104,20 +104,20 @@ Do these steps on one node at a time. Do not flush Redis or clear queues.
 3. Rebuild the configuration cache:
 
    ```bash
-   docker exec coolify php artisan config:cache
+   docker exec stx php artisan config:cache
    ```
 
 4. Restart Horizon on this node only. `horizon:terminate` lets the running
    jobs finish, then s6 starts Horizon again with the new configuration:
 
    ```bash
-   docker exec coolify php artisan horizon:terminate
+   docker exec stx php artisan horizon:terminate
    ```
 
 5. Make sure the six supervisors are running on this node:
 
    ```bash
-   docker exec coolify php artisan horizon:supervisors
+   docker exec stx php artisan horizon:supervisors
    ```
 
 6. Make sure the `maintenance` and `webhooks` queues drain (its depth goes down) and that

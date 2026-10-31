@@ -24,7 +24,7 @@ use Throwable;
 
 /**
  * The steps that finish a transfer on the instance that manages the server now: webhooks, DNS, Sentinel, backups,
- * and runners. Coolify checks each step where it can, and fixes some. The list is saved in
+ * and runners. STX Hosting checks each step where it can, and fixes some. The list is saved in
  * server_metadata.transfer.finish, so its state survives a reload and is the same for every user of the team.
  *
  * An item is {key, type, subject, label, status, hint, message, details, error, link, link_label, checked_at}. The hint
@@ -184,7 +184,7 @@ class TransferFinishChecklist
     {
         return $this->update($server, $key, function (array $item) use ($server) {
             if ($this->fixLabel($item) === null) {
-                throw new RuntimeException('Coolify cannot fix this step. Do it by hand, then mark it as done.');
+                throw new RuntimeException('STX Hosting cannot fix this step. Do it by hand, then mark it as done.');
             }
             $this->runFix($server, $item);
 
@@ -337,7 +337,7 @@ class TransferFinishChecklist
             'github_runners' => $server->githubRunnerConfig()->value('is_enabled')
                 ? ['ok', 'GitHub runners are enabled.', null]
                 : ['action', 'Disabled after the transfer. Enable them when the GitHub App sends its webhooks here.', null],
-            default => throw new RuntimeException('Coolify cannot check this step. Do it by hand, then mark it as done.'),
+            default => throw new RuntimeException('STX Hosting cannot check this step. Do it by hand, then mark it as done.'),
         };
     }
 
@@ -501,7 +501,7 @@ class TransferFinishChecklist
         try {
             [$status, $message, $error] = $change($finish['items'][$index]) + [2 => null];
         } catch (Throwable $e) {
-            [$status, $message, $error] = ['action', 'Coolify could not do this step.', $e->getMessage()];
+            [$status, $message, $error] = ['action', 'STX Hosting could not do this step.', $e->getMessage()];
         }
 
         return DB::transaction(function () use ($server, $key, $status, $message, $error) {

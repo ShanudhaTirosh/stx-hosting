@@ -71,7 +71,7 @@ class DeployServiceApplication
             $commands->push('docker start '.escapeshellarg("{$composeServiceName}-{$service->uuid}").' >/dev/null');
         }
 
-        $commands->push("docker network connect {$safeProjectName} coolify-proxy >/dev/null 2>&1 || true");
+        $commands->push("docker network connect {$safeProjectName} stx-proxy >/dev/null 2>&1 || true");
 
         return remote_process($commands->toArray(), $service->server, type_uuid: $service->uuid, callEventOnFinish: 'ServiceStartFinished', callEventData: ServiceStartFinished::dataFor($service), queue: deployment_queue());
     }

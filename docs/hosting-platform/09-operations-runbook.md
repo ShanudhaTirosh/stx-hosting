@@ -58,7 +58,7 @@ The ShanuTechX hosting platform runs as a coordinated multi-container production
                                      ┌─────────────┐       ┌─────────────┐│
                                      │ PostgreSQL  │       │   Redis 7   ││
                                      │  16 Cluster │       │  (Queues &  ││
-                                     │(`coolify-db`│       │  Sessions)  ││
+                                     │(`stx-db`│       │  Sessions)  ││
                                      └─────────────┘       └─────────────┘│
                                                                   ▲       │
                                                                   │       │
@@ -132,8 +132,8 @@ services:
     container_name: stx-postgres
     restart: always
     environment:
-      POSTGRES_DB: ${DB_DATABASE:-coolify}
-      POSTGRES_USER: ${DB_USERNAME:-coolify}
+      POSTGRES_DB: ${DB_DATABASE:-stx}
+      POSTGRES_USER: ${DB_USERNAME:-stx}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Database password required}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -141,7 +141,7 @@ services:
     networks:
       - stx-internal
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-coolify} -d ${DB_DATABASE:-coolify}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-stx} -d ${DB_DATABASE:-stx}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -151,7 +151,7 @@ services:
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
-    container_name: coolify-redis
+    container_name: stx-redis
     restart: always
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?Redis password required}"]
     volumes:
@@ -167,7 +167,7 @@ services:
   # ---------------------------------------------------------------------------
   # STX Hosting Orchestration & Commerce Core App
   # ---------------------------------------------------------------------------
-  coolify:
+  stx:
     image: ghcr.io/stx-enterprises/stx-hosting:latest
     container_name: stx-core
     restart: always
@@ -183,8 +183,8 @@ services:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE:-coolify}
-      DB_USERNAME: ${DB_USERNAME:-coolify}
+      DB_DATABASE: ${DB_DATABASE:-stx}
+      DB_USERNAME: ${DB_USERNAME:-stx}
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -201,16 +201,16 @@ services:
       - stx-internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.coolify.rule=Host(`app.shanutechx.com`)"
-      - "traefik.http.routers.coolify.entrypoints=websecure"
-      - "traefik.http.routers.coolify.tls.certresolver=letsencrypt"
-      - "traefik.http.services.coolify.loadbalancer.server.port=80"
+      - "traefik.http.routers.stx.rule=Host(`app.shanutechx.com`)"
+      - "traefik.http.routers.stx.entrypoints=websecure"
+      - "traefik.http.routers.stx.tls.certresolver=letsencrypt"
+      - "traefik.http.services.stx.loadbalancer.server.port=80"
       # Laravel Reverb WebSocket Router (Port 6001)
-      - "traefik.http.routers.coolify-ws.rule=Host(`app.shanutechx.com`) && (PathPrefix(`/app`) || PathPrefix(`/reverb`))"
-      - "traefik.http.routers.coolify-ws.entrypoints=websecure"
-      - "traefik.http.routers.coolify-ws.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.coolify-ws.service=coolify-ws"
-      - "traefik.http.services.coolify-ws.loadbalancer.server.port=6001"
+      - "traefik.http.routers.stx-ws.rule=Host(`app.shanutechx.com`) && (PathPrefix(`/app`) || PathPrefix(`/reverb`))"
+      - "traefik.http.routers.stx-ws.entrypoints=websecure"
+      - "traefik.http.routers.stx-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.stx-ws.service=stx-ws"
+      - "traefik.http.services.stx-ws.loadbalancer.server.port=6001"
 
   # ---------------------------------------------------------------------------
   # Public Storefront (`web`)
@@ -219,7 +219,7 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: coolify-storefront
+    container_name: stx-storefront
     restart: always
     environment:
       NODE_ENV: production
@@ -243,7 +243,7 @@ services:
     build:
       context: ./status
       dockerfile: Dockerfile
-    container_name: coolify-status
+    container_name: stx-status
     restart: always
     environment:
       NODE_ENV: production
@@ -269,7 +269,7 @@ services:
 
 ### 3.1 Backup Strategy & Schedule
 To meet our RPO < 1 hour and RTO < 2 hours:
-1. **PostgreSQL Relational State (`coolify-db`)**:
+1. **PostgreSQL Relational State (`stx-db`)**:
    - Snapshot frequency: **Every 30 minutes** via automated cron worker.
    - Mechanism: Native `pg_dump` with gzip compression piped to S3-compatible object storage (Cloudflare R2 or AWS S3).
    - Retention: Keep 48 hourly backups (2 days), 30 daily backups (1 month), 12 monthly archives (1 year).
@@ -287,8 +287,8 @@ set -euo pipefail
 
 # Configuration
 TIMESTAMP=$(date -u +"%Y%m%d_%H%M%SZ")
-BACKUP_DIR="/var/backups/coolify"
-BACKUP_FILE="${BACKUP_DIR}/coolify_db_${TIMESTAMP}.sql.gz"
+BACKUP_DIR="/var/backups/stx"
+BACKUP_FILE="${BACKUP_DIR}/stx_db_${TIMESTAMP}.sql.gz"
 S3_BUCKET="s3://stx-platform-backups/database"
 DISCORD_WEBHOOK="${DISCORD_OPS_WEBHOOK:-}"
 
@@ -297,24 +297,24 @@ mkdir -p "${BACKUP_DIR}"
 echo "[$(date -u)] Initiating PostgreSQL database dump..."
 
 # Execute pg_dump inside the running postgres container
-docker exec stx-postgres pg_dump -U coolify -d coolify | gzip -9 > "${BACKUP_FILE}"
+docker exec stx-postgres pg_dump -U stx -d stx | gzip -9 > "${BACKUP_FILE}"
 
 FILE_SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
 echo "[$(date -u)] Backup created successfully: ${BACKUP_FILE} (${FILE_SIZE})"
 
 # Upload to off-site S3 storage
 echo "[$(date -u)] Syncing backup to remote S3 bucket..."
-aws s3 cp "${BACKUP_FILE}" "${S3_BUCKET}/coolify_db_${TIMESTAMP}.sql.gz" --storage-class STANDARD_IA
+aws s3 cp "${BACKUP_FILE}" "${S3_BUCKET}/stx_db_${TIMESTAMP}.sql.gz" --storage-class STANDARD_IA
 
 # Prune local backups older than 7 days
-find "${BACKUP_DIR}" -type f -name "coolify_db_*.sql.gz" -mtime +7 -delete
+find "${BACKUP_DIR}" -type f -name "stx_db_*.sql.gz" -mtime +7 -delete
 
 echo "[$(date -u)] Backup routine complete."
 
 # Optional Discord notification
 if [[ -n "${DISCORD_WEBHOOK}" ]]; then
   curl -s -H "Content-Type: application/json" -X POST \
-    -d "{\"content\": \"✅ **PostgreSQL Backup Succeeded**\\n• Snapshot: \`coolify_db_${TIMESTAMP}.sql.gz\`\\n• Size: \`${FILE_SIZE}\`\\n• Destination: \`${S3_BUCKET}\`\"}" \
+    -d "{\"content\": \"✅ **PostgreSQL Backup Succeeded**\\n• Snapshot: \`stx_db_${TIMESTAMP}.sql.gz\`\\n• Size: \`${FILE_SIZE}\`\\n• Destination: \`${S3_BUCKET}\`\"}" \
     "${DISCORD_WEBHOOK}" > /dev/null || true
 fi
 ```
@@ -325,7 +325,7 @@ In the event of total server loss or datacenter destruction:
 1. **Provision New Base Server**:
    - Spin up a clean Ubuntu 24.04 LTS host.
    - Install Docker Engine and Docker Compose v2.
-   - Clone platform repository to `/opt/coolify-platform`.
+   - Clone platform repository to `/opt/stx-platform`.
 2. **Retrieve Latest Encrypted Backup from S3**:
    ```bash
    aws s3 cp s3://stx-platform-backups/database/latest.sql.gz /tmp/restore.sql.gz
@@ -334,15 +334,15 @@ In the event of total server loss or datacenter destruction:
 3. **Start PostgreSQL Container**:
    ```bash
    docker compose -f docker-compose.prod.yml up -d postgres
-   docker compose -f docker-compose.prod.yml exec -T postgres pg_isready -U coolify
+   docker compose -f docker-compose.prod.yml exec -T postgres pg_isready -U stx
    ```
 4. **Restore Database Snapshot**:
    ```bash
-   gunzip -c /tmp/restore.sql.gz | docker exec -i stx-postgres psql -U coolify -d coolify
+   gunzip -c /tmp/restore.sql.gz | docker exec -i stx-postgres psql -U stx -d stx
    ```
 5. **Verify Database Integrity**:
    ```bash
-   docker exec -it stx-postgres psql -U coolify -d coolify -c "SELECT COUNT(*) FROM users; SELECT COUNT(*) FROM orders; SELECT COUNT(*) FROM service_instances;"
+   docker exec -it stx-postgres psql -U stx -d stx -c "SELECT COUNT(*) FROM users; SELECT COUNT(*) FROM orders; SELECT COUNT(*) FROM service_instances;"
    ```
 6. **Launch Full Application Stack**:
    ```bash

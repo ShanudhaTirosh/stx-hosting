@@ -492,7 +492,7 @@ When an invoice remains unpaid at `D+4 00:00:00 UTC`, `ExecuteServiceSuspensionJ
    - **For STX Hosting Shared PaaS Applications**:
      ```php
      // Call internal STX Hosting API to stop application container
-     Http::withToken($coolifyToken)->post("http://localhost:8000/api/v1/applications/{$service->coolify_app_uuid}/stop");
+     Http::withToken($stxToken)->post("http://localhost:8000/api/v1/applications/{$service->stx_app_uuid}/stop");
      ```
 3. **Telemetry Suspension**:
    - The monitor probe in the Status Platform is updated to `is_active = 0` to prevent false alarm incident generation while suspended.

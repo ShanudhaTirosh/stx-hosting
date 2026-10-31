@@ -2,10 +2,10 @@
 
 namespace App\Livewire;
 
-use App\Actions\Server\UpdateCoolify;
+use App\Actions\Server\UpdateStx;
 use App\Models\InstanceSettings;
 use App\Models\Server;
-use App\Services\CoolifyUpgradeStatus;
+use App\Services\StxUpgradeStatus;
 use Livewire\Component;
 
 class Upgrade extends Component
@@ -40,8 +40,8 @@ class Upgrade extends Component
 
     protected function refreshUpgradeState(): void
     {
-        $this->currentVersion = config('constants.coolify.version');
-        $this->latestVersion = get_latest_version_of_coolify();
+        $this->currentVersion = config('constants.stx.version', config('constants.coolify.version'));
+        $this->latestVersion = get_latest_version_of_stx();
         $this->devMode = isDev();
 
         if ($this->devMode) {
@@ -74,7 +74,7 @@ class Upgrade extends Component
             $this->updateInProgress = true;
             dispatch(function () {
                 try {
-                    UpdateCoolify::run(manual_update: true);
+                    UpdateStx::run(manual_update: true);
                 } catch (\Throwable $e) {
                     report($e);
                 }
@@ -83,8 +83,8 @@ class Upgrade extends Component
             auditLog('ui.instance.upgrade_started', [
                 'team_id' => null,
                 'resource' => 'instance',
-                'from_version' => config('constants.coolify.version'),
-                'to_version' => get_latest_version_of_coolify(),
+                'from_version' => config('constants.stx.version', config('constants.coolify.version')),
+                'to_version' => get_latest_version_of_stx(),
             ]);
         } catch (\Throwable $e) {
             return handleError($e, $this);
@@ -103,7 +103,7 @@ class Upgrade extends Component
             return ['status' => 'none'];
         }
 
-        $statusFile = CoolifyUpgradeStatus::FILE;
+        $statusFile = StxUpgradeStatus::FILE;
 
         try {
             $content = instant_remote_process(
@@ -116,10 +116,10 @@ class Upgrade extends Component
             return ['status' => 'none'];
         }
 
-        return CoolifyUpgradeStatus::fromFile(
+        return StxUpgradeStatus::fromFile(
             content: $content,
-            runningVersion: $this->currentVersion !== '' ? $this->currentVersion : (string) config('constants.coolify.version'),
-            targetVersion: $this->latestVersion !== '' ? $this->latestVersion : get_latest_version_of_coolify(),
+            runningVersion: $this->currentVersion !== '' ? $this->currentVersion : (string) config('constants.stx.version', config('constants.coolify.version')),
+            targetVersion: $this->latestVersion !== '' ? $this->latestVersion : get_latest_version_of_stx(),
         );
     }
 }

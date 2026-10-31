@@ -41,7 +41,7 @@ GIT_COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
 ENV_DIR="$(dirname "$GIT_COMMON_DIR")/.dev-instances"
 SLOTS_FILE="$ENV_DIR/slots"
 QEMU_STORAGE="${DEVELOPMENT_QEMU_STORAGE_PATH:-/var/lib/libvirt/images/coolify-development}"
-LEGACY_CONTAINERS=(coolify coolify-db coolify-redis coolify-vite coolify-mail coolify-minio coolify-minio-init coolify-testing-host)
+LEGACY_CONTAINERS=(coolify coolify-db coolify-redis coolify-vite coolify-mail coolify-minio coolify-minio-init stx-testing-host)
 
 usage() {
   sed -n '2,30p' "$0" | sed 's/^# \?//'

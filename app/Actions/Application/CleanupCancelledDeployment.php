@@ -31,7 +31,7 @@ class CleanupCancelledDeployment
 
                         // A removed helper cannot stop the Railpack builder, which keeps the memory of its builds.
                         if ($deployment->application?->build_pack === 'railpack') {
-                            $helperImage = coolifyHelperImage().':'.getHelperVersion();
+                            $helperImage = stxHelperImage().':'.getHelperVersion();
                             instant_remote_process([railpackBuilderHelperCommand(railpackBuildxMetadataVolume($server), $helperImage, 'true')], $server, false);
                         }
                     }

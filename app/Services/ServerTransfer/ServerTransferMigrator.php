@@ -305,8 +305,8 @@ class ServerTransferMigrator
             ->count();
 
         return [
-            $this->check('the server is not the Coolify host', $server->id !== 0,
-                'The Coolify host (localhost) cannot be transferred between instances.'),
+            $this->check('the server is not the STX Hosting host', $server->id !== 0,
+                'The STX Hosting host (localhost) cannot be transferred between instances.'),
             $this->check('this instance manages the server', ! $server->isTransferredAway(),
                 'This server was already transferred to another instance.'),
             $this->check('no deployment is queued or running on the server', $activeDeployments === 0,
@@ -712,7 +712,7 @@ class ServerTransferMigrator
         }
 
         if ($response->status() === 404) {
-            throw new RuntimeException('The target instance does not support server transfer. Upgrade it to Coolify '.config('constants.coolify.version').' or newer.');
+            throw new RuntimeException('The target instance does not support server transfer. Upgrade it to STX Hosting '.config('constants.coolify.version').' or newer.');
         }
 
         // A proxy timeout (502/504) or a server error does not mean that the import failed: the target can still finish it.
@@ -774,7 +774,7 @@ class ServerTransferMigrator
 
         // An unknown route answers 404 before the token is checked, so this check comes first.
         $gates = [
-            [404, 'the target instance supports server transfer', 'The target instance does not support server transfer. Upgrade it to Coolify '.config('constants.coolify.version').' or newer.'],
+            [404, 'the target instance supports server transfer', 'The target instance does not support server transfer. Upgrade it to STX Hosting '.config('constants.coolify.version').' or newer.'],
             [401, 'the target instance accepts the API token', 'The target instance does not accept the API token. Create a new token on the target instance and paste it here.'],
             [403, 'the API token can create servers on the target instance', 'Use a token with the root permission, or the write and deploy permissions, from an admin or owner. Target response: '.$message],
         ];

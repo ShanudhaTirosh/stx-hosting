@@ -10,7 +10,7 @@
 
 services:
   coolify:
-    image: coolify:dev
+    image: stx:dev
     pull_policy: never
     container_name: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
     build:
@@ -35,8 +35,8 @@ services:
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_DATABASE: "${DB_DATABASE:-coolify}"
-      DB_USERNAME: "${DB_USERNAME:-coolify}"
+      DB_DATABASE: "${DB_DATABASE:-stx}"
+      DB_USERNAME: "${DB_USERNAME:-stx}"
       DB_PASSWORD: "${DB_PASSWORD:-password}"
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -48,9 +48,9 @@ services:
       TERMINAL_PORT: "${FORWARD_TERMINAL_PORT:-6002}"
       PUSHER_BACKEND_PORT: 6001
       PUSHER_SCHEME: "${PUSHER_SCHEME:-http}"
-      PUSHER_APP_ID: "${PUSHER_APP_ID:-coolify}"
-      PUSHER_APP_KEY: "${PUSHER_APP_KEY:-coolify}"
-      PUSHER_APP_SECRET: "${PUSHER_APP_SECRET:-coolify}"
+      PUSHER_APP_ID: "${PUSHER_APP_ID:-stx}"
+      PUSHER_APP_KEY: "${PUSHER_APP_KEY:-stx}"
+      PUSHER_APP_SECRET: "${PUSHER_APP_SECRET:-stx}"
       BROADCAST_CONNECTION: reverb
       QUEUE_CONNECTION: redis
       CACHE_STORE: redis
@@ -59,11 +59,11 @@ services:
       DEVELOPMENT_QEMU_INSTANCE: "${DEVELOPMENT_QEMU_INSTANCE:-}"
       DEVELOPMENT_QEMU_SLOT: "${DEVELOPMENT_QEMU_SLOT:-}"
       DEVELOPMENT_QEMU_DOCKER_NETWORK: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
-      DEVELOPMENT_QEMU_COOLIFY_CONTAINER: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
-      # Host paths of the volumes that testing-host mounts at /data/coolify and /data/coolify/backups.
+      DEVELOPMENT_QEMU_STX_CONTAINER: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
+      # Host paths of the volumes that testing-host mounts at /data/stx and /data/stx/backups.
       # STX Hosting uses them only for the testing-host server (it shares the host Docker daemon), not for KVM servers.
-      DEV_COOLIFY_DATA_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_coolify_data"
-      DEV_COOLIFY_BACKUPS_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_backups_data"
+      DEV_STX_DATA_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_stx_data"
+      DEV_STX_BACKUPS_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_backups_data"
     healthcheck:
       test: curl -sf http://127.0.0.1:8080/api/health || exit 1
       interval: 5s
@@ -72,8 +72,8 @@ services:
     volumes:
       - .:/var/www/html/:cached
       - backups_data:/var/www/html/storage/app/backups
-      - ./docker/coolify-terminal/terminal-server.js:/terminal/terminal-server.js
-      - ./docker/coolify-terminal/terminal-utils.js:/terminal/terminal-utils.js
+      - ./docker/stx-terminal/terminal-server.js:/terminal/terminal-server.js
+      - ./docker/stx-terminal/terminal-utils.js:/terminal/terminal-utils.js
     depends_on:
       postgres:
         condition: service_healthy
@@ -88,9 +88,9 @@ services:
     ports:
       - "${DEV_BIND_ADDRESS:-0.0.0.0}:${FORWARD_DB_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: "${DB_USERNAME:-coolify}"
+      POSTGRES_USER: "${DB_USERNAME:-stx}"
       POSTGRES_PASSWORD: "${DB_PASSWORD:-password}"
-      POSTGRES_DB: "${DB_DATABASE:-coolify}"
+      POSTGRES_DB: "${DB_DATABASE:-stx}"
       POSTGRES_HOST_AUTH_METHOD: "trust"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
@@ -137,7 +137,7 @@ services:
 
   testing-host:
     profiles: ["testing-host"]
-    image: coolify-testing-host:dev
+    image: stx-testing-host:dev
     pull_policy: never
     build:
       context: .
@@ -145,18 +145,18 @@ services:
     init: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - coolify_data:/data/coolify
+      - stx_data:/data/stx
       # Same path as on the Docker host, so bind mounts created through the host daemon resolve.
-      - coolify_data:/var/lib/docker/volumes/${COMPOSE_PROJECT_NAME:-coolify-dev}_coolify_data/_data
-      - backups_data:/data/coolify/backups
-      - postgres_data:/data/coolify/_volumes/database
-      - redis_data:/data/coolify/_volumes/redis
-      - minio_data:/data/coolify/_volumes/minio
+      - stx_data:/var/lib/docker/volumes/${COMPOSE_PROJECT_NAME:-coolify-dev}_stx_data/_data
+      - backups_data:/data/stx/backups
+      - postgres_data:/data/stx/_volumes/database
+      - redis_data:/data/stx/_volumes/redis
+      - minio_data:/data/stx/_volumes/minio
     networks:
       coolify:
         # Seeders use this hostname for the localhost server.
         aliases:
-          - coolify-testing-host
+          - stx-testing-host
 
   mailpit:
     profiles: ["mailpit"]
@@ -182,9 +182,9 @@ services:
       - minio_data:/data
     networks:
       coolify:
-        # The seeded "Local MinIO" storage (S3StorageSeeder) uses http://coolify-minio:9000.
+        # The seeded "Local MinIO" storage (S3StorageSeeder) uses http://stx-minio:9000.
         aliases:
-          - coolify-minio
+          - stx-minio
 
   minio-init:
     profiles: ["minio"]
@@ -205,7 +205,7 @@ volumes:
   backups_data:
   postgres_data:
   redis_data:
-  coolify_data:
+  stx_data:
   minio_data:
 
 networks:

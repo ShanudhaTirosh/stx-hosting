@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Links the deployments on additional servers to the main deployment, so Coolify can send one
+     * Links the deployments on additional servers to the main deployment, so STX Hosting can send one
      * notification after all servers finish.
      */
     public function up(): void

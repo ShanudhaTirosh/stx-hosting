@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Before Coolify kept `driver`, `driver_opts` and `labels` of a renamed Compose volume, Docker
+     * Before STX Hosting kept `driver`, `driver_opts` and `labels` of a renamed Compose volume, Docker
      * created the volume without them. Mark every volume that exists at upgrade time, so the parsers
      * keep its old name-only declaration and Docker Compose does not ask to recreate the volume.
      */

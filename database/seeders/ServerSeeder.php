@@ -17,7 +17,7 @@ class ServerSeeder extends Seeder
             'uuid' => 'localhost',
             'name' => 'localhost',
             'description' => 'This is a test docker container in development mode',
-            'ip' => 'coolify-testing-host',
+            'ip' => 'stx-testing-host',
             'port' => 22,
             'user' => 'root',
             'team_id' => 0,

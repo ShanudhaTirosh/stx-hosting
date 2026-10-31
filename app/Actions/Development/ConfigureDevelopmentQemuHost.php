@@ -62,7 +62,7 @@ class ConfigureDevelopmentQemuHost
 
     private function configureIpForwarding(): void
     {
-        $this->runOrFail("printf 'net.ipv4.ip_forward=1\\n' > /etc/sysctl.d/99-coolify-development-qemu.conf");
+        $this->runOrFail("printf 'net.ipv4.ip_forward=1\\n' > /etc/sysctl.d/99-stx-development-qemu.conf");
         $this->runOrFail('sysctl -w net.ipv4.ip_forward=1');
     }
 
@@ -80,7 +80,7 @@ class ConfigureDevelopmentQemuHost
         $subnet = trim($subnetResult->output());
 
         if ($subnetResult->failed() || $subnet === '') {
-            throw new RuntimeException('Unable to determine the Coolify Docker network subnet.');
+            throw new RuntimeException('Unable to determine the STX Hosting Docker network subnet.');
         }
 
         $rule = sprintf(
@@ -135,7 +135,7 @@ XML;
     }
 
     /**
-     * Instance names become part of libvirt domain names ("coolify-dev-{instance}--{profile}"),
+     * Instance names become part of libvirt domain names ("stx-dev-{instance}--{profile}"),
      * so they must not contain repeated, leading, or trailing dashes that would blur that separator.
      */
     private function ensureValidInstance(): void

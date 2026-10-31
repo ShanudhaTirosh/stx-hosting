@@ -13,14 +13,14 @@ class SeedDevelopmentTraefikCertificates
 {
     use AsAction;
 
-    public const RESOLVER = 'coolify-dev-examples';
+    public const RESOLVER = 'stx-dev-examples';
 
     /** @var array<int, array{main: string, sans: array<int, string>, days: int}> */
     private const EXAMPLES = [
-        ['main' => 'app.coolify.test', 'sans' => ['www.app.coolify.test'], 'days' => 60],
-        ['main' => 'api.coolify.test', 'sans' => [], 'days' => 5],
-        ['main' => '*.preview.coolify.test', 'sans' => ['preview.coolify.test'], 'days' => 89],
-        ['main' => 'docs.coolify.test', 'sans' => ['help.coolify.test', 'status.coolify.test'], 'days' => 30],
+        ['main' => 'app.stxhosting.test', 'sans' => ['www.app.stxhosting.test'], 'days' => 60],
+        ['main' => 'api.stxhosting.test', 'sans' => [], 'days' => 5],
+        ['main' => '*.preview.stxhosting.test', 'sans' => ['preview.stxhosting.test'], 'days' => 89],
+        ['main' => 'docs.stxhosting.test', 'sans' => ['help.stxhosting.test', 'status.stxhosting.test'], 'days' => 30],
     ];
 
     public function __construct(private GetTraefikCertificates $getTraefikCertificates) {}

@@ -86,7 +86,7 @@ class Show extends Component
                     return $this->dispatch('error', 'You must delete all resources before deleting this destination.');
                 }
                 $safeNetwork = escapeshellarg($this->destination->network);
-                instant_remote_process(["docker network disconnect {$safeNetwork} coolify-proxy"], $this->destination->server, throwError: false);
+                instant_remote_process(["docker network disconnect {$safeNetwork} stx-proxy 2>/dev/null || docker network disconnect {$safeNetwork} coolify-proxy"], $this->destination->server, throwError: false);
                 instant_remote_process([dockerNetworkRemoveCommand($this->destination->network)], $this->destination->server);
             }
             $auditContext = $this->auditContext();

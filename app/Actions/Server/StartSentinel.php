@@ -99,7 +99,7 @@ class StartSentinel
         }
 
         // Two starts at the same time both remove the container, and then the second `docker run`
-        // fails because the first one already uses the coolify-sentinel name.
+        // fails because the first one already uses the stx-sentinel name.
         Cache::lock(self::lockKey($server), self::LOCK_SECONDS)->block(
             self::LOCK_WAIT_SECONDS,
             fn () => $this->start($server, $restart, $latestVersion, $customImage),
@@ -121,7 +121,7 @@ class StartSentinel
         $endpoint = $server->settings->ensureSentinelUrl();
         $debug = data_get($server, 'settings.is_sentinel_debug_enabled');
         $mountDir = devHostDockerPath($server, base_configuration_dir().'/sentinel');
-        $image = coolifyRegistryUrl().'/coollabsio/sentinel:'.$version;
+        $image = stxRegistryUrl().'/coollabsio/sentinel:'.$version;
         $environments = [
             'TOKEN' => $token,
             'DEBUG' => $debug ? 'true' : 'false',
@@ -150,13 +150,13 @@ class StartSentinel
         $network = $server->isLocalhost() ? ' --network coolify' : '';
         // A userns-remap daemon refuses --pid host unless the container opts out of remapping.
         // On other daemons --userns host has no effect. https://docs.docker.com/engine/security/userns-remap/
-        $dockerCommand = "docker run -d$network $dockerEnvironments --name coolify-sentinel --restart unless-stopped -v /var/run/docker.sock:/var/run/docker.sock -v $mountDir:/app/db {$trafficMount}--userns host --pid host --health-cmd \"curl --fail http://127.0.0.1:8888/api/health || exit 1\" --health-start-period 120s --health-interval 10s --health-retries 3 --add-host=host.docker.internal:host-gateway --label $dockerLabels $image";
+        $dockerCommand = "docker run -d$network $dockerEnvironments --name stx-sentinel --restart unless-stopped -v /var/run/docker.sock:/var/run/docker.sock -v $mountDir:/app/db {$trafficMount}--userns host --pid host --health-cmd \"curl --fail http://127.0.0.1:8888/api/health || exit 1\" --health-start-period 120s --health-interval 10s --health-retries 3 --add-host=host.docker.internal:host-gateway --label $dockerLabels $image";
 
         $server->sentinelHeartbeat(isReset: true);
         $server->forceFill(['sentinel_waiting_since' => now()])->save();
 
         instant_remote_process([
-            'docker rm -f coolify-sentinel || true',
+            'docker rm -f stx-sentinel || true',
             "mkdir -p $mountDir",
             ...self::trafficLogPreparationCommands($server),
             $dockerCommand,

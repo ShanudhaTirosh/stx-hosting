@@ -21,7 +21,7 @@ class CloudflareDomainConnect
     }
 
     /**
-     * Domain Connect is a Coolify Cloud feature and requires a signing key
+     * Domain Connect is a STX Cloud feature and requires a signing key
      * (instance setting or env) to be present at runtime.
      */
     public function isAvailable(): bool
@@ -31,7 +31,7 @@ class CloudflareDomainConnect
 
     public function providerId(): string
     {
-        return (string) config('services.domain_connect.provider_id', 'coolify.io');
+        return (string) config('services.domain_connect.provider_id', 'stxhosting.com');
     }
 
     public function serviceId(): string

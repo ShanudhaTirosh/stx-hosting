@@ -12,7 +12,7 @@ class SeedDevelopmentQemuServerCommand extends Command
 {
     protected $signature = 'dev:qemu:seed {profile : Profile key from config/development-qemu.php} {--keep-others} {--as-localhost : Use the VM for the localhost server (id 0)} {--ip= : SSH host instead of the profile IP} {--port=22 : SSH port} {--gpu : Install the NVIDIA driver and container toolkit in the VM}';
 
-    protected $description = 'Seed one development QEMU server in the Coolify database';
+    protected $description = 'Seed one development QEMU server in the STX Hosting database';
 
     public function handle(): int
     {
@@ -28,9 +28,9 @@ class SeedDevelopmentQemuServerCommand extends Command
         if ($this->option('as-localhost')) {
             try {
                 StartDevelopmentInstanceDatabase::run($server);
-                $this->info('Started the coolify-db container for instance backups.');
+                $this->info('Started the stx-db container for instance backups.');
             } catch (Throwable $e) {
-                $this->warn("Could not start the coolify-db container for instance backups: {$e->getMessage()}");
+                $this->warn("Could not start the stx-db container for instance backups: {$e->getMessage()}");
             }
         }
 

@@ -239,7 +239,7 @@ class StartDatabaseImport
 
     /**
      * Copies a backup into the database container. bz2, xz and zip backups go through
-     * the Coolify helper image, because database images do not ship those tools.
+     * the STX helper image, because database images do not ship those tools.
      *
      * @param  array<string, mixed>  $cleanup
      * @return list<string>
@@ -252,7 +252,7 @@ class StartDatabaseImport
         }
 
         $helper = "backup-decompress-{$operation}";
-        $image = escapeshellarg(coolifyHelperImage().':'.getHelperVersion());
+        $image = escapeshellarg(stxHelperImage().':'.getHelperVersion());
 
         try {
             instant_remote_process([
@@ -297,7 +297,7 @@ class StartDatabaseImport
      */
     private function startS3Helper(S3Storage $storage, Server $server, string $helper, string $network): void
     {
-        $image = escapeshellarg(coolifyHelperImage().':'.getHelperVersion());
+        $image = escapeshellarg(stxHelperImage().':'.getHelperVersion());
 
         try {
             instant_remote_process([

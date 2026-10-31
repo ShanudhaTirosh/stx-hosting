@@ -183,8 +183,8 @@ class HostingCatalogSeeder extends Seeder
             [
                 'name' => 'PaaS Application Hosting',
                 'category' => 'web_hosting',
-                'description' => 'Coolify-powered container deployment platform with automatic SSL, custom domains, and Git integration.',
-                'icon_url' => '/images/logos/coolify.svg',
+                'description' => 'STX-powered container deployment platform with automatic SSL, custom domains, and Git integration.',
+                'icon_url' => '/svgs/stx-logo.svg',
                 'is_popular' => true,
                 'badge' => 'Instant Deploy',
                 'is_active' => true,
@@ -347,4 +347,3 @@ class HostingCatalogSeeder extends Seeder
         }
     }
 }
-

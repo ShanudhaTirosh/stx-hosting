@@ -350,10 +350,10 @@ class LocalFileVolume extends BaseModel
 
         $state = self::remoteFileStates([(string) $path], $server)[0];
         if ($state === 'unknown') {
-            throw new \Exception("Coolify cannot check the file {$path} on the server.");
+            throw new \Exception("STX Hosting cannot check the file {$path} on the server.");
         }
         if ($state === 'other' && ! $this->is_directory) {
-            throw new \Exception("A symbolic link or a special file is at {$path} on the server. Coolify did not write the file.");
+            throw new \Exception("A symbolic link or a special file is at {$path} on the server. STX Hosting did not write the file.");
         }
         $isFile = $state === 'file';
         $isDir = in_array($state, ['directory', 'empty-directory'], true);
@@ -517,7 +517,7 @@ class LocalFileVolume extends BaseModel
         $result = instant_remote_process(["test -L {$escapedPath} && echo LINK || echo OK"], $server);
 
         if (trim((string) $result) !== 'OK') {
-            throw new \RuntimeException("{$path} is a symbolic link on the server. Coolify does not write a file through a symbolic link. Remove the link or use another path.");
+            throw new \RuntimeException("{$path} is a symbolic link on the server. STX Hosting does not write a file through a symbolic link. Remove the link or use another path.");
         }
     }
 

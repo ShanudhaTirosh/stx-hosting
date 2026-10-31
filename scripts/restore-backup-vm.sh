@@ -330,11 +330,11 @@ while docker exec coolify sh -c "ps aux | grep -q '[a]rtisan start:migration'"; 
 done
 
 echo
-echo "--- Migration output (docker logs coolify) ---"
-docker logs coolify 2>&1 | sed -n '/Migration is enabled/,/Seeder is enabled/p'
+echo "--- Migration output (docker logs stx 2>/dev/null || docker logs coolify) ---"
+docker logs stx 2>/dev/null || docker logs coolify 2>&1 | sed -n '/Migration is enabled/,/Seeder is enabled/p'
 echo
 echo "--- Errors after start ---"
-docker logs coolify 2>&1 | grep -iE 'error|exception|fail' | tail -n 30 || true
+docker logs stx 2>/dev/null || docker logs coolify 2>&1 | grep -iE 'error|exception|fail' | tail -n 30 || true
 echo
 echo "--- Pending migrations ---"
 docker exec coolify php artisan migrate:status --pending || true

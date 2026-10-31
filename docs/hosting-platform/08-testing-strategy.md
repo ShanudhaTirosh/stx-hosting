@@ -566,8 +566,8 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: coolify_test
-          POSTGRES_USER: coolify
+          POSTGRES_DB: stx_test
+          POSTGRES_USER: stx
           POSTGRES_PASSWORD: password
         ports:
           - 5432:5432

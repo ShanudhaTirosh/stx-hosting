@@ -41,10 +41,10 @@ class UpdateCoolifyJob implements ShouldBeEncrypted, ShouldQueue
                 return;
             }
 
-            Log::info('Starting Coolify update process...');
+            Log::info('Starting STX Hosting update process...');
             UpdateCoolify::run(false); // false means it's not a manual update
 
-            Log::info('Coolify upgrade script started. Result: /data/coolify/source/.upgrade-status, log: /data/coolify/source/upgrade-*.log.');
+            Log::info('STX Hosting upgrade script started. Result: /data/coolify/source/.upgrade-status, log: /data/coolify/source/upgrade-*.log.');
         } catch (\Throwable $e) {
             Log::error('UpdateCoolifyJob failed: '.$e->getMessage());
             // Consider implementing a notification to administrators

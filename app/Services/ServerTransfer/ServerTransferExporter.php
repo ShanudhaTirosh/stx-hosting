@@ -97,7 +97,7 @@ class ServerTransferExporter
     public function export(Server $server, bool $includeSensitive = true): array
     {
         if ($server->id === 0) {
-            throw new RuntimeException('The Coolify host (localhost) cannot be transferred between instances.');
+            throw new RuntimeException('The STX Hosting host (localhost) cannot be transferred between instances.');
         }
 
         $server->loadMissing(['settings', 'privateKey', 'standaloneDockers', 'swarmDockers', 'cloudProviderToken', 'sslCertificates']);
@@ -400,7 +400,7 @@ class ServerTransferExporter
             return $gh?->is_system_wide === true;
         });
         if ($usesSystemWideGithub) {
-            $warnings[] = 'Some applications use a system-wide GitHub App, which is not exported. On import, Coolify will re-link to a matching system-wide GitHub App on the target instance (by UUID) if one exists.';
+            $warnings[] = 'Some applications use a system-wide GitHub App, which is not exported. On import, STX Hosting will re-link to a matching system-wide GitHub App on the target instance (by UUID) if one exists.';
         }
 
         $usesSystemWideGitlab = $applications->contains(function (Application $app) {
@@ -412,7 +412,7 @@ class ServerTransferExporter
             return $gl?->is_system_wide === true;
         });
         if ($usesSystemWideGitlab) {
-            $warnings[] = 'Some applications use a system-wide GitLab App, which is not exported. On import, Coolify will re-link to a matching system-wide GitLab App on the target instance (by UUID) if one exists.';
+            $warnings[] = 'Some applications use a system-wide GitLab App, which is not exported. On import, STX Hosting will re-link to a matching system-wide GitLab App on the target instance (by UUID) if one exists.';
         }
 
         $usesSystemWideGitea = $applications->contains(function (Application $app) {
@@ -424,7 +424,7 @@ class ServerTransferExporter
             return $gt?->is_system_wide === true;
         });
         if ($usesSystemWideGitea) {
-            $warnings[] = 'Some applications use a system-wide Gitea App, which is not exported. On import, Coolify will re-link to a matching system-wide Gitea App on the target instance (by UUID) if one exists.';
+            $warnings[] = 'Some applications use a system-wide Gitea App, which is not exported. On import, STX Hosting will re-link to a matching system-wide Gitea App on the target instance (by UUID) if one exists.';
         }
 
         if ($dependencies['s3_storages']->isNotEmpty()) {
@@ -562,7 +562,7 @@ class ServerTransferExporter
         }
         if ($runnerConfig) {
             $steps[] = 'After the GitHub App sends webhooks to {target_url}, open this server there, check the runner requirements, and enable GitHub runners. '
-                .'Enabling them stops runners that another Coolify instance started on this server.';
+                .'Enabling them stops runners that another STX Hosting instance started on this server.';
         }
         $steps[] = 'This instance keeps a copy of the SSH key of the server. On {target_url}, add a new SSH key to the server and select it there, '
             .'then remove the old public key from ~/.ssh/authorized_keys on the server.';

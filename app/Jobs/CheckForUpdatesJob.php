@@ -44,7 +44,7 @@ class CheckForUpdatesJob implements ShouldBeEncrypted, ShouldQueue
 
             return true;
         } catch (\Throwable $e) {
-            Log::warning('Could not check for Coolify updates', ['error' => $e->getMessage()]);
+            Log::warning('Could not check for STX Hosting updates', ['error' => $e->getMessage()]);
 
             return false;
         }

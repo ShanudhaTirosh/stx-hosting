@@ -16,7 +16,7 @@ class FlushDatabase
     {
         $cli = $database instanceof StandaloneKeydb ? 'keydb-cli' : 'redis-cli';
         if ($database instanceof StandaloneDragonfly && $database->enable_ssl) {
-            $cli .= ' --tls --cacert /etc/dragonfly/certs/coolify-ca.crt --cert /etc/dragonfly/certs/server.crt --key /etc/dragonfly/certs/server.key';
+            $cli .= ' --tls --cacert /etc/dragonfly/certs/stx-ca.crt --cert /etc/dragonfly/certs/server.crt --key /etc/dragonfly/certs/server.key';
         }
 
         $output = instant_remote_process(

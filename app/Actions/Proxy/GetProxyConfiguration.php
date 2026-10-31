@@ -116,14 +116,14 @@ class GetProxyConfiguration
             // One command per line: the non-root sudo parser adds sudo to line starts, not to `then`/`else` branches.
             "if [ -f {$configurationPath} ]; then",
             "    if [ \"$(stat -c %s {$configurationPath})\" -gt ".self::MAX_CONFIGURATION_SIZE_BYTES.' ]; then',
-            "        echo '__COOLIFY_PROXY_CONFIG_TOO_LARGE__'",
+            "        echo '__STX_PROXY_CONFIG_TOO_LARGE__'",
             '    else',
             "        head -c {$readLimit} {$configurationPath}",
             '    fi',
             'fi',
         ], $server, false);
 
-        if ($result === '__COOLIFY_PROXY_CONFIG_TOO_LARGE__' || strlen($result ?? '') > self::MAX_CONFIGURATION_SIZE_BYTES) {
+        if ($result === '__STX_PROXY_CONFIG_TOO_LARGE__' || strlen($result ?? '') > self::MAX_CONFIGURATION_SIZE_BYTES) {
             throw new \RuntimeException('Proxy configuration exceeds the 5 MiB size limit.');
         }
 

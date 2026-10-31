@@ -51,7 +51,7 @@ class ResourceStartActivity
      */
     public const DATABASE_START_LOCK_SECONDS = self::IN_PROGRESS_STALE_AFTER_SECONDS;
 
-    public const INTERRUPTED_MESSAGE = 'Interrupted by a Coolify restart.';
+    public const INTERRUPTED_MESSAGE = 'Interrupted by a STX Hosting restart.';
 
     public const STALE_MESSAGE = 'Marked as failed: no progress was recorded for too long.';
 

@@ -160,8 +160,8 @@ class StartMysql
                 [
                     [
                         'type' => 'bind',
-                        'source' => '/data/coolify/ssl/coolify-ca.crt',
-                        'target' => '/etc/mysql/certs/coolify-ca.crt',
+                        'source' => '/data/stx/ssl/stx-ca.crt',
+                        'target' => '/etc/mysql/certs/stx-ca.crt',
                         'read_only' => true,
                     ],
                 ]
@@ -191,7 +191,7 @@ class StartMysql
                 'mysqld',
                 '--ssl-cert=/etc/mysql/certs/server.crt',
                 '--ssl-key=/etc/mysql/certs/server.key',
-                '--ssl-ca=/etc/mysql/certs/coolify-ca.crt',
+                '--ssl-ca=/etc/mysql/certs/stx-ca.crt',
                 '--require-secure-transport=1',
             ];
         }

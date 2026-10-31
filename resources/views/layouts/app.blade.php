@@ -56,7 +56,7 @@
                                 <span class="text-cyan-400 font-extrabold">STX</span> Enterprises
                             </span>
                         </a>
-                        <x-version x-show="!collapsed" title="v{{ config('constants.coolify.version') }}"
+                        <x-version x-show="!collapsed" title="v{{ config('constants.stx.version', config('constants.coolify.version')) }}"
                             class="min-w-0 truncate !text-[10.5px] font-medium text-neutral-400 dark:text-fg-faint !opacity-100 hover:!opacity-100 dark:hover:text-fg hover:text-black" />
                     </div>
                     @if (isInstanceAdmin() && !isCloud())

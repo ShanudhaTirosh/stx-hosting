@@ -1124,7 +1124,7 @@ done
 
 if [ "$HEALTH" != "healthy" ]; then
     echo " - ERROR: STX Hosting container is not healthy after ${HEALTH_WAIT}s. Status: $HEALTH"
-    echo " - Please check: docker logs coolify"
+    echo " - Please check: docker logs stx 2>/dev/null || docker logs coolify"
     exit 1
 fi
 step_done
@@ -1168,7 +1168,7 @@ for IP in $PRIVATE_IPS; do
 done
 
 if [ "$IS_COOLIFY_VOLUME_EXISTS" -eq 0 ] && { [ -z "$ROOT_USER_EMAIL" ] || [ -z "$ROOT_USER_PASSWORD" ]; }; then
-    printf '\n  %s! Create the root account within 10 minutes. If the time ends, run %sdocker restart coolify%s%s and try again.%s\n' "$C_YELLOW" "$C_BOLD" "$C_RESET" "$C_YELLOW" "$C_RESET" >&3
+    printf '\n  %s! Create the root account within 10 minutes. If the time ends, run %sdocker restart stx 2>/dev/null || docker restart coolify%s%s and try again.%s\n' "$C_YELLOW" "$C_BOLD" "$C_RESET" "$C_YELLOW" "$C_RESET" >&3
 fi
 printf '\n  %s! Back up %s/data/coolify/source/.env%s%s to a safe place outside this server (e.g. a password manager).%s\n' "$C_YELLOW" "$C_BOLD" "$C_RESET" "$C_YELLOW" "$C_RESET" >&3
 printf '  %sLog file: %s%s\n\n' "$C_DIM" "$INSTALLATION_LOG_WITH_DATE" "$C_RESET" >&3

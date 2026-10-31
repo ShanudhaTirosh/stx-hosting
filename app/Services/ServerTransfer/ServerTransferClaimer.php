@@ -46,7 +46,7 @@ class ServerTransferClaimer
     public function claim(Server $server): array
     {
         if ($server->id === 0) {
-            throw new RuntimeException('Cannot claim the Coolify host itself.');
+            throw new RuntimeException('Cannot claim the STX Hosting host itself.');
         }
 
         $instanceUrl = rtrim((string) (instanceSettings()->fqdn ?: config('app.url')), '/');
@@ -117,7 +117,7 @@ class ServerTransferClaimer
     public function markTransferred(Server $server, ?string $exportId = null, ?string $targetInstanceUrl = null, bool $fromOwnerMarker = false): array
     {
         if ($server->id === 0) {
-            throw new RuntimeException('Cannot transfer the Coolify host itself.');
+            throw new RuntimeException('Cannot transfer the STX Hosting host itself.');
         }
 
         $result = DB::transaction(function () use ($server, $exportId, $targetInstanceUrl, $fromOwnerMarker) {
@@ -273,7 +273,7 @@ class ServerTransferClaimer
     {
         $server->githubRunnerConfig()->update(['is_enabled' => false]);
 
-        $message = 'The server was transferred to another Coolify instance. This instance stopped managing its runners.';
+        $message = 'The server was transferred to another STX Hosting instance. This instance stopped managing its runners.';
         GithubRunnerExecution::query()
             ->where('server_id', $server->id)
             ->whereIn('status', GithubRunnerStatus::active())
@@ -327,12 +327,12 @@ class ServerTransferClaimer
 
         $this->markTransferred($server, targetInstanceUrl: $owner, fromOwnerMarker: true);
 
-        Log::warning('Server is claimed by another Coolify instance; management stopped here', [
+        Log::warning('Server is claimed by another STX Hosting instance; management stopped here', [
             'server_uuid' => $server->uuid,
             'owner_instance_url' => $owner,
         ]);
         $server->team?->notify(new GeneralNotification(
-            "Server '{$server->name}' is now managed by ".($owner ?? 'another Coolify instance').'. This instance stopped managing it.',
+            "Server '{$server->name}' is now managed by ".($owner ?? 'another STX Hosting instance').'. This instance stopped managing it.',
             success: false,
         ));
 

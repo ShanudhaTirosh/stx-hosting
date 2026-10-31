@@ -11,7 +11,7 @@ class ManagedDnsRecord extends BaseModel
 {
     use HasFactory;
 
-    public const OWNERSHIP_COMMENT_PREFIX = 'managed-by: coolify';
+    public const OWNERSHIP_COMMENT_PREFIX = 'managed-by: stx';
 
     protected $fillable = [
         'uuid', 'team_id', 'integration_token_id', 'dns_provider_zone_id',

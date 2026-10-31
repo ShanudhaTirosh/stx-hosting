@@ -40,6 +40,7 @@ _ide_helper_models.php
 scripts/load-test/*
 .ignition.json
 .env.dusk.local
+docker/stx-terminal/node_modules
 docker/coolify-terminal/node_modules
 .DS_Store
 CHANGELOG.md
@@ -58,7 +59,7 @@ ref
 .dev/lima/ssh_key
 .dev/lima/hosts
 
-# Multi-instance local Coolify env files (scripts/dev-instances)
+# Multi-instance local STX Hosting env files (scripts/dev-instances)
 .dev-instances/
 
 # Service parser template snapshots: generated locally by scripts/parser-snapshot-diff, not committed

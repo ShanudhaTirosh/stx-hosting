@@ -14,7 +14,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Tags | Coolify')]
+#[Title('Tags | STX Hosting')]
 class Show extends Component
 {
     use AuthorizesRequests;

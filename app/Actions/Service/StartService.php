@@ -74,7 +74,7 @@ class StartService
         } else {
             $commands[] = "{$compose} up -d --remove-orphans --force-recreate --build < /dev/null";
         }
-        $commands[] = "docker network connect $service->uuid coolify-proxy >/dev/null 2>&1 || true";
+        $commands[] = "docker network connect $service->uuid stx-proxy >/dev/null 2>&1 || true";
         $commands = array_merge($commands, $this->logDrainNetworkConnectCommands($service));
         if ($service->is_maintenance_enabled) {
             // Domains can change with the compose file, so the maintenance routes follow them.
@@ -166,7 +166,7 @@ class StartService
         }
 
         return [
-            'docker network connect '.escapeshellarg($network).' coolify-log-drain >/dev/null 2>&1 || true',
+            'docker network connect '.escapeshellarg($network).' stx-log-drain >/dev/null 2>&1 || true',
         ];
     }
 

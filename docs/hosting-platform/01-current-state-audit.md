@@ -37,7 +37,7 @@ This document provides an exhaustive, evidence-based architectural, codebase, an
                        │ Internal Telemetry / Probes       │ Authenticated REST API
                        ▼                                   ▼
 ┌──────────────────────────────────────┐   ┌──────────────────────────────────────┐
-│       STATUS PLATFORM (`status`)     │   │      COOLIFY CONTROL PLANE (Root)    │
+│       STATUS PLATFORM (`status`)     │   │      STX HOSTING CONTROL PLANE (Root)    │
 │   Next.js 15 App Router | React 19   │   │   Laravel 12 / PHP 8.4 / Livewire 3  │
 │   Port 3003 | SQLite (status.db)     │   │   Port 8000 (App) / 6001 (Reverb)    │
 │   - Autonomous Monitoring Daemon     │   │   - Cloud Provider Provisioning:     │
@@ -107,7 +107,7 @@ This document provides an exhaustive, evidence-based architectural, codebase, an
 | **Language & Engine** | PHP 8.4 (Laravel 12) | TypeScript (Node.js 20+) | TypeScript (Node.js 22+) |
 | **Frontend Framework** | Livewire 3.8.10 + Alpine.js | Next.js 14.2.35 (React 18) | Next.js 15.1.0 (React 19) |
 | **CSS System** | Tailwind CSS v4.3.3 | Tailwind CSS v3.4.7 | Tailwind CSS v4.0.0 |
-| **Primary Persistence** | PostgreSQL 15/16 (`coolify-db`) | Stateless (Browser `localStorage`) | SQLite 3 (`status.db`) |
+| **Primary Persistence** | PostgreSQL 15/16 (`stx-db`) | Stateless (Browser `localStorage`) | SQLite 3 (`status.db`) |
 | **Queue / Asynchrony** | Redis 7 + Laravel Horizon | Client Promises | Server Lifecycle Daemon (`register()`) |
 | **Auth Mechanism** | Fortify + Sanctum Bearer Tokens | Redirects to Dashboard URL | Jose HS256 JWT (`sp_session` cookie) |
 | **WebSockets / Events**| Laravel Reverb (Port 6001) | None (Polled API) | Polling & SSE-ready |
@@ -295,7 +295,7 @@ STX Hosting contains a production Stripe integration (`app/Actions/Stripe/`, `ap
   - `Team ID 0`: Instance root team (`isAdminFromSession()` evaluates membership in Team 0).
   - `Server ID 0`: Localhost server where STX Hosting runs.
   - `InstanceSettings ID 0`: Global instance configuration singleton.
-  - `StandalonePostgresql ID 0`: STX Hosting's internal database (`coolify-db`).
+  - `StandalonePostgresql ID 0`: STX Hosting's internal database (`stx-db`).
 
 ### 5.4 Pre-Built Cloud Provider Provisioning Engine (Reusable Asset!)
 STX Hosting contains production-grade REST clients for major cloud VPS providers in `app/Services/`:
@@ -309,7 +309,7 @@ STX Hosting contains production-grade REST clients for major cloud VPS providers
 - **Hostinger (`App\Services\HostingerService`)**:
   - Implemented methods: `getCatalog()`, `getDataCenters()`, `getTemplates()`, `createServer()`, `deleteServer()`.
 - **Validation Job (`ValidateAndInstallServerJob`)**:
-  - Verifies SSH reachability, validates OS distribution, installs prerequisites (`curl`, `wget`, `git`, `docker`, `docker-compose`), provisions Traefik/Caddy proxy, and configures the `coolify` Docker network.
+  - Verifies SSH reachability, validates OS distribution, installs prerequisites (`curl`, `wget`, `git`, `docker`, `docker-compose`), provisions Traefik/Caddy proxy, and configures the `stx` Docker network.
 
 ---
 

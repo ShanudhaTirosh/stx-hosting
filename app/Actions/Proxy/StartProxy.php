@@ -75,9 +75,9 @@ class StartProxy
             $commands = $commands->merge([
                 "mkdir -p $proxy_path/dynamic",
                 "echo 'Creating required Docker Compose file.'",
-                "echo 'Starting coolify-proxy.'",
-                "docker stack deploy --detach=true -c $compose_file coolify-proxy",
-                "echo 'Successfully started coolify-proxy.'",
+                "echo 'Starting stx-proxy.'",
+                "docker stack deploy --detach=true -c $compose_file stx-proxy",
+                "echo 'Successfully started stx-proxy.'",
             ]);
         } else {
             // The base Caddyfile also holds the maintenance blocks (see Server::caddyBaseCaddyfile()).
@@ -88,19 +88,19 @@ class StartProxy
                 "echo 'Creating required Docker Compose file.'",
                 "echo 'Pulling docker image.'",
                 serverDockerConfigPrefix($server)."docker compose -f $compose_file pull",
-                'if docker ps -a --format "{{.Names}}" | grep -q "^coolify-proxy$"; then',
-                "    echo 'Stopping and removing existing coolify-proxy.'",
-                '    docker stop coolify-proxy 2>/dev/null || true',
-                '    docker rm -f coolify-proxy 2>/dev/null || true',
+                'if docker ps -a --format "{{.Names}}" | grep -q "^stx-proxy$"; then',
+                "    echo 'Stopping and removing existing stx-proxy.'",
+                '    docker stop stx-proxy 2>/dev/null || true',
+                '    docker rm -f stx-proxy 2>/dev/null || true',
                 '    # Wait for container to be fully removed',
                 '    for i in {1..10}; do',
-                '        if ! docker ps -a --format "{{.Names}}" | grep -q "^coolify-proxy$"; then',
+                '        if ! docker ps -a --format "{{.Names}}" | grep -q "^stx-proxy$"; then',
                 '            break',
                 '        fi',
-                '        echo "Waiting for coolify-proxy to be removed... ($i/10)"',
+                '        echo "Waiting for stx-proxy to be removed... ($i/10)"',
                 '        sleep 1',
                 '    done',
-                "    echo 'Successfully stopped and removed existing coolify-proxy.'",
+                "    echo 'Successfully stopped and removed existing stx-proxy.'",
                 'fi',
             ]);
             if ($server->proxyType() !== ProxyTypes::TRAEFIK->value) {
@@ -110,9 +110,9 @@ class StartProxy
             // Ensure required networks exist BEFORE docker compose up (networks are declared as external)
             $commands = $commands->merge(ensureProxyNetworksExist($server));
             $commands = $commands->merge([
-                "echo 'Starting coolify-proxy.'",
+                "echo 'Starting stx-proxy.'",
                 "docker compose -f $compose_file up -d --wait --remove-orphans",
-                "echo 'Successfully started coolify-proxy.'",
+                "echo 'Successfully started stx-proxy.'",
             ]);
             $commands = $commands->merge(connectProxyToNetworks($server));
         }

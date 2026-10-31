@@ -13,11 +13,11 @@ class InfrastructureOverviewResource extends Resource
 {
     use ResolvesTeam;
 
-    protected string $name = 'coolify-overview';
+    protected string $name = 'stx-overview';
 
     protected string $description = 'Team infrastructure overview JSON for the authenticated Coolify token.';
 
-    protected string $uri = 'coolify://overview';
+    protected string $uri = 'stx://overview';
 
     protected string $mimeType = 'application/json';
 

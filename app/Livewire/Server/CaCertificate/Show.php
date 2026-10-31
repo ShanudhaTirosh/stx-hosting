@@ -72,7 +72,7 @@ class Show extends Component
 
             if ($this->caCertificate) {
                 if (! openssl_x509_check_private_key($this->certificateContent, $this->caCertificate->ssl_private_key)) {
-                    throw new \Exception('This certificate does not match the CA private key of this server. Coolify signs database certificates with that key, so clients would fail with a certificate signature error.');
+                    throw new \Exception('This certificate does not match the CA private key of this server. STX Hosting signs database certificates with that key, so clients would fail with a certificate signature error.');
                 }
 
                 $this->caCertificate->ssl_certificate = $this->certificateContent;
@@ -99,7 +99,7 @@ class Show extends Component
         try {
             $this->authorize('manageCaCertificate', $this->server);
             SslHelper::generateSslCertificate(
-                commonName: 'Coolify CA Certificate',
+                commonName: 'STX Hosting CA Certificate',
                 serverId: $this->server->id,
                 isCaCertificate: true,
                 validityDays: 10 * 365

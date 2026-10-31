@@ -71,6 +71,6 @@ trait RemembersCanvasView
 
     private function viewCookieName(string $page): string
     {
-        return 'coolify_'.auth()->id().'_'.$page.'_view';
+        return 'stx_'.auth()->id().'_'.$page.'_view';
     }
 }

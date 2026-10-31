@@ -2,11 +2,11 @@
 
 /*
  * Server-side host for the bundled Reverb server. Older installs could set
- * PUSHER_BACKEND_HOST to the removed "coolify-realtime" container, so that
+ * PUSHER_BACKEND_HOST to the removed "stx-realtime" container, so that
  * value is treated as unset. The browser-facing PUSHER_HOST must never be used here.
  */
 $backendHost = env('PUSHER_BACKEND_HOST');
-if (blank($backendHost) || $backendHost === 'coolify-realtime') {
+if (blank($backendHost) || $backendHost === 'stx-realtime') {
     $backendHost = '127.0.0.1';
 }
 
@@ -42,9 +42,9 @@ return [
 
         'reverb' => [
             'driver' => 'reverb',
-            'key' => env('PUSHER_APP_KEY', 'coolify'),
-            'secret' => env('PUSHER_APP_SECRET', 'coolify'),
-            'app_id' => env('PUSHER_APP_ID', 'coolify'),
+            'key' => env('PUSHER_APP_KEY', 'stx'),
+            'secret' => env('PUSHER_APP_SECRET', 'stx'),
+            'app_id' => env('PUSHER_APP_ID', 'stx'),
             'options' => [
                 'host' => $backendHost,
                 'port' => env('PUSHER_BACKEND_PORT', 6001),
@@ -62,9 +62,9 @@ return [
         // protocol, so this keeps pointing at the bundled server like it did before.
         'pusher' => [
             'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY', 'coolify'),
-            'secret' => env('PUSHER_APP_SECRET', 'coolify'),
-            'app_id' => env('PUSHER_APP_ID', 'coolify'),
+            'key' => env('PUSHER_APP_KEY', 'stx'),
+            'secret' => env('PUSHER_APP_SECRET', 'stx'),
+            'app_id' => env('PUSHER_APP_ID', 'stx'),
             'options' => [
                 'host' => $backendHost,
                 'port' => env('PUSHER_BACKEND_PORT', 6001),

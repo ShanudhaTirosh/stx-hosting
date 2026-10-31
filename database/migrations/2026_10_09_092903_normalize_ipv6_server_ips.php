@@ -57,7 +57,7 @@ return new class extends Migration
             return;
         }
 
-        // Coolify does not allow the same server IP twice, in any team.
+        // STX Hosting does not allow the same server IP twice, in any team.
         $duplicateExists = DB::table('servers')
             ->whereNull('deleted_at')
             ->where('id', '!=', $server->id)

@@ -60,7 +60,7 @@ class SentinelController extends Controller
                 'server_uuid' => $server->uuid,
                 'team_id' => $server->team_id,
             ]);
-            $server->rememberSentinelPushProblem('Coolify rejected the push: the subscription of this team is not active.');
+            $server->rememberSentinelPushProblem('STX Hosting rejected the push: the subscription of this team is not active.');
 
             return response()->json(['message' => 'Unauthorized'], 401);
         }
@@ -70,7 +70,7 @@ class SentinelController extends Controller
                 'server_uuid' => $server->uuid,
                 'team_id' => $server->team_id,
             ]);
-            $server->rememberSentinelPushProblem('Coolify rejected the push: the server is marked unreachable, not usable, or disabled. Validate the server connection.');
+            $server->rememberSentinelPushProblem('STX Hosting rejected the push: the server is marked unreachable, not usable, or disabled. Validate the server connection.');
 
             return response()->json(['message' => 'Server is not functional'], 401);
         }
@@ -80,7 +80,7 @@ class SentinelController extends Controller
                 'server_uuid' => $server->uuid,
                 'team_id' => $server->team_id,
             ]);
-            $server->rememberSentinelPushProblem('Coolify rejected the push: the Sentinel token does not match. Sync Sentinel to apply the current token.');
+            $server->rememberSentinelPushProblem('STX Hosting rejected the push: the Sentinel token does not match. Sync Sentinel to apply the current token.');
 
             return response()->json(['message' => 'Unauthorized'], 401);
         }
@@ -89,7 +89,7 @@ class SentinelController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $server->rememberSentinelPushProblem('Coolify rejected the push: the payload is not valid.');
+            $server->rememberSentinelPushProblem('STX Hosting rejected the push: the payload is not valid.');
 
             return response()->json(serializeApiResponse([
                 'message' => 'Validation failed.',

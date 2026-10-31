@@ -110,7 +110,7 @@ wait_for_coolify() {
 		sleep 5
 	done
 	info "roll back with: cp $BACKUP_FILE $ENV_FILE && LATEST_IMAGE=$current_version ${compose[*]} up -d --no-deps coolify"
-	die "STX Hosting $patch_version is not healthy after 5 minutes, check it with: docker logs coolify"
+	die "STX Hosting $patch_version is not healthy after 5 minutes, check it with: docker logs stx 2>/dev/null || docker logs coolify"
 }
 
 main

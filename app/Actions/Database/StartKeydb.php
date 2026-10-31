@@ -181,8 +181,8 @@ class StartKeydb
                 [
                     [
                         'type' => 'bind',
-                        'source' => '/data/coolify/ssl/coolify-ca.crt',
-                        'target' => '/etc/keydb/certs/coolify-ca.crt',
+                        'source' => '/data/stx/ssl/stx-ca.crt',
+                        'target' => '/etc/keydb/certs/stx-ca.crt',
                         'read_only' => true,
                     ],
                 ]
@@ -309,7 +309,7 @@ class StartKeydb
                 '--tls-port 6380',
                 '--tls-cert-file /etc/keydb/certs/server.crt',
                 '--tls-key-file /etc/keydb/certs/server.key',
-                '--tls-ca-cert-file /etc/keydb/certs/coolify-ca.crt',
+                '--tls-ca-cert-file /etc/keydb/certs/stx-ca.crt',
                 '--tls-auth-clients optional',
             ];
             $command .= ' '.implode(' ', $sslArgs);

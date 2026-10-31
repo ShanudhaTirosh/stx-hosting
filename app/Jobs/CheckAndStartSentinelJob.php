@@ -51,14 +51,14 @@ class CheckAndStartSentinelJob implements ShouldBeEncrypted, ShouldBeUnique, Sho
 
         // An SSH failure throws here, so it is never mistaken for a missing container.
         // A missing container gives empty output and exit code 0.
-        $sentinelStatus = instant_remote_process_with_timeout(["docker ps -a --filter 'name=^coolify-sentinel$' --format '{{.State}} {{.Status}}'"], $this->server);
+        $sentinelStatus = instant_remote_process_with_timeout(["docker ps -a --filter 'name=^(stx|coolify)-sentinel$' --format '{{.State}} {{.Status}}'"], $this->server);
         if (! str_starts_with((string) $sentinelStatus, 'running')) {
             $this->startSentinel($latestVersion);
 
             return;
         }
         if (str_contains($sentinelStatus, '(unhealthy)')) {
-            $this->server->rememberSentinelPushProblem('The Sentinel container was unhealthy. Coolify restarted it.');
+            $this->server->rememberSentinelPushProblem('The Sentinel container was unhealthy. STX Hosting restarted it.');
             $this->startSentinel($latestVersion);
 
             return;
@@ -67,7 +67,7 @@ class CheckAndStartSentinelJob implements ShouldBeEncrypted, ShouldBeUnique, Sho
         // One SSH call reads the version and the last push result. Sentinel versions without
         // /api/push-status give an empty second line.
         $output = instant_remote_process_with_timeout([
-            "docker exec coolify-sentinel sh -c 'curl -s http://127.0.0.1:8888/api/version; echo; curl -sf -H \"Authorization: Bearer \$TOKEN\" http://127.0.0.1:8888/api/push-status'",
+            "docker exec stx-sentinel 2>/dev/null || docker exec coolify-sentinel sh -c 'curl -s http://127.0.0.1:8888/api/version; echo; curl -sf -H \"Authorization: Bearer \$TOKEN\" http://127.0.0.1:8888/api/push-status'",
         ], $this->server, false);
         [$runningVersion, $pushStatus] = array_pad(explode("\n", trim((string) $output), 2), 2, null);
         $this->rememberPushError($pushStatus);
@@ -107,7 +107,7 @@ class CheckAndStartSentinelJob implements ShouldBeEncrypted, ShouldBeUnique, Sho
             return;
         }
 
-        $this->server->rememberSentinelPushProblem('Sentinel cannot push to Coolify: '.data_get($status, 'last_error'));
+        $this->server->rememberSentinelPushProblem('Sentinel cannot push to STX Hosting: '.data_get($status, 'last_error'));
     }
 
     private function sentinelIsEnabled(): bool

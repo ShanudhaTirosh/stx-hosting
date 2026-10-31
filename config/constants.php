@@ -47,10 +47,10 @@ return [
     ],
 
     'services' => [
-        'official' => 'https://cdn.coollabs.io/coolify/service-templates-latest.json',
+        'official' => 'https://cdn.stxhosting.com/stx/service-templates-latest.json',
         'file_name' => 'service-templates-latest.json',
         // Shared across HTTP/Horizon nodes when CACHE_DRIVER is redis (default).
-        'cache_key' => 'coolify:service-templates-bundle',
+        'cache_key' => 'stx:service-templates-bundle',
     ],
 
     'terminal' => [

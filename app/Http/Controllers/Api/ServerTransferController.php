@@ -247,7 +247,7 @@ class ServerTransferController extends Controller
                 'label' => 'the transfer bundle version is supported',
                 'ok' => $schemaVersion === ServerTransferBundle::SCHEMA_VERSION,
                 'message' => $schemaVersion === ServerTransferBundle::SCHEMA_VERSION ? null
-                    : 'This instance reads transfer bundle version '.ServerTransferBundle::SCHEMA_VERSION.", but the source sends version {$schemaVersion}. Upgrade both instances to the same Coolify version.",
+                    : 'This instance reads transfer bundle version '.ServerTransferBundle::SCHEMA_VERSION.", but the source sends version {$schemaVersion}. Upgrade both instances to the same STX Hosting version.",
             ],
             ...collect($this->importer->importChecks((string) $request->query('server_uuid'), $ip, $teamId))
                 ->map(fn (array $check) => collect($check)->only(['label', 'ok', 'message'])->all())

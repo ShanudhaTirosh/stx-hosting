@@ -58,7 +58,7 @@ class CheckTraefikVersionForServerJob implements ShouldBeEncrypted, ShouldQueue
 
         // Check if image tag is 'latest' by inspecting the image (makes SSH call)
         $imageTag = instant_remote_process([
-            "docker inspect coolify-proxy --format '{{.Config.Image}}' 2>/dev/null",
+            "docker inspect stx-proxy 2>/dev/null || docker inspect coolify-proxy --format '{{.Config.Image}}' 2>/dev/null",
         ], $this->server, false);
 
         // Handle empty/null response from SSH command

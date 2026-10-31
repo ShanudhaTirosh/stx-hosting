@@ -104,7 +104,7 @@ class Transfer extends Component
         try {
             $this->authorize('transfer', $this->server);
             if ($this->isLocalhost) {
-                throw new \RuntimeException('The Coolify host (localhost) cannot be transferred.');
+                throw new \RuntimeException('The STX Hosting host (localhost) cannot be transferred.');
             }
 
             $migrator->start(

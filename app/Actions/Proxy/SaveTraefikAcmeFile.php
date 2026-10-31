@@ -13,11 +13,11 @@ class SaveTraefikAcmeFile
     {
         $path = rtrim($server->proxyPath(), '/').'/acme.json';
         $suffix = bin2hex(random_bytes(8));
-        $temporaryPath = "{$path}.coolify-{$suffix}";
-        $uploadPath = "/tmp/coolify-acme-{$suffix}.json";
+        $temporaryPath = "{$path}.stx-{$suffix}";
+        $uploadPath = "/tmp/stx-acme-{$suffix}.json";
 
         // Upload the file with scp: a certificate store can exceed the size limit of one shell argument.
-        $localPath = tempnam(sys_get_temp_dir(), 'coolify-acme-');
+        $localPath = tempnam(sys_get_temp_dir(), 'stx-acme-');
         try {
             chmod($localPath, 0600);
             file_put_contents($localPath, $contents);

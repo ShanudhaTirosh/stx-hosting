@@ -50,7 +50,7 @@ class CloudProviderApiException extends Exception
             $this->errorCode === 'resource_unavailable' => 'The selected server type, image, or location is not available now. Select a different location or server type.',
             $this->errorCode === 'uniqueness_error' => "A resource with the same name already exists in your {$this->provider} account, for example a server or an SSH key. Use a different name.",
             $this->errorCode === 'maintenance', $this->status === 423, $this->status >= 500 => "{$this->provider} cannot process the request now. Try again later.",
-            $this->status === 401 => "The {$this->provider} API token is invalid or expired. Update the cloud provider token in Coolify.",
+            $this->status === 401 => "The {$this->provider} API token is invalid or expired. Update the cloud provider token in STX Hosting.",
             $this->status === 403 => "The {$this->provider} API token does not have permission for this request. Use a token with read and write access.",
             $this->status === 404 => "{$this->provider} could not find a requested resource, for example the location, server type, image, or SSH key.",
             $this->status === 409 => "{$this->provider} rejected the request because of a conflict with an existing resource.",

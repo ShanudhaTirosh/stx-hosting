@@ -166,7 +166,7 @@ class PrivateKey extends BaseModel
             $instance = new self;
             $instance->rateLimit(10);
             $name = generate_random_name();
-            $description = 'Created by Coolify';
+            $description = 'Created by STX Hosting';
             $keyPair = generateSSHKey($type === 'ed25519' ? 'ed25519' : 'rsa');
 
             return [
@@ -283,7 +283,7 @@ class PrivateKey extends BaseModel
         $testSuccess = $disk->put($testFilename, 'test');
 
         if (! $testSuccess) {
-            throw new \Exception('SSH keys storage directory is not writable. Run on the host: sudo chown -R 9999 /data/coolify/ssh && sudo chmod -R 700 /data/coolify/ssh && docker restart coolify');
+            throw new \Exception('SSH keys storage directory is not writable. Run on the host: sudo chown -R 9999 /data/stx/ssh && sudo chmod -R 700 /data/stx/ssh && docker restart stx');
         }
 
         // Clean up test file

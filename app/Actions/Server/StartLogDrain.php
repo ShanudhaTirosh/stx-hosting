@@ -80,10 +80,14 @@ class StartLogDrain
 [FILTER]
     Name                modify
     Match               *
-    Set                 coolify.server_name {$serverName}
+    Set                 stx.server_name {$serverName}
+    Rename              STX_APP_NAME stx.app_name
     Rename              COOLIFY_APP_NAME coolify.app_name
+    Rename              STX_PROJECT_NAME stx.project_name
     Rename              COOLIFY_PROJECT_NAME coolify.project_name
+    Rename              STX_SERVER_IP stx.server_ip
     Rename              COOLIFY_SERVER_IP coolify.server_ip
+    Rename              STX_ENVIRONMENT_NAME stx.environment_name
     Rename              COOLIFY_ENVIRONMENT_NAME coolify.environment_name
 [OUTPUT]
     Name nrlogs
@@ -114,10 +118,14 @@ class StartLogDrain
 [FILTER]
     Name                modify
     Match               *
-    Set                 coolify.server_name {$serverName}
+    Set                 stx.server_name {$serverName}
+    Rename              STX_APP_NAME stx.app_name
     Rename              COOLIFY_APP_NAME coolify.app_name
+    Rename              STX_PROJECT_NAME stx.project_name
     Rename              COOLIFY_PROJECT_NAME coolify.project_name
+    Rename              STX_SERVER_IP stx.server_ip
     Rename              COOLIFY_SERVER_IP coolify.server_ip
+    Rename              STX_ENVIRONMENT_NAME stx.environment_name
     Rename              COOLIFY_ENVIRONMENT_NAME coolify.environment_name
 [OUTPUT]
     Name            http
@@ -160,9 +168,9 @@ class StartLogDrain
             }
             $compose = base64_encode('
 services:
-  coolify-log-drain:
+  stx-log-drain:
     image: cr.fluentbit.io/fluent/fluent-bit:5.1
-    container_name: coolify-log-drain
+    container_name: stx-log-drain
     command: -c /fluent-bit.conf
     env_file:
       - .env
@@ -223,7 +231,7 @@ Files:
                 "echo 'Pulling Fluent Bit'",
                 "docker compose -f $compose_path pull --quiet --ignore-pull-failures",
                 "echo 'Starting Fluent Bit'",
-                'docker rm -f coolify-log-drain >/dev/null 2>&1 || true',
+                'docker rm -f stx-log-drain >/dev/null 2>&1 || true',
                 "docker compose -f $compose_path up -d",
             ];
             $command = array_merge($command, $this->logDrainNetworkConnectCommands($server));
@@ -256,7 +264,7 @@ Files:
             ->map(fn (Service $service) => data_get($service, 'destination.network'))
             ->filter()
             ->unique()
-            ->map(fn (string $network) => 'docker network connect '.escapeshellarg($network).' coolify-log-drain >/dev/null 2>&1 || true')
+            ->map(fn (string $network) => 'docker network connect '.escapeshellarg($network).' stx-log-drain >/dev/null 2>&1 || true')
             ->values()
             ->all();
     }

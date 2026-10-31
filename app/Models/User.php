@@ -326,7 +326,7 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
         $mail->view('emails.email-verification', [
             'url' => $url,
         ]);
-        $mail->subject('Coolify: Verify your email.');
+        $mail->subject('STX Hosting: Verify your email.');
         send_user_an_email($mail, $this->email);
     }
 

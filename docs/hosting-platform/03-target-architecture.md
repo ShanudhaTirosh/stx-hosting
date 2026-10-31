@@ -1,7 +1,7 @@
 # Deliverable C: Target Architecture & Product Specifications
 **Document Reference**: `docs/hosting-platform/03-target-architecture.md`  
 **Requirement Mapping**: R3 (Hosting Products Specification and Security Architecture)  
-**System Ecosystem**: ShanuTechX Commercial Hosting Platform (`web`, `status`, `webmail`, `coolify`)  
+**System Ecosystem**: ShanuTechX Commercial Hosting Platform (`web`, `status`, `webmail`, `stx`)  
 **Status**: Production Architecture Baseline  
 **Author**: ShanuTechX Platform Architecture & Systems Engineering  
 **Revision**: 1.0.0 (October 2026)  
@@ -81,7 +81,7 @@ The platform architecture organizes components into four distinct functional tie
                     ▼                                                   ▼
         ┌───────────────────────┐                           ┌───────────────────────┐
         │  PostgreSQL 16 Cluster│                           │  Redis 7 In-Memory    │
-        │     (`coolify-db`)    │                           │  (Queues & Sessions)  │
+        │     (`stx-db`)    │                           │  (Queues & Sessions)  │
         │ • 14 Core Commerce Tbl│                           │ • Horizon Queue Engine│
         │ • Server & App Config │                           │ • Cache & Broadcasts  │
         │ • Encrypted Secrets   │                           │ • Rate Limiting Locks │
@@ -116,8 +116,8 @@ The platform architecture organizes components into four distinct functional tie
 | **Public Storefront** | `web/` | Next.js 14 (App Router), Tailwind CSS v4, Three.js | `3000` | `shanutechx.com`, `www.shanutechx.com` | Marketing, dynamic catalog display (`/vps`, `/app-hosting`, `/databases`), documentation (`/docs`), pricing comparison (`/pricing`). Consumes backend via `web/lib/api.ts`. |
 | **Status Platform** | `status/` | Next.js 15, Tailwind CSS, SQLite (`data/status.db`) | `3003` | `status.shanutechx.com` | Real-time probe telemetry (ICMP ping, TCP port, HTTP/S checks), 90-day uptime bars, incident publishing, `/admin` monitor management studio. |
 | **Webmail Service** | `webmail/` | Next.js 14, Tailwind CSS | `3002` | `mail.shanutechx.com`, `webmail.shanutechx.com` | Web-based email client portal for hosted domain email accounts. |
-| **Control Plane & API** | root (`coolify`) | Laravel 12, Livewire 3, Sanctum, Reverb | `8000` | `portal.shanutechx.com`, `api.shanutechx.com` | Core commercial engine, customer portal, admin management console, REST API gateway (`/api/v1/`), STX Hosting orchestration engine. |
-| **Reverb WebSockets** | root (`coolify`) | Laravel Reverb WebSocket Server | `6001` | `ws.shanutechx.com` | Real-time browser updates for terminal, deployment logs, service power state changes, and payment verification toasts. |
+| **Control Plane & API** | root (`stx`) | Laravel 12, Livewire 3, Sanctum, Reverb | `8000` | `portal.shanutechx.com`, `api.shanutechx.com` | Core commercial engine, customer portal, admin management console, REST API gateway (`/api/v1/`), STX Hosting orchestration engine. |
+| **Reverb WebSockets** | root (`stx`) | Laravel Reverb WebSocket Server | `6001` | `ws.shanutechx.com` | Real-time browser updates for terminal, deployment logs, service power state changes, and payment verification toasts. |
 | **PostgreSQL Database** | root (`postgres`) | PostgreSQL 16 Alpine | `5432` (Internal) | `postgres:5432` (Docker Network) | Persistent storage for STX Hosting control plane and ShanuTechX commercial commerce data (14 relational tables). |
 | **Redis Cache & Queue** | root (`redis`) | Redis 7 Alpine | `6379` (Internal) | `redis:6379` (Docker Network) | High-throughput job queue management for deployment pipelines, email notifications, dunning sweeps, and cache. |
 

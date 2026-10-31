@@ -41,10 +41,10 @@ services:
       - "6002"
     networks:
       coolify:
-        # Realtime ran in the coolify-realtime container before 4.4; keep the name for existing proxy upstreams.
+        # Realtime ran in the stx-realtime container before 4.4; keep the name for existing proxy upstreams.
         aliases:
           - stx-realtime
-          - coolify-realtime
+          - stx-realtime
     healthcheck:
       test: curl --fail http://127.0.0.1:8080/api/health && curl --fail http://127.0.0.1:${PUSHER_BACKEND_PORT:-6001}/up || exit 1
       interval: 5s
@@ -58,13 +58,13 @@ services:
         condition: service_healthy
   postgres:
     volumes:
-      - coolify-db:/var/lib/postgresql/data
+      - stx-db:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: "${DB_USERNAME}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      POSTGRES_DB: "${DB_DATABASE:-coolify}"
+      POSTGRES_DB: "${DB_DATABASE:-stx}"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}", "-d", "${DB_DATABASE:-coolify}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}", "-d", "${DB_DATABASE:-stx}" ]
       interval: 5s
       retries: 10
       timeout: 2s
@@ -73,17 +73,17 @@ services:
     environment:
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
     volumes:
-      - coolify-redis:/data
+      - stx-redis:/data
     healthcheck:
       test: redis-cli ping
       interval: 5s
       retries: 10
       timeout: 2s
 volumes:
-  coolify-db:
-    name: coolify-db
-  coolify-redis:
-    name: coolify-redis
+  stx-db:
+    name: stx-db
+  stx-redis:
+    name: stx-redis
 
 networks:
   coolify:

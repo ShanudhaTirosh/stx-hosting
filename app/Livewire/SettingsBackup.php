@@ -65,20 +65,20 @@ class SettingsBackup extends Component
         $this->s3s = $s3s;
     }
 
-    public function addCoolifyDatabase()
+    public function addStxDatabase()
     {
         try {
             $this->authorize('update', $this->settings);
             $this->database = StandalonePostgresql::find(0);
             if (! $this->database) {
                 $server = Server::findOrFail(0);
-                $out = instant_remote_process(['docker inspect coolify-db'], $server);
+                $out = instant_remote_process(['docker inspect stx-db 2>/dev/null || docker inspect coolify-db'], $server);
                 $envs = format_docker_envs_to_json($out);
                 $this->database = new StandalonePostgresql;
                 $this->database->forceFill([
                     'id' => 0,
-                    'name' => 'coolify-db',
-                    'description' => 'Coolify database',
+                    'name' => 'stx-db',
+                    'description' => 'STX Hosting database',
                     'postgres_user' => $envs['POSTGRES_USER'],
                     'postgres_password' => $envs['POSTGRES_PASSWORD'],
                     'postgres_db' => $envs['POSTGRES_DB'],

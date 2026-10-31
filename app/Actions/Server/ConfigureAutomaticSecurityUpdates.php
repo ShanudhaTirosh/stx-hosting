@@ -33,7 +33,7 @@ class ConfigureAutomaticSecurityUpdates
 
     public const TIME_PATTERN = '/^([01]\d|2[0-3]):[0-5]\d$/';
 
-    public const APT_CONFIG_FILE = '/etc/apt/apt.conf.d/52coolify-unattended-upgrades';
+    public const APT_CONFIG_FILE = '/etc/apt/apt.conf.d/52stx-unattended-upgrades';
 
     public const APT_TIMER_DROP_IN_DIRECTORY = '/etc/systemd/system/apt-daily-upgrade.timer.d';
 
@@ -73,7 +73,7 @@ class ConfigureAutomaticSecurityUpdates
     public static function aptConfig(): string
     {
         return <<<'CONF'
-            // Managed by Coolify: install security updates only.
+            // Managed by STX Hosting: install security updates only.
             APT::Periodic::Update-Package-Lists "1";
             APT::Periodic::Unattended-Upgrade "1";
             #clear Unattended-Upgrade::Allowed-Origins;
@@ -99,7 +99,7 @@ class ConfigureAutomaticSecurityUpdates
      */
     private static function aptEnableCommands(string $time): array
     {
-        $dropIn = self::APT_TIMER_DROP_IN_DIRECTORY.'/coolify.conf';
+        $dropIn = self::APT_TIMER_DROP_IN_DIRECTORY.'/stx.conf';
 
         return [
             "sh -c 'command -v unattended-upgrade >/dev/null 2>&1 || { apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y unattended-upgrades; }'",
@@ -118,7 +118,7 @@ class ConfigureAutomaticSecurityUpdates
     private static function aptDisableCommands(): array
     {
         return [
-            'rm -f '.self::APT_CONFIG_FILE.' '.self::APT_TIMER_DROP_IN_DIRECTORY.'/coolify.conf',
+            'rm -f '.self::APT_CONFIG_FILE.' '.self::APT_TIMER_DROP_IN_DIRECTORY.'/stx.conf',
             'systemctl daemon-reload',
         ];
     }
@@ -143,8 +143,8 @@ class ConfigureAutomaticSecurityUpdates
                 ."chmod 644 \$f'",
             "sh -c 'set -e; ".self::dnfTimerSelection()
                 .'mkdir -p /etc/systemd/system/$t.d; '
-                ."echo {$dropIn} | base64 -d > /etc/systemd/system/\$t.d/coolify.conf; "
-                .'chmod 644 /etc/systemd/system/$t.d/coolify.conf; '
+                ."echo {$dropIn} | base64 -d > /etc/systemd/system/\$t.d/stx.conf; "
+                .'chmod 644 /etc/systemd/system/$t.d/stx.conf; '
                 ."systemctl daemon-reload; systemctl enable --now \$t'",
         ];
     }
@@ -157,7 +157,7 @@ class ConfigureAutomaticSecurityUpdates
         return [
             "sh -c 'set -e; ".self::dnfTimerSelection()
                 .'if [ -e /usr/lib/systemd/system/$t ]; then systemctl disable --now $t; fi; '
-                ."rm -f /etc/systemd/system/\$t.d/coolify.conf; systemctl daemon-reload'",
+                ."rm -f /etc/systemd/system/\$t.d/stx.conf; systemctl daemon-reload'",
         ];
     }
 
