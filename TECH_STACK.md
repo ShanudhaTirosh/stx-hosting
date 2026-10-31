@@ -1,4 +1,4 @@
-# Coolify Technology Stack
+# STX Hosting Technology Stack
 
 ## Frontend
 

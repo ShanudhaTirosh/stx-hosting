@@ -11,7 +11,7 @@ use Stripe\Subscription as StripeSubscription;
 /**
  * Finds the Stripe subscriptions that did not end, of every Stripe customer with one of the given
  * emails and of the given customers. One email can have more than one Stripe customer, and a
- * subscription can exist at Stripe without a subscription row in Coolify.
+ * subscription can exist at Stripe without a subscription row in STX Hosting.
  */
 class FindOpenStripeSubscriptions
 {

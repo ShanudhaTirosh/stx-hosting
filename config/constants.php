@@ -3,30 +3,38 @@
 // 0 or an invalid value would remove the time limit of every remote command.
 $sshCommandTimeout = (int) env('SSH_COMMAND_TIMEOUT', 3600);
 
+$baseConfigPath = env('BASE_CONFIG_PATH');
+if (! $baseConfigPath) {
+    $baseConfigPath = file_exists('/data/stx') ? '/data/stx' : '/data/coolify';
+}
+
+$stxConfig = [
+    'version' => env('STX_VERSION') ?: (env('COOLIFY_VERSION') ?: '4.5.4'),
+    'helper_version' => '1.0.19',
+    'railpack_version' => '0.43.0',
+    'self_hosted' => env('SELF_HOSTED', true),
+    'autoupdate' => env('AUTOUPDATE'),
+    'base_config_path' => $baseConfigPath,
+    // Development only: Docker volumes that the testing-host server mounts at /data/stx and /data/stx/backups.
+    // devHostDockerPath() uses them only for that server.
+    'dev_data_volume' => env('DEV_STX_DATA_VOLUME', env('DEV_COOLIFY_DATA_VOLUME', 'coolify_dev_coolify_data')),
+    'dev_backups_volume' => env('DEV_STX_BACKUPS_VOLUME', env('DEV_COOLIFY_BACKUPS_VOLUME', 'coolify_dev_backups_data')),
+    // Development only: IP for the seeded sslip.io wildcard domain and application domains (for example a Tailscale IP).
+    'dev_seed_ip' => env('DEV_SEED_IP') ?: '127.0.0.1',
+    'registry_url' => env('REGISTRY_URL', 'docker.io'),
+    'helper_image' => env('HELPER_IMAGE', env('REGISTRY_URL', 'docker.io').'/coollabsio/coolify-helper'),
+    'is_windows_docker_desktop' => env('IS_WINDOWS_DOCKER_DESKTOP', false),
+    'cdn_url' => env('CDN_URL', 'https://cdn.coollabs.io'),
+    'versions_url' => env('VERSIONS_URL', env('CDN_URL', 'https://cdn.coollabs.io').'/coolify/versions.json'),
+    'upgrade_script_url' => env('UPGRADE_SCRIPT_URL', env('CDN_URL', 'https://cdn.coollabs.io').'/coolify/upgrade.sh'),
+    'releases_url' => env('RELEASES_URL', 'https://cdn.coollabs.io/coolify/releases.json'),
+    // "sequential" or "concurrent". Empty uses sequential on self-hosted and concurrent on STX Cloud.
+    'scheduled_jobs_dispatch_mode' => env('SCHEDULED_JOBS_DISPATCH_MODE'),
+];
+
 return [
-    'coolify' => [
-        'version' => env('COOLIFY_VERSION') ?: '4.5.4',
-        'helper_version' => '1.0.19',
-        'railpack_version' => '0.43.0',
-        'self_hosted' => env('SELF_HOSTED', true),
-        'autoupdate' => env('AUTOUPDATE'),
-        'base_config_path' => env('BASE_CONFIG_PATH', '/data/coolify'),
-        // Development only: Docker volumes that the testing-host server mounts at /data/coolify and /data/coolify/backups.
-        // devHostDockerPath() uses them only for that server. The defaults are the legacy docker-compose.dev.yml names.
-        'dev_data_volume' => env('DEV_COOLIFY_DATA_VOLUME', 'coolify_dev_coolify_data'),
-        'dev_backups_volume' => env('DEV_COOLIFY_BACKUPS_VOLUME', 'coolify_dev_backups_data'),
-        // Development only: IP for the seeded sslip.io wildcard domain and application domains (for example a Tailscale IP).
-        'dev_seed_ip' => env('DEV_SEED_IP') ?: '127.0.0.1',
-        'registry_url' => env('REGISTRY_URL', 'docker.io'),
-        'helper_image' => env('HELPER_IMAGE', env('REGISTRY_URL', 'docker.io').'/coollabsio/coolify-helper'),
-        'is_windows_docker_desktop' => env('IS_WINDOWS_DOCKER_DESKTOP', false),
-        'cdn_url' => env('CDN_URL', 'https://cdn.coollabs.io'),
-        'versions_url' => env('VERSIONS_URL', env('CDN_URL', 'https://cdn.coollabs.io').'/coolify/versions.json'),
-        'upgrade_script_url' => env('UPGRADE_SCRIPT_URL', env('CDN_URL', 'https://cdn.coollabs.io').'/coolify/upgrade.sh'),
-        'releases_url' => env('RELEASES_URL', 'https://cdn.coollabs.io/coolify/releases.json'),
-        // "sequential" or "concurrent". Empty uses sequential on self-hosted and concurrent on Coolify Cloud.
-        'scheduled_jobs_dispatch_mode' => env('SCHEDULED_JOBS_DISPATCH_MODE'),
-    ],
+    'stx' => $stxConfig,
+    'coolify' => $stxConfig,
 
     'cloud' => [
         // Days after a subscription ends (or after a never-paid team was created) before cloud:cleanup-unsubscribed-teams deletes the team's data.

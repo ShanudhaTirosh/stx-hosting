@@ -80,6 +80,14 @@ use Symfony\Component\Yaml\Yaml;
 
 function base_configuration_dir(): string
 {
+    $custom = config('constants.stx.base_config_path') ?: config('constants.coolify.base_config_path');
+    if ($custom) {
+        return $custom;
+    }
+    if (file_exists('/data/stx')) {
+        return '/data/stx';
+    }
+
     return '/data/coolify';
 }
 function application_configuration_dir(): string
@@ -4690,11 +4698,20 @@ function coolifyDefaultEnvironmentVariables(StandaloneRedis|StandalonePostgresql
     $server ??= $resource instanceof Service ? $resource->server : $resource->destination?->server;
 
     return collect([
+        'STX_APP_NAME' => $resource->name,
+        'STX_PROJECT_NAME' => $resource->project()?->name,
+        'STX_ENVIRONMENT_NAME' => $resource->environment?->name,
+        'STX_SERVER_IP' => $server?->ip,
         'COOLIFY_APP_NAME' => $resource->name,
         'COOLIFY_PROJECT_NAME' => $resource->project()?->name,
         'COOLIFY_ENVIRONMENT_NAME' => $resource->environment?->name,
         'COOLIFY_SERVER_IP' => $server?->ip,
     ])->whereNotNull()->map(fn ($value) => (string) $value)->except(collect($definedKeys)->all());
+}
+
+function stxDefaultEnvironmentVariables(StandaloneRedis|StandalonePostgresql|StandaloneMongodb|StandaloneMysql|StandaloneMariadb|StandaloneKeydb|StandaloneDragonfly|StandaloneClickhouse|StandaloneSqlite|Application|Service $resource, iterable $definedKeys = [], ?Server $server = null): Collection
+{
+    return coolifyDefaultEnvironmentVariables($resource, $definedKeys, $server);
 }
 
 function convertToKeyValueCollection($environment)

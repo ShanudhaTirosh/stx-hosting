@@ -1,14 +1,14 @@
 services:
   coolify-testing-host:
     init: true
-    image: "docker.io/coollabsio/coolify-testing-host:latest"
+    image: "ghcr.io/stxhosting/testing-host:latest"
     pull_policy: always
     container_name: coolify-testing-host
     volumes:
       - //var/run/docker.sock://var/run/docker.sock
-      - ./:/data/coolify
+      - ./:/data/stx
   coolify:
-    image: "docker.io/coollabsio/coolify:latest"
+    image: "ghcr.io/stxhosting/platform:latest"
     pull_policy: always
     container_name: coolify
     restart: always

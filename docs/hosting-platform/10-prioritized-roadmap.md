@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-ROADMAP-010`  
 **Version**: `1.0.0`  
 **Classification**: Strategic Project Execution & Commercial Launch Roadmap  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`coolify`), Infrastructure Hypervisors  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`stx-platform`), Infrastructure Hypervisors  
 **Author**: ShanuTechX Executive Leadership & Platform Engineering Group  
 **Status**: Approved for Commercial Execution  
 

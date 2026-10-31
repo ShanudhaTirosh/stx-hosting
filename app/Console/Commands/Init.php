@@ -283,12 +283,15 @@ class Init extends Command
 
     private function sendAliveSignal()
     {
-        $id = config('app.id');
-        $version = config('constants.coolify.version');
-        try {
-            Http::get("https://undead.coolify.io/v4/alive?appId=$id&version=$version");
-        } catch (\Throwable $e) {
-            echo "Error in sending live signal: {$e->getMessage()}\n";
+        $endpoint = env('STX_TELEMETRY_ENDPOINT');
+        if ($endpoint) {
+            $id = config('app.id');
+            $version = config('constants.coolify.version');
+            try {
+                Http::get("{$endpoint}?appId={$id}&version={$version}");
+            } catch (\Throwable) {
+                // Silently ignore
+            }
         }
     }
 

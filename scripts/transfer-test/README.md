@@ -1,6 +1,6 @@
 # Server transfer test kit
 
-Live end-to-end tests for the server transfer (moving a server and its resources to another Coolify instance).
+Live end-to-end tests for the server transfer (moving a server and its resources to another STX Hosting instance).
 The unit tests in `tests/Unit/ServerTransfer/` fake SSH and HTTP. These scripts use two real dev instances and
 real VMs, so they also find problems with shells, sudo, networks, queues, and running containers.
 
@@ -66,7 +66,7 @@ VM server on A → Transfer, and use the target URL `http://localhost:<B port>` 
 | `seed-inventory.php` | Seeds a large database-only demo server (no deploys) on the current instance |
 | `full-e2e.sh`, `seed-full.php` | The full coverage test and its records |
 | `snapshot.sh`, `snapshot.php`, `snapshot-diff.php` | Write and compare the records of a server (`Tests\Support\ServerTransferSnapshot`) |
-| `runtime-snapshot.sh` | Writes the containers and Coolify files of a VM for a comparison |
+| `runtime-snapshot.sh` | Writes the containers and STX Hosting files of a VM for a comparison |
 
 Tokens and the VM SSH key are written to `<main checkout>/.dev-instances/transfer-test/<source>/` (not in git).
 For a full manual test of every transferred setting, see `docs/server-transfer-full-coverage.md`.

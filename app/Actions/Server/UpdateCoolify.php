@@ -162,7 +162,7 @@ class UpdateCoolify
                 'status' => $status,
             ]);
             throw new \Exception(
-                'Another Coolify upgrade is already running. Wait for it to finish. '.
+                'Another STX Hosting upgrade is already running. Wait for it to finish. '.
                 'If it has stopped, you can upgrade again '.CoolifyUpgradeStatus::RUNNING_LOCK_EXPIRES_AFTER_MINUTES.' minutes after its last status update.'
             );
         }

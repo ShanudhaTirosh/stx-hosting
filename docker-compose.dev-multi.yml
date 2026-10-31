@@ -27,7 +27,7 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       AUTORUN_ENABLED: "${AUTORUN_ENABLED:-false}"
-      APP_NAME: "${APP_NAME:-Coolify}"
+      APP_NAME: "${APP_NAME:-STX Hosting}"
       APP_URL: "${APP_URL:-http://localhost:8000}"
       APP_KEY: "${APP_KEY:-}"
       APP_ENV: "${APP_ENV:-local}"
@@ -61,7 +61,7 @@ services:
       DEVELOPMENT_QEMU_DOCKER_NETWORK: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
       DEVELOPMENT_QEMU_COOLIFY_CONTAINER: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
       # Host paths of the volumes that testing-host mounts at /data/coolify and /data/coolify/backups.
-      # Coolify uses them only for the testing-host server (it shares the host Docker daemon), not for KVM servers.
+      # STX Hosting uses them only for the testing-host server (it shares the host Docker daemon), not for KVM servers.
       DEV_COOLIFY_DATA_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_coolify_data"
       DEV_COOLIFY_BACKUPS_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_backups_data"
     healthcheck:

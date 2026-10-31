@@ -124,7 +124,7 @@ class VolumeCloneJob implements ShouldBeEncrypted, ShouldQueue
             $targetCloneDir = $this->createCloneArchiveDirectory($this->targetServer, $this->targetVolume);
             $tgtDir = escapeshellarg($targetCloneDir);
 
-            // Coolify host is the intermediary: download from source, upload to target.
+            // STX Hosting host is the intermediary: download from source, upload to target.
             instant_scp_from_server(
                 "{$sourceCloneDir}/volume-data.tar.gz",
                 $localArchive,

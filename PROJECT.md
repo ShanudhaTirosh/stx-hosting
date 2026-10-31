@@ -1,4 +1,4 @@
-# Project: Coolify Production Commercial Hardening
+# Project: STX Hosting Production Commercial Hardening
 
 ## Architecture
 The platform is built on Laravel 12 (Laravel 10 structure), Livewire 3, Tailwind CSS v4, PostgreSQL, Horizon (Redis queues), and Reverb (WebSockets). It is enhanced into a production-ready, commercial-grade hosting and deployment platform featuring:

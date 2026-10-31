@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-PLAN-007`  
 **Version**: `1.0.0`  
 **Classification**: Technical Engineering & Project Execution Plan  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`coolify`), Infrastructure Hypervisors  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`stx-platform`), Infrastructure Hypervisors  
 **Author**: ShanuTechX Systems Engineering & Platform Operations Group  
 **Status**: Approved for Execution  
 

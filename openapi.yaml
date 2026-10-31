@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
-  title: Coolify
+  title: STX Hosting
   version: '0.1'
 servers:
   -
-    url: 'https://app.coolify.io/api/v1'
-    description: 'Coolify Cloud API. Change the host to your own instance if you are self-hosting.'
+    url: 'https://api.stxhosting.com/api/v1'
+    description: 'STX Hosting API. Change the host to your own instance if you are self-hosting.'
 paths:
   '/applications/{uuid}/previews':
     get:
@@ -69,7 +69,7 @@ paths:
                   type: [string, 'null']
                   example: 'https://github.com/org/repo/pull/42'
                 git_type:
-                  description: 'Git provider that hosts the pull request. Sets the ref Coolify fetches (pull/{id}/head or merge-requests/{id}/head).'
+                  description: 'Git provider that hosts the pull request. Sets the ref STX Hosting fetches (pull/{id}/head or merge-requests/{id}/head).'
                   type: [string, 'null']
                   enum: [github, gitlab, gitea, bitbucket]
                 commit:
@@ -543,7 +543,7 @@ paths:
                 docker_compose_domains:
                   type: array
                   description: 'Array of URLs to be applied to containers of a dockercompose application.'
-                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
+                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://api.stxhosting.com,https://app2.stxhosting.com")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
                 watch_paths:
                   type: string
                   description: 'Watch path patterns, one per line (newline-separated). Commas do not separate patterns.'
@@ -579,10 +579,10 @@ paths:
                 redact_all_env_values_in_logs:
                   type: boolean
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
                   default: true
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
                 is_pr_deployments_public_enabled:
                   type: boolean
                   description: 'Make pull request deployments public.'
@@ -618,7 +618,7 @@ paths:
                 is_container_label_readonly_enabled:
                   type: boolean
                   default: true
-                  description: 'Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
+                  description: 'Let STX Hosting manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
                 is_raw_compose_deployment_enabled:
                   type: boolean
                   description: 'Deploy the raw Docker Compose definition.'
@@ -979,7 +979,7 @@ paths:
                 docker_compose_domains:
                   type: array
                   description: 'Array of URLs to be applied to containers of a dockercompose application.'
-                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
+                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://api.stxhosting.com,https://app2.stxhosting.com")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
                 watch_paths:
                   type: string
                   description: 'Watch path patterns, one per line (newline-separated). Commas do not separate patterns.'
@@ -1015,10 +1015,10 @@ paths:
                 redact_all_env_values_in_logs:
                   type: boolean
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
                   default: true
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
                 is_pr_deployments_public_enabled:
                   type: boolean
                   description: 'Make pull request deployments public.'
@@ -1054,7 +1054,7 @@ paths:
                 is_container_label_readonly_enabled:
                   type: boolean
                   default: true
-                  description: 'Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
+                  description: 'Let STX Hosting manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
                 is_raw_compose_deployment_enabled:
                   type: boolean
                   description: 'Deploy the raw Docker Compose definition.'
@@ -1415,7 +1415,7 @@ paths:
                 docker_compose_domains:
                   type: array
                   description: 'Array of URLs to be applied to containers of a dockercompose application.'
-                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
+                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://api.stxhosting.com,https://app2.stxhosting.com")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
                 watch_paths:
                   type: string
                   description: 'Watch path patterns, one per line (newline-separated). Commas do not separate patterns.'
@@ -1451,10 +1451,10 @@ paths:
                 redact_all_env_values_in_logs:
                   type: boolean
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
                   default: true
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
                 is_pr_deployments_public_enabled:
                   type: boolean
                   description: 'Make pull request deployments public.'
@@ -1490,7 +1490,7 @@ paths:
                 is_container_label_readonly_enabled:
                   type: boolean
                   default: true
-                  description: 'Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
+                  description: 'Let STX Hosting manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
                 is_raw_compose_deployment_enabled:
                   type: boolean
                   description: 'Deploy the raw Docker Compose definition.'
@@ -1824,10 +1824,10 @@ paths:
                 redact_all_env_values_in_logs:
                   type: boolean
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
                   default: true
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
                 is_pr_deployments_public_enabled:
                   type: boolean
                   description: 'Make pull request deployments public.'
@@ -1863,7 +1863,7 @@ paths:
                 is_container_label_readonly_enabled:
                   type: boolean
                   default: true
-                  description: 'Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
+                  description: 'Let STX Hosting manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
                 is_raw_compose_deployment_enabled:
                   type: boolean
                   description: 'Deploy the raw Docker Compose definition.'
@@ -2183,10 +2183,10 @@ paths:
                 redact_all_env_values_in_logs:
                   type: boolean
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
                   default: true
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
                 is_pr_deployments_public_enabled:
                   type: boolean
                   description: 'Make pull request deployments public.'
@@ -2222,7 +2222,7 @@ paths:
                 is_container_label_readonly_enabled:
                   type: boolean
                   default: true
-                  description: 'Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
+                  description: 'Let STX Hosting manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
                 is_raw_compose_deployment_enabled:
                   type: boolean
                   description: 'Deploy the raw Docker Compose definition.'
@@ -2657,7 +2657,7 @@ paths:
                 docker_compose_domains:
                   type: array
                   description: 'Array of URLs to be applied to containers of a dockercompose application.'
-                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
+                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, domain: { type: string, description: 'Comma-separated list of URLs (e.g. "https://api.stxhosting.com,https://app2.stxhosting.com")' }, redirect: { type: string, nullable: true, description: 'Per-service www/non-www redirect for this compose service.', enum: [www, non-www, both] } }, type: object }
                 watch_paths:
                   type: string
                   description: 'Watch path patterns, one per line (newline-separated). Commas do not separate patterns.'
@@ -2711,10 +2711,10 @@ paths:
                 redact_all_env_values_in_logs:
                   type: boolean
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
                   default: true
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
                 is_pr_deployments_public_enabled:
                   type: boolean
                   description: 'Make pull request deployments public.'
@@ -2750,7 +2750,7 @@ paths:
                 is_container_label_readonly_enabled:
                   type: boolean
                   default: true
-                  description: 'Let Coolify manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
+                  description: 'Let STX Hosting manage the container labels. True regenerates custom_labels from domains, redirect, and proxy settings. False keeps custom_labels as you set them: domains, redirect, and basic auth changes then do not change the labels.'
                 is_raw_compose_deployment_enabled:
                   type: boolean
                   description: 'Deploy the raw Docker Compose definition.'
@@ -3392,7 +3392,7 @@ paths:
       tags:
         - Applications
       summary: 'Migrate to Server'
-      description: 'Migrate an application to another destination/server owned by the authenticated team. Stops the application, optionally transfers persistent volume data when both servers are managed by Coolify, and updates database records. Redeploy after migration completes.'
+      description: 'Migrate an application to another destination/server owned by the authenticated team. Stops the application, optionally transfers persistent volume data when both servers are managed by STX Hosting, and updates database records. Redeploy after migration completes.'
       operationId: migrate-application-by-uuid
       parameters:
         -
@@ -3508,7 +3508,7 @@ paths:
                   description: 'Whether this is a directory mount (file only, default false).'
                 fs_path:
                   type: string
-                  description: 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. Coolify never deletes a path outside the resource directory.'
+                  description: 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. STX Hosting never deletes a path outside the resource directory.'
               type: object
               additionalProperties: false
       responses:
@@ -4948,9 +4948,9 @@ paths:
                 redact_all_env_values_in_logs:
                   type: boolean
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values, database passwords, and remote secrets are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Restart the database to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Restart the database to apply it.'
                 is_log_drain_enabled:
                   type: boolean
                   description: 'Send the database logs to the log drain of the server. Log drain must be enabled on the server. Restart the database to apply it.'
@@ -6217,7 +6217,7 @@ paths:
       tags:
         - Databases
       summary: 'Migrate to Server'
-      description: 'Migrate a database to another destination/server owned by the authenticated team. Stops the database, optionally transfers persistent volume data when both servers are managed by Coolify, and updates database records. Redeploy after migration completes.'
+      description: 'Migrate a database to another destination/server owned by the authenticated team. Stops the database, optionally transfers persistent volume data when both servers are managed by STX Hosting, and updates database records. Redeploy after migration completes.'
       operationId: migrate-database-by-uuid
       parameters:
         -
@@ -6683,7 +6683,7 @@ paths:
                   description: 'Whether this is a directory mount (file only, default false).'
                 fs_path:
                   type: string
-                  description: 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. Coolify never deletes a path outside the resource directory.'
+                  description: 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. STX Hosting never deletes a path outside the resource directory.'
               type: object
               additionalProperties: false
       responses:
@@ -7249,7 +7249,7 @@ paths:
       tags:
         - Destinations
       summary: 'Create destination'
-      description: "Create a Docker network destination on a server owned by the authenticated team. The network must be new: Docker's built-in networks (bridge, host, none) and networks that already exist on a standalone server are rejected, because Coolify connects the proxy to the destination network."
+      description: "Create a Docker network destination on a server owned by the authenticated team. The network must be new: Docker's built-in networks (bridge, host, none) and networks that already exist on a standalone server are rejected, because STX Hosting connects the proxy to the destination network."
       operationId: create-server-destination
       parameters:
         -
@@ -7523,11 +7523,11 @@ paths:
       tags:
         - DigitalOcean
       summary: 'Create a server on DigitalOcean'
-      description: 'Create a DigitalOcean droplet and link it as a Coolify server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.'
+      description: 'Create a DigitalOcean droplet and link it as a STX Hosting server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.'
       operationId: create-digitalocean-server
       responses:
         '201':
-          description: 'DigitalOcean droplet created and linked to a Coolify server.'
+          description: 'DigitalOcean droplet created and linked to a STX Hosting server.'
         '401':
           $ref: '#/components/responses/401'
         '403':
@@ -8346,7 +8346,7 @@ paths:
       tags:
         - Hetzner
       summary: 'Create Hetzner Server'
-      description: 'Create a new server on Hetzner and register it in Coolify. A cloud-init script or extra SSH key IDs need a token with the deploy permission.'
+      description: 'Create a new server on Hetzner and register it in STX Hosting. A cloud-init script or extra SSH key IDs need a token with the deploy permission.'
       operationId: create-hetzner-server
       requestBody:
         description: 'Hetzner server creation parameters'
@@ -8557,7 +8557,7 @@ paths:
       operationId: create-hostinger-server
       responses:
         '201':
-          description: 'Hostinger VPS purchased and linked to a Coolify server.'
+          description: 'Hostinger VPS purchased and linked to a STX Hosting server.'
         '401':
           $ref: '#/components/responses/401'
         '403':
@@ -8868,7 +8868,7 @@ paths:
   /version:
     get:
       summary: Version
-      description: 'Get Coolify version.'
+      description: 'Get STX Hosting version.'
       operationId: version
       responses:
         '200':
@@ -11343,7 +11343,7 @@ paths:
     post:
       tags:
         - Servers
-      summary: 'Migrate server to another Coolify instance'
+      summary: 'Migrate server to another STX Hosting instance'
       description: 'Start a transfer in the background: export this server, import and claim it on the target instance (with the given token), then disable automations here. All secrets of the server, also locked environment variables, are sent to the target. Follow the progress with GET /servers/{uuid}/transfer. The target URL must use https. Requires read:sensitive and write, and the owner role of the server team.'
       operationId: migrate-server-between-instances
       parameters:
@@ -11364,7 +11364,7 @@ paths:
               properties:
                 target_url:
                   type: string
-                  example: 'https://coolify-b.example.com'
+                  example: 'https://panel-b.stxhosting.com'
                 target_token:
                   description: 'API token on the target instance (root or write)'
                   type: string
@@ -11471,7 +11471,7 @@ paths:
       tags:
         - Servers
       summary: 'Import server transfer bundle'
-      description: 'Import a server transfer bundle into this Coolify instance (adopt mode by default). This instance then manages the server, and Sentinel reports to it. Needs a token with the write and deploy permissions.'
+      description: 'Import a server transfer bundle into this STX Hosting instance (adopt mode by default). This instance then manages the server, and Sentinel reports to it. Needs a token with the write and deploy permissions.'
       operationId: import-server-transfer-bundle
       requestBody:
         required: true
@@ -12075,7 +12075,7 @@ paths:
                   type: string
                   enum: [both, www, non-www]
                 max_restart_count:
-                  description: 'Maximum Docker restart count before Coolify stops the container. Set to 0 to disable the limit.'
+                  description: 'Maximum Docker restart count before STX Hosting stops the container. Set to 0 to disable the limit.'
                   type: [integer, 'null']
                   minimum: 0
               type: object
@@ -12859,7 +12859,7 @@ paths:
                 urls:
                   type: array
                   description: 'Array of URLs to be applied to containers of a service.'
-                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, url: { type: string, description: 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io").' } }, type: object }
+                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, url: { type: string, description: 'Comma-separated list of URLs (e.g. "https://api.stxhosting.com,https://app2.stxhosting.com").' } }, type: object }
                 force_domain_override:
                   type: boolean
                   default: false
@@ -13045,7 +13045,7 @@ paths:
                 urls:
                   type: array
                   description: 'Array of URLs to be applied to containers of a service.'
-                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, url: { type: string, description: 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io").' } }, type: object }
+                  items: { properties: { name: { type: string, description: 'The service name as defined in docker-compose.' }, url: { type: string, description: 'Comma-separated list of URLs (e.g. "https://api.stxhosting.com,https://app2.stxhosting.com").' } }, type: object }
                 force_domain_override:
                   type: boolean
                   default: false
@@ -13058,10 +13058,10 @@ paths:
                   type: boolean
                   default: true
                   description: 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'
-                include_coolify_default_variables:
+                include_stx_default_variables:
                   type: boolean
                   default: true
-                  description: 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
+                  description: 'Add the predefined STX_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'
               type: object
       responses:
         '200':
@@ -13453,7 +13453,7 @@ paths:
       tags:
         - Services
       summary: 'Migrate to Server'
-      description: 'Migrate a service to another destination/server owned by the authenticated team. Stops the service, optionally transfers persistent volume data when both servers are managed by Coolify, and updates database records. Redeploy after migration completes.'
+      description: 'Migrate a service to another destination/server owned by the authenticated team. Stops the service, optionally transfers persistent volume data when both servers are managed by STX Hosting, and updates database records. Redeploy after migration completes.'
       operationId: migrate-service-by-uuid
       parameters:
         -
@@ -13686,7 +13686,7 @@ paths:
                   description: 'Whether this is a directory mount (file only, default false).'
                 fs_path:
                   type: string
-                  description: 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. Coolify never deletes a path outside the resource directory.'
+                  description: 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. STX Hosting never deletes a path outside the resource directory.'
               type: object
               additionalProperties: false
       responses:
@@ -15205,7 +15205,7 @@ paths:
       tags:
         - Vultr
       summary: 'Create Vultr Server'
-      description: 'Create a Vultr instance and link it as a Coolify server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.'
+      description: 'Create a Vultr instance and link it as a STX Hosting server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.'
       operationId: create-vultr-server
       responses:
         '201':
@@ -15480,7 +15480,7 @@ components:
         is_include_timestamps:
           description: 'Not returned for MariaDB.'
           type: boolean
-        include_coolify_default_variables:
+        include_stx_default_variables:
           type: boolean
         redact_all_env_values_in_logs:
           type: boolean
@@ -15511,7 +15511,7 @@ components:
         limits_cpu_shares:
           type: integer
         config_hash:
-          description: 'Internal hash that Coolify uses to find configuration changes that need a restart. It changes only when the database starts, so do not use it to compare configurations.'
+          description: 'Internal hash that STX Hosting uses to find configuration changes that need a restart. It changes only when the database starts, so do not use it to compare configurations.'
           type:
             - string
             - 'null'
@@ -16149,7 +16149,7 @@ components:
           description: 'The date and time when the application was deleted.'
         compose_parsing_version:
           type: string
-          description: 'How Coolify parse the compose file.'
+          description: 'How STX Hosting parses the compose file.'
         custom_nginx_configuration:
           type: string
           nullable: true
@@ -16320,7 +16320,7 @@ components:
           type: boolean
         is_env_sorting_enabled:
           type: boolean
-        include_coolify_default_variables:
+        include_stx_default_variables:
           type: boolean
         is_container_label_readonly_enabled:
           type: boolean
@@ -16755,7 +16755,7 @@ components:
           description: 'The raw docker-compose.yml file of the service.'
         docker_compose:
           type: string
-          description: 'The docker-compose.yml file that is parsed and modified by Coolify.'
+          description: 'The docker-compose.yml file that is parsed and modified by STX Hosting.'
         destination_type:
           type: string
           description: 'Destination type.'

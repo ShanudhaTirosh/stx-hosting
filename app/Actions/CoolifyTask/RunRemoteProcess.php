@@ -168,7 +168,7 @@ class RunRemoteProcess
             'status' => $status->value,
         ];
 
-        // Coolify can stop a database import while this job runs (restart or stale import). Keep the
+        // STX Hosting can stop a database import while this job runs (restart or stale import). Keep the
         // stop status and message, because this job only has its own older copy of the properties.
         $stored = Activity::query()->whereKey($this->activity->getKey())->first()?->properties;
         if ($stored !== null && filled($stored->get(DatabaseImportCleanup::STOP_REQUESTED_PROPERTY))) {

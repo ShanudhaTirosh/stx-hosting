@@ -20,7 +20,7 @@ use RuntimeException;
  * orphaned. The user must resolve each blocker first, the same way team
  * deletion requires an empty team. With $removeTeamResources, the servers,
  * resources, projects, and Git sources of teams where the user is the only
- * member are removed from Coolify instead. Nothing is stopped on the servers.
+ * member are removed from STX Hosting instead. Nothing is stopped on the servers.
  */
 class DeleteUserAccount
 {
@@ -118,7 +118,7 @@ class DeleteUserAccount
 
         return $this->subscriptionConfirmationActions($user)
             ->concat($removedTeams->map(fn (Team $team): string => "The servers, projects, and Git sources of the team \"{$team->name}\" will be removed from Coolify. Nothing is stopped on the servers."))
-            ->push('Your account will be permanently deleted from Coolify.')
+            ->push('Your account will be permanently deleted from STX Hosting.')
             ->values()
             ->all();
     }

@@ -52,7 +52,7 @@ class EnsureContentFilesOnServer
                 'file' => null,
                 'directory' => $log("Warning: A directory that is not empty is at {$path} on the server. Coolify did not write the configuration file for {$fileStorage->mount_path}. Remove the directory on the server, then start the resource again.", 'stderr'),
                 'other' => $log("Warning: A symbolic link or a special file is at {$path} on the server. Coolify did not write the configuration file for {$fileStorage->mount_path}.", 'stderr'),
-                default => $log("Warning: Coolify cannot check the configuration file {$path} on the server.", 'stderr'),
+                default => $log("Warning: STX Hosting cannot check the configuration file {$path} on the server.", 'stderr'),
             };
         }
 
@@ -69,7 +69,7 @@ class EnsureContentFilesOnServer
                 $fileStorage->saveStorageOnServer($server);
                 $written++;
             } catch (\Throwable $e) {
-                $log("Warning: Coolify cannot write the configuration file {$path}: ".$this->plainText($e->getMessage()), 'stderr');
+                $log("Warning: STX Hosting cannot write the configuration file {$path}: ".$this->plainText($e->getMessage()), 'stderr');
             }
         }
 

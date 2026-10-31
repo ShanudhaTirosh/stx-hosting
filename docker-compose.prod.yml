@@ -1,26 +1,26 @@
 services:
   # Placeholder for "soketi" overrides in docker-compose.custom.yml from versions before 4.4.
-  # Realtime runs inside the coolify container now. Without this entry, such an override is an
+  # Realtime runs inside the STX Hosting platform container now. Without this entry, such an override is an
   # incomplete service and every upgrade fails. Zero replicas means it never starts, and
-  # "docker compose up" removes the old coolify-realtime container (an inactive profile keeps it).
-  # It uses the coolify image, so install and upgrade do not pull another image.
+  # "docker compose up" removes any legacy realtime container (an inactive profile keeps it).
+  # It uses the STX Hosting platform image, so install and upgrade do not pull another image.
   soketi:
-    image: "${REGISTRY_URL:-docker.io}/coollabsio/coolify:${LATEST_IMAGE:-latest}"
+    image: "${REGISTRY_URL:-ghcr.io}/stxhosting/platform:${LATEST_IMAGE:-latest}"
     deploy:
       replicas: 0
   coolify:
-    image: "${REGISTRY_URL:-docker.io}/coollabsio/coolify:${LATEST_IMAGE:-latest}"
+    image: "${REGISTRY_URL:-ghcr.io}/stxhosting/platform:${LATEST_IMAGE:-latest}"
     volumes:
       - type: bind
-        source: /data/coolify/source/.env
+        source: ${DATA_DIR:-/data/stx}/source/.env
         target: /var/www/html/.env
         read_only: true
-      - /data/coolify/ssh:/var/www/html/storage/app/ssh
-      - /data/coolify/applications:/var/www/html/storage/app/applications
-      - /data/coolify/databases:/var/www/html/storage/app/databases
-      - /data/coolify/services:/var/www/html/storage/app/services
-      - /data/coolify/backups:/var/www/html/storage/app/backups
-      - /data/coolify/images:/var/www/html/storage/app/images
+      - ${DATA_DIR:-/data/stx}/ssh:/var/www/html/storage/app/ssh
+      - ${DATA_DIR:-/data/stx}/applications:/var/www/html/storage/app/applications
+      - ${DATA_DIR:-/data/stx}/databases:/var/www/html/storage/app/databases
+      - ${DATA_DIR:-/data/stx}/services:/var/www/html/storage/app/services
+      - ${DATA_DIR:-/data/stx}/backups:/var/www/html/storage/app/backups
+      - ${DATA_DIR:-/data/stx}/images:/var/www/html/storage/app/images
     environment:
       - APP_ENV=${APP_ENV:-production}
       - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-256M}
@@ -30,7 +30,7 @@ services:
       - PHP_FPM_PM_MAX_SPARE_SERVERS=${PHP_FPM_PM_MAX_SPARE_SERVERS:-10}
       - PUSHER_BACKEND_PORT=${PUSHER_BACKEND_PORT:-6001}
     env_file:
-      - /data/coolify/source/.env
+      - ${DATA_DIR:-/data/stx}/source/.env
     ports:
       - "${APP_PORT:-8000}:8080"
       - "${REVERB_PORT:-${SOKETI_PORT:-6001}}:6001"
@@ -43,6 +43,7 @@ services:
       coolify:
         # Realtime ran in the coolify-realtime container before 4.4; keep the name for existing proxy upstreams.
         aliases:
+          - stx-realtime
           - coolify-realtime
     healthcheck:
       test: curl --fail http://127.0.0.1:8080/api/health && curl --fail http://127.0.0.1:${PUSHER_BACKEND_PORT:-6001}/up || exit 1

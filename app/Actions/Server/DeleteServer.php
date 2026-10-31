@@ -57,11 +57,11 @@ class DeleteServer
             );
         }
 
-        logger()->debug($server ? 'Deleting server from Coolify' : 'Server already deleted from Coolify, skipping Coolify deletion');
+        logger()->debug($server ? 'Deleting server from Coolify' : 'Server already deleted from STX Hosting, skipping Coolify deletion');
 
-        // If server is already deleted from Coolify, skip this part
+        // If server is already deleted from STX Hosting, skip this part
         if (! $server) {
-            return; // Server already force deleted from Coolify
+            return; // Server already force deleted from STX Hosting
         }
 
         try {
@@ -103,7 +103,7 @@ class DeleteServer
 
         } catch (\Throwable $e) {
 
-            // Log the error but don't prevent the server from being deleted from Coolify
+            // Log the error but don't prevent the server from being deleted from STX Hosting
             logger()->error('Failed to delete server from Hetzner', [
                 'error' => $e->getMessage(),
                 'hetzner_server_id' => $hetznerServerId,

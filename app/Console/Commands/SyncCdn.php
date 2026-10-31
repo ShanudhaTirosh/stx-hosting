@@ -294,7 +294,7 @@ class SyncCdn extends Command
             ],
             default: 'production',
         ) === 'nightly';
-        $cdn = 'https://cdn.coollabs.io';
+        $cdn = 'https://cdn.stxhosting.com';
 
         $parent_dir = realpath(dirname(__FILE__).'/../../..');
 

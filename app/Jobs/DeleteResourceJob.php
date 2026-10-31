@@ -104,7 +104,7 @@ class DeleteResourceJob implements ShouldBeEncrypted, ShouldQueue
                 }
             }
         } catch (\Throwable $e) {
-            // A resource can always be deleted from Coolify, also when its server does not respond.
+            // A resource can always be deleted from STX Hosting, also when its server does not respond.
             Log::warning('Remote cleanup failed while deleting resource; continuing with local deletion.', [
                 'resource_id' => $this->resource->id,
                 'resource_type' => $this->resource->type(),

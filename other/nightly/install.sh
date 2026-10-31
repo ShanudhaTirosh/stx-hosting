@@ -47,7 +47,7 @@ create_coolify_directories() {
     mkdir -p /data/coolify/images /data/coolify/ssh/{keys,mux}
 }
 
-# Coolify's own directories, used by the coolify container (UID 9999)
+# STX Hosting's own directories, used by the coolify container (UID 9999)
 set_coolify_directory_permissions() {
     chown -R 9999:root /data/coolify/{source,ssh,images}
     chmod -R 700 /data/coolify/{source,ssh,images}
@@ -254,15 +254,15 @@ trap ui_on_exit EXIT
 if [ "$UI_TTY" = true ]; then
     printf '\033[?25l' >&3
 fi
-printf '\n  %sWelcome to Coolify Installer!%s\n' "$C_BOLD" "$C_RESET" >&3
+printf '\n  %sWelcome to STX Hosting Installer!%s\n' "$C_BOLD" "$C_RESET" >&3
 printf '  %sThis script will install everything for you. Sit back and relax.%s\n' "$C_DIM" "$C_RESET" >&3
 printf '  %sLog file: %s%s\n\n' "$C_DIM" "$INSTALLATION_LOG_WITH_DATE" "$C_RESET" >&3
 UI_INSTALL_STARTED=$(ui_now)
 
 echo "=========================================="
-echo "   Coolify Installation - ${DATE}"
+echo "   STX Hosting Installation - ${DATE}"
 echo "=========================================="
-echo "Source code: https://github.com/coollabsio/coolify/blob/v4.x/scripts/install.sh"
+echo "Source code: https://github.com/stx-enterprises/stx-hosting/blob/v4.x/scripts/install.sh"
 
 # Predefined root user
 ROOT_USERNAME=${ROOT_USERNAME:-}
@@ -544,7 +544,7 @@ fi
 echo "---------------------------------------------"
 echo "| Operating System  | $OS_TYPE $OS_VERSION"
 echo "| Docker            | $DOCKER_VERSION"
-echo "| Coolify           | $LATEST_VERSION"
+echo "| STX Hosting       | $LATEST_VERSION"
 echo "| Helper            | $LATEST_HELPER_VERSION"
 echo "| Docker Pool       | $DOCKER_ADDRESS_POOL_BASE (size $DOCKER_ADDRESS_POOL_SIZE)"
 echo "| Registry URL      | $REGISTRY_URL"
@@ -662,7 +662,7 @@ if [ "$SSH_DETECTED" = "false" ]; then
     *)
         echo "###############################################################################"
         echo "WARNING: Could not detect and install OpenSSH server - this does not mean that it is not installed or not running, just that we could not detect it."
-        echo -e "Please make sure it is installed and running, otherwise Coolify cannot connect to the host system. \n"
+        echo -e "Please make sure it is installed and running, otherwise STX Hosting cannot connect to the host system. \n"
         echo "###############################################################################"
         exit 1
         ;;
@@ -676,7 +676,7 @@ SSH_PERMIT_ROOT_LOGIN=$(sshd -T | grep -i "permitrootlogin" | awk '{print $2}') 
 if [ "$SSH_PERMIT_ROOT_LOGIN" = "yes" ] || [ "$SSH_PERMIT_ROOT_LOGIN" = "without-password" ] || [ "$SSH_PERMIT_ROOT_LOGIN" = "prohibit-password" ]; then
     echo " - SSH PermitRootLogin is enabled."
 else
-    warn "SSH PermitRootLogin is disabled. If you have problems with SSH, read https://coolify.io/docs/knowledge-base/server/openssh"
+    warn "SSH PermitRootLogin is disabled. If you have problems with SSH, read https://docs.stxhosting.com/knowledge-base/server/openssh"
 fi
 
 # Detect if docker is installed via snap
@@ -684,7 +684,7 @@ if [ -x "$(command -v snap)" ]; then
     SNAP_DOCKER_INSTALLED=$(snap list docker >/dev/null 2>&1 && echo "true" || echo "false")
     if [ "$SNAP_DOCKER_INSTALLED" = "true" ]; then
         echo "Docker is installed via snap."
-        echo "   Please note that Coolify does not support Docker installed via snap."
+        echo "   Please note that STX Hosting does not support Docker installed via snap."
         echo "   Please remove Docker with snap (snap remove docker) and reexecute this script."
         exit 1
     fi
@@ -826,7 +826,7 @@ INSTALLED_DOCKER_VERSION=$(docker version --format '{{.Server.Version}}' 2>/dev/
 if [ -z "$INSTALLED_DOCKER_VERSION" ]; then
     warn "Could not determine Docker version. Please ensure Docker $MIN_DOCKER_VERSION+ is installed."
 elif [ "$INSTALLED_DOCKER_VERSION" -lt "$MIN_DOCKER_VERSION" ]; then
-    echo " - ERROR: Docker version $INSTALLED_DOCKER_VERSION is too old. Coolify requires Docker $MIN_DOCKER_VERSION or newer."
+    echo " - ERROR: Docker version $INSTALLED_DOCKER_VERSION is too old. STX Hosting requires Docker $MIN_DOCKER_VERSION or newer."
     echo "   Please upgrade Docker: https://docs.docker.com/engine/install/"
     exit 1
 else
@@ -1047,8 +1047,8 @@ else
 fi
 step_done
 
-step_start "Starting Coolify" "v${LATEST_VERSION}"
-echo " - Waiting for Coolify to be ready..."
+step_start "Starting STX Hosting" "v${LATEST_VERSION}"
+echo " - Waiting for STX Hosting to be ready..."
 
 # Wait for upgrade.sh background process to complete
 # upgrade.sh writes status to /data/coolify/source/.upgrade-status
@@ -1108,14 +1108,14 @@ if [ $WAITED -ge $MAX_WAIT ]; then
 fi
 
 # Final health verification - wait for container to be healthy
-echo " - Verifying Coolify is healthy..."
+echo " - Verifying STX Hosting is healthy..."
 HEALTH_WAIT=60
 HEALTH_WAITED=0
 while [ $HEALTH_WAITED -lt $HEALTH_WAIT ]; do
     HEALTH=$(docker inspect --format='{{.State.Health.Status}}' coolify 2>/dev/null || echo "unknown")
     if [ "$HEALTH" = "healthy" ]; then
-        log "Coolify container is healthy"
-        echo " - Coolify is ready!"
+        log "STX Hosting container is healthy"
+        echo " - STX Hosting is ready!"
         break
     fi
     sleep 2
@@ -1123,7 +1123,7 @@ while [ $HEALTH_WAITED -lt $HEALTH_WAIT ]; do
 done
 
 if [ "$HEALTH" != "healthy" ]; then
-    echo " - ERROR: Coolify container is not healthy after ${HEALTH_WAIT}s. Status: $HEALTH"
+    echo " - ERROR: STX Hosting container is not healthy after ${HEALTH_WAIT}s. Status: $HEALTH"
     echo " - Please check: docker logs coolify"
     exit 1
 fi
@@ -1151,7 +1151,7 @@ DEFAULT_PRIVATE_IP=$(ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p')
 PRIVATE_IPS=$(hostname -I 2>/dev/null || ip -o addr show scope global | awk '{print $4}' | cut -d/ -f1)
 set -e
 
-printf '\n  %s%sCoolify is ready!%s  %sInstalled in %s%s\n\n' "$C_BOLD" "$C_PURPLE" "$C_RESET" "$C_DIM" "$(ui_duration $(($(ui_now) - UI_INSTALL_STARTED)))" "$C_RESET" >&3
+printf '\n  %s%sSTX Hosting is ready!%s  %sInstalled in %s%s\n\n' "$C_BOLD" "$C_PURPLE" "$C_RESET" "$C_DIM" "$(ui_duration $(($(ui_now) - UI_INSTALL_STARTED)))" "$C_RESET" >&3
 if [ -n "$IPV4_PUBLIC_IP" ]; then
     printf '  Public IPv4   %shttp://%s:8000%s\n' "$C_BOLD" "$IPV4_PUBLIC_IP" "$C_RESET" >&3
 fi
@@ -1174,6 +1174,6 @@ printf '\n  %s! Back up %s/data/coolify/source/.env%s%s to a safe place outside 
 printf '  %sLog file: %s%s\n\n' "$C_DIM" "$INSTALLATION_LOG_WITH_DATE" "$C_RESET" >&3
 
 log_section "Installation Complete"
-log "Coolify installation completed successfully"
+log "STX Hosting installation completed successfully"
 log "Version: ${LATEST_VERSION}"
 log "Log file: ${INSTALLATION_LOG_WITH_DATE}"

@@ -1,17 +1,17 @@
-# Coolify UI design system
+# STX Hosting UI design system
 
 This file has two parts:
 
-- **Part 1, Portable design language:** the look and feel of the Coolify UI,
-  with no dependency on Coolify code. It has the principles, a copy-paste token
+- **Part 1, Portable design language:** the look and feel of the STX Hosting UI,
+  with no dependency on STX Hosting code. It has the principles, a copy-paste token
   sheet in plain CSS, and the anatomy of each component with exact values. Use
   it to give another app the same feel. It works with any stack (plain CSS,
   Tailwind, React, Vue, Blade).
-- **Part 2, Coolify implementation:** how Coolify applies the language with its
+- **Part 2, STX Hosting implementation:** how STX Hosting applies the language with its
   Livewire + Blade + Alpine + Tailwind v4 frontend: the components, routes, page
   shells, and the rules for this repository.
 
-When you change a shared value in Coolify, update Part 1 and Part 2 in the same
+When you change a shared value in STX Hosting, update Part 1 and Part 2 in the same
 change.
 
 ---
@@ -34,7 +34,7 @@ change.
 - **Dark gray, not black.** Dark mode page canvas and the top bar are neutral
   sRGB 10,10,10 (`#0a0a0a`). Card wells sit one step up (`#121212`). Light mode is
   pure neutral gray.
-- **One accent.** Coolify purple in both themes (`#6b16ed`, hover `#7317ff`,
+- **One accent.** STX Hosting purple in both themes (`#6b16ed`, hover `#7317ff`,
   pressed `#5a12c7`, depth `#4a0fa3`, light text and icons `#a391ff`). Yellow
   is only for real warnings. In the default dark theme the sidebar, including
   the logo cell, is purple-black (`#120e1a`) with a faint brand wash. Users
@@ -150,7 +150,7 @@ Rules for the tokens:
 - **Dark lightness level.** The canvas is at 14.48% and the header panel at
   19.13%. To
   change the level, move every dark surface and border token by the same
-  amount (canvas, panel, menu, hover, borders, and the Coolify surface ladder),
+  amount (canvas, panel, menu, hover, borders, and the STX Hosting surface ladder),
   so the steps between layers stay the same. If you move only some of them, a
   hover fill can become darker than its menu.
 - Primary buttons, focus rings, and active navigation use purple in both
@@ -524,12 +524,12 @@ Class names below are examples. Keep the values and structure.
 
 ---
 
-# Part 2. Coolify implementation
+# Part 2. STX Hosting implementation
 
-This part defines how Coolify applies the design language with its Livewire +
+This part defines how STX Hosting applies the design language with its Livewire +
 Blade + Alpine + Tailwind v4 frontend. It covers the global shell, project and
 environment pages, application navigation, settings surfaces, tables, modals,
-toasts, terminals, and metrics. In Coolify, the tokens of Part 1 map to the
+toasts, terminals, and metrics. In STX Hosting, the tokens of Part 1 map to the
 `--coollabs-*`, `--color-*`, `--card-*`, and `--well-*` variables in
 `resources/css/app.css`.
 
@@ -566,7 +566,7 @@ The interface is compact and product-focused:
   heavy borders or a strong floating shadow;
 - full-width data tables for dense collections;
 - outline Reicon glyphs through `<x-reicon>`;
-- the Coolify purple brand accent in both themes (`#6b16ed`); yellow only for
+- the STX Hosting purple brand accent in both themes (`#6b16ed`); yellow only for
   real warnings, such as "Update available";
 - the active sidebar item is a purple gradient tile with a 2px depth edge and
   no glow. The row itself stays transparent;
@@ -595,7 +595,7 @@ buttons to their regular border color (`rgb(255 255 255 / 0.08)`).
 
 ## 2. Development and cascade notes
 
-PHP runs in this branch's Coolify container (`./scripts/dev exec …`). The main
+PHP runs in this branch's STX Hosting container (`./scripts/dev exec …`). The main
 checkout serves the app at `http://localhost:8000` with Vite on `5173`;
 worktrees use the port block printed by `./scripts/dev urls`.
 
@@ -649,7 +649,7 @@ the card well (`.dark .application-settings-section-body :is(.listbox-panel,
 ...)`).
 | `--coollabs-subtle` | 50% neutral | 70.8% neutral | labels and muted titles (light darkened for WCAG AA 4.5:1) |
 
-Accent behavior uses Coolify purple in both themes. Brand tokens live in
+Accent behavior uses STX Hosting purple in both themes. Brand tokens live in
 `@theme` as `--color-brand` (`#6b16ed`), `--color-brand-hover` (`#7317ff`),
 `--color-brand-press` (`#5a12c7`), `--color-brand-depth` (`#4a0fa3`), and
 `--color-brand-light` (`#a391ff`). Dark mode sets `--color-accent` to
@@ -681,7 +681,7 @@ lift off the content:
   becomes `rgb(10 10 10 / 0.72)` with blur and a neutral hairline. In dark
   mode, top-level card wells and table rows use `--color-card` (`#121212`),
   not the top bar.
-- **Desktop sidebar and the topbar brand block** (Coolify name and version)
+- **Desktop sidebar and the topbar brand block** (STX Hosting name and version)
   use the canvas color in light mode. In the default dark theme they use
   `--color-sidebar` (`#120e1a`): a vertical brand wash on the nav, a flat 9%
   wash on the logo cell, and a lavender right edge. Inactive icon tiles,
@@ -755,11 +755,11 @@ color. Row-hover states keep the lighter `dark:hover:bg-white/[0.025]`.
 - Nested items sit behind a thin 1px guide line (`.nav-children`) and use the
   same selected pill, not a thick box border.
 - The logo cell (`.app-topbar-brand` in `layouts/app.blade.php`) is `w-56`
-  expanded and `w-16` collapsed. Expanded, it shows the `Coolify` wordmark
+  expanded and `w-16` collapsed. Expanded, it shows the `STX Hosting` wordmark
   (`text-[15px] font-semibold tracking-tight`), `<x-version>`
   (`text-[10.5px]`, `text-fg-faint` in dark), and the update badge
   (`livewire:upgrade`, instance admins on self-hosted only) at `ml-auto`.
-  Collapsed, it shows only `/coolify-logo.svg` at `size-5` and adds
+  Collapsed, it shows only `/svgs/stx-logo.svg` at `size-5` and adds
   `border-b`.
 - The update badge sits on the version row: an 18px fully rounded pill with
   9.5px semibold text. It is `bg-coollabs/10 text-coollabs ring-coollabs/25` in
@@ -772,7 +772,7 @@ color. Row-hover states keep the lighter `dark:hover:bg-white/[0.025]`.
 - The mobile top bar (`MOBILE TOP BAR` in `layouts/app.blade.php`, `lg:hidden`)
   is `sticky top-0 z-40`, `px-4 py-3 sm:px-6`, `bg-white/95 dark:bg-panel/95
   backdrop-blur-sm` with `border-neutral-200/60 dark:border-white/[0.06]`.
-  Left: `/coolify-logo.svg` (18px) in a `size-8 rounded-lg bg-neutral-100
+  Left: `/svgs/stx-logo.svg` (18px) in a `size-8 rounded-lg bg-neutral-100
   dark:bg-white/[0.06]` tile, then `livewire:switch-team`. Right (`gap-1`):
   `#configuration-warning-hud-slot-mobile`, `deployments-indicator
   variant="mobile"`, the update badge (`livewire:upgrade key="mobile-upgrade"`,

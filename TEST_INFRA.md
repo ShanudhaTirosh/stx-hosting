@@ -1,9 +1,9 @@
-# Coolify Commercial Hardening: End-to-End (E2E) Test Infrastructure Specification
+# STX Hosting Commercial Hardening: End-to-End (E2E) Test Infrastructure Specification
 
 **Document Version**: 1.0.0  
 **Status**: ACTIVE / SPECIFICATION & BASELINE  
 **Architecture Track**: Dual Track — E2E Testing Track  
-**Target Repository**: `coollabsio/coolify` (Laravel 12 / Livewire 3 / PostgreSQL 15 / Redis 7)  
+**Target Repository**: `stx-enterprises/stx-hosting` (Laravel 12 / Livewire 3 / PostgreSQL 15 / Redis 7)  
 **Author**: Teamwork Test Writer (`e2e_test_writer_1`)  
 **Scope**: Requirements R1–R7 (`ORIGINAL_REQUEST.md`), Features 1–23 (`PROJECT.md` § Feature Inventory)  
 
@@ -12,7 +12,7 @@
 ## 1. Testing Philosophy & Guiding Principles
 
 ### 1.1 Opaque-Box, Requirement-Driven Philosophy
-The Coolify Commercial Hardening test infrastructure is built upon an uncompromising **opaque-box, requirement-driven methodology**:
+The STX Hosting Commercial Hardening test infrastructure is built upon an uncompromising **opaque-box, requirement-driven methodology**:
 1. **Opaque-Box Independence**: Tests interact with the platform strictly through its public interfaces, HTTP/REST endpoints (`/api/v1/*`), Livewire component actions (`$this->call()`, `$this->set()`), authorization gates (`Gate::allows()`, policies), and observable side effects (database persistence, queued jobs, emitted events, and container configurations). Tests never inspect or bind to private object state, ephemeral internal variables, or transient implementation details.
 2. **Specification Authority**: The expected outputs, error messages, and state transitions are directly derived from the commercial hardening specification in `ORIGINAL_REQUEST.md` (R1–R7) and the Interface Contracts in `PROJECT.md`.
 3. **Immutability of Behavioral Contracts**: Implementation details may evolve (e.g., refactoring database queries, swapping queue drivers, or adjusting UI blade structure), but the behavioral contract specified by tests must remain invariant. If an implementation changes, the tests serve as the ultimate oracle of regression prevention.
@@ -206,7 +206,7 @@ tests/
 
 ## 7. Test Runner Invocation Commands & Execution Matrix
 
-All tests run in the Dockerized Coolify development container environment (`coolify`), backed by PostgreSQL (`coolify-db`) and Redis (`coolify-redis`).
+All tests run in the Dockerized STX Hosting development container environment (`coolify`), backed by PostgreSQL (`coolify-db`) and Redis (`coolify-redis`).
 
 ### 7.1 Running Full Test Suites
 ```bash

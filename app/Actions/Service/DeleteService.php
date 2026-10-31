@@ -79,7 +79,7 @@ class DeleteService
     /**
      * Removes the container of one service part. Returns false when the server does not respond,
      * also when it is still marked reachable but the SSH call fails: the container then stays until
-     * the service starts again (compose up --remove-orphans), and the part can still be deleted from Coolify.
+     * the service starts again (compose up --remove-orphans), and the part can still be deleted from STX Hosting.
      */
     public function removeSubresourceContainer(ServiceApplication|ServiceDatabase $resource): bool
     {

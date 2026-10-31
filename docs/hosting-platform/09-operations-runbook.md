@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-OPS-009`  
 **Version**: `1.0.0`  
 **Classification**: Site Reliability Engineering (SRE) & Operational Standard  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Webmail (`webmail`), STX Hosting Orchestration Engine (`coolify`), PostgreSQL Cluster, Redis Infrastructure, Hypervisors  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Webmail (`webmail`), STX Hosting Orchestration Engine (`stx-platform`), PostgreSQL Cluster, Redis Infrastructure, Hypervisors  
 **Author**: ShanuTechX Platform Operations & SRE Infrastructure Group  
 **Status**: Approved for Production  
 
@@ -75,26 +75,26 @@ The ShanuTechX hosting platform runs as a coordinated multi-container production
 version: '3.8'
 
 networks:
-  coolify-edge:
-    name: coolify-edge
+  stx-edge:
+    name: stx-edge
     external: false
-  coolify-internal:
-    name: coolify-internal
+  stx-internal:
+    name: stx-internal
     internal: true
 
 volumes:
   postgres-data:
-    name: coolify-postgres-data
+    name: stx-postgres-data
   redis-data:
-    name: coolify-redis-data
+    name: stx-redis-data
   status-data:
-    name: coolify-status-data
-  coolify-storage:
-    name: coolify-app-storage
-  coolify-ssh:
-    name: coolify-ssh-keys
+    name: stx-status-data
+  stx-storage:
+    name: stx-app-storage
+  stx-ssh:
+    name: stx-ssh-keys
   traefik-acme:
-    name: coolify-traefik-acme
+    name: stx-traefik-acme
 
 services:
   # ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ services:
   # ---------------------------------------------------------------------------
   traefik:
     image: traefik:v3.1
-    container_name: coolify-traefik
+    container_name: stx-traefik
     restart: always
     command:
       - "--api.dashboard=false"
@@ -122,14 +122,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-acme:/acme
     networks:
-      - coolify-edge
+      - stx-edge
 
   # ---------------------------------------------------------------------------
   # Core Database Cluster
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
-    container_name: coolify-postgres
+    container_name: stx-postgres
     restart: always
     environment:
       POSTGRES_DB: ${DB_DATABASE:-coolify}
@@ -139,7 +139,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - coolify-internal
+      - stx-internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-coolify} -d ${DB_DATABASE:-coolify}"]
       interval: 10s
@@ -157,7 +157,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - coolify-internal
+      - stx-internal
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
@@ -169,7 +169,7 @@ services:
   # ---------------------------------------------------------------------------
   coolify:
     image: ghcr.io/stx-enterprises/stx-hosting:latest
-    container_name: coolify-core
+    container_name: stx-core
     restart: always
     depends_on:
       postgres:
@@ -193,12 +193,12 @@ services:
     ports:
       - "6001:6001"
     volumes:
-      - coolify-storage:/var/www/html/storage
-      - coolify-ssh:/var/www/html/storage/app/ssh
+      - stx-storage:/var/www/html/storage
+      - stx-ssh:/var/www/html/storage/app/ssh
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - coolify-edge
-      - coolify-internal
+      - stx-edge
+      - stx-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.coolify.rule=Host(`app.shanutechx.com`)"
@@ -228,7 +228,7 @@ services:
       NEXT_PUBLIC_DASHBOARD_URL: https://app.shanutechx.com
       NEXT_PUBLIC_STATUS_URL: https://status.shanutechx.com
     networks:
-      - coolify-edge
+      - stx-edge
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.storefront.rule=Host(`shanutechx.com`) || Host(`www.shanutechx.com`)"
@@ -253,8 +253,8 @@ services:
     volumes:
       - status-data:/app/data
     networks:
-      - coolify-edge
-      - coolify-internal
+      - stx-edge
+      - stx-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.status.rule=Host(`status.shanutechx.com`)"
@@ -297,7 +297,7 @@ mkdir -p "${BACKUP_DIR}"
 echo "[$(date -u)] Initiating PostgreSQL database dump..."
 
 # Execute pg_dump inside the running postgres container
-docker exec coolify-postgres pg_dump -U coolify -d coolify | gzip -9 > "${BACKUP_FILE}"
+docker exec stx-postgres pg_dump -U coolify -d coolify | gzip -9 > "${BACKUP_FILE}"
 
 FILE_SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
 echo "[$(date -u)] Backup created successfully: ${BACKUP_FILE} (${FILE_SIZE})"
@@ -329,7 +329,7 @@ In the event of total server loss or datacenter destruction:
 2. **Retrieve Latest Encrypted Backup from S3**:
    ```bash
    aws s3 cp s3://stx-platform-backups/database/latest.sql.gz /tmp/restore.sql.gz
-   aws s3 sync s3://stx-platform-backups/keys/ /var/lib/docker/volumes/coolify-ssh-keys/_data/
+   aws s3 sync s3://stx-platform-backups/keys/ /var/lib/docker/volumes/stx-ssh-keys/_data/
    ```
 3. **Start PostgreSQL Container**:
    ```bash
@@ -338,11 +338,11 @@ In the event of total server loss or datacenter destruction:
    ```
 4. **Restore Database Snapshot**:
    ```bash
-   gunzip -c /tmp/restore.sql.gz | docker exec -i coolify-postgres psql -U coolify -d coolify
+   gunzip -c /tmp/restore.sql.gz | docker exec -i stx-postgres psql -U coolify -d coolify
    ```
 5. **Verify Database Integrity**:
    ```bash
-   docker exec -it coolify-postgres psql -U coolify -d coolify -c "SELECT COUNT(*) FROM users; SELECT COUNT(*) FROM orders; SELECT COUNT(*) FROM service_instances;"
+   docker exec -it stx-postgres psql -U coolify -d coolify -c "SELECT COUNT(*) FROM users; SELECT COUNT(*) FROM orders; SELECT COUNT(*) FROM service_instances;"
    ```
 6. **Launch Full Application Stack**:
    ```bash

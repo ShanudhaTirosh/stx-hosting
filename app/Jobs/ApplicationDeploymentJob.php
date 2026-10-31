@@ -1045,7 +1045,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
     {
         $composeFile = collect($this->application->parse(pull_request_id: $this->pull_request_id, preview_id: data_get($this->preview, 'id'), commit: $this->commit));
         if (blank(data_get($composeFile, 'services'))) {
-            throw new DeploymentException("The Docker Compose file has no services, or Coolify could not parse it. Check that {$this->application->docker_compose_location} is valid YAML and has a services section.");
+            throw new DeploymentException("The Docker Compose file has no services, or STX Hosting could not parse it. Check that {$this->application->docker_compose_location} is valid YAML and has a services section.");
         }
         if ($this->pull_request_id === 0) {
             ServerFilesFromServerJob::dispatch($this->application);
@@ -1172,7 +1172,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
                 if ($this->preserveRepository) {
                     $start_in_workdir = "cd {$server_workdir} && {$start_command}";
                     if ($this->server->isNonRoot()) {
-                        // A non-root SSH user cannot cd into the resource directory on the Coolify host. As one
+                        // A non-root SSH user cannot cd into the resource directory on the STX Hosting host. As one
                         // `sh -c` script, the sudo parser runs the cd and the start command as root.
                         $start_in_workdir = 'sh -c '.escapeshellarg($start_in_workdir);
                     }
@@ -1420,7 +1420,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
                 $this->docker_compose_location = '/'.addPreviewDeploymentSuffix('docker-compose', $this->pull_request_id).'.yaml';
             }
             // `docker cp` above can copy symlinks from the repository to these names. Remove them first, so that
-            // Coolify writes regular files.
+            // STX Hosting writes regular files.
             $this->execute_remote_command(
                 [
                     "mkdir -p $mainDir",
@@ -1782,7 +1782,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
     /**
      * Fetch the secrets from the application's secret manager source. Values
      * live only in memory during the deployment and in the generated .env on
-     * the server — they are never persisted in the Coolify database. Fetched
+     * the server — they are never persisted in the STX Hosting database. Fetched
      * lazily (only when a variable references a secret), once per deployment.
      * A fetch failure fails the deployment.
      *
@@ -2540,7 +2540,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
     }
 
     /**
-     * Coolify blocks new volumes on multi-server applications, but older applications can have both.
+     * STX Hosting blocks new volumes on multi-server applications, but older applications can have both.
      * Some applications accept separate data on each server (for example a cache), so the
      * deployment continues and only shows a warning.
      */
@@ -2588,7 +2588,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
             return;
         }
 
-        throw new DeploymentException('Before deploying to multiple servers, you must set a Docker image in the General tab. More information: https://coolify.io/docs/knowledge-base/server/multiple-servers');
+        throw new DeploymentException('Before deploying to multiple servers, you must set a Docker image in the General tab. More information: https://docs.stxhosting.com/knowledge-base/server/multiple-servers');
     }
 
     /**
@@ -3529,7 +3529,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
             ->value('commit');
 
         if (blank($commit)) {
-            throw new DeploymentException("Coolify cannot find the commit of Bitbucket pull request #{$this->pull_request_id}, because Bitbucket Cloud has no pull request refs over git. Push a commit to the pull request to deploy it with the webhook, or deploy the preview with a commit SHA through the API.");
+            throw new DeploymentException("STX Hosting cannot find the commit of Bitbucket pull request #{$this->pull_request_id}, because Bitbucket Cloud has no pull request refs over git. Push a commit to the pull request to deploy it with the webhook, or deploy the preview with a commit SHA through the API.");
         }
 
         $this->commit = $commit;
@@ -4645,7 +4645,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             }
             $unsupported_options = unsupportedDockerRunOptions($this->application->custom_docker_run_options);
             if (count($unsupported_options) > 0) {
-                $this->application_deployment_queue->addLogEntry('Warning: These custom Docker options are not supported and were not applied: '.implode(', ', $unsupported_options).'. See https://coolify.io/docs/applications/builds/custom-docker-options for the supported options.', 'stderr');
+                $this->application_deployment_queue->addLogEntry('Warning: These custom Docker options are not supported and were not applied: '.implode(', ', $unsupported_options).'. See https://docs.stxhosting.com/applications/builds/custom-docker-options for the supported options.', 'stderr');
             }
             if ((bool) $this->application->settings->is_consistent_container_name_enabled) {
                 $docker_compose['services'][$this->application->uuid] = $docker_compose['services'][$this->container_name];
@@ -4813,7 +4813,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
 
     /**
      * Older versions accepted any static image through the API, so a stored value can be one that
-     * Coolify no longer supports. Such a value stops the deployment with a clear error instead of
+     * STX Hosting no longer supports. Such a value stops the deployment with a clear error instead of
      * silently building with another web server image.
      */
     private function staticImage(): string
@@ -4920,7 +4920,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             // Traditional build args approach - generate COOLIFY_ variables locally
             $coolify_envs = $this->generate_coolify_env_variables(forBuildTime: true);
             $coolify_envs->each(function ($value, $key) {
-                $key = $this->validatedBuildtimeEnvironmentVariableKey((string) $key, 'the Coolify build environment');
+                $key = $this->validatedBuildtimeEnvironmentVariableKey((string) $key, 'the STX Hosting build environment');
                 $this->build_args->push('--build-arg '.escapeshellarg($key));
             });
         }
@@ -6025,7 +6025,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             is_array($build) && array_key_exists('dockerfile_inline', $build) => 'the service uses an inline Dockerfile (dockerfile_inline)',
             is_string($context) && preg_match('~^[a-z][a-z0-9+.-]*://|^git@~i', $context) === 1 => 'the build context is a remote Git URL',
             (is_string($context) && str_contains($context, '$')) || (is_string($dockerfile) && str_contains($dockerfile, '$')) => 'the build context or Dockerfile path uses variables',
-            default => 'Coolify cannot read the build definition',
+            default => 'STX Hosting cannot read the build definition',
         };
 
         $names = $variables->keys()
@@ -6447,7 +6447,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
 
     /**
      * The main server queues one deployment for each additional server. When all are queued and the
-     * last one ends, Coolify sends one notification: success if all servers succeeded, else failed
+     * last one ends, STX Hosting sends one notification: success if all servers succeeded, else failed
      * with a link to the first deployment that did not succeed.
      */
     private function sendMultiServerDeploymentNotification(string $parentDeploymentUuid): void

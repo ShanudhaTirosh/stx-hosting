@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-TEST-008`  
 **Version**: `1.0.0`  
 **Classification**: Engineering Testing Specification & Quality Standard  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`coolify`), Database & Queue Workers  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`stx-platform`), Database & Queue Workers  
 **Author**: ShanuTechX Quality Engineering & Security Assurance Group  
 **Status**: Approved for Execution  
 

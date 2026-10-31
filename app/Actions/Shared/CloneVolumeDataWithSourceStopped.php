@@ -203,10 +203,10 @@ class CloneVolumeDataWithSourceStopped
         if ($wasRunning) {
             try {
                 self::startSource($source);
-                $message .= " Coolify started '{$source->name}' again.";
+                $message .= " STX Hosting started '{$source->name}' again.";
             } catch (Throwable $startError) {
                 Log::error("Failed to start {$source->name} again after a failed volume clone: ".$startError->getMessage());
-                $message .= " Coolify could not start '{$source->name}' again. Start it manually.";
+                $message .= " STX Hosting could not start '{$source->name}' again. Start it manually.";
             }
         }
 
@@ -225,7 +225,7 @@ class CloneVolumeDataWithSourceStopped
         Application|Service|StandaloneClickhouse|StandaloneDragonfly|StandaloneKeydb|StandaloneMariadb|StandaloneMongodb|StandaloneMysql|StandalonePostgresql|StandaloneRedis|StandaloneSqlite $source,
         Throwable $e,
     ): void {
-        $message = "Coolify did not copy the volume data of '{$source->name}' to its clone, because stopping '{$source->name}' failed. The clone has no copied data.";
+        $message = "STX Hosting did not copy the volume data of '{$source->name}' to its clone, because stopping '{$source->name}' failed. The clone has no copied data.";
 
         try {
             $stillRunning = self::runningContainers($source) !== [];
@@ -236,10 +236,10 @@ class CloneVolumeDataWithSourceStopped
         if ($stillRunning && $source instanceof Service) {
             try {
                 self::startStoppedServiceContainers($source);
-                $message .= " Some containers of '{$source->name}' were still running, so Coolify started its stopped containers again.";
+                $message .= " Some containers of '{$source->name}' were still running, so STX Hosting started its stopped containers again.";
             } catch (Throwable $startError) {
                 Log::error("Failed to start the stopped containers of {$source->name} after a failed stop for a volume clone: ".$startError->getMessage());
-                $message .= " Some containers of '{$source->name}' are still running. Coolify could not start its stopped containers again. Start '{$source->name}' manually.";
+                $message .= " Some containers of '{$source->name}' are still running. STX Hosting could not start its stopped containers again. Start '{$source->name}' manually.";
             }
         } elseif ($stillRunning && $source instanceof Application && $e->getCode() === self::APPLICATION_PARTLY_STOPPED) {
             $message .= ' '.self::redeployPartlyStoppedApplication($source);
@@ -248,10 +248,10 @@ class CloneVolumeDataWithSourceStopped
         } else {
             try {
                 self::startSource($source);
-                $message .= " Coolify started '{$source->name}' again.";
+                $message .= " STX Hosting started '{$source->name}' again.";
             } catch (Throwable $startError) {
                 Log::error("Failed to start {$source->name} again after a failed stop for a volume clone: ".$startError->getMessage());
-                $message .= " Coolify could not start '{$source->name}' again. Start it manually.";
+                $message .= " STX Hosting could not start '{$source->name}' again. Start it manually.";
             }
         }
 
@@ -295,7 +295,7 @@ class CloneVolumeDataWithSourceStopped
             return "Some containers of '{$application->name}' stopped and others are still running. Coolify could not queue a redeploy of '{$application->name}' to bring back its stopped containers. Redeploy it manually.";
         }
 
-        $sentence = "Some containers of '{$application->name}' stopped and others were still running, so Coolify started a redeploy of '{$application->name}' to bring back its stopped containers";
+        $sentence = "Some containers of '{$application->name}' stopped and others were still running, so STX Hosting started a redeploy of '{$application->name}' to bring back its stopped containers";
 
         return $commit === null
             ? $sentence.'. Coolify could not find the commit that ran before, so the redeploy uses the configured commit or image tag.'

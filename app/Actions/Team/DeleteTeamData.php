@@ -53,7 +53,7 @@ use Illuminate\Support\Facades\DB;
 use LogicException;
 
 /**
- * Removes every record Coolify keeps for a team: servers, resources (also soft-deleted ones and
+ * Removes every record STX Hosting keeps for a team: servers, resources (also soft-deleted ones and
  * ones without a destination), projects, keys, sources, storages, tokens, settings, and the
  * subscription. Nothing runs on the team's servers; their containers keep running.
  *
@@ -231,7 +231,7 @@ class DeleteTeamData
 
     /**
      * Removes the runner records of the team's servers and GitHub Apps, so that busy runners do not
-     * block deleting them. The runners keep running on the servers; Coolify only stops tracking them.
+     * block deleting them. The runners keep running on the servers; STX Hosting only stops tracking them.
      *
      * @param  array<int, int>  $serverIds
      */

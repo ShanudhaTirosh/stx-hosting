@@ -1,4 +1,4 @@
-# Coolify Release Guide
+# STX Hosting Release Guide
 
 ## Branches
 
@@ -28,9 +28,9 @@ feature/* → next → RC
 
 1. Merge feature branches into `next`.
 2. Set `coolify.nightly.version` in both version files to the intended RC, such as `4.5-rc.1`.
-3. Every push to `next` runs **Build Coolify Next**. It publishes `sha-<short-sha>`, `4.5-rc.1.<short-sha>`, and the moving `next` tag. It never publishes the exact `4.5-rc.1` tag.
+3. Every push to `next` runs **Build STX Hosting Next**. It publishes `sha-<short-sha>`, `4.5-rc.1.<short-sha>`, and the moving `next` tag. It never publishes the exact `4.5-rc.1` tag.
 4. Create a reviewed draft GitHub Release named `v4.5-rc.1` and mark it as a prerelease.
-5. Run **Release Coolify RC** manually from `next` and enter `v4.5-rc.1`.
+5. Run **Release STX Hosting RC** manually from `next` and enter `v4.5-rc.1`.
 6. The workflow validates the draft and configured nightly version, builds the exact RC, publishes `4.5-rc.1`, updates the `next` image tag, and publishes the draft prerelease.
 7. Advance `coolify.nightly.version` to the next intended RC version.
 
