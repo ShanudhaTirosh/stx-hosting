@@ -9,7 +9,8 @@ class CategoryGameServers extends Component
 {
     public string $currency = 'USD';
     public string $billingPeriod = 'monthly';
-    public string $selectedGame = 'all'; // all, minecraft, rust, palworld, cs2
+    public string $selectedGame = 'all'; // all, minecraft, rust, palworld, cs2, ark
+    public string $gamePlatformUrl = 'https://games.shanutechx.com';
 
     public function selectCurrency(string $curr): void
     {
@@ -45,7 +46,7 @@ class CategoryGameServers extends Component
             $q->where('is_active', true);
         }])
             ->where('is_active', true)
-            ->where('category', 'game_server')
+            ->whereIn('category', ['game_servers', 'games', 'vps'])
             ->orderBy('is_popular', 'desc')
             ->orderBy('id', 'asc')
             ->get();
@@ -57,4 +58,3 @@ class CategoryGameServers extends Component
         ]);
     }
 }
-

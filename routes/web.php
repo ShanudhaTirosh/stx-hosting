@@ -171,6 +171,7 @@ Route::post('/auth/link', [Controller::class, 'acceptLink'])->middleware('thrott
 Route::get('/auth/{provider}/redirect', [OauthController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->name('auth.callback');
 // Public Native Storefront & Status (Port 8000)
+Route::get('/', \App\Livewire\Storefront\Index::class)->name('home');
 Route::get('/store', \App\Livewire\Storefront\Index::class)->name('store.index');
 Route::get('/vps', \App\Livewire\Storefront\CategoryVps::class)->name('store.vps');
 Route::get('/game-servers', \App\Livewire\Storefront\CategoryGameServers::class)->name('store.games');
@@ -243,7 +244,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('dashboard');
     })->name('two-factor.required.switch-team');
 
-    Route::get('/', Dashboard::class)->name('dashboard');
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/dashboard/canvas', DashboardCanvas::class)->name('dashboard.canvas');
     Route::get('/analytics', Analytics::class)->name('analytics');
     Route::get('/metrics', FleetMetrics::class)->name('metrics');

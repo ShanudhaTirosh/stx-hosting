@@ -1,4 +1,5 @@
 <div class="min-h-screen bg-[#030014] text-white flex flex-col justify-between relative overflow-hidden">
+    {{-- Background Grid & Glow --}}
     <div class="fixed inset-0 bg-[radial-gradient(#1e1b4b_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none z-0"></div>
     <div class="fixed top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-cyan-600/15 rounded-full blur-[140px] pointer-events-none -z-10"></div>
 
@@ -19,117 +20,90 @@
             <p class="text-base md:text-lg text-neutral-300 leading-relaxed font-sans">
                 Engineered for extreme performance with DDR5 ECC memory, Gen4 NVMe arrays, custom game DDoS defense, and instant modpack installation.
             </p>
+        </div>
 
-            {{-- Supported Games Banner --}}
-            <div class="flex flex-wrap items-center justify-center gap-2 pt-2 text-xs font-mono">
-                <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-neutral-300">Minecraft (Paper, Fabric, Forge)</span>
-                <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-neutral-300">Rust 100-Tick</span>
-                <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-neutral-300">Palworld Dedicated</span>
-                <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-neutral-300">Counter-Strike 2 128-Tick</span>
-                <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-neutral-300">ARK: Survival Ascended</span>
+        {{-- Official External Platform Link Card (per user specification) --}}
+        <div class="max-w-4xl mx-auto glass-card rounded-3xl p-8 sm:p-12 border border-cyan-500/30 shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-2xl space-y-6 text-center relative z-10">
+            <div class="size-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.4)] mx-auto">
+                <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
             </div>
 
-            {{-- Currency Controls --}}
-            <div class="flex items-center justify-center gap-4 pt-4">
-                <div class="flex items-center rounded-xl p-1 border border-white/10 bg-white/5 text-xs font-mono">
-                    <button type="button" wire:click="selectCurrency('USD')"
-                        @class(['px-3 py-1.5 rounded-lg font-bold transition-colors', 'bg-purple-600 text-white' => $currency === 'USD', 'text-neutral-400 hover:text-white' => $currency !== 'USD'])>
-                        USD ($)
-                    </button>
-                    <button type="button" wire:click="selectCurrency('LKR')"
-                        @class(['px-3 py-1.5 rounded-lg font-bold transition-colors', 'bg-purple-600 text-white' => $currency === 'LKR', 'text-neutral-400 hover:text-white' => $currency !== 'LKR'])>
-                        LKR (Rs)
-                    </button>
+            <div class="space-y-3 max-w-2xl mx-auto">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase">
+                    <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Dedicated Gaming Control Panel
                 </div>
+
+                <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                    Managed on Our <span class="text-gradient">Gaming Platform</span>
+                </h2>
+
+                <p class="text-sm text-neutral-300 leading-relaxed font-sans">
+                    Dedicated Game Servers (<strong class="text-white">Minecraft Paper/Fabric/Forge, Rust 100-Tick, Palworld Dedicated, Counter-Strike 2, and ARK: Survival Ascended</strong>) run on our specialized game orchestration panel with 1-click modpack installers, automated backup snapshots, and real-time console access.
+                </p>
+
+                <p class="text-xs text-neutral-400 font-mono">
+                    Official Game Node Gateway: <span class="text-cyan-300 font-bold">games.shanutechx.com</span>
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-white/10">
+                <a href="{{ $gamePlatformUrl }}" target="_blank" rel="noopener noreferrer"
+                    class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-extrabold text-sm shadow-[0_0_25px_rgba(6,182,212,0.45)] hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] transition-all flex items-center justify-center gap-2 font-mono">
+                    <span>Launch Game Server Panel</span>
+                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+
+                <a href="https://discord.gg/shanutechx" target="_blank" rel="noopener noreferrer"
+                    class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-300 hover:text-white font-bold text-sm transition-all flex items-center justify-center gap-2 font-mono">
+                    <span>Join Gaming Community</span>
+                    <svg class="size-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
             </div>
         </div>
 
-        {{-- Game Server Plans --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse ($products as $prod)
-                @php
-                    $primaryVariant = $prod->variants->first();
-                    $tier = $primaryVariant?->pricingTiers->first();
-                    $priceMonthlyUsd = max(5, (float) ($tier?->price_monthly_usd ?: 12));
-                    $priceMonthlyLkr = ($tier && (float)$tier->price_monthly_lkr > 0) ? (float)$tier->price_monthly_lkr : round($priceMonthlyUsd * 305, 0);
+        {{-- Supported Game Titles Showcase --}}
+        <div class="border-t border-white/[0.06] pt-12">
+            <div class="text-center space-y-2 mb-10">
+                <span class="text-xs font-mono uppercase font-bold text-cyan-400 tracking-widest">Supported Game Runtimes</span>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-white">High-Tickrate Game Environments</h3>
+            </div>
 
-                    $displayPrice = ($currency === 'USD')
-                        ? '$' . number_format($priceMonthlyUsd, 2)
-                        : 'Rs ' . number_format($priceMonthlyLkr, 0);
-                @endphp
-
-                <div @class([
-                    'glass-card rounded-2xl p-6 flex flex-col justify-between transition-all relative',
-                    'border-cyan-500/50 shadow-[0_0_40px_-10px_rgba(6,182,212,0.3)]' => $prod->is_popular,
-                ])>
-                    @if ($prod->is_popular)
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-cyan-600 to-purple-500 text-white shadow-lg">
-                            High-Performance Choice
-                        </div>
-                    @endif
-
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs uppercase font-mono tracking-wider text-cyan-400">High-Tickrate Game Node</span>
-                            @if ($prod->is_popular)
-                                <span class="size-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                            @endif
-                        </div>
-
-                        <h2 class="text-xl font-bold text-white mb-2">{{ $prod->name }}</h2>
-                        <p class="text-xs text-neutral-300 leading-relaxed mb-6">{{ $prod->description }}</p>
-
-                        <div class="mb-6 pb-6 border-b border-white/10">
-                            <div class="flex items-baseline gap-1">
-                                <span class="text-3xl font-extrabold text-white font-mono">{{ $displayPrice }}</span>
-                                <span class="text-xs text-neutral-400">/ month</span>
-                            </div>
-                        </div>
-
-                        @if ($primaryVariant)
-                            <div class="grid grid-cols-2 gap-2 text-xs font-mono mb-6 bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                                <div>
-                                    <span class="text-neutral-500 block text-[10px]">CPU</span>
-                                    <span class="text-white font-bold">{{ $primaryVariant->vcpu }} High-Clock vCPU</span>
-                                </div>
-                                <div>
-                                    <span class="text-neutral-500 block text-[10px]">DDR5 RAM</span>
-                                    <span class="text-white font-bold">{{ $primaryVariant->ram_mb >= 1024 ? ($primaryVariant->ram_mb / 1024) . ' GB' : $primaryVariant->ram_mb . ' MB' }}</span>
-                                </div>
-                                <div>
-                                    <span class="text-neutral-500 block text-[10px]">NVME DISK</span>
-                                    <span class="text-white font-bold">{{ $primaryVariant->disk_gb }} GB Gen4</span>
-                                </div>
-                                <div>
-                                    <span class="text-neutral-500 block text-[10px]">PLAYERS</span>
-                                    <span class="text-white font-bold">Unlimited</span>
-                                </div>
-                            </div>
-                        @endif
-
-                        <ul class="space-y-2 text-xs text-neutral-300 mb-6">
-                            <li class="flex items-center gap-2"><span class="text-cyan-400 font-bold">&#10003;</span> Game DDoS Filtering (Layer 7 & UDP)</li>
-                            <li class="flex items-center gap-2"><span class="text-cyan-400 font-bold">&#10003;</span> Automated World Backups & Schedules</li>
-                            <li class="flex items-center gap-2"><span class="text-cyan-400 font-bold">&#10003;</span> SFTP File Access & Custom JAR Support</li>
-                            <li class="flex items-center gap-2"><span class="text-cyan-400 font-bold">&#10003;</span> Instant Web Console & Restart Loops</li>
-                        </ul>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                <div class="p-5 rounded-2xl glass-card border border-white/10 text-center space-y-2">
+                    <div class="size-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto">
+                        <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     </div>
+                    <div class="text-sm font-bold text-white">128-Tick CS2 &amp; Rust</div>
+                    <div class="text-[11px] text-neutral-400">Low-jitter UDP packet delivery</div>
+                </div>
 
-                    <div>
-                        <button type="button" wire:click="orderPlan('{{ $primaryVariant?->uuid }}', '{{ $tier?->uuid }}')"
-                            class="w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all hover:border-cyan-400 hover:text-cyan-300">
-                            Deploy Game Server &rarr;
-                        </button>
+                <div class="p-5 rounded-2xl glass-card border border-white/10 text-center space-y-2">
+                    <div class="size-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto">
+                        <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
+                    <div class="text-sm font-bold text-white">Game Anti-DDoS</div>
+                    <div class="text-[11px] text-neutral-400">Volumetric attack filtering</div>
                 </div>
-            @empty
-                <div class="col-span-3 text-center py-16 glass-card rounded-2xl">
-                    <p class="text-sm text-neutral-400">Loading game server fleet nodes...</p>
+
+                <div class="p-5 rounded-2xl glass-card border border-white/10 text-center space-y-2">
+                    <div class="size-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
+                        <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    </div>
+                    <div class="text-sm font-bold text-white">1-Click Modpacks</div>
+                    <div class="text-[11px] text-neutral-400">CurseForge &amp; Modrinth sync</div>
                 </div>
-            @endforelse
+
+                <div class="p-5 rounded-2xl glass-card border border-white/10 text-center space-y-2">
+                    <div class="size-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto">
+                        <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="text-sm font-bold text-white">99.9% Uptime SLA</div>
+                    <div class="text-[11px] text-neutral-400">Automated daily game backups</div>
+                </div>
+            </div>
         </div>
     </main>
 
     <x-storefront.footer />
 </div>
-

@@ -67,7 +67,9 @@ class Monitor extends BaseModel
             }
             $history[] = [
                 'day' => now()->subDays($i)->format('M d'),
+                'date' => now()->subDays($i)->format('M d, Y'),
                 'status' => ($i === 0) ? ($this->current_status === 'down' ? 'down' : ($this->current_status === 'degraded' ? 'degraded' : 'up')) : $status,
+                'uptime' => ($status === 'down' ? '0.00' : ($status === 'degraded' ? '92.50' : '100.00')),
             ];
         }
 
