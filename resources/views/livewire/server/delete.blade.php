@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(10) }} > Delete Server | Coolify
+        {{ data_get_str($server, 'name')->limit(10) }} > Delete Server | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -12,13 +12,13 @@
         <div class="application-settings-form w-full">
             @if (! $server->is_coolify_host)
                 <x-application.settings-section id="server-danger-section" title="Delete server"
-                    helper="Permanently remove this server and its configuration from Coolify."
+                    helper="Permanently remove this server and its configuration from STX Hosting."
                     class="server-danger-section">
                     <x-danger-zone title="This action cannot be undone">
                         <p>
-                        The server will be removed from Coolify.
+                        The server will be removed from STX Hosting.
                         @if ($server->isTransferredAway())
-                            This server was transferred to another Coolify instance. Only the records on this instance
+                            This server was transferred to another STX Hosting instance. Only the records on this instance
                             are deleted, also the records of its resources. The server, its containers, and its data
                             stay as they are.
                         @elseif ($server->definedResources()->count() > 0)
@@ -35,8 +35,8 @@
                         <x-slot:action>
                         @php
                             $deleteActions = $server->isTransferredAway()
-                                ? ['This server and the records of its resources will be permanently deleted from this Coolify instance. Nothing on the server changes.']
-                                : ['This server will be permanently deleted from Coolify.'];
+                                ? ['This server and the records of its resources will be permanently deleted from this STX Hosting instance. Nothing on the server changes.']
+                                : ['This server will be permanently deleted from STX Hosting.'];
                             $deleteWarningMessage = null;
                             if ($server->isTransferredAway()) {
                                 $deleteWarningMessage = '<strong>This removes the option to undo the transfer.</strong><br>'
@@ -45,7 +45,7 @@
                             }
                             if ($server->hostinger_virtual_machine_id && ! $server->isTransferredAway()) {
                                 $deleteWarningMessage = '<strong>Hostinger deletes a VPS only at the end of its paid period.</strong><br>'
-                                    .'If you select to delete the VPS from Hostinger, Coolify turns off its auto-renewal. '
+                                    .'If you select to delete the VPS from Hostinger, STX Hosting turns off its auto-renewal. '
                                     .'The VPS keeps running until the paid period ends. Then Hostinger deletes it with all its data. '
                                     .'To delete it now or to request a refund, '
                                     .'<a class="underline font-semibold" href="https://hpanel.hostinger.com/" target="_blank" rel="noopener noreferrer">cancel the VPS in hPanel</a>.';

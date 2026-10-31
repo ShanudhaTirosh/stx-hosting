@@ -1,6 +1,6 @@
-# Coolify Cloud Horizon worker pools
+# STX Hosting Cloud Horizon worker pools
 
-Coolify Cloud runs Horizon on two app nodes that share one Redis. On Cloud
+STX Hosting Cloud runs Horizon on two app nodes that share one Redis. On Cloud
 (`SELF_HOSTED=false`, `APP_ENV=production`), `config/horizon.php` provisions
 one fixed-size supervisor per queue. A busy queue cannot starve the others.
 

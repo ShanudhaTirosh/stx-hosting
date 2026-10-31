@@ -312,7 +312,7 @@ class Index extends Component
         $this->uses_sso = true;
         $this->show_email_change = false;
         $this->show_verification = false;
-        $this->dispatch('error', 'Email addresses managed by SSO cannot be changed in Coolify.');
+        $this->dispatch('error', 'Email addresses managed by SSO cannot be changed in STX Hosting.');
 
         return true;
     }

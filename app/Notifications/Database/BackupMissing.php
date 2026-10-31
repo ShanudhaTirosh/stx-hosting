@@ -28,7 +28,7 @@ class BackupMissing extends CustomEmailNotification
     public function toMail(): MailMessage
     {
         return (new MailMessage)
-            ->subject("Coolify: [ACTION REQUIRED] No recent backup for {$this->databaseName}")
+            ->subject("STX Hosting: [ACTION REQUIRED] No recent backup for {$this->databaseName}")
             ->view('emails.backup-missing', $this->messageData());
     }
 
@@ -44,7 +44,7 @@ class BackupMissing extends CustomEmailNotification
 
     public function toTelegram(): array
     {
-        return ['message' => 'Coolify: '.$this->description()];
+        return ['message' => 'STX Hosting: '.$this->description()];
     }
 
     public function toPushover(): PushoverMessage

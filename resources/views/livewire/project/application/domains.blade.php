@@ -120,7 +120,7 @@
                                     @if ($addDomainDnsFailed)
                                         <x-callout type="danger" title="DNS is not pointing to the right IP">
                                             This domain does not currently resolve to this server.
-                                            Traffic may not reach Coolify until you update DNS.
+                                            Traffic may not reach STX Hosting until you update DNS.
                                             Are you sure you want to add it anyway?
                                             @if (filled($addDomainDnsMessage))
                                                 <div class="pt-2">{{ $addDomainDnsMessage }}</div>
@@ -262,7 +262,7 @@
                 @if ($hasHttpsDomains)
                     <x-forms.listbox canGate="update" :canResource="$application" id="isForceHttpsEnabled"
                         label="Redirect HTTP to HTTPS" onChange="updateForceHttps"
-                        helper="Disable only when Cloudflare Tunnel or another proxy connects to Coolify over HTTP. Keep enabled when Cloudflare uses Full or Full (Strict) SSL."
+                        helper="Disable only when Cloudflare Tunnel or another proxy connects to STX Hosting over HTTP. Keep enabled when Cloudflare uses Full or Full (Strict) SSL."
                         :options="[
                             ['value' => true, 'label' => 'Enabled'],
                             ['value' => false, 'label' => 'Disabled'],
@@ -325,7 +325,7 @@
                                 @if ($editDomainDnsFailed)
                                     <x-callout type="danger" title="DNS is not pointing to the right IP">
                                         This domain does not currently resolve to this server.
-                                        Traffic may not reach Coolify until you update DNS.
+                                        Traffic may not reach STX Hosting until you update DNS.
                                         Are you sure you want to save it anyway?
                                         @if (filled($editDomainDnsMessage))
                                             <div class="pt-2">{{ $editDomainDnsMessage }}</div>

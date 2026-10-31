@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        Advanced Settings | Coolify
+        Advanced Settings | STX Hosting
     </x-slot>
 
     <x-settings.layout>
@@ -42,7 +42,7 @@
                 <x-application.settings-subsection id="api-section" title="API and MCP">
                     <div class="grid gap-4 lg:grid-cols-2">
                         <x-forms.listbox id="is_api_enabled" label="API access"
-                            helper="Allow authenticated requests to the Coolify REST API." onChange="instantSave"
+                            helper="Allow authenticated requests to the STX Hosting REST API." onChange="instantSave"
                             :options="[
                                 ['value' => true, 'label' => 'Enabled'],
                                 ['value' => false, 'label' => 'Disabled'],
@@ -93,11 +93,11 @@
                 </x-application.settings-subsection>
                 @if (isCloud())
                     <x-application.settings-subsection id="domain-connect-section" title="Domain Connect"
-                        helper="Optional RSA private key used to sign Cloudflare Domain Connect apply URLs on Coolify Cloud. Leave blank to keep the existing key.">
+                        helper="Optional RSA private key used to sign Cloudflare Domain Connect apply URLs on STX Hosting Cloud. Leave blank to keep the existing key.">
                         <div class="grid gap-4">
                             <x-forms.input id="domain_connect_private_key" type="password" allowToPeak
                                 label="Domain Connect private key (PEM)"
-                                helper="Paste a PEM private key to set or rotate. Public key must be published at domainconnect.coolify.io. Env DOMAIN_CONNECT_PRIVATE_KEY is used as a fallback when this is empty."
+                                helper="Paste a PEM private key to set or rotate. Public key must be published at domainconnect.stxhosting.com. Env DOMAIN_CONNECT_PRIVATE_KEY is used as a fallback when this is empty."
                                 placeholder="-----BEGIN PRIVATE KEY-----" />
                             @if (filled(data_get($settings, 'domain_connect_private_key')))
                                 <div class="flex flex-wrap items-center gap-2">
@@ -116,11 +116,11 @@
                         </div>
                     </x-application.settings-subsection>
                     <x-application.settings-subsection id="server-validation-section" title="Server validation"
-                        helper="Limits failed SSH validations, so users cannot make Coolify Cloud try logins on hosts that they do not own. Successful connections do not count.">
+                        helper="Limits failed SSH validations, so users cannot make STX Hosting Cloud try logins on hosts that they do not own. Successful connections do not count.">
                         <div class="grid gap-4 lg:grid-cols-3">
                             <x-forms.input id="server_validation_rate_limit_seconds" type="number" min="60" max="86400"
                                 label="Rate limit window (seconds)"
-                                helper="The period in which Coolify counts failed validations. From 60 to 86400 seconds." />
+                                helper="The period in which STX Hosting counts failed validations. From 60 to 86400 seconds." />
                             <x-forms.input id="server_validation_max_failures_per_ip" type="number" min="1" max="1000"
                                 label="Max failed validations per IP"
                                 helper="For one target IP, from all teams together, in the window. From 1 to 1000." />
@@ -175,14 +175,14 @@
             </x-application.settings-section>
 
             <x-application.settings-section id="storage-section" title="Storage"
-                helper="Where Coolify stores uploaded images and how users download files.">
+                helper="Where STX Hosting stores uploaded images and how users download files.">
                 <x-application.settings-subsection first id="avatar-storage-section" title="Image storage"
                     helper="Choose where compressed profile pictures and project icons are stored. Use S3 for multi-instance or cloud deployments so every application replica can access the same files.">
                     <div class="flex max-w-md flex-col gap-4">
                         <x-forms.listbox id="avatar_storage" label="Storage destination" onChange="instantSave"
                             :options="$avatar_storage_options" />
                         <x-forms.input id="image_cdn_url" label="Image CDN URL"
-                            helper="Optional public URL (for example a CDN or public bucket domain) that serves profile pictures and project icons stored on S3. Leave empty to serve them through Coolify." placeholder="https://images.example.com" />
+                            helper="Optional public URL (for example a CDN or public bucket domain) that serves profile pictures and project icons stored on S3. Leave empty to serve them through STX Hosting." placeholder="https://images.example.com" />
                     </div>
                     @if (count($avatar_storage_options) === 1)
                         <x-callout type="info" title="No usable S3 storage configured" class="mt-4">
@@ -191,17 +191,17 @@
                     @endif
                 </x-application.settings-subsection>
                 <x-application.settings-subsection id="file-download-storage-section" title="File downloads"
-                    helper="Choose how files from the container file browser and backups are downloaded. Streaming sends each file through this Coolify instance (file browser: up to 1 GB). With S3, the server uploads the file to the bucket and the browser downloads it from S3, up to 5 GB; larger backups are streamed. S3 download links expire after 15 minutes, and the files are deleted after 6 hours.">
+                    helper="Choose how files from the container file browser and backups are downloaded. Streaming sends each file through this STX Hosting instance (file browser: up to 1 GB). With S3, the server uploads the file to the bucket and the browser downloads it from S3, up to 5 GB; larger backups are streamed. S3 download links expire after 15 minutes, and the files are deleted after 6 hours.">
                     <div class="flex max-w-md flex-col gap-4">
                         <x-forms.listbox id="file_download_storage" label="Download method" onChange="instantSave"
                             :options="[
-                                ['value' => 'stream', 'label' => 'Stream through Coolify'],
+                                ['value' => 'stream', 'label' => 'Stream through STX Hosting'],
                                 ...array_values(array_filter($avatar_storage_options, fn ($option) => $option['value'] !== 'local')),
                             ]" />
                     </div>
                     <x-callout type="info" title="Bucket auto-delete rule" class="mt-4">
-                        When you select an S3 storage, Coolify adds a lifecycle rule that deletes objects under
-                        <span class="font-mono">coolify-file-downloads/</span> after 1 day, as a safety net. The selected
+                        When you select an S3 storage, STX Hosting adds a lifecycle rule that deletes objects under
+                        <span class="font-mono">stx-file-downloads/</span> after 1 day, as a safety net. The selected
                         storage must be reachable from your servers, and the S3 provider must support lifecycle rules.
                     </x-callout>
                 </x-application.settings-subsection>

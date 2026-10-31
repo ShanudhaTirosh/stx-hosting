@@ -343,7 +343,7 @@ class ServerProxyController extends Controller
             return $teamId;
         }
 
-        if ($response = $this->deployAbilityForbiddenResponse($request, 'Coolify applies the proxy configuration on the server, so it needs a token with the deploy permission.')) {
+        if ($response = $this->deployAbilityForbiddenResponse($request, 'STX Hosting applies the proxy configuration on the server, so it needs a token with the deploy permission.')) {
             return $response;
         }
 

@@ -66,7 +66,7 @@
                                 @endif
                                 @if ($form['ignoresDriverOptions'])
                                     <span class="block text-xs text-amber-800 dark:text-amber-300/90">
-                                        Coolify does not apply the driver options of this volume because it was created before they were supported. To apply them: stop the resource, back up any data you need, delete this entry together with the Docker volume, then redeploy.
+                                        STX Hosting does not apply the driver options of this volume because it was created before they were supported. To apply them: stop the resource, back up any data you need, delete this entry together with the Docker volume, then redeploy.
                                     </span>
                                 @endif
                             </div>
@@ -157,7 +157,7 @@
                                                 'default_warning' => 'The Docker volume and its data will not be deleted.',
                                             ]]"
                                             :actions="array_values(array_filter([
-                                                'This removes only the stale volume entry from Coolify.',
+                                                'This removes only the stale volume entry from STX Hosting.',
                                                 $form['replacedExternalVolume']
                                                     ? 'The next deployment uses the external volume \''.$form['replacedExternalVolume'].'\' instead of this volume.'
                                                     : null,
@@ -175,7 +175,7 @@
                                                 'default_warning' => 'The Docker volume and its data stay on the server. The driver options are not applied, because Docker keeps using the existing volume.',
                                             ]]"
                                             :actions="[
-                                                'Remove the storage entry from Coolify.',
+                                                'Remove the storage entry from STX Hosting.',
                                             ]"
                                             warningMessage="Stop the resource first: Docker cannot delete a volume that a running container uses. If the volume contains data you need, use Backup before you delete it." confirmationText="{{ $form['name'] }}"
                                             confirmationLabel="Please confirm by entering the Storage Name below"

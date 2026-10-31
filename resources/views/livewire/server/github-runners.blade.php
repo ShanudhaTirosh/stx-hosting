@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(10) }} > GitHub Runners | Coolify
+        {{ data_get_str($server, 'name')->limit(10) }} > GitHub Runners | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -131,8 +131,8 @@
                                     ->all()"
                                 helper="Organization GitHub App that receives the Workflow job webhook events." />
                             <x-forms.input id="labels" label="Labels" required canGate="update" :canResource="$server"
-                                placeholder="coolify"
-                                helper="Comma-separated custom labels. Coolify also registers self-hosted and linux. Jobs must ask for at least one custom label." />
+                                placeholder="stx-runner"
+                                helper="Comma-separated custom labels. STX Hosting also registers self-hosted and linux. Jobs must ask for at least one custom label." />
                             @if ($server->isBuildServer())
                                 <x-forms.listbox id="isDedicated" label="Application builds" canGate="update"
                                     :canResource="$server" :options="[
@@ -169,7 +169,7 @@
                                 helper="Docker: each job gets a private Docker daemon. The daemon runs privileged, so a job can get root access to this server. Use it only for trusted repositories.<br><br>Isolated Docker: each job gets a private Docker daemon in an unprivileged Sysbox container. Everything that needs Docker works, and root in the job has no rights on this server. Needs Sysbox on the server.<br><br>No Docker: jobs run in an unprivileged container. JavaScript actions, composite actions, and shell steps work. Docker container actions, services, container jobs, and docker commands fail.<br><br>The host Docker socket is never shared." />
                             <x-forms.input id="runnerImage" label="Runner image" canGate="update" :canResource="$server"
                                 :placeholder="config('constants.github_runner.image')"
-                                helper="Empty uses the latest official runner image, which Coolify pulls for every runner. Set a tag, for example ghcr.io/actions/actions-runner:2.337.0, to pin a version, or use a custom image based on the official one to add tools. GitHub stops sending jobs to runners that are more than 30 days old." />
+                                helper="Empty uses the latest official runner image, which STX Hosting pulls for every runner. Set a tag, for example ghcr.io/actions/actions-runner:2.337.0, to pin a version, or use a custom image based on the official one to add tools. GitHub stops sending jobs to runners that are more than 30 days old." />
                         </div>
                         <div x-cloak x-show="$wire.dockerMode === 'sysbox'" class="mt-4"
                             x-effect="if ($wire.dockerMode === 'sysbox' && $wire.isSysboxInstalled === null) $wire.checkSysbox()">
@@ -179,7 +179,7 @@
                                 </x-callout>
                             @elseif ($isSysboxInstalled === false)
                                 <x-callout type="warning" title="Sysbox is not installed">
-                                    Isolated Docker needs the Sysbox runtime. Coolify installs Sysbox
+                                    Isolated Docker needs the Sysbox runtime. STX Hosting installs Sysbox
                                     {{ config('constants.github_runner.sysbox.version') }} from the official package
                                     (Debian and Ubuntu, kernel 5.12 or newer). Docker reloads its configuration, and
                                     running containers are not restarted.
@@ -194,7 +194,7 @@
                                 </x-callout>
                             @else
                                 <x-callout type="info" title="Checking Sysbox">
-                                    Coolify checks if Sysbox is installed on this server.
+                                    STX Hosting checks if Sysbox is installed on this server.
                                 </x-callout>
                             @endif
                         </div>

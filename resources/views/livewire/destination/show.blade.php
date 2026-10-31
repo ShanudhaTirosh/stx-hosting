@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ $destination->name }} | Destination | Coolify
+        {{ $destination->name }} | Destination | STX Hosting
     </x-slot>
 
     @php
@@ -30,7 +30,7 @@
                             <x-danger-zone title="Delete destination">
                                 <p>
                                     Permanently delete <strong class="font-semibold">{{ $destination->name }}</strong>
-                                    from Coolify. The Docker network is also removed from the server.
+                                    from STX Hosting. The Docker network is also removed from the server.
                                 </p>
                                 <p>Delete or move every attached resource before deleting this destination.</p>
                                 <x-slot:action>
@@ -44,7 +44,7 @@
                                             step2ButtonText="Permanently Delete" canGate="delete"
                                             :canResource="$destination" />
                                     @else
-                                        <x-forms.button isError disabled tooltip="The default Coolify destination cannot be deleted.">
+                                        <x-forms.button isError disabled tooltip="The default STX Hosting destination cannot be deleted.">
                                             Delete destination
                                         </x-forms.button>
                                     @endif

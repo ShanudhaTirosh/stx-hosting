@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ $name ?: 'GitLab App' }} | Sources | Coolify
+        {{ $name ?: 'GitLab App' }} | Sources | STX Hosting
     </x-slot>
 
     @if ($isConnected)
@@ -45,14 +45,14 @@
                         @can('makeSystemWide', \App\Models\GitlabApp::class)
                             <div class="lg:col-span-2 max-w-xs">
                                 <x-forms.checkbox canGate="update" :canResource="$gitlab_app" label="System wide"
-                                    helper="If checked, this GitLab App will be available for everyone in this Coolify instance."
+                                    helper="If checked, this GitLab App will be available for everyone in this STX Hosting instance."
                                     instantSave id="isSystemWide" />
                             </div>
                         @endcan
                         @if ($isSystemWide)
                             <div class="lg:col-span-2">
                                 <x-callout type="warning" title="Shared with every team">
-                                    System-wide GitLab Apps are shared across all teams on this Coolify instance. Prefer team-specific apps when you need repository isolation.
+                                    System-wide GitLab Apps are shared across all teams on this STX Hosting instance. Prefer team-specific apps when you need repository isolation.
                                 </x-callout>
                             </div>
                         @endif
@@ -73,7 +73,7 @@
             </x-application.settings-section>
 
             <x-application.settings-section id="connection-section" title="Connection"
-                helper="OAuth credentials and the endpoints Coolify uses to reach this source.">
+                helper="OAuth credentials and the endpoints STX Hosting uses to reach this source.">
                 <x-application.settings-subsection first title="OAuth credentials"
                     helper="Application credentials from your GitLab OAuth application.">
                     <div class="grid gap-4 lg:grid-cols-2">
@@ -240,7 +240,7 @@
                     @if (! isCloud() || isDev())
                         <div class="mt-4 grid gap-4 lg:grid-cols-2">
                             <div class="lg:col-span-2 text-[12px] text-neutral-500 dark:text-fg-dim">
-                                GitLab will redirect back to this Coolify URL. It must match the Callback URL on your GitLab OAuth Application exactly.
+                                GitLab will redirect back to this STX Hosting URL. It must match the Callback URL on your GitLab OAuth Application exactly.
                             </div>
                             <div class="lg:col-span-2 max-w-md">
                                 <x-forms.listbox id="use_custom_webhook_endpoint" label="Webhook endpoint"
@@ -249,7 +249,7 @@
                                         ['value' => true, 'label' => 'Use a custom endpoint'],
                                     ]"
                                     x-model="useCustomWebhookEndpoint"
-                                    helper="Use a custom public URL when Coolify is behind a tunnel or reverse proxy." />
+                                    helper="Use a custom public URL when STX Hosting is behind a tunnel or reverse proxy." />
                             </div>
                             <div class="lg:col-span-2" x-show="!useCustomWebhookEndpoint">
                                 <x-forms.listbox id="webhook_endpoint" x-model="webhookEndpoint"
@@ -264,7 +264,7 @@
                             <div class="lg:col-span-2" x-cloak x-show="useCustomWebhookEndpoint">
                                 <x-forms.input x-model="customWebhookEndpoint" id="custom_webhook_endpoint"
                                     type="url" label="Custom endpoint"
-                                    placeholder="https://coolify.example.com"
+                                    placeholder="https://panel.stxhosting.com"
                                     helper="GitLab will use this custom public URL. Do not include /webhooks." />
                             </div>
                         </div>
@@ -290,7 +290,7 @@
                             @if (! isCloud() && auth()->user()->can('makeSystemWide', \App\Models\GitlabApp::class))
                                 <div class="max-w-xs lg:col-span-2">
                                     <x-forms.checkbox label="System wide" id="isSystemWide"
-                                        helper="If checked, this GitLab App will be available for everyone in this Coolify instance." />
+                                        helper="If checked, this GitLab App will be available for everyone in this STX Hosting instance." />
                                 </div>
                             @endif
                         </div>
@@ -300,7 +300,7 @@
 
             @if ($clientId)
                 <x-application.settings-section title="Step 3 · Authorize with GitLab"
-                    description="Authorize Coolify with your GitLab instance. The redirect URI must match the Callback URL configured in GitLab.">
+                    description="Authorize STX Hosting with your GitLab instance. The redirect URI must match the Callback URL configured in GitLab.">
                     <a href="{{ $this->getOAuthUrl() }}" wire:key="oauth-url-{{ md5((string) $redirectUri) }}"
                         class="button button-highlighted">
                         Connect to GitLab

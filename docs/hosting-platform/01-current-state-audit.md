@@ -1,8 +1,8 @@
 # Deliverable A: Current-State Codebase Audit & Storefront Inventory
 
 **Document Reference:** `docs/hosting-platform/01-current-state-audit.md`  
-**Repository:** `coollabsio/coolify` with Integrated ShanuTechX Ecosystem (`web/` & `status/`)  
-**Core Version:** Coolify `4.5.4` (`versions.json:4`, `config/constants.php:8`)  
+**Repository:** `stx-enterprises/stx-hosting` with Integrated ShanuTechX Ecosystem (`web/` & `status/`)  
+**Core Version:** STX Hosting `4.5.4` (`versions.json:4`, `config/constants.php:8`)  
 **Date of Audit:** October 2026  
 **Auditor:** Teamwork Architecture & Engineering Implementation Group (`worker_m1`)  
 **Integrity Mode:** Genuine Development & Production Architecture Audit
@@ -12,7 +12,7 @@
 ## 1. Executive Summary & Audit Scope
 
 This document provides an exhaustive, evidence-based architectural, codebase, and infrastructure audit of the current workspace. The repository contains three primary application sub-systems:
-1. **Coolify Control Plane (Root Repository)**: A self-hosted PaaS and multi-server management control plane built on **Laravel 12.70.1** (using the explicit Laravel 10 directory structure), **PHP 8.4**, **Livewire 3.8.10**, **Tailwind CSS 4.3.3**, **PostgreSQL 15/16**, **Redis 7**, **Laravel Horizon 5.50.0**, and **Laravel Reverb 1.12.0**.
+1. **STX Hosting Control Plane (Root Repository)**: A self-hosted PaaS and multi-server management control plane built on **Laravel 12.70.1** (using the explicit Laravel 10 directory structure), **PHP 8.4**, **Livewire 3.8.10**, **Tailwind CSS 4.3.3**, **PostgreSQL 15/16**, **Redis 7**, **Laravel Horizon 5.50.0**, and **Laravel Reverb 1.12.0**.
 2. **ShanuTechX Public Storefront (`web/`)**: A marketing, catalog, pricing comparison, and developer documentation portal (`@shanutechx/web` v0.1.0) built on **Next.js 14.2.35 (App Router)**, **React 18.3.1**, and **Tailwind CSS 3.4.7** featuring dark glassmorphism styling, Three.js / D3-geo interactive 3D globe visualization, a client-side shopping cart context, and 18 public pages.
 3. **ShanuTechX Status Platform (`status/`)**: An autonomous, self-hosted infrastructure uptime monitoring and incident management platform (`@shanutechx/status` v1.0.0) built on **Next.js 15.1.0 (App Router)**, **React 19.0.0**, **Tailwind CSS 4.0.0**, and embedded **SQLite (`sqlite3 5.1.7`)** with a multi-protocol daemon (HTTP/HTTPS, TCP port, ICMP ping), 5-channel notification dispatchers, and a password-protected `/admin` studio.
 
@@ -32,7 +32,7 @@ This document provides an exhaustive, evidence-based architectural, codebase, an
 │   - Multi-tenant Customer Authentication & RBAC (Customer vs Administrator)     │
 │   - Order & Invoice State Machine (Pending -> Verifying -> Paid -> Provisioning) │
 │   - Payment Proof Submission & Verification Queue (Manual Bank Transfer)         │
-│   - Quota Enforcement & Least-Privilege Proxy to Coolify REST API                │
+│   - Quota Enforcement & Least-Privilege Proxy to STX Hosting REST API                │
 └──────────────────────┬───────────────────────────────────┬───────────────────────┘
                        │ Internal Telemetry / Probes       │ Authenticated REST API
                        ▼                                   ▼
@@ -49,15 +49,15 @@ This document provides an exhaustive, evidence-based architectural, codebase, an
 ```
 
 1. **Storefront & Status Readiness**: The frontend assets (`web/` and `status/`) are aesthetically polished, functionally mature, and directly usable for the commercial hosting platform. `web/` provides complete sales collateral, pricing comparisons (LKR and USD), and developer docs. `status/` provides autonomous infrastructure health checks, multi-channel alerting, and incident tracking.
-2. **Core Coolify Capabilities**: The Coolify backend provides production-ready orchestration for Linux servers, Docker containers, multi-container compose services, standalone databases, S3 backups, and Traefik Let's Encrypt SSL. Crucially, it already contains battle-tested cloud provider provisioning clients (`HetznerService`, `DigitalOceanService`, `VultrService`, `HostingerService`).
-3. **Core Commercial Gaps**: Neither Coolify nor the Next.js apps currently contain a commercial hosting order-to-activation engine, database models for hosting products/orders/invoices, manual bank transfer payment proof verification queues, or customer tenant isolation boundaries.
-4. **Critical Security Imperative**: Coolify's native team model grants `Team Admin` and `Team Owner` full root access, arbitrary container bind mounts, and terminal execution on host servers (`SECURITY.md:31-37`). Customers must **never** be granted administrative access to shared Coolify host nodes. Customer VPS hosting must be delivered via isolated virtual machines, and application hosting must be mediated by a dedicated customer portal and API gateway.
+2. **Core STX Hosting Capabilities**: The STX Hosting backend provides production-ready orchestration for Linux servers, Docker containers, multi-container compose services, standalone databases, S3 backups, and Traefik Let's Encrypt SSL. Crucially, it already contains battle-tested cloud provider provisioning clients (`HetznerService`, `DigitalOceanService`, `VultrService`, `HostingerService`).
+3. **Core Commercial Gaps**: Neither STX Hosting nor the Next.js apps currently contain a commercial hosting order-to-activation engine, database models for hosting products/orders/invoices, manual bank transfer payment proof verification queues, or customer tenant isolation boundaries.
+4. **Critical Security Imperative**: STX Hosting's native team model grants `Team Admin` and `Team Owner` full root access, arbitrary container bind mounts, and terminal execution on host servers (`SECURITY.md:31-37`). Customers must **never** be granted administrative access to shared STX Hosting host nodes. Customer VPS hosting must be delivered via isolated virtual machines, and application hosting must be mediated by a dedicated customer portal and API gateway.
 
 ---
 
 ## 2. Technology Stack & Package Inventory
 
-### 2.1 Backend Core (Coolify Engine)
+### 2.1 Backend Core (STX Hosting Engine)
 - **Runtime & Language**: PHP `^8.4` (`composer.json:14`).
 - **Web Framework**: Laravel `12.70.1` (`laravel/framework: ^12.70.1`, `composer.json:20`).
   - Uses Laravel 10 structural layout with dedicated `app/Http/Kernel.php`, `app/Console/Kernel.php`, `app/Exceptions/Handler.php`, and `app/Providers/`.
@@ -101,7 +101,7 @@ This document provides an exhaustive, evidence-based architectural, codebase, an
 
 ### 2.4 Comparative Technology Inventory Matrix
 
-| Technology Dimension | Coolify Core | ShanuTechX Web (`web/`) | ShanuTechX Status (`status/`) |
+| Technology Dimension | STX Hosting Core | ShanuTechX Web (`web/`) | ShanuTechX Status (`status/`) |
 |---|---|---|---|
 | **Role in Platform** | Infrastructure Orchestrator & PaaS | Public Storefront & Marketing | Public Status & Fleet Health |
 | **Language & Engine** | PHP 8.4 (Laravel 12) | TypeScript (Node.js 20+) | TypeScript (Node.js 22+) |
@@ -262,10 +262,10 @@ Supports 5 alerting channels upon state change (`status/features/notifications/s
 
 ---
 
-## 5. Core Coolify Backend & Infrastructure Inventory
+## 5. Core STX Hosting Backend & Infrastructure Inventory
 
 ### 5.1 Route Hierarchy & Access Gating
-Inspection of `routes/web.php` establishes that the Coolify root repository is strictly an administrative control plane:
+Inspection of `routes/web.php` establishes that the STX Hosting root repository is strictly an administrative control plane:
 - **Root Route (`/`)**:
   ```php
   // routes/web.php:210
@@ -277,8 +277,8 @@ Inspection of `routes/web.php` establishes that the Coolify root repository is s
   Exclusively links to internal administrative entities: `/projects`, `/servers`, `/canvas`, `/storages`, `/shared-variables`, `/team`, `/settings`, `/terminal`, `/profile`.
 - **Zero Commercial Hosting Routes**: No public storefront, cart, order review, or customer service management views exist in the root repository.
 
-### 5.2 Subscription & Billing Architecture (Coolify Native)
-Coolify contains a production Stripe integration (`app/Actions/Stripe/`, `app/Jobs/StripeProcessJob.php`), but it is hard-coded for **Coolify Cloud's SaaS subscription** (charging $5/month base + $3/month per connected server limit):
+### 5.2 Subscription & Billing Architecture (STX Hosting Native)
+STX Hosting contains a production Stripe integration (`app/Actions/Stripe/`, `app/Jobs/StripeProcessJob.php`), but it is hard-coded for **STX Hosting Cloud's SaaS subscription** (charging $5/month base + $3/month per connected server limit):
 - Component: `App\Livewire\Subscription\PricingPlans` (`app/Livewire/Subscription/PricingPlans.php:1-69`).
 - Gating: Disabled in self-hosted mode (`if (! isCloud()) return redirect(RouteServiceProvider::HOME);`).
 - Quantity Sync: Automatically updates Stripe subscription quantity as servers are added (`UpdateSubscriptionQuantity.php`).
@@ -293,12 +293,12 @@ Coolify contains a production Stripe integration (`app/Actions/Stripe/`, `app/Jo
 - **Sentinel IDs (`AGENTS.md:Instance sentinels (id = 0)`)**:
   - `User ID 0`: Instance root administrator.
   - `Team ID 0`: Instance root team (`isAdminFromSession()` evaluates membership in Team 0).
-  - `Server ID 0`: Localhost server where Coolify runs.
+  - `Server ID 0`: Localhost server where STX Hosting runs.
   - `InstanceSettings ID 0`: Global instance configuration singleton.
-  - `StandalonePostgresql ID 0`: Coolify's internal database (`coolify-db`).
+  - `StandalonePostgresql ID 0`: STX Hosting's internal database (`coolify-db`).
 
 ### 5.4 Pre-Built Cloud Provider Provisioning Engine (Reusable Asset!)
-Coolify contains production-grade REST clients for major cloud VPS providers in `app/Services/`:
+STX Hosting contains production-grade REST clients for major cloud VPS providers in `app/Services/`:
 - **Hetzner Cloud (`App\Services\HetznerService`)**:
   - Fully implemented methods: `getServerTypes()`, `getLocations()`, `getImages()`, `getSshKeys()`, `createServer()`, `powerOnServer()`, `deleteServer()`, `enableServerBackup()`.
   - Automated backoff and rate-limit (`429`) handling.
@@ -323,18 +323,18 @@ Coolify contains production-grade REST clients for major cloud VPS providers in 
 | **Storefront** | Developer Documentation Hub | ✅ **Working** | `web/app/docs/page.tsx` | Complete 7-guide hub with interactive code snippets. |
 | **Storefront** | Shopping Cart Context & Drawer | ⚠️ **Partial** | `web/context/CartContext.tsx`, `Navbar.tsx:867` | Drawer renders placeholder text; wire up items and checkout button. |
 | **Storefront** | Customer Reviews & Submission | ⚠️ **Partial** | `web/app/reviews/page.tsx`, `ReviewCarousel.tsx` | Carousel works with fallbacks; submission endpoint needs backend route. |
-| **Storefront** | Coolify Root Public Storefront | ❌ **Missing** | `routes/web.php:210,680` | Root route redirects to `/login`. Storefront served by `web/`. |
+| **Storefront** | STX Hosting Root Public Storefront | ❌ **Missing** | `routes/web.php:210,680` | Root route redirects to `/login`. Storefront served by `web/`. |
 | **Fleet Status** | Multi-Protocol Health Prober | ✅ **Working** | `status/features/status/server/monitor.ts` | Complete HTTP/HTTPS, TCP, and ICMP monitoring daemon. |
 | **Fleet Status** | SQLite Persistence & Metrics | ✅ **Working** | `status/lib/db.ts:149-223` | Schema auto-migrates; checks logged with latency and status. |
 | **Fleet Status** | Multi-Channel Notifications | ✅ **Working** | `status/features/notifications/server/` | Dispatches alerts to Discord, Telegram, Email, Teams, Google Chat. |
 | **Fleet Status** | Admin Incident & Monitor Studio | ✅ **Working** | `status/app/admin/` | Complete monitor CRUD, incident management, maintenance windows. |
 | **Fleet Status** | Built-in Status Page in Storefront | ⚠️ **Partial** | `web/app/status/page.tsx` | 766 lines of UI; fetches `/api/status/public` (needs endpoint adapter). |
-| **Billing** | Coolify SaaS Server Limits Billing | ✅ **Working** | `app/Actions/Stripe/CreateCheckoutSession.php` | Reusable for Stripe Checkout; only handles SaaS server limits. |
+| **Billing** | STX Hosting SaaS Server Limits Billing | ✅ **Working** | `app/Actions/Stripe/CreateCheckoutSession.php` | Reusable for Stripe Checkout; only handles SaaS server limits. |
 | **Billing** | Dynamic Hosting Product Catalog | ❌ **Missing** | Missing in root DB | Must create `hosting_products` & `hosting_product_prices` schema. |
 | **Billing** | Hosting Order & Invoice Schema | ❌ **Missing** | Missing in root DB | Must create `hosting_orders`, `hosting_invoices`, `hosting_order_items`. |
 | **Billing** | Manual Bank Transfer & Proof Upload | ❌ **Missing** | Missing across all repos | Must build customer proof upload and admin verification queue. |
 | **Security** | Role-Based Access Control | ⚠️ **Partial** | `app/Enums/Role.php`, `app/Policies/` | Only supports team-scoped Member/Admin/Owner. Needs Customer role. |
-| **Security** | Customer VPS Isolation | ❌ **Missing** | Missing in Coolify | Must configure customer user SSH keys separately from root key. |
+| **Security** | Customer VPS Isolation | ❌ **Missing** | Missing in STX Hosting | Must configure customer user SSH keys separately from root key. |
 | **Orchestration**| Hetzner Cloud Provisioning | ✅ **Working** | `app/Services/HetznerService.php` | 100% production-ready for automated VPS VM creation. |
 | **Orchestration**| DigitalOcean Provisioning | ✅ **Working** | `app/Services/DigitalOceanService.php` | 100% production-ready for automated Droplet creation. |
 | **Orchestration**| Vultr & Hostinger Provisioning | ✅ **Working** | `app/Services/VultrService.php`, `HostingerService.php` | 100% production-ready for multi-cloud VPS scaling. |
@@ -367,10 +367,10 @@ Coolify contains production-grade REST clients for major cloud VPS providers in 
    - **Remediation**: Implement a Next.js rewrite or API proxy route forwarding `/api/status/public` to `status/api/dashboard`.
 
 ### 7.2 Critical Security Risks
-1. **Coolify Shared Host Administrative Access Hazard**:
-   - In Coolify, `Team Admin` and `Team Owner` roles grant arbitrary root command execution on the managed server (`SECURITY.md:31-37`).
-   - **Impact**: If shared application hosting customers are added as Coolify team admins on a multi-tenant server, they can access host Docker sockets (`/var/run/docker.sock`) and escalate to host root.
-   - **Remediation**: Customers must **never** be given direct Coolify administrative credentials or access to the Coolify control plane. Customer actions must be mediated by a dedicated Customer Portal proxying restricted commands to the Coolify API.
+1. **STX Hosting Shared Host Administrative Access Hazard**:
+   - In STX Hosting, `Team Admin` and `Team Owner` roles grant arbitrary root command execution on the managed server (`SECURITY.md:31-37`).
+   - **Impact**: If shared application hosting customers are added as STX Hosting team admins on a multi-tenant server, they can access host Docker sockets (`/var/run/docker.sock`) and escalate to host root.
+   - **Remediation**: Customers must **never** be given direct STX Hosting administrative credentials or access to the STX Hosting control plane. Customer actions must be mediated by a dedicated Customer Portal proxying restricted commands to the STX Hosting API.
 2. **Default Production Credentials in `status/.env`**:
    - `status/.env:3,5` contains hardcoded credentials: `ADMIN_PASSWORD=changeme` and `SESSION_SECRET=please-change-this-to-a-long-random-string`.
    - **Impact**: High risk of unauthorized administrative takeover if deployed without setting environment overrides.
@@ -390,11 +390,11 @@ Coolify contains production-grade REST clients for major cloud VPS providers in 
    - Refactor `Navbar.tsx` cart drawer to list active cart items and trigger `proceedToCheckout()`.
 2. **Deploy `status/` as the Fleet Uptime Monitor**:
    - Deploy `status/` (Next.js 15) on port `3003` (or at `status.shanutechx.com`).
-   - Configure monitors pointing to Coolify host servers, Traefik proxy ingress, and customer application domains.
+   - Configure monitors pointing to STX Hosting host servers, Traefik proxy ingress, and customer application domains.
    - Expose public telemetry to the storefront via `/api/dashboard`.
 3. **Build the Central Hosting API Gateway**:
    - Implement the intermediate hosting backend providing customer authentication, product catalog CRUD, order state machine, payment proof upload, and admin verification queues.
-   - Mediate all infrastructure operations to Coolify via team-scoped Sanctum tokens with exact abilities.
+   - Mediate all infrastructure operations to STX Hosting via team-scoped Sanctum tokens with exact abilities.
 4. **Phased VPS Rollout**:
-   - **Phase 1**: Manual VPS allocation from pre-provisioned server inventory + Application Hosting via Coolify.
+   - **Phase 1**: Manual VPS allocation from pre-provisioned server inventory + Application Hosting via STX Hosting.
    - **Phase 2**: Automated VPS provisioning leveraging existing `HetznerService` and `DigitalOceanService` clients.

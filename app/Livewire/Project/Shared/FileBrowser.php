@@ -482,7 +482,7 @@ class FileBrowser extends Component
             $entries = [];
             $this->shellUnavailable = true;
             if (preg_match('/Unable to find image|failed to resolve reference|pull access denied|manifest unknown/i', $e->getMessage())) {
-                $this->helperError = 'The server could not pull the Coolify helper image ('.coolifyHelperImage().':'.getHelperVersion().'). Check that the server can reach the registry.';
+                $this->helperError = 'The server could not pull the STX helper image ('.coolifyHelperImage().':'.getHelperVersion().'). Check that the server can reach the registry.';
             }
         }
         $this->entries = array_map(fn ($e) => [

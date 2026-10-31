@@ -211,7 +211,7 @@
                                                         placeholder="/srv/config/app.conf" id="file_storage_source"
                                                         label="Source Path"
                                                         x-on:input="sourcePath = $event.target.value"
-                                                        helper="Optional. File location on the host: an absolute path anywhere on the host, or a path relative to the resource directory. Empty: Coolify keeps the file in the resource directory. Coolify never deletes a file outside the resource directory." />
+                                                        helper="Optional. File location on the host: an absolute path anywhere on the host, or a path relative to the resource directory. Empty: STX Hosting keeps the file in the resource directory. STX Hosting never deletes a file outside the resource directory." />
                                                     <x-forms.textarea canGate="update" :canResource="$resource" label="Content"
                                                         id="file_storage_content"></x-forms.textarea>
                                                     <div class="flex justify-end pt-2">
@@ -266,7 +266,7 @@
                                             <form class="flex w-full flex-col gap-4"
                                                 wire:submit='submitHostFileStorage'>
                                                 <p class="text-[13px] leading-5 text-neutral-500 dark:text-fg-dim">
-                                                    Bind an existing host file into the container. Coolify will not modify
+                                                    Bind an existing host file into the container. STX Hosting will not modify
                                                     or delete the source file.
                                                 </p>
                                                 <div class="flex flex-col gap-4">
@@ -336,7 +336,7 @@
                                                     <x-forms.input canGate="update" :canResource="$resource"
                                                         placeholder="{{ application_configuration_dir() }}/{{ $resource->uuid }}/etc/nginx"
                                                         id="file_storage_directory_source" label="Source Directory"
-                                                        required helper="Directory on the host: an absolute path anywhere on the host, or a path relative to the resource directory. Coolify creates it when it is missing, and never deletes a directory outside the resource directory." />
+                                                        required helper="Directory on the host: an absolute path anywhere on the host, or a path relative to the resource directory. STX Hosting creates it when it is missing, and never deletes a directory outside the resource directory." />
                                                     <x-forms.input canGate="update" :canResource="$resource"
                                                         placeholder="/etc/nginx" id="file_storage_directory_destination"
                                                         label="Destination Directory" required
@@ -485,14 +485,14 @@
     @endif
 
     @if (count($externalVolumes) > 0)
-        {{-- External Compose volumes: read-only, no storage entry, never removed by Coolify --}}
+        {{-- External Compose volumes: read-only, no storage entry, never removed by STX Hosting --}}
         <x-application.settings-section :id="'external-volumes-'.$resource->uuid" title="External volumes"
             :flush="true"
-            helper="Docker volumes that the Docker Compose file declares with external: true. Coolify mounts them as written.">
+            helper="Docker volumes that the Docker Compose file declares with external: true. STX Hosting mounts them as written.">
             <div class="flex w-full flex-col">
                 <div
                     class="border-b border-neutral-200 px-4 py-3 text-[13px] leading-5 text-neutral-500 dark:border-white/[0.08] dark:text-fg-dim">
-                    Managed outside Coolify. Coolify never removes these volumes.
+                    Managed outside STX Hosting. STX Hosting never removes these volumes.
                 </div>
                 <div class="data-table w-full">
                     <div class="data-table-header external-volumes-table-grid">

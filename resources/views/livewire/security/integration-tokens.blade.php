@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        Integration Tokens | Coolify
+        Integration Tokens | STX Hosting
     </x-slot>
 
     <x-security.settings-layout>

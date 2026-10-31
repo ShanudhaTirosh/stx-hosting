@@ -123,7 +123,7 @@ class HostingerController extends Controller
         security: [['bearerAuth' => []]],
         tags: ['Hostinger'],
         responses: [
-            new OA\Response(response: 201, description: 'Hostinger VPS purchased and linked to a Coolify server.'),
+            new OA\Response(response: 201, description: 'Hostinger VPS purchased and linked to a STX Hosting server.'),
             new OA\Response(response: 401, ref: '#/components/responses/401'),
             new OA\Response(response: 403, description: 'The token needs the deploy permission for a post-install script or extra SSH keys.'),
             new OA\Response(response: 422, description: 'Validation failed.'),

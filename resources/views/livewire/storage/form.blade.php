@@ -39,7 +39,7 @@
             @endif
             <x-forms.checkbox canGate="update" :canResource="$storage" id="usePathStyleEndpoint"
                 label="Use path-style URLs"
-                helper="Turn this off for providers that only accept virtual-hosted-style URLs (bucket.endpoint). Coolify turns it off for Alibaba Cloud OSS, Tencent Cloud COS, and Volcengine TOS, and when the provider rejects path-style URLs." />
+                helper="Turn this off for providers that only accept virtual-hosted-style URLs (bucket.endpoint). STX Hosting turns it off for Alibaba Cloud OSS, Tencent Cloud COS, and Volcengine TOS, and when the provider rejects path-style URLs." />
         </div>
     </x-application.settings-section>
 </form>

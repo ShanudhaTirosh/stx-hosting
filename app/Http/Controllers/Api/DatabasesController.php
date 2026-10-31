@@ -4723,7 +4723,7 @@ class DatabasesController extends Controller
             }
 
             if ($request->filled('content')) {
-                $forbidden = $this->deployAbilityForbiddenResponse($request, 'Coolify writes the file content on the server immediately, so it needs a token with the deploy permission.');
+                $forbidden = $this->deployAbilityForbiddenResponse($request, 'STX Hosting writes the file content on the server immediately, so it needs a token with the deploy permission.');
                 if ($forbidden) {
                     return $forbidden;
                 }

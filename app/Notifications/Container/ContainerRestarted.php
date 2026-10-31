@@ -39,7 +39,7 @@ class ContainerRestarted extends CustomEmailNotification implements ThrottledNot
     public function toMail(): MailMessage
     {
         $mail = new MailMessage;
-        $mail->subject("Coolify: A resource ({$this->name}) has been restarted automatically on {$this->server->name}");
+        $mail->subject("STX Hosting: A resource ({$this->name}) has been restarted automatically on {$this->server->name}");
         $mail->view('emails.container-restarted', [
             'containerName' => $this->name,
             'serverName' => $this->server->name,
@@ -66,7 +66,7 @@ class ContainerRestarted extends CustomEmailNotification implements ThrottledNot
 
     public function toTelegram(): array
     {
-        $message = "Coolify: A resource ({$this->name}) has been restarted automatically on {$this->server->name}";
+        $message = "STX Hosting: A resource ({$this->name}) has been restarted automatically on {$this->server->name}";
         $payload = [
             'message' => $message,
         ];
@@ -74,7 +74,7 @@ class ContainerRestarted extends CustomEmailNotification implements ThrottledNot
             $payload['buttons'] = [
                 [
                     [
-                        'text' => 'Check Proxy in Coolify',
+                        'text' => 'Check Proxy in STX Hosting',
                         'url' => $this->url,
                     ],
                 ],
@@ -89,7 +89,7 @@ class ContainerRestarted extends CustomEmailNotification implements ThrottledNot
         $buttons = [];
         if ($this->url) {
             $buttons[] = [
-                'text' => 'Check Proxy in Coolify',
+                'text' => 'Check Proxy in STX Hosting',
                 'url' => $this->url,
             ];
         }

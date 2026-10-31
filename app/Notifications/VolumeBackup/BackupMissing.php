@@ -41,7 +41,7 @@ class BackupMissing extends CustomEmailNotification
     public function toMail(): MailMessage
     {
         return (new MailMessage)
-            ->subject("Coolify: [ACTION REQUIRED] No recent storage backup for {$this->resourceName}")
+            ->subject("STX Hosting: [ACTION REQUIRED] No recent storage backup for {$this->resourceName}")
             ->view('emails.volume-backup-missing', [
                 'summary' => $this->summary(),
                 'last_execution_at' => $this->lastExecutionAt?->toDateTimeString(),
@@ -67,10 +67,10 @@ class BackupMissing extends CustomEmailNotification
 
     public function toTelegram(): array
     {
-        $data = ['message' => "Coolify: {$this->summary()}"];
+        $data = ['message' => "STX Hosting: {$this->summary()}"];
 
         if ($this->url) {
-            $data['buttons'] = [['text' => 'Open resource in Coolify', 'url' => $this->url]];
+            $data['buttons'] = [['text' => 'Open resource in STX Hosting', 'url' => $this->url]];
         }
 
         return $data;
@@ -82,7 +82,7 @@ class BackupMissing extends CustomEmailNotification
             title: 'Scheduled storage backup missing',
             level: 'error',
             message: $this->summary(),
-            buttons: $this->url ? [['text' => 'Open resource in Coolify', 'url' => $this->url]] : [],
+            buttons: $this->url ? [['text' => 'Open resource in STX Hosting', 'url' => $this->url]] : [],
         );
     }
 
@@ -90,7 +90,7 @@ class BackupMissing extends CustomEmailNotification
     {
         return new SlackMessage(
             title: 'Scheduled storage backup missing',
-            description: $this->summary().($this->url ? "\n\n<{$this->url}|Open resource in Coolify>" : ''),
+            description: $this->summary().($this->url ? "\n\n<{$this->url}|Open resource in STX Hosting>" : ''),
             color: SlackMessage::errorColor(),
         );
     }

@@ -330,12 +330,12 @@
                                     </div>
 
                                     <p class="mt-3 line-clamp-2 text-[12px] leading-5 text-neutral-600 dark:text-fg-dim"
-                                        x-text="service.slogan || service.description || 'Deploy this service with a ready-to-use Coolify template.'">
+                                        x-text="service.slogan || service.description || 'Deploy this service with a ready-to-use STX Hosting template.'">
                                     </p>
 
                                     <div
                                         class="mt-auto flex items-center gap-1.5 border-t border-neutral-200 pt-3 dark:border-white/[0.07]">
-                                        <a :href="getDocLink(service) || coolifyDocsUrl(service)" target="_blank"
+                                        <a :href="getDocLink(service) || stxDocsUrl(service)" target="_blank"
                                             rel="noopener noreferrer" @mouseenter="resolveDocLink(service)" @click.stop
                                             class="button" :class="{ 'opacity-60': docCheckInProgress[service.name] }">
                                             Docs
@@ -481,9 +481,9 @@
                             // Remove flavor suffixes: -with-*, -without-*
                             return normalized.replace(/-(with|without)-.+$/, '');
                         },
-                        coolifyDocsUrl(service) {
+                        stxDocsUrl(service) {
                             const baseName = service.docsSlug || this.extractBaseServiceName(service.name);
-                            return 'https://coolify.io/docs/services/' + baseName;
+                            return 'https://stxhosting.com/docs/services/' + baseName;
                         },
                         officialDocsUrl(service) {
                             return service.documentation || null;
@@ -521,14 +521,14 @@
 
                             this.docCheckInProgress[serviceName] = true;
 
-                            // 1. Try Coolify docs first
-                            const coolifyUrl = this.coolifyDocsUrl(service);
-                            const coolifyExists = await this.checkUrlExists(coolifyUrl);
+                            // 1. Try STX Hosting docs first
+                            const stxUrl = this.stxDocsUrl(service);
+                            const stxExists = await this.checkUrlExists(stxUrl);
 
-                            if (coolifyExists) {
-                                this.docLinkCache[serviceName] = coolifyUrl;
+                            if (stxExists) {
+                                this.docLinkCache[serviceName] = stxUrl;
                                 this.docCheckInProgress[serviceName] = false;
-                                return coolifyUrl;
+                                return stxUrl;
                             }
 
                             // 2. Fall back to official docs
@@ -904,7 +904,7 @@
     @endif
     @if ($current_step === 'existing-postgresql')
         <x-application.settings-section title="Connect an existing PostgreSQL database"
-            description="Provide the connection URL for the database Coolify should use.">
+            description="Provide the connection URL for the database STX Hosting should use.">
             <form wire:submit="addExistingPostgresql" class="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div class="min-w-0 flex-1">
                     <x-forms.input placeholder="postgres://username:password@database:5432" label="Database URL"

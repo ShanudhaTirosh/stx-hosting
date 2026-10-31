@@ -39,7 +39,7 @@
                                 helper="Days of CPU and memory history to retain." />
                             <x-forms.input canGate="update" :canResource="$server" type="number" min="10"
                                 id="sentinelPushIntervalSeconds" label="Push interval" required
-                                helper="Seconds between health reports sent to Coolify." />
+                                helper="Seconds between health reports sent to STX Hosting." />
                         </div>
 
                         <div class="mt-4 max-w-xs">

@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        Update Settings | Coolify
+        Update Settings | STX Hosting
     </x-slot>
 
     <x-settings.layout>
@@ -9,7 +9,7 @@
             <x-unsaved-bar action="submit" targets="update_check_frequency,auto_update_frequency" />
 
             <x-application.settings-section title="Updates"
-                helper="Install the latest Coolify version manually when an update is available.">
+                helper="Install the latest STX Hosting version manually when an update is available.">
                 <x-slot:actions>
                     <livewire:upgrade :full-button="true" key="settings-upgrade" />
                     <x-forms.button type="button" wire:click="checkManually">

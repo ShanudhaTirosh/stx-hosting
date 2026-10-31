@@ -3,7 +3,7 @@
         <div wire:poll.3s="checkDownloads" class="hidden"></div>
     @endif
     <x-slot:title>
-        {{ data_get_str($resource, 'name')->limit(10) }} > Files | Coolify
+        {{ data_get_str($resource, 'name')->limit(10) }} > Files | STX Hosting
     </x-slot>
 
     @if ($type === 'application')
@@ -156,7 +156,7 @@
             </x-empty>
         @elseif ($shellUnavailable)
             <x-empty title="File browser is not available"
-                description="Coolify cannot open the files of this container. {{ $helperError }}">
+                description="STX Hosting cannot open the files of this container. {{ $helperError }}">
                 <x-slot:icon>
                     <x-reicon name="folder" class="size-8" />
                 </x-slot:icon>
@@ -399,7 +399,7 @@
                             },
                             ensureTheme(monaco) {
                                 if (window.__fileEditorThemeDefined) return;
-                                monaco.editor.defineTheme('coolify-dark', { base: 'vs-dark', inherit: true, rules: [], colors: { 'editor.background': '#0b0b0c', 'editorGutter.background': '#0b0b0c', 'minimap.background': '#0b0b0c' } });
+                                monaco.editor.defineTheme('stx-dark', { base: 'vs-dark', inherit: true, rules: [], colors: { 'editor.background': '#0b0b0c', 'editorGutter.background': '#0b0b0c', 'minimap.background': '#0b0b0c' } });
                                 window.__fileEditorThemeDefined = true;
                             },
                             async load(detail) {
@@ -413,10 +413,10 @@
                                 // Alpine reactive state - proxying its huge object
                                 // graph would hang and crash the tab.
                                 if (!el._monacoEditor) {
-                                    const editor = monaco.editor.create(el, { value: content, language, theme: this.isDark() ? 'coolify-dark' : 'vs', automaticLayout: true, minimap: { enabled: false }, fontSize: 14, lineNumbersMinChars: 3, scrollBeyondLastLine: false, renderLineHighlight: 'all', padding: { top: 12, bottom: 12 }, scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8, useShadows: false } });
+                                    const editor = monaco.editor.create(el, { value: content, language, theme: this.isDark() ? 'stx-dark' : 'vs', automaticLayout: true, minimap: { enabled: false }, fontSize: 14, lineNumbersMinChars: 3, scrollBeyondLastLine: false, renderLineHighlight: 'all', padding: { top: 12, bottom: 12 }, scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8, useShadows: false } });
                                     el._monacoEditor = editor;
                                     editor.onDidChangeModelContent(() => { wire.set('editorContent', editor.getValue(), false); });
-                                    new MutationObserver(() => monaco.editor.setTheme(this.isDark() ? 'coolify-dark' : 'vs')).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+                                    new MutationObserver(() => monaco.editor.setTheme(this.isDark() ? 'stx-dark' : 'vs')).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
                                 } else {
                                     const model = el._monacoEditor.getModel();
                                     model.setValue(content);

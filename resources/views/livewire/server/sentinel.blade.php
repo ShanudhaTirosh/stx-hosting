@@ -49,21 +49,21 @@
                                     wire:navigate>Open Sentinel logs</a>
                                 and review recent connection or push errors.
                             </li>
-                            <li>Confirm that the Coolify URL and Sentinel token match this configuration.</li>
+                            <li>Confirm that the STX Hosting URL and Sentinel token match this configuration.</li>
                         </ul>
 
                         @if ($server->isLocalhost())
-                            <p>Sync Sentinel to recreate it on the Coolify Docker network.</p>
+                            <p>Sync Sentinel to recreate it on the STX Hosting Docker network.</p>
                         @else
                             <div class="space-y-2">
-                                <p>The remote server needs outbound access to this Coolify URL. Sentinel reporting does not require an inbound listening port.</p>
+                                <p>The remote server needs outbound access to this STX Hosting URL. Sentinel reporting does not require an inbound listening port.</p>
                                 @if (filled($sentinelCustomUrl))
                                     <p>
                                         From the remote server, test
                                         <code class="break-all">curl -fsS {{ escapeshellarg(rtrim($sentinelCustomUrl, '/') . '/api/health') }}</code>.
                                     </p>
                                 @else
-                                    <p>Set a reachable Coolify URL before syncing Sentinel.</p>
+                                    <p>Set a reachable STX Hosting URL before syncing Sentinel.</p>
                                 @endif
                                 <p>Check DNS, TLS certificates, outbound firewall rules, and proxy settings.</p>
                             </div>
@@ -72,7 +72,7 @@
                 </x-callout>
             @elseif ($sentinelStatus === 'in_sync')
                 <p class="text-sm text-neutral-500 dark:text-fg-dim">
-                    Sentinel is connected and reporting server health to this Coolify instance.
+                    Sentinel is connected and reporting server health to this STX Hosting instance.
                 </p>
             @elseif ($sentinelStatus === 'restarting')
                 <p class="text-sm text-neutral-500 dark:text-fg-dim">Sentinel is restarting.</p>
@@ -83,18 +83,18 @@
 
         @if ($server->isSentinelEnabled())
             <x-application.settings-section id="server-sentinel-connection-section" title="Connection"
-                helper="Configure how Sentinel authenticates with and reports to Coolify.">
+                helper="Configure how Sentinel authenticates with and reports to STX Hosting.">
                 <x-slot:actions>
                     <div class="flex items-center gap-2">
                         @can('manageSentinel', $server)
                             <x-modal-confirmation title="Restore default Sentinel configuration?"
                                 buttonTitle="Restore defaults" submitAction="restoreDefaultConfiguration"
                                 :actions="[
-                                    'Restore the generated Coolify URL and default collection settings.',
+                                    'Restore the generated STX Hosting URL and default collection settings.',
                                     'Clear debug logging and the development image override.',
                                     'The Sentinel token and metrics setting will be preserved.',
                                     'Restart Sentinel to apply the restored configuration.',
-                                ]" warningMessage="Your custom Sentinel configuration will be replaced with Coolify defaults."
+                                ]" warningMessage="Your custom Sentinel configuration will be replaced with STX Hosting defaults."
                                 :confirmWithText="false" :confirmWithPassword="false"
                                 step2ButtonText="Restore defaults" />
                         @endcan
@@ -106,8 +106,8 @@
                 </x-slot:actions>
                 <div class="grid gap-4 lg:grid-cols-2">
                     <x-forms.input canGate="update" :canResource="$server" id="sentinelCustomUrl"
-                        required label="Coolify URL"
-                        helper="Public URL used by Sentinel to reach this Coolify instance." />
+                        required label="STX Hosting URL"
+                        helper="Public URL used by Sentinel to reach this STX Hosting instance." />
                     <x-forms.input canGate="update" :canResource="$server" type="password"
                         id="sentinelToken" label="Sentinel token" required
                         helper="Authentication token used by Sentinel." />

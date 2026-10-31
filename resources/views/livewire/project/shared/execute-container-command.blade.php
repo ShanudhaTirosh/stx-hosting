@@ -1,6 +1,6 @@
 <div @if ($type !== 'server') wire:init="loadContainers" @endif>
     <x-slot:title>
-        {{ data_get_str($resource, 'name')->limit(10) }} > Terminal | Coolify
+        {{ data_get_str($resource, 'name')->limit(10) }} > Terminal | STX Hosting
     </x-slot>
 
     @if ($type === 'application')
@@ -81,14 +81,14 @@
                 selectedContainer: @entangle('selected_container').live,
                 containerOptions: @entangle('containerOptions'),
                 init() {
-                    const savedTheme = localStorage.getItem('coolify-console-theme');
+                    const savedTheme = localStorage.getItem('stx-console-theme');
                     this.consoleTheme = this.themeKeys.includes(savedTheme) ? savedTheme : 'system';
-                    localStorage.setItem('coolify-console-theme', this.consoleTheme);
+                    localStorage.setItem('stx-console-theme', this.consoleTheme);
                 },
                 setTheme(theme) {
                     this.consoleTheme = theme;
                     this.themeOpen = false;
-                    localStorage.setItem('coolify-console-theme', theme);
+                    localStorage.setItem('stx-console-theme', theme);
                     window.dispatchEvent(new CustomEvent('terminal-theme-change', { detail: { theme } }));
                 },
                 setTerminalMode(mode) {
@@ -101,7 +101,7 @@
                     Livewire.dispatch('set-terminal-mode', { mode });
                 },
                 syncTheme() {
-                    const savedTheme = localStorage.getItem('coolify-console-theme');
+                    const savedTheme = localStorage.getItem('stx-console-theme');
                     this.consoleTheme = this.themeKeys.includes(savedTheme) ? savedTheme : 'system';
                 },
                 selectContainer(value) {

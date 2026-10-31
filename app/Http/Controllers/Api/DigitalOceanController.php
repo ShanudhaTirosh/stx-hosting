@@ -202,11 +202,11 @@ class DigitalOceanController extends Controller
         path: '/servers/digitalocean',
         operationId: 'create-digitalocean-server',
         summary: 'Create a server on DigitalOcean',
-        description: 'Create a DigitalOcean droplet and link it as a Coolify server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.',
+        description: 'Create a DigitalOcean droplet and link it as a STX Hosting server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.',
         security: [['bearerAuth' => []]],
         tags: ['DigitalOcean'],
         responses: [
-            new OA\Response(response: 201, description: 'DigitalOcean droplet created and linked to a Coolify server.'),
+            new OA\Response(response: 201, description: 'DigitalOcean droplet created and linked to a STX Hosting server.'),
             new OA\Response(response: 401, ref: '#/components/responses/401'),
             new OA\Response(response: 403, description: 'The token needs the deploy permission for a cloud-init script or extra SSH keys.'),
             new OA\Response(response: 422, description: 'Validation failed.'),

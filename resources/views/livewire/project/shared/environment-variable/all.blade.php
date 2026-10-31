@@ -48,8 +48,8 @@
                             ]" :disabled="! auth()->user()->can('manageEnvironment', $resource)" />
                     </div>
                 @endif
-                <x-forms.checkbox instantSave="saveCoolifyDefaultVariables" id="include_coolify_default_variables"
-                    label="Include Coolify default variables"
+                <x-forms.checkbox instantSave="saveSTX HostingDefaultVariables" id="include_coolify_default_variables"
+                    label="Include STX Hosting default variables"
                     helper="Adds COOLIFY_APP_NAME, COOLIFY_PROJECT_NAME, COOLIFY_ENVIRONMENT_NAME and COOLIFY_SERVER_IP to the container at runtime. A variable that you define with the same name wins. Takes effect after the next deploy or restart."
                     :disabled="! auth()->user()->can('manageEnvironment', $resource)" />
                 @if ($this->hasLogRedactionSetting())
@@ -266,7 +266,7 @@
                             next-action="nextEnvironmentVariablePage"
                             last-action="setEnvironmentVariablePage({{ $lastPage }})">
                             <x-slot:pageSize>
-                                <x-page-size-select model="perPage" livewire storage-key="coolify.page-size.environment-variables" />
+                                <x-page-size-select model="perPage" livewire storage-key="stx.page-size.environment-variables" />
                             </x-slot:pageSize>
                         </x-table-pagination>
                     </div>

@@ -1029,11 +1029,11 @@ class ServersController extends Controller
         if (is_null($deleteFromProvider)) {
             return response()->json(['message' => 'delete_from_provider must be a boolean.'], 422);
         }
-        // Another Coolify instance manages a transferred server. This instance deletes only its own records:
+        // Another STX Hosting instance manages a transferred server. This instance deletes only its own records:
         // never the cloud server, the containers, or the DNS records that the other instance uses.
         if ($server->isTransferredAway()) {
             if ($deleteFromProvider) {
-                return response()->json(['message' => 'This server is managed by another Coolify instance. Delete its cloud server from that instance.'], 422);
+                return response()->json(['message' => 'This server is managed by another STX Hosting instance. Delete its cloud server from that instance.'], 422);
             }
             app(ServerTransferClaimer::class)->deleteArchive($server);
             auditLog('api.server.deleted', ['team_id' => $teamId, 'server_uuid' => $server->uuid, 'server_name' => $server->name, 'ip' => $server->ip, 'archive' => true]);
@@ -1180,7 +1180,7 @@ class ServersController extends Controller
 
         if (! $server->canBeValidated()) {
             return response()->json([
-                'message' => 'This server was transferred to another Coolify instance and cannot be revalidated here.',
+                'message' => 'This server was transferred to another STX Hosting instance and cannot be revalidated here.',
             ], 422);
         }
 

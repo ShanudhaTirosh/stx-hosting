@@ -266,7 +266,7 @@
                         <div class="min-w-0 flex-1 py-0.5">
                             <h3 id="custom-theme-title" class="truncate">Custom theme</h3>
                             <p class="mt-0.5 text-xs text-neutral-500 dark:text-fg-dim">
-                                Colors of Coolify in this browser. Text stays readable on every color.
+                                Colors of STX Hosting in this browser. Text stays readable on every color.
                             </p>
                         </div>
                         <button type="button" @click="dialogOpen = false"
@@ -299,7 +299,7 @@
                                     aria-hidden="true">
                                     <div class="flex w-2/5 flex-col gap-0.5 p-2.5"
                                         :style="`background: ${draftColors.sidebar}; color: ${textOn(draftColors.sidebar)}`">
-                                        <div class="mb-2 px-2 text-sm font-semibold">Coolify</div>
+                                        <div class="mb-2 px-2 text-sm font-semibold">STX Hosting</div>
                                         <div class="flex items-center gap-2 rounded-md px-2 py-1.5 opacity-75">
                                             <x-reicon name="dashboard" class="size-3.5" /> Dashboard
                                         </div>

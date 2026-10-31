@@ -168,7 +168,7 @@ class Index extends Component
                 if (! validateDNSEntry($this->fqdn, $this->server)) {
                     $target = serverDnsTargetIp($this->server) ?? $this->server->ip;
                     $guidance = dnsMismatchGuidanceMessage($target, $target);
-                    $this->dispatch('error', "Validating DNS failed.<br><br>{$guidance}<br><br>Check this <a target='_blank' class='underline dark:text-white' href='https://coolify.io/docs/knowledge-base/dns-configuration'>documentation</a> for further help.");
+                    $this->dispatch('error', "Validating DNS failed.<br><br>{$guidance}<br><br>Check this <a target='_blank' class='underline dark:text-white' href='https://docs.stxhosting.com/knowledge-base/dns-configuration'>documentation</a> for further help.");
                     $error_show = true;
                 }
             }

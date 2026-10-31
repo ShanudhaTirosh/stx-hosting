@@ -48,14 +48,14 @@
 <div class="{{ $selected_uuid === 'default' ? '' : 'terminal-page' }} application-settings-form"
     x-init="$wire.loadContainers()">
     <x-slot:title>
-        Terminal | Coolify
+        Terminal | STX Hosting
     </x-slot>
 
     <header class="terminal-page-header shrink-0">
         <div class="flex items-center gap-2">
             <h1 class="text-[24px]! leading-7! font-semibold! tracking-tight!">Terminal</h1>
             <x-helper
-                helper="If you cannot connect, confirm the server is reachable and that the terminal port is open on the firewall.<br><br><a class='underline' href='https://coolify.io/docs/knowledge-base/server/firewall/#terminal' target='_blank' rel='noopener noreferrer'>Documentation</a>" />
+                helper="If you cannot connect, confirm the server is reachable and that the terminal port is open on the firewall.<br><br><a class='underline' href='https://stxhosting.com/docs/knowledge-base/server/firewall/#terminal' target='_blank' rel='noopener noreferrer'>Documentation</a>" />
         </div>
         <p class="mt-1 text-[13px] text-neutral-500 dark:text-fg-dim">
             Run commands on reachable servers and containers from the browser.
@@ -93,14 +93,14 @@
                 ].filter((group) => group.targets.length > 0);
             },
             init() {
-                const savedTheme = localStorage.getItem('coolify-console-theme');
+                const savedTheme = localStorage.getItem('stx-console-theme');
                 this.consoleTheme = this.themeKeys.includes(savedTheme) ? savedTheme : 'system';
-                localStorage.setItem('coolify-console-theme', this.consoleTheme);
+                localStorage.setItem('stx-console-theme', this.consoleTheme);
             },
             setTheme(theme) {
                 this.consoleTheme = theme;
                 this.themeOpen = false;
-                localStorage.setItem('coolify-console-theme', theme);
+                localStorage.setItem('stx-console-theme', theme);
                 window.dispatchEvent(new CustomEvent('terminal-theme-change', { detail: { theme } }));
             },
             setTerminalMode(mode) {
@@ -113,7 +113,7 @@
                 Livewire.dispatch('set-terminal-mode', { mode });
             },
             syncTheme() {
-                const savedTheme = localStorage.getItem('coolify-console-theme');
+                const savedTheme = localStorage.getItem('stx-console-theme');
                 this.consoleTheme = this.themeKeys.includes(savedTheme) ? savedTheme : 'system';
             },
             async selectTarget(target) {

@@ -12,7 +12,7 @@
 
 This specification establishes the authoritative data models, application programming interfaces, and security isolation architecture powering the ShanuTechX Commercial Hosting Platform. 
 
-To bridge the public marketing storefront (`web`), the real-time telemetry status platform (`status`), and the Coolify container orchestration engine (`coolify`), the system implements:
+To bridge the public marketing storefront (`web`), the real-time telemetry status platform (`status`), and the STX Hosting container orchestration engine (`coolify`), the system implements:
 1. **A production-grade PostgreSQL 16 relational database schema** comprising 15 normalized tables, strict referential constraints, granular indexes, and auditable ledger mechanics.
 2. **A comprehensive OpenAPI 3.0 REST API contract** enabling programmatic customer interactions, storefront dynamic plan queries, and administrative queue operations.
 3. **A zero-trust infrastructure security architecture** enforcing hardware-level tenant boundary isolation, cryptographic credential vaulting (AES-256-GCM), tamper-proof payment proof handling, and protection against privilege escalation.
@@ -1181,7 +1181,7 @@ The hosting platform enforces strict defense-in-depth isolation across compute, 
 To prevent hypervisor escapes, host discovery, lateral movement, or unauthorized control plane access from a customer VPS:
 
 1. **Hypervisor Interface Shielding & Netfilter Ingress Defense (`INPUT`, `FORWARD`, `DOCKER-USER`)**:
-   - The hypervisor management interfaces (Proxmox Web GUI `8006`, Hypervisor SSH `22`, Coolify Control Plane `8000`, Reverb WebSockets `6001`, Terminal Server `6002`, PostgreSQL database `5432`, and Redis `6379`) are bound exclusively to an internal, non-routable management VLAN (`10.250.0.0/24`) or `127.0.0.1`.
+   - The hypervisor management interfaces (Proxmox Web GUI `8006`, Hypervisor SSH `22`, STX Hosting Control Plane `8000`, Reverb WebSockets `6001`, Terminal Server `6002`, PostgreSQL database `5432`, and Redis `6379`) are bound exclusively to an internal, non-routable management VLAN (`10.250.0.0/24`) or `127.0.0.1`.
    - **Critical Netfilter Ingress Boundary**: In Linux netfilter architecture, packets from customer virtual machines directed at the host's bridge gateway IP address (e.g., on `vmbr0`) do **NOT** traverse the `FORWARD` chain; they enter the host's `INPUT` chain directly. Furthermore, Docker routing forwards packets via `PREROUTING` directly to container ports, bypassing standard user chains.
    - To guarantee complete isolation, the host netfilter rules enforce multi-chain blocking across IPv4 and IPv6:
      ```bash
@@ -1214,7 +1214,7 @@ To prevent hypervisor escapes, host discovery, lateral movement, or unauthorized
      # Drop all container and build environment access to link-local cloud metadata
      iptables -I DOCKER-USER -d 169.254.169.254 -j DROP
      ```
-   - **Dedicated Build Execution Nodes**: Shared PaaS builds (`ApplicationDeploymentJob`) must never execute on the Coolify control plane node (`Server ID 0`). Builds execute on dedicated, ephemeral worker nodes residing in an isolated DMZ with zero routing to management networks.
+   - **Dedicated Build Execution Nodes**: Shared PaaS builds (`ApplicationDeploymentJob`) must never execute on the STX Hosting control plane node (`Server ID 0`). Builds execute on dedicated, ephemeral worker nodes residing in an isolated DMZ with zero routing to management networks.
    - **Host Bind Mount Rejection**: The platform API gateway sanitizes all raw Compose and Docker configurations, strictly rejecting any volume mapping where `type == 'bind'` or where host paths (`/`, `/var/run/docker.sock`, `/etc`, `~`) are referenced, permitting only platform-managed Docker named volumes.
 
 ---
@@ -1293,7 +1293,7 @@ Because customer payment proofs originate from untrusted external sources, the u
 ### 4.4 Defense-in-Depth & Anti-Leakage Controls
 
 1. **Automated API Secret Redaction**:
-   All API endpoints and Livewire components inherit Coolify's `ApiSensitiveData` middleware. This middleware recursively inspects outbound JSON arrays and automatically masks sensitive keys (`password`, `secret`, `encrypted_secret`, `token`, `private_key`, `two_factor_secret`) with `***REDACTED***` unless explicitly decrypted in an authorized, single-view action.
+   All API endpoints and Livewire components inherit STX Hosting's `ApiSensitiveData` middleware. This middleware recursively inspects outbound JSON arrays and automatically masks sensitive keys (`password`, `secret`, `encrypted_secret`, `token`, `private_key`, `two_factor_secret`) with `***REDACTED***` unless explicitly decrypted in an authorized, single-view action.
 2. **Role Hierarchy & Server-Side Enforcement**:
    - `Role::MEMBER` (Rank 1): Read-only access to owned services; ability to create orders and upload payment proofs.
    - `Role::ADMIN` (Rank 2): Team administration, service power actions, reboot, and environment variable configuration.

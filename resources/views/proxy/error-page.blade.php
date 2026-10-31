@@ -9,10 +9,10 @@
     <section>
         <h2>Are you the site owner?</h2>
         <ul>
-            <li>The domain is not configured on a resource in Coolify, or its DNS points to another server.</li>
+            <li>The domain is not configured on a resource in STX Hosting, or its DNS points to another server.</li>
             <li>The application is stopped, still deploying, or has crashed.</li>
             <li>The application health check is failing.</li>
         </ul>
-        <a href="https://coolify.io/docs/troubleshoot/applications/no-available-server" rel="noopener noreferrer">Read the troubleshooting guide</a>
+        <a href="https://stxhosting.com/docs/troubleshoot/applications/no-available-server" rel="noopener noreferrer">Read the troubleshooting guide</a>
     </section>
 @endsection

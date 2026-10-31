@@ -47,7 +47,7 @@ class HighDiskUsage extends CustomEmailNotification implements ThrottledNotifica
     public function toMail(): MailMessage
     {
         $mail = new MailMessage;
-        $mail->subject("Coolify: Server ({$this->server->name}) high disk usage detected!");
+        $mail->subject("STX Hosting: Server ({$this->server->name}) high disk usage detected!");
         $mail->view('emails.high-disk-usage', [
             'name' => $this->server->name,
             'disk_usage' => $this->disk_usage,
@@ -68,7 +68,7 @@ class HighDiskUsage extends CustomEmailNotification implements ThrottledNotifica
 
         $message->addField('Disk usage', "{$this->disk_usage}%", true);
         $message->addField('Threshold', "{$this->server_disk_usage_notification_threshold}%", true);
-        $message->addField('What to do?', '[Link](https://coolify.io/docs/knowledge-base/server/automated-cleanup)', true);
+        $message->addField('What to do?', '[Link](https://docs.stxhosting.com/knowledge-base/server/automated-cleanup)', true);
         $message->addField('Change Settings', '[Threshold]('.base_url().'/server/'.$this->server->uuid.'#advanced) | [Notification]('.base_url().'/notifications/discord)');
 
         return $message;
@@ -77,7 +77,7 @@ class HighDiskUsage extends CustomEmailNotification implements ThrottledNotifica
     public function toTelegram(): array
     {
         return [
-            'message' => "Coolify: Server '{$this->server->name}' high disk usage detected!\nDisk usage: {$this->disk_usage}%. Threshold: {$this->server_disk_usage_notification_threshold}%.\nPlease cleanup your disk to prevent data-loss.\nHere are some tips: https://coolify.io/docs/knowledge-base/server/automated-cleanup.",
+            'message' => "STX Hosting: Server '{$this->server->name}' high disk usage detected!\nDisk usage: {$this->disk_usage}%. Threshold: {$this->server_disk_usage_notification_threshold}%.\nPlease cleanup your disk to prevent data-loss.\nHere are some tips: https://docs.stxhosting.com/knowledge-base/server/automated-cleanup.",
         ];
     }
 
@@ -89,7 +89,7 @@ class HighDiskUsage extends CustomEmailNotification implements ThrottledNotifica
             message: "Server '{$this->server->name}' high disk usage detected!<br/><br/><b>Disk usage:</b> {$this->disk_usage}%.<br/><b>Threshold:</b> {$this->server_disk_usage_notification_threshold}%.<br/>Please cleanup your disk to prevent data-loss.",
             buttons: [
                 'Change settings' => base_url().'/server/'.$this->server->uuid.'#advanced',
-                'Tips for cleanup' => 'https://coolify.io/docs/knowledge-base/server/automated-cleanup',
+                'Tips for cleanup' => 'https://docs.stxhosting.com/knowledge-base/server/automated-cleanup',
             ],
         );
     }
@@ -100,7 +100,7 @@ class HighDiskUsage extends CustomEmailNotification implements ThrottledNotifica
         $description .= "Disk usage: {$this->disk_usage}%\n";
         $description .= "Threshold: {$this->server_disk_usage_notification_threshold}%\n\n";
         $description .= "Please cleanup your disk to prevent data-loss.\n";
-        $description .= "Tips for cleanup: https://coolify.io/docs/knowledge-base/server/automated-cleanup\n";
+        $description .= "Tips for cleanup: https://docs.stxhosting.com/knowledge-base/server/automated-cleanup\n";
         $description .= "Change settings:\n";
         $description .= '- Threshold: '.base_url().'/server/'.$this->server->uuid."#advanced\n";
         $description .= '- Notifications: '.base_url().'/notifications/slack';

@@ -35,9 +35,9 @@
 
         <div class="flex flex-col gap-6">
             <x-application.settings-section id="deploy-webhook-section" title="Deploy webhook"
-                helper="Trigger a deployment from an external service. Requests must include a valid Coolify API authorization token.">
+                helper="Trigger a deployment from an external service. Requests must include a valid STX Hosting API authorization token.">
                 <x-slot:actions>
-                    <a class="button" href="https://coolify.io/docs/api-reference/authorization" target="_blank"
+                    <a class="button" href="https://stxhosting.com/docs/api-reference/authorization" target="_blank"
                         rel="noopener noreferrer">
                         Documentation
                         <x-external-link />
@@ -135,7 +135,7 @@
                 <x-application.settings-section id="manual-git-webhooks-section" title="Manual Git webhooks"
                     helper="Manual repository webhooks are only required when a repository is not connected through an official Git App.">
                     <x-empty size="sm" title="Managed by your Git App"
-                        description="This application uses an official Git App, so Coolify configures repository webhooks automatically."
+                        description="This application uses an official Git App, so STX Hosting configures repository webhooks automatically."
                         icon-name="notifications" />
                 </x-application.settings-section>
             @endif
@@ -143,9 +143,9 @@
     @else
         <div class="application-settings-form">
             <x-application.settings-section title="Deploy webhook"
-                helper="Trigger an external deployment with a valid Coolify API authorization token.">
+                helper="Trigger an external deployment with a valid STX Hosting API authorization token.">
                 <x-slot:actions>
-                    <a class="button" href="https://coolify.io/docs/api-reference/authorization" target="_blank"
+                    <a class="button" href="https://stxhosting.com/docs/api-reference/authorization" target="_blank"
                         rel="noopener noreferrer">
                         Documentation
                         <x-external-link />

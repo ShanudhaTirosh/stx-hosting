@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\TransientToken;
 
 function getTeamIdFromToken()
 {
@@ -31,7 +32,7 @@ function getTeamIdFromToken()
     $token = $user?->currentAccessToken();
     $teamId = data_get($token, 'team_id');
 
-    if ($token instanceof \Laravel\Sanctum\TransientToken) {
+    if ($token instanceof TransientToken) {
         $teamId = session('currentTeam')?->id ?? $user->currentTeam()?->id;
     }
 
@@ -43,7 +44,7 @@ function getTeamIdFromToken()
 }
 function invalidTokenResponse()
 {
-    return response()->json(['message' => 'Invalid token.', 'docs' => 'https://coolify.io/docs/api-reference/authorization'], 400);
+    return response()->json(['message' => 'Invalid token.', 'docs' => 'https://docs.stxhosting.com/api-reference/authorization'], 400);
 }
 
 function serializeApiResponse($data)

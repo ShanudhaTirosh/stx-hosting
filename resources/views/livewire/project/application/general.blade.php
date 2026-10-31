@@ -10,7 +10,7 @@
         <x-unsaved-bar action="submit"
             targets="name,description,buildPack,staticImage,baseDirectory,dockerComposeLocation,dockerComposeCustomBuildCommand,dockerComposeCustomStartCommand,watchPaths,dockerfileLocation,dockerfileTargetBuild,publishDirectory,installCommand,buildCommand,startCommand,customNginxConfiguration,dockerfile,dockerRegistryImageName,dockerRegistryImageTag,portsExposes,portsMappings,customNetworkAliases,customDockerRunOptions,httpBasicAuthUsername,httpBasicAuthPassword,preDeploymentCommand,preDeploymentCommandContainer,postDeploymentCommand,postDeploymentCommandContainer,isContainerLabelReadonlyEnabled,isContainerLabelEscapeEnabled,customLabels" />
         <div class="application-settings-grid flex flex-col gap-6">
-            <x-application.settings-section id="application-details-section" title="Application details" helper="Name the application and choose the build strategy Coolify should use to deploy it." class="application-details-card">
+            <x-application.settings-section id="application-details-section" title="Application details" helper="Name the application and choose the build strategy STX Hosting should use to deploy it." class="application-details-card">
             @if ($buildPack === 'dockercompose' && filled($dockerComposeRaw))
                 <x-slot:actions>
                     <x-forms.button canGate="update" :canResource="$application" wire:target='initLoadingCompose'
@@ -102,7 +102,7 @@
                 <x-application.settings-subsection id="security-section" title="Authentication" first class="border-b border-neutral-200 py-5 dark:border-white/[0.07]">
                     @if ($application->settings->is_container_label_readonly_enabled == false)
                     <x-empty size="sm" title="Authentication is managed through labels"
-                        description="Authentication is managed via manual proxy labels. Switch label management back to Coolify to configure it here."
+                        description="Authentication is managed via manual proxy labels. Switch label management back to STX Hosting to configure it here."
                         icon-name="admin">
                         <x-slot:contents>
                             <button type="button" class="button"
@@ -113,7 +113,7 @@
                     </x-empty>
                     @else
                     <x-forms.listbox id="isHttpBasicAuthEnabled" label="Method" onChange="instantSave"
-                        helper="HTTP Basic Authentication adds the required authentication labels to the proxy. Coolify currently supports a single username and password."
+                        helper="HTTP Basic Authentication adds the required authentication labels to the proxy. STX Hosting currently supports a single username and password."
                         :options="[
                             ['value' => false, 'label' => 'None'],
                             ['value' => true, 'label' => 'HTTP Basic Authentication'],
@@ -174,7 +174,7 @@
             @endif
             </x-application.settings-section>
 
-            <x-application.settings-section id="build-pipeline-section" title="Build & deploy" helper="How Coolify builds the application, where it pushes the image, and the commands it runs around each deployment.">
+            <x-application.settings-section id="build-pipeline-section" title="Build & deploy" helper="How STX Hosting builds the application, where it pushes the image, and the commands it runs around each deployment.">
             @if (!$application->dockerfile && $application->build_pack !== 'dockerimage')
                 <div class="application-build-pack-options mb-5 border-b border-neutral-200 pb-5 dark:border-white/[0.07]">
                     <div class="grid gap-4 sm:grid-cols-2">
@@ -300,7 +300,7 @@
                                             : ['value' => true, 'label' => 'No build servers connected', 'disabled' => true],
                                     ];
                                     $buildServerFallbackPolicy = $application->environment->project->team->is_build_server_fallback_enabled
-                                        ? 'If no usable build server is available, Coolify builds on the deployment server.'
+                                        ? 'If no usable build server is available, STX Hosting builds on the deployment server.'
                                         : 'If no usable build server is available, the deployment fails.';
                                 @endphp
                                 <div class="grid gap-4 pt-2 sm:grid-cols-2">
@@ -311,7 +311,7 @@
                                     @endif
                                     <x-forms.listbox id="isBuildServerEnabled" label="Builder selection"
                                         onChange="instantSave" :options="$buildServerOptions"
-                                        helper="Build your application on a dedicated build server. If several build servers are connected, Coolify picks an available one automatically. {{ $buildServerFallbackPolicy }} More info in the <a href='https://coolify.io/docs/knowledge-base/server/build-server' class='underline' target='_blank'>documentation</a>."
+                                        helper="Build your application on a dedicated build server. If several build servers are connected, STX Hosting picks an available one automatically. {{ $buildServerFallbackPolicy }} More info in the <a href='https://stxhosting.com/docs/knowledge-base/server/build-server' class='underline' target='_blank'>documentation</a>."
                                         x-bind:disabled="!canUpdate" />
                                 </div>
                             @endif
@@ -385,7 +385,7 @@
                             id="isContainerLabelEscapeEnabled" instantSave
                             x-bind:disabled="!canUpdate"></x-forms.checkbox>
                         {{-- <x-forms.checkbox label="Readonly labels"
-                            helper="Labels are readonly by default. Readonly means that edits you do to the labels could be lost and Coolify will autogenerate the labels for you. If you want to edit the labels directly, disable this option. <br><br>Be careful, it could break the proxy configuration after you restart the container as Coolify will now NOT autogenerate the labels for you (ofc you can always reset the labels to the coolify defaults manually)."
+                            helper="Labels are readonly by default. Readonly means that edits you do to the labels could be lost and STX Hosting will autogenerate the labels for you. If you want to edit the labels directly, disable this option. <br><br>Be careful, it could break the proxy configuration after you restart the container as STX Hosting will now NOT autogenerate the labels for you (ofc you can always reset the labels to the coolify defaults manually)."
                             id="isContainerLabelReadonlyEnabled" instantSave></x-forms.checkbox> --}}
                     </div>
                 </div>
@@ -401,7 +401,7 @@
                     @if ($application->destination->server->isSwarm())
                         @if ($application->build_pack !== 'dockerimage')
                             <div>Docker Swarm requires the image to be available in a registry. More info <a
-                                    class="underline" href="https://coolify.io/docs/knowledge-base/docker/registry"
+                                    class="underline" href="https://stxhosting.com/docs/knowledge-base/docker/registry"
                                     target="_blank">here</a>.</div>
                         @endif
                     @endif
@@ -591,16 +591,16 @@
 
                 <x-application.settings-section id="container-section" title="Container" helper="Options and labels applied to the container when it starts.">
                     <x-forms.input
-                        helper="You can add custom docker run options that will be used when your container is started.<br>Note: Not all options are supported, as they could mess up Coolify's automation and could cause bad experience for users.<br><br>Check the <a class='underline dark:text-white' href='https://coolify.io/docs/knowledge-base/docker/custom-commands'>docs.</a>"
+                        helper="You can add custom docker run options that will be used when your container is started.<br>Note: Not all options are supported, as they could mess up STX Hosting's automation and could cause bad experience for users.<br><br>Check the <a class='underline dark:text-white' href='https://stxhosting.com/docs/knowledge-base/docker/custom-commands'>docs.</a>"
                         placeholder="--cap-add SYS_ADMIN --device=/dev/fuse --security-opt apparmor:unconfined --ulimit nofile=1024:1024 --tmpfs /run:rw,noexec,nosuid,size=65536k --hostname=myapp"
                         id="customDockerRunOptions" label="Custom Docker options" x-bind:disabled="!canUpdate" />
                 <x-application.settings-subsection id="container-labels-section" title="Labels">
                     <div class="grid w-full gap-4 sm:grid-cols-2">
                         <x-forms.listbox id="isContainerLabelReadonlyEnabled" label="Label management"
                             onChange="instantSave"
-                            helper="When Coolify manages the labels, they are regenerated automatically and manual edits can be lost.<br><br>If you edit them yourself, be careful: a wrong label set can break the proxy configuration after a restart (you can always reset to the Coolify defaults)."
+                            helper="When STX Hosting manages the labels, they are regenerated automatically and manual edits can be lost.<br><br>If you edit them yourself, be careful: a wrong label set can break the proxy configuration after a restart (you can always reset to the STX Hosting defaults)."
                             :options="[
-                                ['value' => true, 'label' => 'Managed by Coolify (auto-generated)'],
+                                ['value' => true, 'label' => 'Managed by STX Hosting (auto-generated)'],
                                 ['value' => false, 'label' => 'Managed manually (edit labels yourself)'],
                             ]" x-bind:disabled="!canUpdate" />
                         <x-forms.listbox id="isContainerLabelEscapeEnabled" label="Special characters"
@@ -615,11 +615,11 @@
                         <div class="mb-1.5 flex items-center justify-between gap-3">
                             <label class="flex w-fit items-center gap-1.5" style="margin-bottom: 0">Active labels</label>
                             @can('update', $application)
-                                <x-modal-confirmation title="Confirm Labels Reset to Coolify Defaults?"
+                                <x-modal-confirmation title="Confirm Labels Reset to STX Hosting Defaults?"
                                     buttonTitle="Reset to defaults" submitAction="resetDefaultLabels(true)"
                                     :actions="[
                                         'All your custom proxy labels will be lost.',
-                                        'Proxy labels (traefik, caddy, etc) will be reset to the coolify defaults.',
+                                        'Proxy labels (traefik, caddy, etc) will be reset to the STX Hosting defaults.',
                                     ]" confirmationText="{{ $application->fqdn . '/' }}"
                                     confirmationLabel="Please confirm the execution of the actions by entering the Application URL below"
                                     shortConfirmationLabel="Application URL" :confirmWithPassword="false"

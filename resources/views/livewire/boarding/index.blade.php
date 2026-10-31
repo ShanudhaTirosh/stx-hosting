@@ -235,7 +235,7 @@
                                         <p class="text-xs mt-1">
                                             Non-root user is experimental:
                                             <a class="font-bold underline" target="_blank"
-                                                href="https://coolify.io/docs/knowledge-base/server/non-root-user">docs</a>
+                                                href="https://stxhosting.com/docs/knowledge-base/server/non-root-user">docs</a>
                                         </p>
                                     </div>
                                 </div>
@@ -253,7 +253,7 @@
 
                                 <p class="mb-4">
                                     For more help, check this <a target="_blank" class="underline font-semibold"
-                                        href="https://coolify.io/docs/knowledge-base/server/openssh">documentation</a>.
+                                        href="https://stxhosting.com/docs/knowledge-base/server/openssh">documentation</a>.
                                 </p>
 
                                 <x-forms.input readonly id="serverPublicKey" class="mb-4"

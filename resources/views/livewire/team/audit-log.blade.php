@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        Team Audit Log | Coolify
+        Team Audit Log | STX Hosting
     </x-slot>
 
     <x-team.settings-layout>
@@ -121,7 +121,7 @@
                         :last-page="$events->lastPage()" wire-target="setPage,previousPage,nextPage"
                         previous-action="previousPage" next-action="nextPage">
                         <x-slot:pageSize>
-                            <x-page-size-select model="perPage" livewire storage-key="coolify.page-size.audit-log"
+                            <x-page-size-select model="perPage" livewire storage-key="stx.page-size.audit-log"
                                 canGate="viewAdmin" :canResource="currentTeam()" />
                         </x-slot:pageSize>
                     </x-table-pagination>

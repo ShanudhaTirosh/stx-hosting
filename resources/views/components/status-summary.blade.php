@@ -92,7 +92,7 @@
                 'bg-warning' => $healthType === 'warning',
                 'bg-error' => $healthType === 'error',
             ];
-            $healthHelper = 'No healthcheck is configured, so Coolify can only report the container state. Traffic can still be routed to the container, but Coolify cannot verify that the application inside it is ready to receive requests.';
+            $healthHelper = 'No healthcheck is configured, so STX Hosting can only report the container state. Traffic can still be routed to the container, but STX Hosting cannot verify that the application inside it is ready to receive requests.';
         @endphp
         @if ($healthcheckUrl)
             <div class="listbox-option gap-0! p-0!">

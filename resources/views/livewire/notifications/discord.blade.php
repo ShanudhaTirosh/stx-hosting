@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        Discord Notifications | Coolify
+        Discord Notifications | STX Hosting
     </x-slot>
 
     <x-notification.settings-layout>

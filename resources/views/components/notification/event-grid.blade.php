@@ -14,7 +14,7 @@
             [
                 'key' => 'statusChange',
                 'label' => 'Resource status changes',
-                'helper' => 'Notify when a resource stops or Coolify automatically restarts it.',
+                'helper' => 'Notify when a resource stops or STX Hosting automatically restarts it.',
             ],
             [
                 'key' => 'restartLimitReached',

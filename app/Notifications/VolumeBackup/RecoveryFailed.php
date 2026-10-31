@@ -57,7 +57,7 @@ class RecoveryFailed extends CustomEmailNotification
     public function toMail(): MailMessage
     {
         $mail = new MailMessage;
-        $mail->subject("Coolify: [ACTION REQUIRED] Storage backup recovery FAILED for {$this->resourceName}");
+        $mail->subject("STX Hosting: [ACTION REQUIRED] Storage backup recovery FAILED for {$this->resourceName}");
         $mail->view('emails.volume-backup-recovery-failed', [
             'summary' => $this->summary(),
             'url' => $this->url,
@@ -84,10 +84,10 @@ class RecoveryFailed extends CustomEmailNotification
 
     public function toTelegram(): array
     {
-        $data = ['message' => "Coolify: [ACTION REQUIRED] {$this->summary()}"];
+        $data = ['message' => "STX Hosting: [ACTION REQUIRED] {$this->summary()}"];
 
         if ($this->url) {
-            $data['buttons'] = [['text' => 'Open resource in Coolify', 'url' => $this->url]];
+            $data['buttons'] = [['text' => 'Open resource in STX Hosting', 'url' => $this->url]];
         }
 
         return $data;
@@ -99,15 +99,15 @@ class RecoveryFailed extends CustomEmailNotification
             title: 'Storage backup recovery failed',
             level: 'error',
             message: "[ACTION REQUIRED] {$this->summary()}",
-            buttons: $this->url ? [['text' => 'Open resource in Coolify', 'url' => $this->url]] : [],
+            buttons: $this->url ? [['text' => 'Open resource in STX Hosting', 'url' => $this->url]] : [],
         );
     }
 
     public function toSlack(): SlackMessage
     {
         return new SlackMessage(
-            title: 'Coolify: [ACTION REQUIRED] Storage backup recovery failed',
-            description: $this->summary().($this->url ? "\n\n<{$this->url}|Open resource in Coolify>" : ''),
+            title: 'STX Hosting: [ACTION REQUIRED] Storage backup recovery failed',
+            description: $this->summary().($this->url ? "\n\n<{$this->url}|Open resource in STX Hosting>" : ''),
             color: SlackMessage::errorColor(),
         );
     }

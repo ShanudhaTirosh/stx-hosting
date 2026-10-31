@@ -1,7 +1,7 @@
                 <form wire:submit.prevent="submit" class="application-settings-form flex flex-col gap-6">
                     <x-unsaved-bar action="submit" />
                     <x-application.settings-section id="server-overview-section" title="Server overview"
-                        helper="Operating system and hardware details for the server running this Coolify instance.">
+                        helper="Operating system and hardware details for the server running this STX Hosting instance.">
                         <x-slot:actions>
                             <x-forms.button type="button" wire:click="refreshServerMetadata"
                                 :disabled="! $server->isFunctional()"
@@ -56,7 +56,7 @@
                     @endif
 
                     <x-application.settings-section id="server-connection-section" title="Connection"
-                        helper="Configure how Coolify identifies and connects to this server.">
+                        helper="Configure how STX Hosting identifies and connects to this server.">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <x-forms.input canGate="update" :canResource="$server" id="name" label="Name"
                                 required :disabled="$isValidating" />

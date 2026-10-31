@@ -4,7 +4,7 @@
 
         @if ($anonymousDataVolume)
             <x-callout type="danger" title="Current data is not in the data volume">
-                <p>Because of a bug in older Coolify versions, a file mount removed the data volume. This database
+                <p>Because of a bug in older STX Hosting versions, a file mount removed the data volume. This database
                     keeps its current data in the unnamed Docker volume <code>{{ $anonymousDataVolume }}</code>.
                     Starting or restarting it is blocked, because it would use the data volume and the current data
                     would seem lost.</p>
@@ -108,7 +108,7 @@
                 <x-forms.input label="Custom Docker options" disabled value="Hidden (only admins can view)" />
             @else
                 <x-forms.input
-                    helper="Add supported docker run options used when the container starts. Unsupported options can interfere with Coolify automation."
+                    helper="Add supported docker run options used when the container starts. Unsupported options can interfere with STX Hosting automation."
                     placeholder="--cap-add SYS_ADMIN --device=/dev/fuse"
                     id="customDockerRunOptions" label="Custom Docker options" canGate="update"
                     :canResource="$database" />

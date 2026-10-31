@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-TEST-008`  
 **Version**: `1.0.0`  
 **Classification**: Engineering Testing Specification & Quality Standard  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, Coolify Orchestration Engine (`coolify`), Database & Queue Workers  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`coolify`), Database & Queue Workers  
 **Author**: ShanuTechX Quality Engineering & Security Assurance Group  
 **Status**: Approved for Execution  
 
@@ -26,7 +26,7 @@ To guarantee zero-defect reliability, this testing strategy implements a compreh
                        │ Sanitization & Exploits │
                        ├─────────────────────────┤
                        │   TIER 2: INTEGRATION   │
-                       │ Database Locks, Coolify │
+                       │ Database Locks, STX Hosting │
                        │ API Mocks, Idempotency  │
                        ├─────────────────────────┤
                        │      TIER 1: UNIT       │
@@ -141,7 +141,7 @@ it('allows transitioning unpaid to payment_pending upon proof upload', function 
 
 ## 3. Tier 2: Integration Testing
 
-Integration tests verify the interaction between models, database transactions, queue workers, and external service clients (Coolify REST API and SQLite Status database).
+Integration tests verify the interaction between models, database transactions, queue workers, and external service clients (STX Hosting REST API and SQLite Status database).
 
 ### 3.1 Database Transaction Integrity & Pessimistic Locking
 Prevents race conditions where two simultaneous payment approvals or duplicate provisioning requests might allocate the same inventory node.
@@ -201,22 +201,22 @@ it('is fully idempotent and does not re-allocate new nodes on worker retry', fun
 });
 ```
 
-### 3.3 Coolify REST API Client Mock & Error Test Harness
-Tests integration with Coolify v4 API endpoints using Laravel's `Http::fake()` and live contract validation.
+### 3.3 STX Hosting REST API Client Mock & Error Test Harness
+Tests integration with STX Hosting v4 API endpoints using Laravel's `Http::fake()` and live contract validation.
 
 #### Scenarios Covered:
-- **`CoolifyApiClientTest.php`**:
+- **`STX HostingApiClientTest.php`**:
   - `createPublicApplication`: Handles HTTP 201 Created returning application UUID.
   - Domain Conflicts: Handles HTTP 409 Conflict when a requested domain is already bound; catches exception and reports clean error to customer.
   - Token Scope Verification: Asserts `deploy` ability is provided when triggering start/stop/restart; catches HTTP 403 when permissions are insufficient.
   - Log Streaming: Verifies handling of sanitized logs versus masked logs when token lacks `read:sensitive`.
 
 ```php
-// tests/Integration/Coolify/CoolifyApiClientTest.php
-use App\Services\Coolify\CoolifyApiClient;
+// tests/Integration/STX Hosting/STX HostingApiClientTest.php
+use App\Services\STX Hosting\STX HostingApiClient;
 use Illuminate\Support\Facades\Http;
 
-it('handles Coolify domain conflict 409 response gracefully', function () {
+it('handles STX Hosting domain conflict 409 response gracefully', function () {
     Http::fake([
         '*/api/v1/applications/public' => Http::response([
             'message' => 'Domain conflicts detected.',
@@ -224,14 +224,14 @@ it('handles Coolify domain conflict 409 response gracefully', function () {
         ], 409),
     ]);
 
-    $client = app(CoolifyApiClient::class);
+    $client = app(STX HostingApiClient::class);
 
     expect(fn () => $client->createPublicApplication([
         'project_uuid' => 'prj_123',
         'server_uuid' => 'srv_123',
         'git_repository' => 'https://github.com/example/repo',
         'domains' => 'https://app.example.com',
-    ]))->toThrow(\App\Exceptions\CoolifyDomainConflictException::class);
+    ]))->toThrow(\App\Exceptions\STX HostingDomainConflictException::class);
 });
 ```
 
@@ -307,8 +307,8 @@ it('strictly forbids a customer from rebooting or stopping another customer serv
 
 ### 4.2 SSH Key Segregation & Host Isolation
 - **Test**: Customer public keys submitted during VPS provisioning are injected *only* into the customer's isolated guest OS `/home/debian/.ssh/authorized_keys` or cloud-init user-data.
-- **Assertion**: Customer public keys are never written to the host hypervisor's `/root/.ssh/authorized_keys` or the Coolify master node.
-- **Assertion**: Host private keys (used by Coolify to manage the host) are never serialized in customer API payloads.
+- **Assertion**: Customer public keys are never written to the host hypervisor's `/root/.ssh/authorized_keys` or the STX Hosting master node.
+- **Assertion**: Host private keys (used by STX Hosting to manage the host) are never serialized in customer API payloads.
 
 ### 4.3 Payment Proof Tamper Resistance & Upload Security
 Validates defense mechanisms against malicious file uploads and tampered payment slips.
@@ -526,7 +526,7 @@ test('full order-to-activation lifecycle with proof upload and admin approval', 
 ### 6.1 Environment Topology
 - **Local Dev / Unit**: SQLite `:memory:`, Array cache, Array queue. Tests run in <10 seconds.
 - **Continuous Integration (CI)**: GitHub Actions runner with PostgreSQL 16 service container and Redis 7 service container.
-- **Staging Canary**: Full multi-service Docker Compose environment running storefront (`web`), status (`status`), and Coolify on private dev VLAN.
+- **Staging Canary**: Full multi-service Docker Compose environment running storefront (`web`), status (`status`), and STX Hosting on private dev VLAN.
 
 ### 6.2 CI/CD GitHub Actions Workflow
 The automated quality gate executes on every pull request and push to `main`:

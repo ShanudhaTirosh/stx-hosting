@@ -1,6 +1,6 @@
 <div class="h-full">
     <x-slot:title>
-        {{ $environment->name }} > Canvas | Coolify
+        {{ $environment->name }} > Canvas | STX Hosting
     </x-slot>
     <div data-environment-canvas data-project="{{ $project->uuid }}" data-environment="{{ $environment->uuid }}"
         data-team="{{ $project->team_id }}" data-user="{{ auth()->id() }}"

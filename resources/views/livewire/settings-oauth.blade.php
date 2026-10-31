@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        Authentication | Coolify
+        Authentication | STX Hosting
     </x-slot>
 
     <x-settings.layout>
@@ -63,7 +63,7 @@
                                 placeholder="{{ oauth_default_redirect_uri($provider) }}" label="Redirect URI" />
                             <x-forms.input canGate="update" :canResource="$settings"
                                 id="oauth_settings_map.{{ $provider }}.base_url" label="Issuer URL" required
-                                helper="OpenID Provider issuer URL, for example https://example.okta.com. Coolify uses it to discover the authorization, token, userinfo, and JWKS endpoints. For Microsoft Entra ID, use https://login.microsoftonline.com/&lt;tenant ID&gt;/v2.0 and add the optional ID token claims email and xms_edov to the app registration." />
+                                helper="OpenID Provider issuer URL, for example https://example.okta.com. STX Hosting uses it to discover the authorization, token, userinfo, and JWKS endpoints. For Microsoft Entra ID, use https://login.microsoftonline.com/&lt;tenant ID&gt;/v2.0 and add the optional ID token claims email and xms_edov to the app registration." />
                             <x-forms.input canGate="update" :canResource="$settings"
                                 id="oauth_settings_map.{{ $provider }}.client_id" label="Client ID" required />
                             <x-forms.input canGate="update" :canResource="$settings"

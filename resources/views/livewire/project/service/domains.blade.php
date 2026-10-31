@@ -107,7 +107,7 @@
                             @if ($addDomainDnsFailed)
                                 <x-callout type="danger" title="DNS is not pointing to the right IP">
                                     This domain does not currently resolve to this server.
-                                    Traffic may not reach Coolify until you update DNS.
+                                    Traffic may not reach STX Hosting until you update DNS.
                                     Are you sure you want to add it anyway?
                                     @if (filled($addDomainDnsMessage))
                                         <div class="pt-2">{{ $addDomainDnsMessage }}</div>
@@ -171,7 +171,7 @@
                         @if ($hasHttpsDomains)
                             <div class="flex w-full items-center gap-2 sm:w-auto service-domains-https">
                                 <label for="service-force-https-{{ $appId }}-trigger" class="mb-0! whitespace-nowrap text-[12px]!">Redirect HTTP to HTTPS</label>
-                                <x-helper helper="Disable only when Cloudflare Tunnel or another proxy connects to Coolify over HTTP. Keep enabled when Cloudflare uses Full or Full (Strict) SSL." />
+                                <x-helper helper="Disable only when Cloudflare Tunnel or another proxy connects to STX Hosting over HTTP. Keep enabled when Cloudflare uses Full or Full (Strict) SSL." />
                                 <x-forms.listbox canGate="update" :canResource="$service" id="forceHttpsRedirects.{{ $appId }}"
                                     htmlId="service-force-https-{{ $appId }}" preserveValue portal
                                     onChange="updateForceHttps"
@@ -262,7 +262,7 @@
                                 @if ($editDomainDnsFailed)
                                     <x-callout type="danger" title="DNS is not pointing to the right IP">
                                         This domain does not currently resolve to this server.
-                                        Traffic may not reach Coolify until you update DNS.
+                                        Traffic may not reach STX Hosting until you update DNS.
                                         Are you sure you want to save it anyway?
                                         @if (filled($editDomainDnsMessage))
                                             <div class="pt-2">{{ $editDomainDnsMessage }}</div>

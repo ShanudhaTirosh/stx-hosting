@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-ROADMAP-010`  
 **Version**: `1.0.0`  
 **Classification**: Strategic Project Execution & Commercial Launch Roadmap  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, Coolify Orchestration Engine (`coolify`), Infrastructure Hypervisors  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`coolify`), Infrastructure Hypervisors  
 **Author**: ShanuTechX Executive Leadership & Platform Engineering Group  
 **Status**: Approved for Commercial Execution  
 
@@ -270,7 +270,7 @@ Rather than waiting weeks for third-party merchant processor underwriting (e.g. 
 
 | Role | Primary Responsibilities | Daily Commitment |
 |---|---|---|
-| **Lead Backend Engineer** | Database migrations, Commerce API, Livewire review queue, Coolify integration. | 100% (Days 1–14) |
+| **Lead Backend Engineer** | Database migrations, Commerce API, Livewire review queue, STX Hosting integration. | 100% (Days 1–14) |
 | **Frontend Engineer** | Storefront API wiring, Cart context, Customer Portal views, Playwright tests. | 100% (Days 1–14) |
 | **SRE / Systems Engineer** | Docker Compose deployment, Proxmox hypervisor setup, Inventory pool, Status probes. | 100% (Days 4–14) |
 | **Operations Reviewer** | Manual payment proof verification, server allocation, customer onboarding. | On-call (Days 5–14) |
@@ -282,7 +282,7 @@ Rather than waiting weeks for third-party merchant processor underwriting (e.g. 
 Immediately following the Day 14 commercial launch, the platform transitions into Phase 2 automation:
 - **Days 15–20**: Implement automated Hetzner Cloud API integration (`HetznerService.php`) with dynamic cloud-init templates for zero-touch VPS delivery.
 - **Days 21–25**: Integrate automated payment gateways (Stripe Checkout & Cryptomus Webhooks) for instant, automated activations.
-- **Days 26–30**: Roll out Coolify PaaS containerized Web Application Hosting and Managed Databases with automated cgroups quota enforcement.
+- **Days 26–30**: Roll out STX Hosting PaaS containerized Web Application Hosting and Managed Databases with automated cgroups quota enforcement.
 
 ---
 

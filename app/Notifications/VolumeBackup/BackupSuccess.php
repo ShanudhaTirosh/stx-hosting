@@ -46,8 +46,8 @@ class BackupSuccess extends CustomEmailNotification
     {
         $mail = new MailMessage;
         $mail->subject($this->warning
-            ? "Coolify: Storage backup succeeded with a warning for {$this->resourceName}"
-            : "Coolify: Storage backup successfully done for {$this->resourceName}");
+            ? "STX Hosting: Storage backup succeeded with a warning for {$this->resourceName}"
+            : "STX Hosting: Storage backup successfully done for {$this->resourceName}");
         $mail->view('emails.volume-backup-result', [
             'summary' => $this->summary(),
             'frequency' => $this->frequency,
@@ -75,10 +75,10 @@ class BackupSuccess extends CustomEmailNotification
 
     public function toTelegram(): array
     {
-        $data = ['message' => "Coolify: {$this->summary()}\n\nFrequency: {$this->frequency}"];
+        $data = ['message' => "STX Hosting: {$this->summary()}\n\nFrequency: {$this->frequency}"];
 
         if ($this->url) {
-            $data['buttons'] = [['text' => 'Open resource in Coolify', 'url' => $this->url]];
+            $data['buttons'] = [['text' => 'Open resource in STX Hosting', 'url' => $this->url]];
         }
 
         return $data;
@@ -90,7 +90,7 @@ class BackupSuccess extends CustomEmailNotification
             title: $this->warning ? 'Storage backup succeeded with a warning' : 'Storage backup successful',
             level: $this->warning ? 'warning' : 'success',
             message: "{$this->summary()}<br/><br/><b>Frequency:</b> {$this->frequency}.",
-            buttons: $this->url ? [['text' => 'Open resource in Coolify', 'url' => $this->url]] : [],
+            buttons: $this->url ? [['text' => 'Open resource in STX Hosting', 'url' => $this->url]] : [],
         );
     }
 
@@ -98,7 +98,7 @@ class BackupSuccess extends CustomEmailNotification
     {
         return new SlackMessage(
             title: $this->warning ? 'Storage backup succeeded with a warning' : 'Storage backup successful',
-            description: $this->summary()."\n\n*Frequency:* {$this->frequency}".($this->url ? "\n\n<{$this->url}|Open resource in Coolify>" : ''),
+            description: $this->summary()."\n\n*Frequency:* {$this->frequency}".($this->url ? "\n\n<{$this->url}|Open resource in STX Hosting>" : ''),
             color: $this->warning ? SlackMessage::warningColor() : SlackMessage::successColor(),
         );
     }

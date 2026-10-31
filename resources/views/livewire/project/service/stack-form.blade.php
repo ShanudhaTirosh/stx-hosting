@@ -49,11 +49,11 @@
                 placeholder="My WordPress site" />
             <x-forms.input canGate="update" :canResource="$service" id="description" label="Description" />
         </div>
-        <x-application.settings-subsection id="service-network-section" title="Network" helper="Control whether this Compose stack joins Coolify's predefined network.">
+        <x-application.settings-subsection id="service-network-section" title="Network" helper="Control whether this Compose stack joins STX Hosting's predefined network.">
             <x-forms.listbox canGate="update" :canResource="$service" id="connectToDockerNetwork" label="Network attachment" live onChange="instantSave"
                 :disabled="! auth()->user()->can('update', $service)" :options="[
                     ['value' => false, 'label' => 'Use the stack network only'],
-                    ['value' => true, 'label' => 'Connect to the predefined Coolify network'],
+                    ['value' => true, 'label' => 'Connect to the predefined STX Hosting network'],
                 ]" />
         </x-application.settings-subsection>
     </x-application.settings-section>

@@ -780,7 +780,7 @@ class General extends Component
                         $server = $this->application->destination->server;
                         $target = serverDnsTargetIp($server) ?? $server->ip;
                         $guidance = dnsMismatchGuidanceMessage($target, $target);
-                        $showToaster && $this->dispatch('error', 'Validating DNS failed.', "{$guidance}<br><br>Check this <a target='_blank' class='underline dark:text-white' href='https://coolify.io/docs/knowledge-base/dns-configuration'>documentation</a> for further help.");
+                        $showToaster && $this->dispatch('error', 'Validating DNS failed.', "{$guidance}<br><br>Check this <a target='_blank' class='underline dark:text-white' href='https://docs.stxhosting.com/knowledge-base/dns-configuration'>documentation</a> for further help.");
                     }
                 }
             }
@@ -968,7 +968,7 @@ class General extends Component
                                 $server = $this->application->destination->server;
                                 $target = serverDnsTargetIp($server) ?? $server->ip;
                                 $guidance = dnsMismatchGuidanceMessage($target, $target);
-                                $showToaster && $this->dispatch('error', 'Validating DNS failed.', "{$guidance}<br><br>Check this <a target='_blank' class='underline dark:text-white' href='https://coolify.io/docs/knowledge-base/dns-configuration'>documentation</a> for further help.");
+                                $showToaster && $this->dispatch('error', 'Validating DNS failed.', "{$guidance}<br><br>Check this <a target='_blank' class='underline dark:text-white' href='https://docs.stxhosting.com/knowledge-base/dns-configuration'>documentation</a> for further help.");
                             }
                         }
                     }

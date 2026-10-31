@@ -94,7 +94,7 @@
                 <x-forms.input label="Custom Docker options" disabled value="Hidden (only admins can view)" />
             @else
                 <x-forms.input
-                    helper="Add supported docker run options used when the container starts. Unsupported options can interfere with Coolify automation."
+                    helper="Add supported docker run options used when the container starts. Unsupported options can interfere with STX Hosting automation."
                     placeholder="--cap-add SYS_ADMIN --device=/dev/fuse"
                     id="customDockerRunOptions" label="Custom Docker options" canGate="update"
                     :canResource="$database" />
@@ -106,7 +106,7 @@
                     <x-forms.textarea placeholder="# maxmemory 256mb
     # maxmemory-policy allkeys-lru
     # timeout 300"
-                        helper="Coolify automatically applies requirepass using the password above. If you override requirepass here, keep both values identical."
+                        helper="STX Hosting automatically applies requirepass using the password above. If you override requirepass here, keep both values identical."
                         label="Custom Redis configuration" rows="10" id="redisConf" canGate="update"
                         :canResource="$database" />
                 @endif

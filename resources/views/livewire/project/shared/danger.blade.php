@@ -10,8 +10,8 @@
     @endphp
     @if ($resource && !data_get($resource, 'destination.server')?->isFunctional())
         <x-callout type="warning" title="Server is not reachable" class="mb-4">
-            Coolify cannot stop or remove Docker resources on this server. Deleting removes this {{ $resourceLabel }}
-            from Coolify only. Its containers, volumes, networks, and configuration files remain on the server and can
+            STX Hosting cannot stop or remove Docker resources on this server. Deleting removes this {{ $resourceLabel }}
+            from STX Hosting only. Its containers, volumes, networks, and configuration files remain on the server and can
             start again when the server is back.
         </x-callout>
     @endif
@@ -43,7 +43,7 @@
                     <ul class="space-y-1 text-xs">
                         <li>• Active deployments will be stopped.</li>
                         <li>• Selected volumes and stored data may be permanently removed.</li>
-                        <li>• This {{ $resourceLabel }} cannot be restored from Coolify after deletion.</li>
+                        <li>• This {{ $resourceLabel }} cannot be restored from STX Hosting after deletion.</li>
                     </ul>
                 <x-slot:action>
                     @if ($canDelete)

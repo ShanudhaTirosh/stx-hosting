@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Coolify writes mounts outside the resource directory on the host without a deployment, so a token
+ * STX Hosting writes mounts outside the resource directory on the host without a deployment, so a token
  * needs the deploy permission (or root) for them.
  */
 trait RequiresDeployForOutsideHostPaths
@@ -25,7 +25,7 @@ trait RequiresDeployForOutsideHostPaths
     }
 
     /**
-     * Coolify writes changed file content on the server immediately, also inside the resource directory.
+     * STX Hosting writes changed file content on the server immediately, also inside the resource directory.
      */
     private function contentChangeForbiddenResponse(Request $request, LocalFileVolume|LocalPersistentVolume $storage): ?JsonResponse
     {
@@ -36,6 +36,6 @@ trait RequiresDeployForOutsideHostPaths
             return null;
         }
 
-        return $this->deployAbilityForbiddenResponse($request, 'Coolify writes the file content on the server immediately, so it needs a token with the deploy permission.');
+        return $this->deployAbilityForbiddenResponse($request, 'STX Hosting writes the file content on the server immediately, so it needs a token with the deploy permission.');
     }
 }

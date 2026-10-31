@@ -88,7 +88,7 @@ use Laravel\Mcp\Server\Tool;
 
 class CoolifyServer extends Server
 {
-    protected string $name = 'Coolify';
+    protected string $name = 'STX Hosting';
 
     protected string $version = '0.3.0';
 
@@ -100,10 +100,10 @@ class CoolifyServer extends Server
     public int $defaultPaginationLength = 100;
 
     protected string $instructions = <<<'MD'
-Coolify MCP for the authenticated team token. Every tool enforces team ownership.
+STX Hosting MCP for the authenticated team token. Every tool enforces team ownership.
 
 Start here (prefer these before deep get_*):
-1. coolify_help — tools this token can use, plus step-by-step recipes (topic=deploy_app_from_git, add_database_to_app, ...).
+1. stx_help — tools this token can use, plus step-by-step recipes (topic=deploy_app_from_git, add_database_to_app, ...).
 2. get_infrastructure_overview — counts + health_hints.
 3. search_resources — fuzzy name/UUID/domain when type is unknown.
 4. list_unhealthy_resources sample_only=true — cheap "what's broken?" sample + counts.

@@ -28,7 +28,7 @@ class GeneralNotification extends Notification implements ShouldQueue
     public function toDiscord(): DiscordMessage
     {
         return new DiscordMessage(
-            title: $this->success ? 'Coolify: General Notification' : 'Coolify: Action required',
+            title: $this->success ? 'STX Hosting: General Notification' : 'STX Hosting: Action required',
             description: $this->message,
             color: $this->success ? DiscordMessage::infoColor() : DiscordMessage::errorColor(),
         );
@@ -53,7 +53,7 @@ class GeneralNotification extends Notification implements ShouldQueue
     public function toSlack(): SlackMessage
     {
         return new SlackMessage(
-            title: $this->success ? 'Coolify: General Notification' : 'Coolify: Action required',
+            title: $this->success ? 'STX Hosting: General Notification' : 'STX Hosting: Action required',
             description: $this->message,
             color: $this->success ? SlackMessage::infoColor() : SlackMessage::errorColor(),
         );

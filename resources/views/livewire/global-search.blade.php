@@ -15,7 +15,7 @@
     // above the global results; 'page' shows only them. Tab switches the scope.
     pageItems: [],
     scope: 'global',
-    serverTimingHudEnabled: localStorage.getItem('coolify.serverTimingHud.enabled') !== '0',
+    serverTimingHudEnabled: localStorage.getItem('stx.serverTimingHud.enabled') !== '0',
     developerCommandsEnabled: @js(app()->environment('local')),
 
     get showServerTimingCommand() {
@@ -26,7 +26,7 @@
 
     toggleServerTimingHud() {
         this.serverTimingHudEnabled = !this.serverTimingHudEnabled;
-        localStorage.setItem('coolify.serverTimingHud.enabled', this.serverTimingHudEnabled ? '1' : '0');
+        localStorage.setItem('stx.serverTimingHud.enabled', this.serverTimingHudEnabled ? '1' : '0');
         window.dispatchEvent(new CustomEvent('server-timing-hud-visibility-changed'));
         this.closeModal();
     },

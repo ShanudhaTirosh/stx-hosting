@@ -1,7 +1,7 @@
 <div x-data
     x-init="@if ($server->hetzner_server_id && $server->cloudProviderToken && !$hetznerServerStatus) $wire.checkHetznerServerStatus(); @endif @if ($server->vultr_instance_id && $server->cloudProviderToken) $wire.checkVultrInstanceStatus(); @endif @if ($server->digitalocean_droplet_id && $server->cloudProviderToken && !$digitalOceanDropletStatus) $wire.checkDigitalOceanDropletStatus(); @endif @if ($server->hostinger_virtual_machine_id && $server->cloudProviderToken && !$hostingerVirtualMachineStatus) $wire.checkHostingerVirtualMachineStatus(); @endif">
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(24) }} | Server | Coolify
+        {{ data_get_str($server, 'name')->limit(24) }} | Server | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -74,7 +74,7 @@
                         targets="name,description,ip,user,port,connectionTimeout,serverTimezone,wildcardDomain" />
 
                     <x-application.settings-section id="server-connection-section" title="Connection"
-                        helper="Configure how Coolify identifies, reaches, and validates this server.">
+                        helper="Configure how STX Hosting identifies, reaches, and validates this server.">
                         <x-slot:badges>
                             @if ($server->isTransferredAway())
                                 <x-status-badge label="Transferred away" type="warning" />
@@ -157,7 +157,7 @@
                             @endif
                             @if ($server->isTransferredAway() && ! $server->isLocalhost())
                                 @php
-                                    $transferTarget = data_get($server->server_metadata, 'transfer.target_instance_url') ?: 'another Coolify instance';
+                                    $transferTarget = data_get($server->server_metadata, 'transfer.target_instance_url') ?: 'another STX Hosting instance';
                                     $transferredAt = data_get($server->server_metadata, 'transfer.transferred_at');
                                     $transferredAt = $transferredAt ? \Illuminate\Support\Carbon::parse($transferredAt)->toDayDateTimeString().' UTC' : 'the transfer';
                                 @endphp
@@ -188,7 +188,7 @@
                         @if ($server->isTransferredAway())
                             <x-callout type="danger" title="Transferred to another instance" class="mb-4">
                                 This server was transferred to
-                                <strong>{{ data_get($server->server_metadata, 'transfer.target_instance_url') ?: 'another Coolify instance' }}</strong>,
+                                <strong>{{ data_get($server->server_metadata, 'transfer.target_instance_url') ?: 'another STX Hosting instance' }}</strong>,
                                 which manages it now. Use that instance. To undo the transfer, use
                                 <a href="{{ route('server.transfer', ['server_uuid' => $server->uuid]) }}" {{ wireNavigate() }}
                                     class="underline">Transfer back</a>. Keep this archive until you are sure: it is the copy
@@ -332,7 +332,7 @@
                                 </p>
                                 <p class="mt-1 text-xs leading-5 text-neutral-500 dark:text-fg-dim">
                                     @if ($server->isTransferredAway())
-                                        This server was migrated away from this Coolify instance and cannot be managed here.
+                                        This server was migrated away from this STX Hosting instance and cannot be managed here.
                                     @elseif ($server->isFunctional())
                                         The server is reachable, validated, and ready to host resources.
                                     @else

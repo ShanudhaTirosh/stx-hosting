@@ -7,9 +7,9 @@
                 :tokens="$available_tokens" />
             <p class="text-[11px] text-neutral-500 dark:text-fg-faint">
                 New to Hetzner?
-                <a href="https://coolify.io/hetzner" target="_blank"
+                <a href="https://stxhosting.com/hetzner" target="_blank"
                     class="font-medium text-coollabs hover:underline dark:text-brand-light">Create an account</a>
-                through Coolify's affiliate link.
+                through STX Hosting's affiliate link.
             </p>
         </div>
     @elseif ($current_step === 2)
@@ -69,7 +69,7 @@
 
                 <form wire:submit="submit" class="flex flex-col gap-6">
                     <x-application.settings-section title="Hetzner server"
-                        description="Choose the location, hardware, operating system, and Coolify SSH key.">
+                        description="Choose the location, hardware, operating system, and STX Hosting SSH key.">
                         <x-slot:actions>
                             <button type="submit"
                                 class="button button-highlighted"
@@ -84,7 +84,7 @@
                         <div class="grid gap-4 lg:grid-cols-2">
                             <div class="lg:col-span-2">
                                 <x-forms.input id="server_name" label="Server name"
-                                    helper="A friendly name shown in Coolify." />
+                                    helper="A friendly name shown in STX Hosting." />
                             </div>
                             <x-forms.listbox id="selected_location" label="Location" required live
                                 placeholder="Select a location" :options="$locationOptions" />

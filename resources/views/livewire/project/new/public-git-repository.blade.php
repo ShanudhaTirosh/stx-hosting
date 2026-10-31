@@ -30,8 +30,8 @@
                 <p class="mt-2 text-xs text-neutral-500 dark:text-fg-dim">
                     Need a sample? Browse
                     <a class="font-medium text-coollabs hover:underline dark:text-brand-light"
-                        href="https://github.com/coollabsio/coolify-examples/" target="_blank">
-                        Coolify Examples
+                        href="https://github.com/stx-enterprises/stx-hosting-examples/" target="_blank">
+                        STX Hosting Examples
                     </a>.
                 </p>
             </div>
@@ -44,7 +44,7 @@
                 <div class="application-settings-section-header">
                     <div>
                         <h2>Build configuration</h2>
-                        <p>Choose how Coolify builds and runs this repository.</p>
+                        <p>Choose how STX Hosting builds and runs this repository.</p>
                     </div>
                     <x-forms.button type="submit" isHighlighted>Continue</x-forms.button>
                 </div>

@@ -227,7 +227,7 @@
                         @php
                             $deleteAccountCheckbox = [
                                 'id' => 'deleteAccount',
-                                'label' => 'Delete my account. Servers, projects, and Git sources of teams where I am the only member are removed from Coolify. Nothing is stopped on the servers.',
+                                'label' => 'Delete my account. Servers, projects, and Git sources of teams where I am the only member are removed from STX Hosting. Nothing is stopped on the servers.',
                             ];
                         @endphp
                         @if ($isRefundEligible)

@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(10) }} > Swarm | Coolify
+        {{ data_get_str($server, 'name')->limit(10) }} > Swarm | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -18,7 +18,7 @@
 
                 <x-callout type="warning" title="Docker Swarm support is deprecated">
                     {{ config('deprecations.swarm') }}
-                    <a class="font-medium underline" href="https://coolify.io/docs/knowledge-base/docker/swarm"
+                    <a class="font-medium underline" href="https://stxhosting.com/docs/knowledge-base/docker/swarm"
                         target="_blank">Read the migration guidance.</a>
                 </x-callout>
 

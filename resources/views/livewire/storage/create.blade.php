@@ -1,7 +1,7 @@
 @can('create', App\Models\S3Storage::class)
     <div class="w-full">
         <div class="mb-4">For more details, please visit the <a class="underline dark:text-brand-light"
-                href="https://coolify.io/docs/knowledge-base/s3/introduction" target="_blank">Coolify Docs</a>.</div>
+                href="https://stxhosting.com/docs/knowledge-base/s3/introduction" target="_blank">STX Hosting Docs</a>.</div>
         <form class="flex flex-col gap-2" wire:submit='submit'>
             <div class="flex gap-2">
                 <x-forms.input required label="Name" id="name" />
@@ -23,7 +23,7 @@
             </div>
             <div class="w-64">
                 <x-forms.checkbox id="usePathStyleEndpoint" label="Use path-style URLs"
-                    helper="Turn this off for providers that only accept virtual-hosted-style URLs (bucket.endpoint). Coolify turns it off for Alibaba Cloud OSS, Tencent Cloud COS, and Volcengine TOS, and when the provider rejects path-style URLs." />
+                    helper="Turn this off for providers that only accept virtual-hosted-style URLs (bucket.endpoint). STX Hosting turns it off for Alibaba Cloud OSS, Tencent Cloud COS, and Volcengine TOS, and when the provider rejects path-style URLs." />
             </div>
 
             <x-forms.button class="mt-4" type="submit" wire:target="submit">

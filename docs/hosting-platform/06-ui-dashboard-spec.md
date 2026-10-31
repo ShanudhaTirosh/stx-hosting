@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-UI-SPEC-006`  
 **Version**: `1.0.0`  
 **Classification**: Frontend Architecture & UI/UX Systems Specification  
-**Target Applications**: Customer Portal (`NEXT_PUBLIC_DASHBOARD_URL` / `localhost:3001`), Administrator Operations Console (`/admin` / Coolify Control Plane), Public Storefront (`web`)  
+**Target Applications**: Customer Portal (`NEXT_PUBLIC_DASHBOARD_URL` / `localhost:3001`), Administrator Operations Console (`/admin` / STX Hosting Control Plane), Public Storefront (`web`)  
 **Design System**: ShanuTechX Dark Glassmorphism, Tailwind CSS, Lucide Icons  
 **Author**: Frontend Architecture & Operations UI Team  
 **Status**: Approved for Implementation  
@@ -98,7 +98,7 @@ The Customer Portal (served at `http://localhost:3001` in local development and 
 │  │ 2 vCPU • 4GB • 80GB   │ Ubuntu    │ 2a01:4f8:.../64  │ 99.98% Up   │ [Console]    │  │
 │  ├───────────────────────┼───────────┼──────────────────┼─────────────┼──────────────┤  │
 │  │ api-cluster-prod      │ Web App   │ api.client.com   │ [● Active]  │ [Restart] [>]│  │
-│  │ 1 vCPU • 2GB • Node   │ Coolify   │ Traefik SSL OK   │ Healthy     │ [Logs]       │  │
+│  │ 1 vCPU • 2GB • Node   │ STX Hosting   │ Traefik SSL OK   │ Healthy     │ [Logs]       │  │
 │  └──────────────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                        │
 │  RECENT FINANCIAL TRANSACTIONS                                                         │
@@ -500,7 +500,7 @@ RateLimiter::for('login', function (Request $request) {
 
 ### 5.3 Sensitive Data Masking & Credential Sanitization
 To prevent credential leakage in audit logs, bug reports, and API responses:
-- Coolify's `ApiSensitiveData` middleware intercepts all API serializations and replaces fields matching `password`, `private_key`, `secret`, `api_token`, and `encrypted_*` with redacted hashes (`********`).
+- STX Hosting's `ApiSensitiveData` middleware intercepts all API serializations and replaces fields matching `password`, `private_key`, `secret`, `api_token`, and `encrypted_*` with redacted hashes (`********`).
 - Transient passwords generated during VPS creation are held in Redis with a 300-second TTL and automatically purged after one view.
 
 ---

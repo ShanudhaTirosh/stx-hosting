@@ -20,7 +20,7 @@
                     <p class="mt-1 text-xs text-neutral-500 dark:text-fg-dim">
                         {{ $doneCount }} of {{ $totalCount }} done.
                         @if ($openCount > 0)
-                            Coolify checks the open steps every 30 seconds.
+                            STX Hosting checks the open steps every 30 seconds.
                         @endif
                     </p>
                 </div>
@@ -157,7 +157,7 @@
                     <div class="mt-4 flex justify-end">
                         <x-modal-confirmation title="Finish with open steps?" submitAction="finishTransfer"
                             :confirmWithText="false" :confirmWithPassword="false" step2ButtonText="Finish the transfer"
-                            :warningMessage="'<strong>'.$openCount.' steps are not OK or done.</strong> Coolify does not check them again. Webhooks, DNS records, or runners can still point to the other instance.'"
+                            :warningMessage="'<strong>'.$openCount.' steps are not OK or done.</strong> STX Hosting does not check them again. Webhooks, DNS records, or runners can still point to the other instance.'"
                             :actions="collect($openGroups)->flatMap(fn ($group) => $group['items'])->map(fn ($step) => 'Skipped: '.$step['label'])->all()">
                             <x-slot:trigger>
                                 <button type="button" class="text-xs text-neutral-500 underline dark:text-fg-dim">Finish with open steps…</button>

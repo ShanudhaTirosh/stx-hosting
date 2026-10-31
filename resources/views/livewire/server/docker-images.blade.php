@@ -1,6 +1,6 @@
 <div wire:init="load">
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(10) }} > Images | Coolify
+        {{ data_get_str($server, 'name')->limit(10) }} > Images | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -118,7 +118,7 @@
                         previous-action="previousPage" next-action="nextPage">
                         <x-slot:pageSize>
                             <x-page-size-select model="perPage" livewire
-                                storage-key="coolify.page-size.server-docker-images" />
+                                storage-key="stx.page-size.server-docker-images" />
                         </x-slot:pageSize>
                     </x-table-pagination>
                 @endif

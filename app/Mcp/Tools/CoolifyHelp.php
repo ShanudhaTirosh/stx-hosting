@@ -15,9 +15,9 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class CoolifyHelp extends Tool
 {
-    protected string $name = 'coolify_help';
+    protected string $name = 'stx_help';
 
-    protected string $description = 'Start here. Lists the Coolify MCP tools this token can use and step-by-step recipes for multi-step tasks. Optional: topic (recipe name) or search (filter tools).';
+    protected string $description = 'Start here. Lists the STX Hosting MCP tools this token can use and step-by-step recipes for multi-step tasks. Optional: topic (recipe name) or search (filter tools).';
 
     use BuildsResponse;
     use ResolvesTeam;

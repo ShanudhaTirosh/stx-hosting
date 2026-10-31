@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\ApplicationSecretManagerController;
 use App\Http\Controllers\Api\AuditEventsController;
 use App\Http\Controllers\Api\CloudInitScriptsController;
 use App\Http\Controllers\Api\CloudProviderTokensController;
+use App\Http\Controllers\Api\Commerce\OrderCheckoutController;
+use App\Http\Controllers\Api\Commerce\PaymentProofController;
+use App\Http\Controllers\Api\Commerce\ProductCatalogController;
+use App\Http\Controllers\Api\Commerce\StatusApiController;
 use App\Http\Controllers\Api\DatabasesController;
 use App\Http\Controllers\Api\DeployController;
 use App\Http\Controllers\Api\DestinationsController;
@@ -181,7 +185,7 @@ Route::group([
     Route::post('/servers/{uuid}/cloudflare-tunnel/enable', [ServerCloudflareTunnelController::class, 'enable'])->middleware(['api.ability:write']);
     Route::post('/servers/{uuid}/cloudflare-tunnel/disable', [ServerCloudflareTunnelController::class, 'disable'])->middleware(['api.ability:write']);
 
-    // Destinations — REST surface for the Coolify "Destinations" UI section (added).
+    // Destinations — REST surface for the STX Hosting "Destinations" UI section (added).
     Route::get('/destinations', [DestinationsController::class, 'index'])->middleware(['api.ability:read']);
     Route::get('/destinations/{uuid}', [DestinationsController::class, 'show'])->middleware(['api.ability:read']);
     Route::patch('/destinations/{uuid}', [DestinationsController::class, 'update'])->middleware(['api.ability:write']);
@@ -462,25 +466,25 @@ Route::group([
 // =========================================================================
 // Commercial Hosting & Storefront API Routes
 // =========================================================================
-Route::get('/products', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'index']);
-Route::get('/products/{slug}', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'show']);
-Route::get('/status', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
-Route::get('/status/public', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
-Route::post('/status/subscribe', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'subscribe']);
+Route::get('/products', [ProductCatalogController::class, 'index']);
+Route::get('/products/{slug}', [ProductCatalogController::class, 'show']);
+Route::get('/status', [StatusApiController::class, 'index']);
+Route::get('/status/public', [StatusApiController::class, 'index']);
+Route::post('/status/subscribe', [StatusApiController::class, 'subscribe']);
 
 Route::group([
     'prefix' => 'v1',
 ], function () {
-    Route::get('/products', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'index']);
-    Route::get('/products/{slug}', [\App\Http\Controllers\Api\Commerce\ProductCatalogController::class, 'show']);
-    Route::get('/status', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
-    Route::get('/status/public', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'index']);
-    Route::post('/status/subscribe', [\App\Http\Controllers\Api\Commerce\StatusApiController::class, 'subscribe']);
-    Route::post('/orders', [\App\Http\Controllers\Api\Commerce\OrderCheckoutController::class, 'store'])->middleware('throttle:commerce-orders');
-    Route::post('/invoices/{uuid}/proof', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'store'])->middleware('throttle:commerce-proofs');
-    Route::get('/payment-proofs/{uuid}/view', [\App\Http\Controllers\Api\Commerce\PaymentProofController::class, 'viewFile'])->name('api.commercial.proof.view');
+    Route::get('/products', [ProductCatalogController::class, 'index']);
+    Route::get('/products/{slug}', [ProductCatalogController::class, 'show']);
+    Route::get('/status', [StatusApiController::class, 'index']);
+    Route::get('/status/public', [StatusApiController::class, 'index']);
+    Route::post('/status/subscribe', [StatusApiController::class, 'subscribe']);
+    Route::post('/orders', [OrderCheckoutController::class, 'store'])->middleware('throttle:commerce-orders');
+    Route::post('/invoices/{uuid}/proof', [PaymentProofController::class, 'store'])->middleware('throttle:commerce-proofs');
+    Route::get('/payment-proofs/{uuid}/view', [PaymentProofController::class, 'viewFile'])->name('api.commercial.proof.view');
 });
 
 Route::any('/{any}', function () {
-    return response()->json(['message' => 'Not found.', 'docs' => 'https://coolify.io/docs'], 404);
+    return response()->json(['message' => 'Not found.', 'docs' => 'https://docs.stxhosting.com'], 404);
 })->where('any', '.*');

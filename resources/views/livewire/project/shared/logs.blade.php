@@ -1,6 +1,6 @@
 <div class="runtime-logs-page">
     <x-slot:title>
-        {{ data_get_str($resource, 'name')->limit(10) }} > Logs | Coolify
+        {{ data_get_str($resource, 'name')->limit(10) }} > Logs | STX Hosting
     </x-slot>
 
     @if ($type === 'application')

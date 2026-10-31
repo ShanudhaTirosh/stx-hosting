@@ -1,6 +1,6 @@
 <div class="flex h-full flex-col">
     <x-slot:title>
-        {{ str($scope)->headline() }} Variables > Canvas | Coolify
+        {{ str($scope)->headline() }} Variables > Canvas | STX Hosting
     </x-slot>
     {{-- Page search items; the menu is in the main sidebar. --}}
     <x-shared-variables.sidebar />

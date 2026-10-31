@@ -13,7 +13,7 @@
                 </div>
                 <x-forms.textarea canGate="update" :canResource="$resource" id="maintenancePage" rows="10" monospace
                     label="Custom maintenance page (HTML)"
-                    placeholder="Leave empty to use the Coolify default maintenance page."
+                    placeholder="Leave empty to use the STX Hosting default maintenance page."
                     helper="One self-contained HTML file (max {{ \App\Models\Server::PROXY_ERROR_PAGE_MAX_BYTES / 1024 }} KB) with inline CSS and images." />
                 @can('update', $resource)
                     <div class="flex gap-2">

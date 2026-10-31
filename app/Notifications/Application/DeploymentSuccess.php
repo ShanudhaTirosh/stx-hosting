@@ -63,10 +63,10 @@ class DeploymentSuccess extends CustomEmailNotification
         $pull_request_id = data_get($this->preview, 'pull_request_id', 0);
         $fqdn = $this->fqdn;
         if ($pull_request_id === 0) {
-            $mail->subject("Coolify: New version is deployed of {$this->application_name}");
+            $mail->subject("STX Hosting: New version is deployed of {$this->application_name}");
         } else {
             $fqdn = $this->preview->fqdn;
-            $mail->subject("Coolify: Pull request #{$pull_request_id} of {$this->application_name} deployed successfully");
+            $mail->subject("STX Hosting: Pull request #{$pull_request_id} of {$this->application_name} deployed successfully");
         }
         $mail->view('emails.application-deployment-success', [
             'commit' => $this->deploymentCommitDetailsForMail($notifiable),
@@ -120,7 +120,7 @@ class DeploymentSuccess extends CustomEmailNotification
     public function toTelegram(): array
     {
         if ($this->preview) {
-            $message = 'Coolify: New PR'.$this->preview->pull_request_id.' version successfully deployed of '.$this->application_name.'';
+            $message = 'STX Hosting: New PR'.$this->preview->pull_request_id.' version successfully deployed of '.$this->application_name.'';
             if ($this->preview->fqdn) {
                 $buttons[] = [
                     'text' => 'Open Application',

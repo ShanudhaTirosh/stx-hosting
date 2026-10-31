@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(10) }} > Security | Coolify
+        {{ data_get_str($server, 'name')->limit(10) }} > Security | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -96,12 +96,12 @@
                         <div @class(['grid gap-4', 'lg:grid-cols-3' => $autoUpdatesSupported])>
                             <x-forms.input canGate="update" :canResource="$server" id="patchCheckFrequency"
                                 label="Check frequency" placeholder="weekly (default, on Sunday)"
-                                helper="Cron expression or preset such as daily, weekly, or monthly. Leave empty for the default: weekly, at a fixed time on Sunday. Coolify notifies your team when updates are available and when a check starts to fail." />
+                                helper="Cron expression or preset such as daily, weekly, or monthly. Leave empty for the default: weekly, at a fixed time on Sunday. STX Hosting notifies your team when updates are available and when a check starts to fail." />
                             @if ($autoUpdatesSupported)
                                 <div class="w-full">
                                 <div class="mb-1.5 flex h-4 w-full items-center gap-1.5">
                                     <label class="mb-0! flex items-center gap-1 text-sm font-medium leading-4">Automatic security updates</label>
-                                    <x-helper helper="{{ $packageManager === 'apt' ? 'Uses unattended-upgrades for the security origins only.' : 'Uses dnf-automatic with upgrade_type = security.' }} Turning it off removes the Coolify configuration and keeps the operating system default." />
+                                    <x-helper helper="{{ $packageManager === 'apt' ? 'Uses unattended-upgrades for the security origins only.' : 'Uses dnf-automatic with upgrade_type = security.' }} Turning it off removes the STX Hosting configuration and keeps the operating system default." />
                                 </div>
                                 <div class="input flex items-center justify-between gap-2 pr-1!">
                                     <span class="flex min-w-0 items-center gap-2 truncate text-neutral-700 dark:text-fg-dim">
@@ -113,10 +113,10 @@
                                             @if ($autoSecurityUpdates)
                                                 <x-modal-confirmation title="Turn off automatic security updates?"
                                                     submitAction="toggleAutomaticSecurityUpdates"
-                                                    warningMessage="Security fixes are then not installed automatically by Coolify."
+                                                    warningMessage="Security fixes are then not installed automatically by STX Hosting."
                                                     temporaryDisableTwoStepConfirmation :confirmWithText="false"
                                                     :confirmWithPassword="false" :actions="[
-                                                        'Coolify removes its configuration from the server.',
+                                                        'STX Hosting removes its configuration from the server.',
                                                         'The server uses the default of the operating system again. Check it if you want no automatic updates at all.',
                                                     ]"
                                                     step2ButtonText="Turn off">
@@ -134,9 +134,9 @@
                                                     temporaryDisableTwoStepConfirmation :confirmWithText="false"
                                                     :confirmWithPassword="false" :actions="[
                                                         'Every day at the time in Maintenance window (time zone of the server), the server installs security updates without asking.',
-                                                        'If Docker comes from the operating system packages (for example docker.io or moby-engine), a security update of Docker restarts it, and all containers on this server stop and start again. Docker from the Docker repository (docker-ce, as Coolify installs it) has no security updates there and is not updated.',
+                                                        'If Docker comes from the operating system packages (for example docker.io or moby-engine), a security update of Docker restarts it, and all containers on this server stop and start again. Docker from the Docker repository (docker-ce, as STX Hosting installs it) has no security updates there and is not updated.',
                                                         'Services that use an updated library (for example OpenSSL or glibc) can restart.',
-                                                        'A new kernel is installed, but the server is not rebooted. Coolify then shows Reboot required.',
+                                                        'A new kernel is installed, but the server is not rebooted. STX Hosting then shows Reboot required.',
                                                     ]"
                                                     step2ButtonText="Turn on">
                                                     <x-slot:trigger>

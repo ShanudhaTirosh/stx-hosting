@@ -1,6 +1,6 @@
 <div class="mt-8">
     @php
-        $secretManagerDescription = 'Reference remote secrets in your environment variables with {{vault.KEY}}. Values are fetched at deployment time and are never stored in the Coolify database. Changing the source does not re-check existing references — missing keys fail the next deployment.';
+        $secretManagerDescription = 'Reference remote secrets in your environment variables with {{vault.KEY}}. Values are fetched at deployment time and are never stored in the STX Hosting database. Changing the source does not re-check existing references — missing keys fail the next deployment.';
         $removeSourceWarning = 'Existing {{vault.*}} reference variables will fail the next deployment until they are removed too.';
     @endphp
     <x-application.settings-section title="Secret manager" :description="$secretManagerDescription">

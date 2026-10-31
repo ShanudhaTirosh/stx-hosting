@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(10) }} > Cloudflare Tunnel | Coolify
+        {{ data_get_str($server, 'name')->limit(10) }} > Cloudflare Tunnel | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -24,7 +24,7 @@
                         </x-process-dialog>
                     @endif
                     @if (!$isCloudflareTunnelsEnabled)
-                        <a class="button" href="https://coolify.io/docs/knowledge-base/cloudflare/tunnels/server-ssh"
+                        <a class="button" href="https://stxhosting.com/docs/knowledge-base/cloudflare/tunnels/server-ssh"
                             target="_blank">
                             Documentation
                             <x-external-link />
@@ -48,7 +48,7 @@
                 @if ($isCloudflareTunnelsEnabled)
                     @if (filled($server->settings->cloudflare_tunnel_id))
                         <p class="mb-4 text-sm leading-6 text-neutral-600 dark:text-fg-dim">
-                            Coolify manages this tunnel through the Cloudflare API (tunnel
+                            STX Hosting manages this tunnel through the Cloudflare API (tunnel
                             <code>{{ \App\Services\CloudflareTunnelService::tunnelName($server) }}</code>).
                         </p>
                     @endif
@@ -62,7 +62,7 @@
                                 submitAction="toggleCloudflareTunnels" :actions="array_merge(
                                     ['Cloudflare Tunnel will be disabled for this server.'],
                                     filled($server->settings->cloudflare_tunnel_id)
-                                        ? ['The Cloudflare tunnel and the DNS record that Coolify created will be deleted.']
+                                        ? ['The Cloudflare tunnel and the DNS record that STX Hosting created will be deleted.']
                                         : [],
                                     $server->ip_previous
                                         ? ['The server IP address will be restored to its previous value.']
@@ -157,7 +157,7 @@
                         <div class="mt-4 border-t border-neutral-200 pt-4 dark:border-white/[0.08]">
                             <x-forms.collapsible title="Use an existing tunnel with its tunnel token">
                                 <p class="text-sm leading-6 text-neutral-600 dark:text-fg-dim">
-                                    For a tunnel you created in the Cloudflare dashboard. Coolify does not need a
+                                    For a tunnel you created in the Cloudflare dashboard. STX Hosting does not need a
                                     Cloudflare API token for this.
                                 </p>
                                 <form class="mt-4" @submit.prevent="$wire.dispatch('automatedCloudflareConfig')">

@@ -76,7 +76,7 @@
                             ]" />
                         @if ($redirectEnabled)
                             <x-forms.input canGate="update" :canResource="$server"
-                                placeholder="https://app.coolify.io" id="redirectUrl"
+                                placeholder="https://app.stxhosting.com" id="redirectUrl"
                                 label="Redirect URL"
                                 helper="Leave empty to return a 503 response instead of redirecting." />
                         @endif
@@ -90,7 +90,7 @@
                         <div class="mt-4 flex flex-col gap-2">
                             <x-forms.textarea canGate="update" :canResource="$server" id="customErrorPage" rows="10"
                                 monospace label="Custom error page (HTML)"
-                                placeholder="Leave empty to use the Coolify default error page."
+                                placeholder="Leave empty to use the STX Hosting default error page."
                                 helper="One self-contained HTML file (max {{ \App\Models\Server::PROXY_ERROR_PAGE_MAX_BYTES / 1024 }} KB) with inline CSS and images. Visitors see it with a 503 status for unknown domains and for stopped, deploying or unhealthy resources. A Redirect URL takes priority over this page." />
                             @can('update', $server)
                                 <div class="flex gap-2">
@@ -119,7 +119,7 @@
                                     <x-modal-confirmation title="Reset Proxy Configuration?"
                                         buttonTitle="Reset configuration"
                                         submitAction="resetProxyConfiguration" :actions="[
-                                            'Reset the proxy configuration to Coolify defaults.',
+                                            'Reset the proxy configuration to STX Hosting defaults.',
                                             'Remove custom ports, entrypoints, and other manual changes.',
                                         ]" confirmationText="{{ $server->name }}"
                                         confirmationLabel="Confirm by entering the server name"
@@ -145,7 +145,7 @@
                                     for this branch is {{ $this->latestTraefikVersion }}. Test the update before applying it
                                     to production servers.
                                     <a class="font-medium underline"
-                                        href="https://coolify.io/docs/core/networking/proxy/traefik/update"
+                                        href="https://stxhosting.com/docs/core/networking/proxy/traefik/update"
                                         target="_blank">Learn how to update Traefik.</a>
                                 </x-callout>
                             @endif
@@ -155,7 +155,7 @@
                                     {{ $this->latestNewerTraefikVersion }}). Review the Traefik changelog for breaking
                                     changes before upgrading.
                                     <a class="font-medium underline"
-                                        href="https://coolify.io/docs/core/networking/proxy/traefik/update"
+                                        href="https://stxhosting.com/docs/core/networking/proxy/traefik/update"
                                         target="_blank">Learn how to update Traefik.</a>
                                 </x-callout>
                             @endif
@@ -193,14 +193,14 @@
             </form>
         @elseif($selectedProxy === 'NONE')
             <x-application.settings-section title="Custom proxy"
-                helper="Coolify will not manage a reverse proxy for this server.">
+                helper="STX Hosting will not manage a reverse proxy for this server.">
                 <x-slot:actions>
                     @can('update', $server)
                         <x-forms.button wire:click.prevent="changeProxy">Switch proxy</x-forms.button>
                     @endcan
                 </x-slot:actions>
                 <x-callout type="info" title="Custom proxy selected">
-                    Configure and operate the proxy outside Coolify.
+                    Configure and operate the proxy outside STX Hosting.
                 </x-callout>
             </x-application.settings-section>
         @else
@@ -209,9 +209,9 @@
                 @can('update', $server)
                     <div class="grid gap-3 lg:grid-cols-3">
                         @foreach ([
-                            ['value' => 'NONE', 'title' => 'Custom', 'description' => 'Manage the proxy outside Coolify.'],
-                            ['value' => 'TRAEFIK', 'title' => 'Traefik', 'description' => 'Use the default Coolify proxy.'],
-                            ['value' => 'CADDY', 'title' => 'Caddy', 'description' => 'Use the Coolify Caddy integration.'],
+                            ['value' => 'NONE', 'title' => 'Custom', 'description' => 'Manage the proxy outside STX Hosting.'],
+                            ['value' => 'TRAEFIK', 'title' => 'Traefik', 'description' => 'Use the default STX Hosting proxy.'],
+                            ['value' => 'CADDY', 'title' => 'Caddy', 'description' => 'Use the STX Hosting Caddy integration.'],
                         ] as $proxyOption)
                             <button type="button" wire:click="selectProxy('{{ $proxyOption['value'] }}')"
                                 class="rounded-lg p-4 text-left ring-1 ring-neutral-200 transition-colors hover:bg-neutral-50 dark:ring-white/[0.08] dark:hover:bg-white/[0.04]">
@@ -237,9 +237,9 @@
             @can('update', $server)
                 <div class="grid gap-3 lg:grid-cols-3">
                     @foreach ([
-                        ['value' => 'NONE', 'title' => 'Custom', 'description' => 'Manage the proxy outside Coolify.'],
-                        ['value' => 'TRAEFIK', 'title' => 'Traefik', 'description' => 'Use the default Coolify proxy.'],
-                        ['value' => 'CADDY', 'title' => 'Caddy', 'description' => 'Use the Coolify Caddy integration.'],
+                        ['value' => 'NONE', 'title' => 'Custom', 'description' => 'Manage the proxy outside STX Hosting.'],
+                        ['value' => 'TRAEFIK', 'title' => 'Traefik', 'description' => 'Use the default STX Hosting proxy.'],
+                        ['value' => 'CADDY', 'title' => 'Caddy', 'description' => 'Use the STX Hosting Caddy integration.'],
                     ] as $proxyOption)
                         <button type="button" wire:click="selectProxy('{{ $proxyOption['value'] }}')"
                             class="rounded-lg p-4 text-left ring-1 ring-neutral-200 transition-colors hover:bg-neutral-50 dark:ring-white/[0.08] dark:hover:bg-white/[0.04]">

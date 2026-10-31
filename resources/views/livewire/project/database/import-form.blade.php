@@ -60,12 +60,12 @@
                 <div class="space-y-4">
             @if ($resourceDbType === 'standalone-postgresql' && $dumpAll)
                             <x-callout type="warning" title="Full restore runs as a superuser">
-                                Restoring all databases needs a PostgreSQL superuser (it recreates databases and roles), so Coolify cannot restrict it. Only use a backup you trust.
-                                <span class="mt-1 block">The backup also replaces PostgreSQL administrator role passwords, including the destination administrator password. If the administrator password changes, update it in Coolify's database configuration after the restore.</span>
+                                Restoring all databases needs a PostgreSQL superuser (it recreates databases and roles), so STX Hosting cannot restrict it. Only use a backup you trust.
+                                <span class="mt-1 block">The backup also replaces PostgreSQL administrator role passwords, including the destination administrator password. If the administrator password changes, update it in STX Hosting's database configuration after the restore.</span>
                             </x-callout>
             @endif
                             <x-forms.textarea rows="10" readonly label="Import command"
-                                helper="Coolify detects the backup format (SQL, archive, gzip, bz2, xz, zip, or tar) before it changes the database."
+                                helper="STX Hosting detects the backup format (SQL, archive, gzip, bz2, xz, zip, or tar) before it changes the database."
                                 wire:model="restoreCommandText" canGate="update"
                                 :canResource="$this->resource" />
                     @if ($resourceDbType !== 'standalone-sqlite')
@@ -96,15 +96,15 @@
                         </div>
                         @if ($restoreMysqlUsers)
                             <x-callout type="warning" title="Restoring users changes passwords">
-                                The backup replaces all users, passwords, and privileges, including the root password. After the next restart of the database, the passwords from the backup apply, so the credentials Coolify stores for this database, and its health check, may stop working.
-                                <span class="mt-1 block">Update the passwords in Coolify's database configuration after the restore.</span>
+                                The backup replaces all users, passwords, and privileges, including the root password. After the next restart of the database, the passwords from the backup apply, so the credentials STX Hosting stores for this database, and its health check, may stop working.
+                                <span class="mt-1 block">Update the passwords in STX Hosting's database configuration after the restore.</span>
                             </x-callout>
                         @endif
                     @endif
                     @if ($resourceDbType === 'standalone-sqlite' && count($this->sqliteDatabaseFiles) > 0)
                         <div class="max-w-sm">
                             <x-forms.listbox id="sqliteDatabase" label="Restore into" live
-                                helper="The database file the backup replaces. Coolify preselects the file named in the backup file name."
+                                helper="The database file the backup replaces. STX Hosting preselects the file named in the backup file name."
                                 :options="collect($this->sqliteDatabaseFiles)->map(fn ($file) => ['value' => $file, 'label' => $file])->all()"
                                 canGate="update" :canResource="$this->resource" />
                         </div>

@@ -181,7 +181,7 @@ class VultrController extends Controller
 
     #[OA\Post(
         summary: 'Create Vultr Server',
-        description: 'Create a Vultr instance and link it as a Coolify server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.',
+        description: 'Create a Vultr instance and link it as a STX Hosting server. A cloud-init script or extra SSH key IDs need a token with the deploy permission.',
         path: '/servers/vultr',
         operationId: 'create-vultr-server',
         security: [

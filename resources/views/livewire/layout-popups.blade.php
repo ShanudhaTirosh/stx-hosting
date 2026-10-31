@@ -37,7 +37,7 @@
                         if (checkNumber > 5) {
                             this.popups.realtime = true;
                             console.error(
-                                'Coolify could not connect to its real-time service. This will cause unusual problems on the UI if not fixed! Please check the related documentation (https://coolify.io/docs/knowledge-base/cloudflare/tunnels/overview) or get help on Discord (https://coollabs.io/discord).)'
+                                'STX Hosting could not connect to its real-time service. This will cause unusual problems on the UI if not fixed! Please check the related documentation (https://stxhosting.com/docs/knowledge-base/cloudflare/tunnels/overview) or get help on Discord (https://coollabs.io/discord).)'
                             );
                         }
 
@@ -112,7 +112,7 @@
                                     <p class="mt-1 text-[12px] leading-5 text-neutral-500 dark:text-fg-dim">
                                         This will cause unusual problems on the UI. Open the
                                         <a class="font-medium text-coollabs underline decoration-coollabs/30 underline-offset-2 transition-colors hover:text-coollabs-100 dark:text-brand-light dark:decoration-brand-light/30 dark:hover:text-brand-light/90"
-                                            href="https://coolify.io/docs/knowledge-base/server/firewall"
+                                            href="https://stxhosting.com/docs/knowledge-base/server/firewall"
                                             target="_blank" rel="noopener noreferrer">required ports</a>
                                         or get help on
                                         <a class="font-medium text-coollabs underline decoration-coollabs/30 underline-offset-2 transition-colors hover:text-coollabs-100 dark:text-brand-light dark:decoration-brand-light/30 dark:hover:text-brand-light/90"
@@ -124,7 +124,7 @@
 
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                                 <a target="_blank" rel="noopener noreferrer"
-                                    href="https://coolify.io/docs/knowledge-base/server/firewall"
+                                    href="https://stxhosting.com/docs/knowledge-base/server/firewall"
                                     class="button h-9 justify-center sm:min-w-28">
                                     View docs
                                 </a>
@@ -160,11 +160,11 @@
                             </div>
                             <div class="min-w-0">
                                 <h2 class="text-[15px]! leading-5! font-semibold! text-black dark:text-fg">
-                                    Love Coolify? Support our work.
+                                    Love STX Hosting? Support our work.
                                 </h2>
                                 <p x-show="!reminders.sponsorship.compact" x-transition.opacity
                                     class="mt-1 text-[12px] leading-5 text-neutral-500 dark:text-fg-dim">
-                                    Coolify is profitable thanks to <span
+                                    STX Hosting is profitable thanks to <span
                                         class="font-semibold text-coollabs dark:text-brand-light">you</span>. Your support
                                     helps us build more features and keep improving the project.
                                 </p>

@@ -15,7 +15,7 @@
                             <button type="button" wire:click="closeDnsProviderModal" class="icon-button" aria-label="Close"><x-reicon name="x" class="size-4" /></button>
                         </header>
                         <div class="application-settings-section-body flex flex-col gap-3">
-                            <p class="text-sm text-neutral-600 dark:text-fg-dim">Coolify matched each hostname to a zone available through your connected DNS credentials.</p>
+                            <p class="text-sm text-neutral-600 dark:text-fg-dim">STX Hosting matched each hostname to a zone available through your connected DNS credentials.</p>
                             @if (collect($dnsProviderProposals)->contains(fn (array $proposal): bool => blank($proposal['target'])))
                                 <x-callout type="warning" title="No public IP">{{ \App\Support\DnsRecordHints::NO_PUBLIC_ADDRESS_MESSAGE }}</x-callout>
                             @endif
@@ -26,13 +26,13 @@
                                         <div class="text-xs text-neutral-500 dark:text-fg-dim">{{ $proposal['credential'] }} · {{ $proposal['zone'] }}@if (filled($proposal['target'])) · {{ $proposal['target'] }}@endif</div>
                                     </div>
                                     @if ($proposal['managed'])
-                                        <x-status-badge status="Managed by Coolify" type="success" />
+                                        <x-status-badge status="Managed by STX Hosting" type="success" />
                                     @elseif (isset($dnsProviderConflicts[$key]))
                                         @php($conflict = $dnsProviderConflicts[$key])
                                         <div class="flex flex-col items-end gap-2 text-xs"><span class="text-red-600 dark:text-red-400">Currently {{ $conflict['current'] }}</span>
                                             <x-modal-confirmation title="Replace conflicting DNS record?" isErrorButton buttonTitle="Replace record"
                                                 submitAction="replaceManagedDnsRecord({{ $proposal['hostname'] }}, {{ $proposal['zone_id'] }})"
-                                                :actions="['Replace '.$proposal['hostname'].' value '.$conflict['current'].' with '.$conflict['proposed'], 'Coolify will manage the replaced record.']"
+                                                :actions="['Replace '.$proposal['hostname'].' value '.$conflict['current'].' with '.$conflict['proposed'], 'STX Hosting will manage the replaced record.']"
                                                 :confirmWithPassword="false" :confirmWithText="false" step2ButtonText="Replace record"
                                                 canGate="update" :canResource="$dnsAuthResource" />
                                         </div>

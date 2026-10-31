@@ -95,19 +95,19 @@
 </div>
 <script data-navigate-once>
 (function () {
-    if (window.__coolifyServerTimingHud) {
+    if (window.__stxServerTimingHud) {
         return;
     }
-    window.__coolifyServerTimingHud = true;
+    window.__stxServerTimingHud = true;
 
-    const STORAGE_KEY = 'coolify.serverTimingHud.open';
-    const ENABLED_STORAGE_KEY = 'coolify.serverTimingHud.enabled';
+    const STORAGE_KEY = 'stx.serverTimingHud.open';
+    const ENABLED_STORAGE_KEY = 'stx.serverTimingHud.enabled';
     const MAX_ENTRIES = 50;
     const MS_KEYS = new Set(['app', 'db', 'php', 'dbslow']);
 
     /** @type {Array<{id:number,at:number,path:string,method:string,kind:string,metrics:Record<string,number>}>} */
-    const history = window.__coolifyServerTimingHistory || (window.__coolifyServerTimingHistory = []);
-    let seq = window.__coolifyServerTimingSeq || 0;
+    const history = window.__stxServerTimingHistory || (window.__stxServerTimingHistory = []);
+    let seq = window.__stxServerTimingSeq || 0;
     let isOpen = localStorage.getItem(STORAGE_KEY) === '1';
 
     function qs(root, sel) {
@@ -463,9 +463,9 @@
         const position = index >= 0 ? (index + 1) + ' of ' + history.length + ' (newest first)' : 'n/a';
 
         const lines = [
-            '## Coolify Server-Timing debug dump',
+            '## STX Hosting Server-Timing debug dump',
             '',
-            'Use this to investigate a slow or expensive HTTP/Livewire response in Coolify (Laravel).',
+            'Use this to investigate a slow or expensive HTTP/Livewire response in STX Hosting (Laravel).',
             '',
             '### Selected request',
             '- **Captured at:** ' + new Date(entry.at).toISOString() + ' (local ' + formatTime(entry.at) + ')',
@@ -549,7 +549,7 @@
             '```',
             '',
             '### Notes for the assistant',
-            '- Values come from Coolify dev Server-Timing middleware (`app.server_timing`).',
+            '- Values come from STX Hosting dev Server-Timing middleware (`app.server_timing`).',
             '- `queries`/`html`/`mem` use Server-Timing `dur` as the metric value (not milliseconds for those three).',
             '- Client-side cost (Vite CSS/JS, paint, Livewire morph) is NOT included in `app`.',
             ''
@@ -629,7 +629,7 @@
         }
 
         seq += 1;
-        window.__coolifyServerTimingSeq = seq;
+        window.__stxServerTimingSeq = seq;
         history.unshift({
             id: seq,
             at: Date.now(),
@@ -840,8 +840,8 @@
         dockHud();
 
         // Document-level delegation survives Livewire morphs / HUD reinjection.
-        if (!window.__coolifyServerTimingClickBound) {
-            window.__coolifyServerTimingClickBound = true;
+        if (!window.__stxServerTimingClickBound) {
+            window.__stxServerTimingClickBound = true;
             document.addEventListener('click', (event) => {
                 const target = event.target;
                 if (!(target instanceof Element)) {
@@ -907,8 +907,8 @@
             }
         } catch (e) {}
 
-        if (!window.__coolifyServerTimingFetchPatched) {
-            window.__coolifyServerTimingFetchPatched = true;
+        if (!window.__stxServerTimingFetchPatched) {
+            window.__stxServerTimingFetchPatched = true;
             const originalFetch = window.fetch.bind(window);
             window.fetch = async function (...args) {
                 const meta = requestMeta(args);
@@ -923,8 +923,8 @@
             };
         }
 
-        if (!window.__coolifyServerTimingXhrPatched && window.XMLHttpRequest) {
-            window.__coolifyServerTimingXhrPatched = true;
+        if (!window.__stxServerTimingXhrPatched && window.XMLHttpRequest) {
+            window.__stxServerTimingXhrPatched = true;
             const open = XMLHttpRequest.prototype.open;
             const send = XMLHttpRequest.prototype.send;
             XMLHttpRequest.prototype.open = function (method, url) {
@@ -950,8 +950,8 @@
             };
         }
 
-        if (!window.__coolifyServerTimingNavBound) {
-            window.__coolifyServerTimingNavBound = true;
+        if (!window.__stxServerTimingNavBound) {
+            window.__stxServerTimingNavBound = true;
             const redock = () => {
                 dockHud();
                 paint();

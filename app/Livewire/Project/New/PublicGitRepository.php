@@ -92,7 +92,7 @@ class PublicGitRepository extends Component
     public function mount()
     {
         if (isDev()) {
-            $this->repository_url = 'https://github.com/coollabsio/coolify-examples/tree/main';
+            $this->repository_url = 'https://github.com/stx-enterprises/examples/tree/main';
             $this->port = 3000;
         }
         $this->parameters = get_route_parameters();

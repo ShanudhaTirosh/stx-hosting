@@ -103,7 +103,7 @@
                             <div>
                                 <h4 class="text-sm font-medium text-neutral-950 dark:text-fg">acme.json backups</h4>
                                 <p class="mt-1 text-xs text-neutral-500 dark:text-fg-dim">
-                                    Coolify saves a copy of acme.json before it changes the file and keeps the
+                                    STX Hosting saves a copy of acme.json before it changes the file and keeps the
                                     last {{ \App\Actions\Proxy\ListTraefikAcmeBackups::KEEP }} copies.
                                 </p>
                             </div>

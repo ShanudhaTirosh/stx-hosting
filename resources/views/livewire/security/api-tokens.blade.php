@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        API Tokens | Coolify
+        API Tokens | STX Hosting
     </x-slot>
 
     <x-security.settings-layout>
@@ -240,7 +240,7 @@
 
                         <x-client-pagination total="filteredTokens.length" x-cloak x-show="filteredTokens.length > 0"
                             summary="`${firstVisibleRow}-${lastVisibleRow} of ${filteredTokens.length}`"
-                            page-size-model="perPage" storage-key="coolify.page-size.api-tokens"
+                            page-size-model="perPage" storage-key="stx.page-size.api-tokens"
                             previous-action="goToPage(page - 1)" next-action="goToPage(page + 1)"
                             next-disabled="page >= lastPage" />
                     @endif

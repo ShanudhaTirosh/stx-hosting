@@ -123,7 +123,7 @@
                     <span>{{ match ($rowDirection) { 'www' => 'non-www → www', 'non-www' => 'www → non-www', default => 'Disabled' } }}</span>
                 </div>
                 <div class="service-domain-detail"
-                    title="{{ ($row['has_port_override'] ?? false) ? 'Custom internal port for this domain' : 'Inherited from the Coolify service port' }}">
+                    title="{{ ($row['has_port_override'] ?? false) ? 'Custom internal port for this domain' : 'Inherited from the STX Hosting service port' }}">
                     <span class="service-domain-detail-label">Internal port</span>
                     <span @if (filled($row['internal_port'] ?? null)) aria-label="Internal port {{ $row['internal_port'] }}" @endif>{{ $row['internal_port'] ?? '—' }}</span>
                 </div>
@@ -196,7 +196,7 @@
                                 submitAction="removeDomainByKey({{ $domainKey }})" :actions="[
                                     'This domain will be removed from the service application.',
                                     'Redeploy or restart may be required for proxy changes.',
-                                ]" :checkboxes="[['id' => 'deleteManagedDns', 'label' => 'Also delete the DNS record created by Coolify, if present.']]"
+                                ]" :checkboxes="[['id' => 'deleteManagedDns', 'label' => 'Also delete the DNS record created by STX Hosting, if present.']]"
                                 :confirmWithPassword="false" :confirmWithText="false"
                                 step2ButtonText="Remove domain">
                                 <x-slot:trigger>

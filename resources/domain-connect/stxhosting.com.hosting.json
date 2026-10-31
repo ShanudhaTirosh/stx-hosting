@@ -1,0 +1,23 @@
+{
+    "providerId": "stxhosting.com",
+    "providerName": "STX Hosting",
+    "serviceId": "hosting",
+    "serviceName": "STX Hosting",
+    "version": 1,
+    "logoUrl": "https://stxhosting.com/STKcdr.png",
+    "description": "Point your domain to an STX Hosting-managed server via an A record.",
+    "variableDescription": "ip is the STX Hosting server IP. host is the subdomain relative to the zone (empty for apex).",
+    "syncPubKeyDomain": "domainconnect.stxhosting.com",
+    "syncBlock": false,
+    "syncRedirect": false,
+    "sharedPath": "/settings/advanced",
+    "records": [
+        {
+            "type": "A",
+            "name": "%host%",
+            "pointsTo": "%ip%",
+            "ttl": 300
+        }
+    ]
+}
+

@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-PLAN-007`  
 **Version**: `1.0.0`  
 **Classification**: Technical Engineering & Project Execution Plan  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, Coolify Orchestration Engine (`coolify`), Infrastructure Hypervisors  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Customer Portal, Administrator Operations Console, STX Hosting Orchestration Engine (`coolify`), Infrastructure Hypervisors  
 **Author**: ShanuTechX Systems Engineering & Platform Operations Group  
 **Status**: Approved for Execution  
 
@@ -11,7 +11,7 @@
 
 ## 1. Executive Summary & Engineering Strategy
 
-The ShanuTechX commercial hosting platform synthesizes an enterprise-grade Coolify v4 control plane, an existing high-performance Next.js 14 marketing storefront (`web`), a real-time Next.js 15 multi-protocol uptime probe engine (`status`), and a purpose-built Commerce & Orchestration Gateway into a unified cloud hosting provider.
+The ShanuTechX commercial hosting platform synthesizes an enterprise-grade STX Hosting v4 control plane, an existing high-performance Next.js 14 marketing storefront (`web`), a real-time Next.js 15 multi-protocol uptime probe engine (`status`), and a purpose-built Commerce & Orchestration Gateway into a unified cloud hosting provider.
 
 To ensure the fastest and most secure path to commercial monetization while maintaining strict infrastructural isolation and zero financial leakage, this implementation plan executes across four sequential, verifiable phases:
 
@@ -33,8 +33,8 @@ To ensure the fastest and most secure path to commercial monetization while main
   └─ Idempotent Decommissioning & Cryptographic Node Sanitization
        │
        ▼
-  PHASE 3: Coolify PaaS Application Hosting Orchestration & Quota Enforcement
-  ├─ Coolify REST API Client Wrapper & Token Scoping
+  PHASE 3: STX Hosting PaaS Application Hosting Orchestration & Quota Enforcement
+  ├─ STX Hosting REST API Client Wrapper & Token Scoping
   ├─ Multi-Tenant Abstraction Layer & Docker cgroups Quota Injection
   ├─ Automated Git/Image Application & Standalone Database Provisioning
   └─ Domain Routing, Let's Encrypt SSL & Health Monitoring
@@ -234,16 +234,16 @@ Phase 2 activates the manual VPS hosting product line. Aligned with the storefro
 
 ---
 
-## 4. Phase 3: Coolify PaaS Application Hosting Orchestration & Quota Enforcement
+## 4. Phase 3: STX Hosting PaaS Application Hosting Orchestration & Quota Enforcement
 
 ### 4.1 Objectives & Scope
-Phase 3 integrates the root Coolify v4 control plane as the orchestration engine for containerized Web Application Hosting and Managed Databases. By implementing a secure Platform Abstraction Layer, the platform provisions isolated containers with hardware cgroups quotas without exposing Coolify root tokens or Docker sockets to customers.
+Phase 3 integrates the root STX Hosting v4 control plane as the orchestration engine for containerized Web Application Hosting and Managed Databases. By implementing a secure Platform Abstraction Layer, the platform provisions isolated containers with hardware cgroups quotas without exposing STX Hosting root tokens or Docker sockets to customers.
 
 ### 4.2 Work Breakdown Structure (WBS)
 
-#### Milestone 3.1: Coolify API Client & Token Management
-- **Task 3.1.1**: Implement `App\Services\Coolify\CoolifyApiClient`:
-  - Internal HTTP client communicating with `http://127.0.0.1:8000/api/v1` or external Coolify host.
+#### Milestone 3.1: STX Hosting API Client & Token Management
+- **Task 3.1.1**: Implement `App\Services\STX Hosting\STX HostingApiClient`:
+  - Internal HTTP client communicating with `http://127.0.0.1:8000/api/v1` or external STX Hosting host.
   - Authenticated via dedicated Laravel Sanctum API Token with `write` and `deploy` abilities bound to master management team.
   - Structured methods for all verified endpoints:
     - `createPublicApplication(array $payload)`
@@ -257,7 +257,7 @@ Phase 3 integrates the root Coolify v4 control plane as the orchestration engine
 - **Task 3.1.2**: Implement error handling and rate-limiting wrapper catching HTTP 409 (domain conflicts) and HTTP 422 (validation errors).
 
 #### Milestone 3.2: Multi-Tenant Abstraction & Resource Quotas
-- **Task 3.2.1**: Map hosting plans to Coolify Docker limits:
+- **Task 3.2.1**: Map hosting plans to STX Hosting Docker limits:
   | Plan Name | RAM (`limits_memory`) | Swap (`limits_memory_swap`) | CPU (`limits_cpus`) | CPU Shares (`limits_cpu_shares`) |
   |---|---|---|---|---|
   | **Basic App** | `512m` | `256m` | `0.5` | `512` |
@@ -265,7 +265,7 @@ Phase 3 integrates the root Coolify v4 control plane as the orchestration engine
   | **Pro App** | `2048m` | `1024m` | `2.0` | `2048` |
   | **Enterprise App**| `4096m` | `2048m` | `4.0` | `4096` |
 - **Task 3.2.2**: Implement `ProvisionApplicationJob`:
-  - Allocates dedicated project and environment in Coolify: `Customer-{user_id}`.
+  - Allocates dedicated project and environment in STX Hosting: `Customer-{user_id}`.
   - Injects target destination UUID on managed deployment server.
   - Sets `limits_memory`, `limits_cpus`, `ports_exposes`, and custom environment variables.
   - Triggers initial build via `POST /api/v1/deploy`.
@@ -277,7 +277,7 @@ Phase 3 integrates the root Coolify v4 control plane as the orchestration engine
   - Environment variables editor: Key-value table with `is_shown_once` (write-only secrets) flag.
   - Real-time build log streaming via Server-Sent Events (SSE) polling `GET /api/v1/deployments/{uuid}`.
 - **Task 3.3.2**: Implement Application Lifecycle controls:
-  - Restart, Stop, Start buttons invoking backend endpoints that call Coolify API.
+  - Restart, Stop, Start buttons invoking backend endpoints that call STX Hosting API.
 
 #### Milestone 3.4: Managed Standalone Databases & Backups
 - **Task 3.4.1**: Implement `ProvisionDatabaseJob`:
@@ -292,11 +292,11 @@ Phase 3 integrates the root Coolify v4 control plane as the orchestration engine
 #### Milestone 3.5: Custom Domains & Traefik Automated SSL
 - **Task 3.5.1**: Implement domain management endpoint `POST /api/v1/services/{uuid}/domains`:
   - Validates FQDN syntax using `ValidHostname` rule.
-  - Resolves DNS A/CNAME record to verify customer pointed their domain to the cluster ingress IP before updating Coolify.
-  - Updates `domains` attribute on Coolify application; Traefik issues Let's Encrypt certificate automatically.
+  - Resolves DNS A/CNAME record to verify customer pointed their domain to the cluster ingress IP before updating STX Hosting.
+  - Updates `domains` attribute on STX Hosting application; Traefik issues Let's Encrypt certificate automatically.
 
 ### 4.3 Phase 3 Deliverables & Exit Criteria
-- [x] Platform backend successfully communicates with Coolify REST API using Sanctum tokens.
+- [x] Platform backend successfully communicates with STX Hosting REST API using Sanctum tokens.
 - [x] Customer order for Web Hosting automatically provisions an isolated container with exact cgroups memory and CPU limits.
 - [x] Application Git builds execute and stream logs to the customer dashboard.
 - [x] Managed databases deploy with randomized credentials and automated S3 backups.
@@ -345,7 +345,7 @@ Phase 4 scales the platform into a fully automated, elastic cloud provider. It i
   - `hosting:send-payment-reminders`: Dispatches reminder emails 3 days, 1 day before due date, and on due date (or expiration reminders for fixed terms).
   - `hosting:process-suspensions`: Runs daily at 02:00 UTC. Identifies overdue invoices or expired fixed terms past grace period:
     - Suspends VPS (powers off VM via Hetzner API `powerOffServer` or Proxmox QM).
-    - Suspends Application (stops container via Coolify API).
+    - Suspends Application (stops container via STX Hosting API).
     - Transitions service status to `'suspended'`.
   - `hosting:process-terminations`: Runs daily at 03:00 UTC. Identifies services suspended for >7 days:
     - Initiates cryptographic disk wipe and deletes Hetzner VM or Proxmox container.
@@ -384,7 +384,7 @@ Phase 4 scales the platform into a fully automated, elastic cloud provider. It i
                             │
        ┌────────────────────┴────────────────────┐
        ▼                                         ▼
-[Phase 3: Coolify API Wrapper]         [Phase 4: Hetzner API Integration]
+[Phase 3: STX Hosting API Wrapper]         [Phase 4: Hetzner API Integration]
        │                                         │
 [Phase 3: Container Quotas & SSL]      [Phase 4: Stripe / Gateway Webhooks]
        │                                         │
@@ -403,7 +403,7 @@ Phase 4 scales the platform into a fully automated, elastic cloud provider. It i
 7. **Day 7**: Customer Portal Service View & Welcome Email Dispatch.
 8. **Day 8**: Status Platform Probes Integration.
 9. **Day 9**: Manual VPS Fulfillment End-to-End Test.
-10. **Day 10**: Coolify REST Client & cgroups Quota Enforcement.
+10. **Day 10**: STX Hosting REST Client & cgroups Quota Enforcement.
 11. **Day 11**: App Deployment & Managed Database Backups.
 12. **Day 12**: Hetzner API Automation & Stripe Webhooks.
 13. **Day 13**: End-to-End Regression & Security Penetration Testing.
@@ -422,7 +422,7 @@ Phase 4 scales the platform into a fully automated, elastic cloud provider. It i
 | **Phase 2** | VPS Inventory | Unallocated nodes sit in `available`; allocation locks node and transitions to `allocated`. | Systems Engineer |
 | **Phase 2** | Customer Portal | Customer can view assigned IP, connection string, and reveal credentials securely. | Product Manager |
 | **Phase 2** | Status Probing | Active VPS automatically appears in `status/data/status.db` with active TCP port 22 monitoring. | SRE Lead |
-| **Phase 3** | Coolify PaaS | Applications deploy with correct `--memory` and `--cpus` limits verified via `docker inspect`. | Systems Architect |
+| **Phase 3** | STX Hosting PaaS | Applications deploy with correct `--memory` and `--cpus` limits verified via `docker inspect`. | Systems Architect |
 | **Phase 3** | Managed DBs | PostgreSQL/MySQL provisioned with random 32-char passwords and automated S3 backup schedules. | DB Administrator |
 | **Phase 4** | Hetzner API | Zero-touch VM creation completes in <120s with injected customer SSH key and QEMU agent. | Cloud Architect |
 | **Phase 4** | Payment Gateways | Stripe webhook activates invoice atomically and triggers provisioning queue. | Financial Controller |

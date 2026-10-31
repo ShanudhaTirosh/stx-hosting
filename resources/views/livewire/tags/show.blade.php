@@ -1,6 +1,6 @@
 <div class="application-settings-form w-full">
     <x-slot:title>
-        Tags | Coolify
+        Tags | STX Hosting
     </x-slot>
 
     <header @class([
@@ -119,7 +119,7 @@
                 </div>
                 <x-client-pagination total="filteredTags.length" x-show="filteredTags.length > 0" class="mt-3 rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-white/[0.08] dark:bg-white/[0.05]"
                     summary="`${rangeStart}-${rangeEnd} of ${filteredTags.length}`" page-size-model="pageSize"
-                    storage-key="coolify.page-size.tags" :options="[12, 24, 48, 96]" />
+                    storage-key="stx.page-size.tags" :options="[12, 24, 48, 96]" />
             </div>
 
             <div x-show="viewMode === 'table'"
@@ -155,7 +155,7 @@
                 </template>
                 <x-client-pagination total="filteredTags.length" x-show="filteredTags.length > 0"
                     summary="`${rangeStart}-${rangeEnd} of ${filteredTags.length}`" page-size-model="pageSize"
-                    storage-key="coolify.page-size.tags" :options="[12, 24, 48, 96]" />
+                    storage-key="stx.page-size.tags" :options="[12, 24, 48, 96]" />
             </div>
 
             <div x-show="filteredTags.length === 0"

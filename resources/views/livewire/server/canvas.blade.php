@@ -1,6 +1,6 @@
 <div class="flex h-full flex-col">
     <x-slot:title>
-        {{ $server ? $server->name.' > Canvas' : 'Servers > Canvas' }} | Coolify
+        {{ $server ? $server->name.' > Canvas' : 'Servers > Canvas' }} | STX Hosting
     </x-slot>
     @if ($server)
         {{-- Status, proxy actions and the server name dock in the top bar. --}}

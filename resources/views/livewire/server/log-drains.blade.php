@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ data_get_str($server, 'name')->limit(10) }} > Log Drains | Coolify
+        {{ data_get_str($server, 'name')->limit(10) }} > Log Drains | STX Hosting
     </x-slot>
 
     <livewire:server.navbar :server="$server" />
@@ -70,7 +70,7 @@
                         </div>
                     </x-application.settings-section>
                     <x-application.settings-section id="server-cloudwatch-drain-section" title="Amazon CloudWatch Logs"
-                        helper="Send container logs directly to CloudWatch Logs using the Docker awslogs logging driver.<br><br>AWS credentials are read by the Docker daemon on this server, not by Coolify. Attach an IAM instance role, or configure <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> for the Docker service or in <code>/root/.aws/credentials</code>.<br><br>The credentials need <code>logs:CreateLogStream</code> and <code>logs:PutLogEvents</code>, plus <code>logs:CreateLogGroup</code> if the log group does not exist yet.<br><br>Delivery errors do not stop containers; they appear in the Docker daemon logs (<code>journalctl -u docker</code>). Redeploy or restart resources to apply the logging driver.">
+                        helper="Send container logs directly to CloudWatch Logs using the Docker awslogs logging driver.<br><br>AWS credentials are read by the Docker daemon on this server, not by STX Hosting. Attach an IAM instance role, or configure <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> for the Docker service or in <code>/root/.aws/credentials</code>.<br><br>The credentials need <code>logs:CreateLogStream</code> and <code>logs:PutLogEvents</code>, plus <code>logs:CreateLogGroup</code> if the log group does not exist yet.<br><br>Delivery errors do not stop containers; they appear in the Docker daemon logs (<code>journalctl -u docker</code>). Redeploy or restart resources to apply the logging driver.">
                         <div class="mb-4 max-w-sm">
                             <x-forms.listbox canGate="update" :canResource="$server" id="isLogDrainCloudwatchEnabled" label="Status"
                                 onChange="instantSave" :options="[
@@ -81,7 +81,7 @@
                         </div>
                         <div class="grid gap-4 lg:grid-cols-3">
                             <x-forms.input canGate="update" :canResource="$server" :required="$isLogDrainCloudwatchEnabled"
-                                id="logDrainCloudwatchGroup" label="Log group" placeholder="/coolify/production"
+                                id="logDrainCloudwatchGroup" label="Log group" placeholder="/stx/production"
                                 :disabled="$server->isLogDrainEnabled()" />
                             <x-forms.input canGate="update" :canResource="$server"
                                 id="logDrainCloudwatchStreamPrefix" label="Log stream prefix" placeholder="docker/"

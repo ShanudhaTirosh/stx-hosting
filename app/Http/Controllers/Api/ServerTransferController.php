@@ -29,7 +29,7 @@ class ServerTransferController extends Controller
     ) {}
 
     #[OA\Post(
-        summary: 'Migrate server to another Coolify instance',
+        summary: 'Migrate server to another STX Hosting instance',
         description: 'Start a transfer in the background: export this server, import and claim it on the target instance (with the given token), then disable automations here. All secrets of the server, also locked environment variables, are sent to the target. Follow the progress with GET /servers/{uuid}/transfer. The target URL must use https. Requires read:sensitive and write, and the owner role of the server team.',
         path: '/servers/{uuid}/migrate',
         operationId: 'migrate-server-between-instances',
@@ -43,7 +43,7 @@ class ServerTransferController extends Controller
             content: new OA\JsonContent(
                 required: ['target_url', 'target_token'],
                 properties: [
-                    new OA\Property(property: 'target_url', type: 'string', example: 'https://coolify-b.example.com'),
+                    new OA\Property(property: 'target_url', type: 'string', example: 'https://panel-b.stxhosting.com'),
                     new OA\Property(property: 'target_token', type: 'string', description: 'API token on the target instance (root or write)'),
                 ]
             )
@@ -276,7 +276,7 @@ class ServerTransferController extends Controller
 
     #[OA\Post(
         summary: 'Import server transfer bundle',
-        description: 'Import a server transfer bundle into this Coolify instance (adopt mode by default). This instance then manages the server, and Sentinel reports to it. Needs a token with the write and deploy permissions.',
+        description: 'Import a server transfer bundle into this STX Hosting instance (adopt mode by default). This instance then manages the server, and Sentinel reports to it. Needs a token with the write and deploy permissions.',
         path: '/servers/import',
         operationId: 'import-server-transfer-bundle',
         security: [['bearerAuth' => []]],

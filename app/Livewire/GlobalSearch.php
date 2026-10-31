@@ -910,14 +910,14 @@ class GlobalSearch extends Component
                 [
                     'name' => 'Update Settings',
                     'type' => 'navigation',
-                    'description' => 'Configure Coolify auto updates',
+                    'description' => 'Configure STX Hosting auto updates',
                     'link' => route('settings.updates'),
                     'search_text' => 'settings updates auto update upgrade version frequency',
                 ],
                 [
                     'name' => 'Instance Backup',
                     'type' => 'navigation',
-                    'description' => 'Back up the Coolify instance database',
+                    'description' => 'Back up the STX Hosting instance database',
                     'link' => route('settings.backup'),
                     'search_text' => 'settings instance backup coolify database restore',
                 ],

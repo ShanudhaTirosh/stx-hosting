@@ -25,7 +25,7 @@
                 wire:key="registry-password-token" />
         @endif
         <p class="text-[12px] text-neutral-500 dark:text-fg-dim">
-            Coolify does not save the token. Docker saves the login on the server in
+            STX Hosting does not save the token. Docker saves the login on the server in
             <code>~/.docker/config.json</code>, encoded but not encrypted.
         </p>
         <div class="flex justify-end">

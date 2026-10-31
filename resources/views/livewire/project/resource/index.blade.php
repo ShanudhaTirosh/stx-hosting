@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ data_get_str($environment, 'name')->limit(10) }} > Resources | Coolify
+        {{ data_get_str($environment, 'name')->limit(10) }} > Resources | STX Hosting
     </x-slot>
     <div x-data="resourceIndex()" class="w-full">
         <header class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -265,7 +265,7 @@
                 </div>
                 <x-client-pagination total="filteredResources.length" x-show="filteredResources.length > 0"
                     summary="filteredResources.length === 0 ? '0 resources' : `${rangeStart}-${rangeEnd} of ${filteredResources.length}`"
-                    page-size-model="pageSize" storage-key="coolify.page-size.environment-resources" />
+                    page-size-model="pageSize" storage-key="stx.page-size.environment-resources" />
             </div>
 
             <div x-cloak x-show="viewMode === 'grid'">
@@ -323,7 +323,7 @@
                 <x-client-pagination total="filteredResources.length" x-show="filteredResources.length > 0"
                     class="mt-3 rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-white/[0.08] dark:bg-white/[0.05]"
                     summary="filteredResources.length === 0 ? '0 resources' : `${rangeStart}-${rangeEnd} of ${filteredResources.length}`"
-                    page-size-model="pageSize" storage-key="coolify.page-size.environment-resources" />
+                    page-size-model="pageSize" storage-key="stx.page-size.environment-resources" />
             </div>
         @endif
     </div>

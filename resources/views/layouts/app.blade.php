@@ -19,14 +19,14 @@
                         this.sidebarReady = true;
                     });
                 });
-                if (!window.__coolifyMarkScrolled) {
-                    window.__coolifyMarkScrolled = () => {
+                if (!window.__stxMarkScrolled) {
+                    window.__stxMarkScrolled = () => {
                         document.documentElement.classList.toggle('is-scrolled', window.scrollY > 2);
                     };
-                    window.addEventListener('scroll', window.__coolifyMarkScrolled, { passive: true });
-                    document.addEventListener('livewire:navigated', () => requestAnimationFrame(window.__coolifyMarkScrolled));
+                    window.addEventListener('scroll', window.__stxMarkScrolled, { passive: true });
+                    document.addEventListener('livewire:navigated', () => requestAnimationFrame(window.__stxMarkScrolled));
                 }
-                window.__coolifyMarkScrolled();
+                window.__stxMarkScrolled();
             },
             toggleSidebar() {
                 this.collapsed = !this.collapsed;

@@ -183,7 +183,7 @@
                         wire-target="previousPage,nextPage" previous-action="previousPage" next-action="nextPage">
                         <x-slot:pageSize>
                             <x-page-size-select model="perPage" livewire
-                                storage-key="coolify.page-size.volume-backup-executions" />
+                                storage-key="stx.page-size.volume-backup-executions" />
                         </x-slot:pageSize>
                     </x-table-pagination>
                 </div>

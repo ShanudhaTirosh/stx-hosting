@@ -1,6 +1,6 @@
 <div class="h-full">
     <x-slot:title>
-        Deploy canvas | Coolify
+        Deploy canvas | STX Hosting
     </x-slot>
     {{-- The app's icons, cloned by resources/js/canvas/deploy/Icon.svelte. --}}
     <template data-deploy-canvas-icons>
@@ -21,7 +21,7 @@
     <div class="absolute">
         <x-modal-confirmation title="Reset the canvas?" submitAction="deploy-canvas-reset" dispatchAction
             :confirmWithText="false" :confirmWithPassword="false" step2ButtonText="Reset"
-            warningMessage="Your steps and their settings are removed from the canvas. Resources that you already deployed stay in Coolify."
+            warningMessage="Your steps and their settings are removed from the canvas. Resources that you already deployed stay in STX Hosting."
             :actions="['Remove every step from the canvas.']">
             <x-slot:trigger>
                 <button id="deploy-canvas-reset-trigger" type="button" class="hidden" aria-hidden="true"></button>

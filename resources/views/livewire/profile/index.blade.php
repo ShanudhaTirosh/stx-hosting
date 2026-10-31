@@ -6,7 +6,7 @@
     },
 }"
     @close-email-change-modal.window="emailModalOpen = false">
-    <x-slot:title>Profile | Coolify</x-slot>
+    <x-slot:title>Profile | STX Hosting</x-slot>
     <div class="mt-8 flex w-full max-w-none flex-col gap-6 lg:mt-3">
 
         <form wire:submit="submit">
@@ -309,7 +309,7 @@
                 <x-danger-zone title="Delete account">
                     @if ($accountDeletionBlockers === [])
                         <p>
-                            Permanently delete your account from Coolify. This action cannot be undone.
+                            Permanently delete your account from STX Hosting. This action cannot be undone.
                         </p>
                         <ul class="space-y-1 text-xs">
                             <li>• Teams where you are the only member are deleted.</li>

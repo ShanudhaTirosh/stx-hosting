@@ -15,7 +15,7 @@
     <form x-show="activeSection === 'general'" wire:submit="submit" class="application-settings-form flex flex-col">
         <x-unsaved-bar action="submit" />
         <x-application.settings-section id="task-configuration-section" title="Task configuration"
-            helper="Configure when this task runs and which command Coolify executes.">
+            helper="Configure when this task runs and which command STX Hosting executes.">
             <x-slot:actions>
                 @if ($resource->isRunning())
                     @can('update', $resource)

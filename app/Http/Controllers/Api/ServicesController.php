@@ -323,7 +323,7 @@ class ServicesController extends Controller
                                 type: 'object',
                                 properties: [
                                     'name' => ['type' => 'string', 'description' => 'The service name as defined in docker-compose.'],
-                                    'url' => ['type' => 'string', 'description' => 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io").'],
+                                    'url' => ['type' => 'string', 'description' => 'Comma-separated list of URLs (e.g. "https://app.stxhosting.com,https://app2.stxhosting.com").'],
                                 ],
                             ),
                         ],
@@ -1071,9 +1071,9 @@ class ServicesController extends Controller
         $this->authorize('delete', $service);
 
         // The parameter was removed. Reject it instead of ignoring it, so old clients do not delete Docker resources they asked to keep.
-        if ($request->boolean('delete_from_coolify_only')) {
+        if ($request->boolean('delete_from_stx_only')) {
             return response()->json([
-                'message' => 'The delete_from_coolify_only parameter is no longer supported. Nothing was deleted. Send the request without it: Coolify removes the service also when the server is not reachable.',
+                'message' => 'The delete_from_stx_only parameter is no longer supported. Nothing was deleted. Send the request without it: Coolify removes the service also when the server is not reachable.',
             ], 422);
         }
 
@@ -1137,7 +1137,7 @@ class ServicesController extends Controller
                                     type: 'object',
                                     properties: [
                                         'name' => ['type' => 'string', 'description' => 'The service name as defined in docker-compose.'],
-                                        'url' => ['type' => 'string', 'description' => 'Comma-separated list of URLs (e.g. "https://app.coolify.io,https://app2.coolify.io").'],
+                                        'url' => ['type' => 'string', 'description' => 'Comma-separated list of URLs (e.g. "https://app.stxhosting.com,https://app2.stxhosting.com").'],
                                     ],
                                 ),
                             ],
@@ -2724,7 +2724,7 @@ class ServicesController extends Controller
             }
 
             if ($request->filled('content')) {
-                $forbidden = $this->deployAbilityForbiddenResponse($request, 'Coolify writes the file content on the server immediately, so it needs a token with the deploy permission.');
+                $forbidden = $this->deployAbilityForbiddenResponse($request, 'STX Hosting writes the file content on the server immediately, so it needs a token with the deploy permission.');
                 if ($forbidden) {
                     return $forbidden;
                 }

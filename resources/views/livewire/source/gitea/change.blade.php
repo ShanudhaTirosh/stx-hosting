@@ -1,6 +1,6 @@
 <div>
     <x-slot:title>
-        {{ $name ?: 'Gitea App' }} | Sources | Coolify
+        {{ $name ?: 'Gitea App' }} | Sources | STX Hosting
     </x-slot>
 
     @if ($isConnected)
@@ -44,13 +44,13 @@
                     @if (! isCloud())
                         <div class="lg:col-span-2 max-w-xs">
                             <x-forms.checkbox canGate="update" :canResource="$gitea_app" label="System wide"
-                                helper="If checked, this Gitea App will be available for everyone in this Coolify instance."
+                                helper="If checked, this Gitea App will be available for everyone in this STX Hosting instance."
                                 instantSave id="isSystemWide" />
                         </div>
                         @if ($isSystemWide)
                             <div class="lg:col-span-2">
                                 <x-callout type="warning" title="Shared with every team">
-                                    System-wide Gitea Apps are shared across all teams on this Coolify instance. Prefer team-specific apps when you need repository isolation.
+                                    System-wide Gitea Apps are shared across all teams on this STX Hosting instance. Prefer team-specific apps when you need repository isolation.
                                 </x-callout>
                             </div>
                         @endif
@@ -71,7 +71,7 @@
             </x-application.settings-section>
 
             <x-application.settings-section id="connection-section" title="Connection"
-                helper="OAuth credentials and the endpoints Coolify uses to reach this source.">
+                helper="OAuth credentials and the endpoints STX Hosting uses to reach this source.">
                 <x-application.settings-subsection first title="OAuth credentials"
                     helper="Client credentials from your Gitea OAuth2 application.">
                     <div class="grid gap-4 lg:grid-cols-2">
@@ -235,7 +235,7 @@
                     @if (! isCloud() || isDev())
                         <div class="mt-4 grid gap-4 lg:grid-cols-2">
                             <div class="lg:col-span-2 text-[12px] text-neutral-500 dark:text-fg-dim">
-                                Gitea will redirect back to this Coolify URL. It must match the Redirect URI on your Gitea OAuth2 application exactly.
+                                Gitea will redirect back to this STX Hosting URL. It must match the Redirect URI on your Gitea OAuth2 application exactly.
                             </div>
                             <div class="lg:col-span-2 max-w-md">
                                 <x-forms.listbox id="use_custom_webhook_endpoint" label="Webhook endpoint"
@@ -244,7 +244,7 @@
                                         ['value' => true, 'label' => 'Use a custom endpoint'],
                                     ]"
                                     x-model="useCustomWebhookEndpoint"
-                                    helper="Use a custom public URL when Coolify is behind a tunnel or reverse proxy." />
+                                    helper="Use a custom public URL when STX Hosting is behind a tunnel or reverse proxy." />
                             </div>
                             <div class="lg:col-span-2" x-show="!useCustomWebhookEndpoint">
                                 <x-forms.listbox id="webhook_endpoint" x-model="webhookEndpoint"
@@ -259,7 +259,7 @@
                             <div class="lg:col-span-2" x-cloak x-show="useCustomWebhookEndpoint">
                                 <x-forms.input x-model="customWebhookEndpoint" id="custom_webhook_endpoint"
                                     type="url" label="Custom endpoint"
-                                    placeholder="https://coolify.example.com"
+                                    placeholder="https://panel.stxhosting.com"
                                     helper="Gitea will use this custom public URL. Do not include /webhooks." />
                             </div>
                         </div>
@@ -285,7 +285,7 @@
                             @if (! isCloud())
                                 <div class="max-w-xs lg:col-span-2">
                                     <x-forms.checkbox label="System wide" id="isSystemWide"
-                                        helper="If checked, this Gitea App will be available for everyone in this Coolify instance." />
+                                        helper="If checked, this Gitea App will be available for everyone in this STX Hosting instance." />
                                 </div>
                             @endif
                         </div>
@@ -295,7 +295,7 @@
 
             @if ($clientId)
                 <x-application.settings-section title="Step 3 · Authorize with Gitea"
-                    description="Authorize Coolify with your Gitea instance. The redirect URI must match the one configured in Gitea.">
+                    description="Authorize STX Hosting with your Gitea instance. The redirect URI must match the one configured in Gitea.">
                     <a href="{{ $this->getOAuthUrl() }}" wire:key="oauth-url-{{ md5((string) $redirectUri) }}"
                         class="button button-highlighted">
                         Connect to Gitea

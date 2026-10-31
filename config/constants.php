@@ -34,8 +34,8 @@ return [
     ],
 
     'urls' => [
-        'docs' => 'https://coolify.io/docs',
-        'contact' => 'https://coolify.io/docs/contact',
+        'docs' => 'https://docs.stxhosting.com',
+        'contact' => 'https://stxhosting.com/contact',
     ],
 
     'services' => [

@@ -23,7 +23,7 @@ $serverListboxOptions = array_merge(
 ?>
 <div class="flex w-full min-w-0 flex-col gap-6">
     <x-slot:title>
-        Metrics | Coolify
+        Metrics | STX Hosting
     </x-slot>
 
     {{-- Header --}}
@@ -113,7 +113,7 @@ $serverListboxOptions = array_merge(
                             <div class="flex flex-wrap items-center gap-x-2 text-[10px] text-neutral-500 dark:text-fg-dim">
                                 <span>{{ $sHealthy }} healthy</span>
                                 @if ($sAttention > 0)<span class="text-orange-500 dark:text-warning">{{ $sAttention }} attention</span>@endif
-                                @if ($sNoMetrics > 0)<span title="Coolify can reach these servers, but Sentinel did not return current metrics.">{{ $sNoMetrics }} no metrics</span>@endif
+                                @if ($sNoMetrics > 0)<span title="STX Hosting can reach these servers, but Sentinel did not return current metrics.">{{ $sNoMetrics }} no metrics</span>@endif
                                 @if ($sOffline > 0)<span class="text-red-500 dark:text-red-400">{{ $sOffline }} offline</span>@endif
                             </div>
                         </div>
@@ -263,7 +263,7 @@ $serverListboxOptions = array_merge(
                                 @if (! $row['online'])
                                     <span class="table-badge table-badge-warning shrink-0">Offline</span>
                                 @elseif (! $row['reporting'])
-                                    <span class="table-badge shrink-0" title="Coolify can reach this server, but Sentinel did not return current metrics.">No metrics</span>
+                                    <span class="table-badge shrink-0" title="STX Hosting can reach this server, but Sentinel did not return current metrics.">No metrics</span>
                                 @endif
                             </div>
                             <div>@include('livewire.fleet._usage-cell', ['percent' => $row['cpu'], 'kind' => 'cpu'])</div>

@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-WORKFLOWS-005`  
 **Version**: `1.0.0`  
 **Classification**: Engineering & Operations Specification  
-**Target Systems**: ShanuTechX Storefront (`web`), Customer Portal (`:3001`), Administrator Operations Console, Coolify Orchestration Engine (`:8000`), Status Platform (`status`)  
+**Target Systems**: ShanuTechX Storefront (`web`), Customer Portal (`:3001`), Administrator Operations Console, STX Hosting Orchestration Engine (`:8000`), Status Platform (`status`)  
 **Author**: Systems Architecture & Workflow Engineering Group  
 **Status**: Approved for Implementation  
 
@@ -15,14 +15,14 @@ This specification formalizes the business workflows, deterministic state machin
 1. **Public Storefront (`web`)** — Next.js 14 marketing, catalog browsing, and dynamic pricing display (`/vps`, `/app-hosting`, `/databases`, `/pricing`).
 2. **Customer Portal (`NEXT_PUBLIC_DASHBOARD_URL` / `localhost:3001`)** — Authenticated client space for checkout, order tracking, invoice payment, manual payment proof submission, and self-service infrastructure controls.
 3. **Administrator Operations Console** — Authenticated management plane for dual-control payment verification, manual and automated VPS inventory provisioning, customer lifecycle governance, and audit compliance.
-4. **Coolify Orchestration Engine & Hypervisors (`:8000`)** — Laravel 12 backend executing containerized PaaS deployments, SSH execution, cloud API integrations (Hetzner Cloud via `HetznerService.php`), and automated hardware sanitization.
+4. **STX Hosting Orchestration Engine & Hypervisors (`:8000`)** — Laravel 12 backend executing containerized PaaS deployments, SSH execution, cloud API integrations (Hetzner Cloud via `HetznerService.php`), and automated hardware sanitization.
 5. **ShanuTechX Status Platform (`status`)** — Next.js 15 multi-protocol telemetry daemon (HTTP/TCP/ICMP) tracking active infrastructure health and publishing public uptime metrics.
 
 ### 1.1 Core Architectural Invariants
 - **Zero Unverified Provisioning**: No compute instance, VPS slice, or container deployment may transition to `provisioning` or `active` without a cryptographically verified or administratively reconciled `paid` invoice.
 - **ACID Financial Transactions**: All order creations, invoice settlements, inventory allocations, and payment proof status changes must execute inside isolated database transactions (`DB::transaction`) utilizing row-level pessimistic locking (`SELECT ... FOR UPDATE`).
 - **Idempotent Operations**: All provisioning, de-provisioning, suspension, and wipe workers must be fully idempotent. Re-executing an active job must produce identical end-state infrastructure without duplicate resource allocation or data loss.
-- **Strict Separation of Planes**: Customer credentials, public SSH keys, and payment slips must never expose underlying hypervisor management credentials, root keys, or Coolify administrative API tokens.
+- **Strict Separation of Planes**: Customer credentials, public SSH keys, and payment slips must never expose underlying hypervisor management credentials, root keys, or STX Hosting administrative API tokens.
 
 ---
 
@@ -191,8 +191,8 @@ Immediately upon `invoices.status = 'paid'`, the system triggers `DispatchProvis
    - Verifies whether server already exists via `getServers(['name' => $serverName])` before calling `createServer()` to ensure strict idempotency on job retries.
    - Generates dynamic cloud-init payload injecting user data, hostname, authorized SSH keys, UFW firewall rules, and `qemu-guest-agent`.
    - Polls Hetzner API action until status is `running` and captures assigned public IPv4 and IPv6 block.
-5. **Phase 3: Coolify PaaS Shared Application Provisioning**:
-   - Worker calls internal Coolify API to create Project, Environment, and Application.
+5. **Phase 3: STX Hosting PaaS Shared Application Provisioning**:
+   - Worker calls internal STX Hosting API to create Project, Environment, and Application.
    - Enforces Docker cgroup resource constraints: `--memory=2g --cpus=2.0`.
    - Configures Traefik reverse proxy labels, automatic Let's Encrypt wildcard SSL certificate generation, and webhook triggers.
 
@@ -374,7 +374,7 @@ The `service_instances` table governs the operational status of provisioned VPS 
 | `pending_setup` | `provision.start` | Lock node in `vps_inventory` or Hetzner API call | `provisioning` | IP assigned; cloud-init / hypervisor configuration executing. |
 | `provisioning` | `provision.success` | Port 22 open; QEMU agent responding; probe active | `active` | Customer granted SSH access. Probes online in Status Platform. |
 | `provisioning` | `provision.fail` | Deployment timeout (300s); network failure | `provision_failed` | Admin alerted. Node marked `maintenance`. No customer access. |
-| `active` | `dunning.suspend` | Cron executes on Invoice Due Date + 4 days (D+4) | `suspended` | **VPS**: Powered off via ACPI / `qm stop`. Public firewall blocks ports 80/443/22.<br>**App**: Container stopped via Coolify API. Ingress routes to maintenance splash. |
+| `active` | `dunning.suspend` | Cron executes on Invoice Due Date + 4 days (D+4) | `suspended` | **VPS**: Powered off via ACPI / `qm stop`. Public firewall blocks ports 80/443/22.<br>**App**: Container stopped via STX Hosting API. Ingress routes to maintenance splash. |
 | `suspended` | `invoice.settled` | Overdue invoice paid via approved proof or card | `active` | **VPS**: Powered on (`qm start` or API power-on). Firewall restored.<br>**App**: Container started; SSL validated. Status probe re-enabled. |
 | `suspended` | `dunning.terminate`| Cron executes on Invoice Due Date + 11 days (D+11) | `terminated` | Immediate removal of customer access. Dispatch to secure wipe queue. Status probe deleted. |
 | `active` | `customer.cancel` | Customer clicks "Cancel Service" (End of Period) | `active` (flagged) | Service remains active until `current_period_end`, then transitions directly to `terminated`. |
@@ -489,9 +489,9 @@ When an invoice remains unpaid at `D+4 00:00:00 UTC`, `ExecuteServiceSuspensionJ
      ```php
      $hetznerService->powerOffServer($service->hetzner_server_id);
      ```
-   - **For Coolify Shared PaaS Applications**:
+   - **For STX Hosting Shared PaaS Applications**:
      ```php
-     // Call internal Coolify API to stop application container
+     // Call internal STX Hosting API to stop application container
      Http::withToken($coolifyToken)->post("http://localhost:8000/api/v1/applications/{$service->coolify_app_uuid}/stop");
      ```
 3. **Telemetry Suspension**:
@@ -506,7 +506,7 @@ When a suspended customer settles their overdue invoice (via approved proof or o
 1. Inside the approval database transaction, `ReactivateServiceJob` is immediately dispatched.
 2. **Infrastructure Restoration**:
    - **VPS**: Hypervisor firewall rule is reset to default accept; VM power-on command is issued (`qm start $VMID` or `powerOnServer`).
-   - **App**: Coolify API is invoked to start the application container (`/applications/{uuid}/start`).
+   - **App**: STX Hosting API is invoked to start the application container (`/applications/{uuid}/start`).
 3. **Telemetry Restoration**: Status Platform probe is re-activated (`is_active = 1`).
 4. **State Transition**: `service_instances.status` reverts to `'active'`, clearing `suspended_at` and `suspension_reason`.
 5. **Customer Notification**: Real-time WebSocket update clears dashboard warning banners, and a confirmation email is dispatched.

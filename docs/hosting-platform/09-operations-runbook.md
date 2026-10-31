@@ -3,7 +3,7 @@
 **Document Identifier**: `DOC-STX-OPS-009`  
 **Version**: `1.0.0`  
 **Classification**: Site Reliability Engineering (SRE) & Operational Standard  
-**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Webmail (`webmail`), Coolify Orchestration Engine (`coolify`), PostgreSQL Cluster, Redis Infrastructure, Hypervisors  
+**Target Systems**: ShanuTechX Storefront (`web`), Status Platform (`status`), Webmail (`webmail`), STX Hosting Orchestration Engine (`coolify`), PostgreSQL Cluster, Redis Infrastructure, Hypervisors  
 **Author**: ShanuTechX Platform Operations & SRE Infrastructure Group  
 **Status**: Approved for Production  
 
@@ -46,7 +46,7 @@ The ShanuTechX hosting platform runs as a coordinated multi-container production
          │ :3000            │ :3003               │ :3002            │ :8000
          ▼                  ▼                     ▼                  ▼
   ┌───────────────┐  ┌───────────────┐     ┌───────────────┐  ┌───────────────┐
-  │  Storefront   │  │Status Platform│     │    Webmail    │  │Coolify Backend│
+  │  Storefront   │  │Status Platform│     │    Webmail    │  │STX Hosting Backend│
   │     (web)     │  │   (status)    │     │   (webmail)   │  │(Commerce/API) │
   │ Next.js 14    │  │ Next.js 15    │     │ Next.js 14    │  │Laravel 12 /   │
   │ App Router    │  │ SQLite DB     │     │ App Router    │  │ Livewire 3    │
@@ -165,10 +165,10 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------------------
-  # Coolify Orchestration & Commerce Core App
+  # STX Hosting Orchestration & Commerce Core App
   # ---------------------------------------------------------------------------
   coolify:
-    image: ghcr.io/coollabsio/coolify:latest
+    image: ghcr.io/stx-enterprises/stx-hosting:latest
     container_name: coolify-core
     restart: always
     depends_on:
@@ -273,7 +273,7 @@ To meet our RPO < 1 hour and RTO < 2 hours:
    - Snapshot frequency: **Every 30 minutes** via automated cron worker.
    - Mechanism: Native `pg_dump` with gzip compression piped to S3-compatible object storage (Cloudflare R2 or AWS S3).
    - Retention: Keep 48 hourly backups (2 days), 30 daily backups (1 month), 12 monthly archives (1 year).
-2. **Coolify SSH & Encryption Keys**:
+2. **STX Hosting SSH & Encryption Keys**:
    - Backup frequency: **Daily** or immediately upon new key generation.
    - Stored in an encrypted S3 vault using GPG asymmetric encryption.
 3. **Status Platform SQLite Database (`status.db`)**:
@@ -577,7 +577,7 @@ Status platform alerts `node-fsn1-kvm01 (198.51.100.22)` is unreachable via ICMP
    - Monitor reboot sequence via serial-over-LAN (SOL).
 4. **Emergency Container Failover (For Application Hosting)**:
    - If node hardware is permanently failed:
-     1. Open Coolify Admin Console.
+     1. Open STX Hosting Admin Console.
      2. Identify applications hosted on failed server destination.
      3. Re-assign applications to standby deployment server `node-fsn1-app02`.
      4. Trigger bulk re-deployment via `POST /api/v1/deploy?tag=failover-group`.

@@ -77,8 +77,8 @@
         @else
             <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-[11px] leading-5 text-neutral-600 dark:border-white/[0.08] dark:bg-white/[0.025] dark:text-fg-dim">
                 <div class="font-medium text-black dark:text-fg">Capability: Secrets (read-only)</div>
-                <p>Coolify reads secrets from this provider at deployment time and writes them into the generated
-                    <code>.env</code> file. Secret values are never stored in the Coolify database.</p>
+                <p>STX Hosting reads secrets from this provider at deployment time and writes them into the generated
+                    <code>.env</code> file. Secret values are never stored in the STX Hosting database.</p>
             </div>
         @endif
 
@@ -92,7 +92,7 @@
                         <li>Account - Cloudflare Tunnel - Edit</li>
                     @endif
                 </ul>
-                <p>Limit zone resources to the zones Coolify should manage.</p>
+                <p>Limit zone resources to the zones STX Hosting should manage.</p>
                 <a href="{{ \App\Models\IntegrationToken::cloudflareTokenTemplateUrl($capabilities) }}"
                     target="_blank" rel="noopener noreferrer"
                     class="button mt-2">

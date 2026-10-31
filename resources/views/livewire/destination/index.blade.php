@@ -1,6 +1,6 @@
 <div class="application-settings-form w-full">
     <x-slot:title>
-        Destinations | Coolify
+        Destinations | STX Hosting
     </x-slot>
 
     <header class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -42,7 +42,7 @@
         @endphp
         <div x-data="{
             search: '',
-            viewMode: localStorage.getItem('coolify-destinations-view') || 'table',
+            viewMode: localStorage.getItem('stx-destinations-view') || 'table',
             items: @js($items),
             get filteredItems() {
                 const query = this.search.trim().toLowerCase();
@@ -55,7 +55,7 @@
             },
             setViewMode(mode) {
                 this.viewMode = mode;
-                localStorage.setItem('coolify-destinations-view', mode);
+                localStorage.setItem('stx-destinations-view', mode);
             }
         }">
             @include('livewire.shared.list-search-controls', ['placeholder' => 'Search destinations'])

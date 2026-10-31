@@ -1,20 +1,22 @@
 {
     "providerId": "coolify.io",
-    "providerName": "Coolify",
+    "providerName": "STX Hosting",
     "serviceId": "hosting",
-    "serviceName": "Coolify Hosting",
+    "serviceName": "STX Hosting",
     "version": 1,
-    "logoUrl": "https://coolify.io/coolify-transparent.png",
-    "description": "Point your domain to a Coolify-managed server via an A record.",
-    "variableDescription": "ip is the Coolify server IP. host is the subdomain relative to the zone (empty for apex).",
-    "syncPubKeyDomain": "domainconnect.coolify.io",
+    "logoUrl": "https://stxhosting.com/STKcdr.png",
+    "description": "Point your domain to an STX Hosting-managed server via an A record.",
+    "variableDescription": "ip is the STX Hosting server IP. host is the subdomain relative to the zone (empty for apex).",
+    "syncPubKeyDomain": "domainconnect.stxhosting.com",
     "syncBlock": false,
+    "syncRedirect": false,
+    "sharedPath": "/settings/advanced",
     "records": [
         {
             "type": "A",
-            "host": "%host%",
+            "name": "%host%",
             "pointsTo": "%ip%",
-            "ttl": 3600
+            "ttl": 300
         }
     ]
 }

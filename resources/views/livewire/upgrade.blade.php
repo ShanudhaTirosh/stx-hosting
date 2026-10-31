@@ -147,7 +147,7 @@
                                     <p class="text-[12px] leading-5" style="color: var(--coollabs-subtle)">
                                         If something goes wrong, check the
                                         <a class="font-medium text-coollabs underline decoration-coollabs/30 underline-offset-2 hover:decoration-coollabs dark:text-brand-light dark:decoration-brand-light/30 dark:hover:decoration-brand-light"
-                                            href="https://coolify.io/docs/upgrade" target="_blank"
+                                            href="https://stxhosting.com/docs/upgrade" target="_blank"
                                             rel="noopener noreferrer">upgrade guide</a>
                                         or the logs on the server at
                                         <span class="font-mono text-neutral-700 dark:text-fg">/data/coolify/source/upgrade*</span>.
@@ -172,7 +172,7 @@
             </template>
         </div>
     @elseif ($fullButton)
-        <p class="text-sm text-neutral-600 dark:text-fg-dim">Coolify is up to date.</p>
+        <p class="text-sm text-neutral-600 dark:text-fg-dim">STX Hosting is up to date.</p>
     @endif
 </div>
 
@@ -216,7 +216,7 @@
                 const steps = [
                     { step: 1, status: '[DEV] Preparing upgrade environment...' },
                     { step: 2, status: '[DEV] Pulling helper image...' },
-                    { step: 3, status: '[DEV] Pulling Coolify image...' },
+                    { step: 3, status: '[DEV] Pulling STX Hosting image...' },
                     { step: 4, status: '[DEV] Restarting services...' },
                 ];
 
@@ -280,7 +280,7 @@
             mapStepToUI(apiStep) {
                 // Map backend steps (1-6) to UI steps (1-4)
                 // Backend: 1=config, 2=env, 3=pull, 4=stop, 5=start, 6=complete
-                // UI: 1=prepare, 2=pull images, 3=pull coolify, 4=restart
+                // UI: 1=prepare, 2=pull images, 3=pull updates, 4=restart
                 if (apiStep <= 2) return 1;
                 if (apiStep === 3) return 2;
                 if (apiStep <= 5) return 3;
@@ -376,9 +376,9 @@
 
             getReviveStatusMessage(elapsedMinutes, attempts) {
                 if (elapsedMinutes === 0) {
-                    return `Waiting for Coolify to come back online... (attempt ${attempts})`;
+                    return `Waiting for STX Hosting to come back online... (attempt ${attempts})`;
                 } else if (elapsedMinutes < 2) {
-                    return `Waiting for Coolify to come back online... (${elapsedMinutes} minute${elapsedMinutes !== 1 ? 's' : ''} elapsed)`;
+                    return `Waiting for STX Hosting to come back online... (${elapsedMinutes} minute${elapsedMinutes !== 1 ? 's' : ''} elapsed)`;
                 } else if (elapsedMinutes < 5) {
                     return `Update in progress, this may take several minutes... (${elapsedMinutes} minutes elapsed)`;
                 } else if (elapsedMinutes < 10) {
@@ -511,7 +511,7 @@
                             this.serviceDown = true;
                             this.instanceWentDown = true;
                             this.currentStep = 4;
-                            this.currentStatus = 'Coolify is restarting with the new version...';
+                            this.currentStatus = 'STX Hosting is restarting with the new version...';
                             if (this.checkUpgradeStatusInterval) {
                                 clearInterval(this.checkUpgradeStatusInterval);
                                 this.checkUpgradeStatusInterval = null;

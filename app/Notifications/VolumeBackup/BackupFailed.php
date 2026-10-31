@@ -43,7 +43,7 @@ class BackupFailed extends CustomEmailNotification
     public function toMail(): MailMessage
     {
         $mail = new MailMessage;
-        $mail->subject("Coolify: [ACTION REQUIRED] Storage backup FAILED for {$this->resourceName}");
+        $mail->subject("STX Hosting: [ACTION REQUIRED] Storage backup FAILED for {$this->resourceName}");
         $mail->view('emails.volume-backup-result', [
             'summary' => $this->summary(),
             'frequency' => $this->frequency,
@@ -74,10 +74,10 @@ class BackupFailed extends CustomEmailNotification
 
     public function toTelegram(): array
     {
-        $data = ['message' => "Coolify: {$this->summary()}\n\nFrequency: {$this->frequency}\n\nReason:\n{$this->output}"];
+        $data = ['message' => "STX Hosting: {$this->summary()}\n\nFrequency: {$this->frequency}\n\nReason:\n{$this->output}"];
 
         if ($this->url) {
-            $data['buttons'] = [['text' => 'Open resource in Coolify', 'url' => $this->url]];
+            $data['buttons'] = [['text' => 'Open resource in STX Hosting', 'url' => $this->url]];
         }
 
         return $data;
@@ -89,7 +89,7 @@ class BackupFailed extends CustomEmailNotification
             title: 'Storage backup failed',
             level: 'error',
             message: "{$this->summary()}<br/><br/><b>Frequency:</b> {$this->frequency}.<br/><b>Reason:</b> {$this->output}",
-            buttons: $this->url ? [['text' => 'Open resource in Coolify', 'url' => $this->url]] : [],
+            buttons: $this->url ? [['text' => 'Open resource in STX Hosting', 'url' => $this->url]] : [],
         );
     }
 
@@ -97,7 +97,7 @@ class BackupFailed extends CustomEmailNotification
     {
         return new SlackMessage(
             title: 'Storage backup failed',
-            description: $this->summary()."\n\n*Frequency:* {$this->frequency}\n\n*Error Output:* {$this->output}".($this->url ? "\n\n<{$this->url}|Open resource in Coolify>" : ''),
+            description: $this->summary()."\n\n*Frequency:* {$this->frequency}\n\n*Error Output:* {$this->output}".($this->url ? "\n\n<{$this->url}|Open resource in STX Hosting>" : ''),
             color: SlackMessage::errorColor(),
         );
     }

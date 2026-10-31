@@ -10,21 +10,21 @@
 
 ## 1. Executive Summary & Architectural Principles
 
-The ShanuTechX Commercial Hosting Platform transforms an open-source Coolify control plane and a suite of dedicated micro-frontends into an integrated, enterprise-ready Cloud Hosting and Platform-as-a-Service (PaaS) business. By augmenting Coolify's orchestration engine with commercial billing, pre-provisioned bare-metal/hypervisor inventory management, upstream cloud provider APIs, and automated telemetry probes, the platform delivers high-margin Virtual Private Servers (VPS), containerized application hosting, and managed databases.
+The ShanuTechX Commercial Hosting Platform transforms an open-source STX Hosting control plane and a suite of dedicated micro-frontends into an integrated, enterprise-ready Cloud Hosting and Platform-as-a-Service (PaaS) business. By augmenting STX Hosting's orchestration engine with commercial billing, pre-provisioned bare-metal/hypervisor inventory management, upstream cloud provider APIs, and automated telemetry probes, the platform delivers high-margin Virtual Private Servers (VPS), containerized application hosting, and managed databases.
 
 ### 1.1 Core Architecture Tenets
 
 1. **Strict Separation of Planes (Management vs. Tenant Access)**:
-   - Under no circumstances shall tenant workloads, customer SSH sessions, or customer container runtimes share direct kernel privileges, Docker sockets, or administrative network interfaces with the Coolify control plane or hypervisor management APIs.
+   - Under no circumstances shall tenant workloads, customer SSH sessions, or customer container runtimes share direct kernel privileges, Docker sockets, or administrative network interfaces with the STX Hosting control plane or hypervisor management APIs.
    - The management plane operates inside isolated internal subnets and localhost bindings; tenant access terminates strictly at public network bridges and customer guest boundaries.
 
 2. **Pragmatic Two-Phase Infrastructure Evolution**:
    - **Phase 1 (Immediate Commercial Launch)**: Leverages a manual allocation model over a pre-provisioned inventory pool (`vps_inventory`) of dedicated hardware nodes and KVM hypervisors. This matches the public storefront's explicit SLA (**"Notice: VPS servers are delivered within 24 to 72 hours"**) and eliminates upstream API dependencies, billing account limits, or third-party merchant underwriting delays on Day 1.
-   - **Phase 2 (Automated Elastic Cloud)**: Introduces event-driven, zero-touch API provisioning directly into upstream cloud providers (specifically Hetzner Cloud via Coolify's verified `App\Services\HetznerService` and DigitalOcean) using dynamic cloud-init injection.
+   - **Phase 2 (Automated Elastic Cloud)**: Introduces event-driven, zero-touch API provisioning directly into upstream cloud providers (specifically Hetzner Cloud via STX Hosting's verified `App\Services\HetznerService` and DigitalOcean) using dynamic cloud-init injection.
 
 3. **Multi-Tenancy Without Privilege Escalation**:
-   - Standard Coolify team administration grants full Docker socket access to team admins (allowing host root compromise via custom Docker Compose bind-mounts). Therefore, shared application hosting is implemented via a **Platform Abstraction Layer** (Option C), where customers manage applications through a curated portal while the backend orchestrates isolated containers under strict Linux cgroups quotas.
-   - Customers requiring full root Docker control are provisioned with dedicated VPS instances running their own dedicated Coolify or bare OS instances (Option B).
+   - Standard STX Hosting team administration grants full Docker socket access to team admins (allowing host root compromise via custom Docker Compose bind-mounts). Therefore, shared application hosting is implemented via a **Platform Abstraction Layer** (Option C), where customers manage applications through a curated portal while the backend orchestrates isolated containers under strict Linux cgroups quotas.
+   - Customers requiring full root Docker control are provisioned with dedicated VPS instances running their own dedicated STX Hosting or bare OS instances (Option B).
 
 4. **Synchronized Telemetry and Status Observability**:
    - Every active VPS and hosted application automatically registers health probes with the existing ShanuTechX Status Platform (`status`), ensuring end-to-end SLA tracking, public transparency, and automated incident alerting.
@@ -116,9 +116,9 @@ The platform architecture organizes components into four distinct functional tie
 | **Public Storefront** | `web/` | Next.js 14 (App Router), Tailwind CSS v4, Three.js | `3000` | `shanutechx.com`, `www.shanutechx.com` | Marketing, dynamic catalog display (`/vps`, `/app-hosting`, `/databases`), documentation (`/docs`), pricing comparison (`/pricing`). Consumes backend via `web/lib/api.ts`. |
 | **Status Platform** | `status/` | Next.js 15, Tailwind CSS, SQLite (`data/status.db`) | `3003` | `status.shanutechx.com` | Real-time probe telemetry (ICMP ping, TCP port, HTTP/S checks), 90-day uptime bars, incident publishing, `/admin` monitor management studio. |
 | **Webmail Service** | `webmail/` | Next.js 14, Tailwind CSS | `3002` | `mail.shanutechx.com`, `webmail.shanutechx.com` | Web-based email client portal for hosted domain email accounts. |
-| **Control Plane & API** | root (`coolify`) | Laravel 12, Livewire 3, Sanctum, Reverb | `8000` | `portal.shanutechx.com`, `api.shanutechx.com` | Core commercial engine, customer portal, admin management console, REST API gateway (`/api/v1/`), Coolify orchestration engine. |
+| **Control Plane & API** | root (`coolify`) | Laravel 12, Livewire 3, Sanctum, Reverb | `8000` | `portal.shanutechx.com`, `api.shanutechx.com` | Core commercial engine, customer portal, admin management console, REST API gateway (`/api/v1/`), STX Hosting orchestration engine. |
 | **Reverb WebSockets** | root (`coolify`) | Laravel Reverb WebSocket Server | `6001` | `ws.shanutechx.com` | Real-time browser updates for terminal, deployment logs, service power state changes, and payment verification toasts. |
-| **PostgreSQL Database** | root (`postgres`) | PostgreSQL 16 Alpine | `5432` (Internal) | `postgres:5432` (Docker Network) | Persistent storage for Coolify control plane and ShanuTechX commercial commerce data (14 relational tables). |
+| **PostgreSQL Database** | root (`postgres`) | PostgreSQL 16 Alpine | `5432` (Internal) | `postgres:5432` (Docker Network) | Persistent storage for STX Hosting control plane and ShanuTechX commercial commerce data (14 relational tables). |
 | **Redis Cache & Queue** | root (`redis`) | Redis 7 Alpine | `6379` (Internal) | `redis:6379` (Docker Network) | High-throughput job queue management for deployment pipelines, email notifications, dunning sweeps, and cache. |
 
 ---
@@ -234,7 +234,7 @@ When a customer terminates a Phase 1 VPS, the node must be forensically wiped to
 Phase 2 introduces instant, zero-touch provisioning for high-volume scale, triggering on-demand VM creation through cloud provider APIs.
 
 #### Upstream Engine: `App\Services\HetznerService`
-The platform directly utilizes Coolify's verified `HetznerService` implementation (`app/Services/HetznerService.php`), which provides:
+The platform directly utilizes STX Hosting's verified `HetznerService` implementation (`app/Services/HetznerService.php`), which provides:
 - Secure bearer token authentication with API rate-limit backoff handling (HTTP 429 reset header calculation).
 - Server lifecycle management: `getLocations()`, `getServerTypes()`, `getImages()`, `createServer()`, `getServer()`, `powerOnServer()`, `deleteServer()`, `enableServerBackup()`, and `findServerByIp()`.
 
@@ -313,21 +313,21 @@ runcmd:
 
 ---
 
-## 4. Coolify Application Hosting Architecture (PaaS)
+## 4. STX Hosting Application Hosting Architecture (PaaS)
 
-Coolify's native architecture manages Docker-based deployments, proxy configs, Git webhooks, and databases. To turn Coolify into a commercial hosting PaaS, the multi-tenancy model must be architected with extreme security rigor.
+STX Hosting's native architecture manages Docker-based deployments, proxy configs, Git webhooks, and databases. To turn STX Hosting into a commercial hosting PaaS, the multi-tenancy model must be architected with extreme security rigor.
 
 ### 4.1 Multi-Tenant Model Evaluation & Decision Matrix
 
 | Model | Structural Mapping | Pros | Cons & Security Threat Analysis | Architecture Decision |
 |---|---|---|---|---|
-| **Option A: Team-per-Customer on Shared Server** | Each customer receives a Coolify Team (`team_id > 0`) sharing a single host Docker daemon. | Native Coolify Livewire UI can be exposed directly; minimal custom frontend code. | **CRITICAL SECURITY RISK**: In Coolify, any Team Admin can add arbitrary Docker Compose files. A customer can mount `/var/run/docker.sock` or the host root filesystem (`/:/host`), compromise the entire server kernel, inspect other tenants' database containers, and capture platform secrets. | **STRICTLY REJECTED** for shared environments. |
-| **Option B: Dedicated VM per Customer** | Each customer is provisioned their own independent VPS (via Phase 1 or 2) with Coolify pre-installed. | Hardware-level KVM kernel isolation; customer receives unrestricted root Coolify access safely; zero cross-tenant risk. | Higher resource threshold (requires minimum 2 vCPU and 2GB RAM per customer); higher cost baseline. | **APPROVED** for "Dedicated PaaS / Coolify Cloud VPS" tier. |
-| **Option C: Platform Abstraction Layer on Managed Clusters** | Platform backend acts as the sole operator of Coolify clusters. Customers interact exclusively with the curated Customer Portal (`NEXT_PUBLIC_DASHBOARD_URL`). Platform communicates with Coolify via internal API. | Absolute isolation; customer never touches Docker socket or raw Compose; fine-grained resource limits enforced; custom domains and env vars safely validated. | Custom portal UI required for application controls. | **APPROVED** for shared "Web App Hosting" and "Managed Database" tiers. |
+| **Option A: Team-per-Customer on Shared Server** | Each customer receives a STX Hosting Team (`team_id > 0`) sharing a single host Docker daemon. | Native STX Hosting Livewire UI can be exposed directly; minimal custom frontend code. | **CRITICAL SECURITY RISK**: In STX Hosting, any Team Admin can add arbitrary Docker Compose files. A customer can mount `/var/run/docker.sock` or the host root filesystem (`/:/host`), compromise the entire server kernel, inspect other tenants' database containers, and capture platform secrets. | **STRICTLY REJECTED** for shared environments. |
+| **Option B: Dedicated VM per Customer** | Each customer is provisioned their own independent VPS (via Phase 1 or 2) with STX Hosting pre-installed. | Hardware-level KVM kernel isolation; customer receives unrestricted root STX Hosting access safely; zero cross-tenant risk. | Higher resource threshold (requires minimum 2 vCPU and 2GB RAM per customer); higher cost baseline. | **APPROVED** for "Dedicated PaaS / STX Hosting Cloud VPS" tier. |
+| **Option C: Platform Abstraction Layer on Managed Clusters** | Platform backend acts as the sole operator of STX Hosting clusters. Customers interact exclusively with the curated Customer Portal (`NEXT_PUBLIC_DASHBOARD_URL`). Platform communicates with STX Hosting via internal API. | Absolute isolation; customer never touches Docker socket or raw Compose; fine-grained resource limits enforced; custom domains and env vars safely validated. | Custom portal UI required for application controls. | **APPROVED** for shared "Web App Hosting" and "Managed Database" tiers. |
 
 ### 4.2 Native Docker Resource Quota Enforcement
 
-Under Option C, the platform leverages Coolify's built-in application resource limit attributes (verified in `app/Models/Application.php` lines 83–89 and `app/Jobs/ApplicationDeploymentJob.php`). Every application provisioned within the shared cluster has strict Linux cgroups constraints enforced:
+Under Option C, the platform leverages STX Hosting's built-in application resource limit attributes (verified in `app/Models/Application.php` lines 83–89 and `app/Jobs/ApplicationDeploymentJob.php`). Every application provisioned within the shared cluster has strict Linux cgroups constraints enforced:
 
 ```php
 // Enforced programmatically during application configuration generation
@@ -353,7 +353,7 @@ $application->update([
 ### 4.3 Database & Compose Service Provisioning Model
 
 1. **Standalone Databases**:
-   - Built on Coolify's standalone database models (`StandalonePostgresql`, `StandaloneMysql`, `StandaloneMariadb`, `StandaloneMongodb`, `StandaloneRedis`).
+   - Built on STX Hosting's standalone database models (`StandalonePostgresql`, `StandaloneMysql`, `StandaloneMariadb`, `StandaloneMongodb`, `StandaloneRedis`).
    - Databases are deployed with isolated volume mounts, randomly generated 32-character alphanumeric passwords, internal-only port bindings (or Traefik TCP proxy with TLS SNI), and automated daily S3 backup jobs (`ScheduledDatabaseBackupJob`).
 2. **Pre-configured Compose Templates**:
    - Supports 1-click deployments from curated templates (`templates/compose/`) such as WordPress, Ghost, Nextcloud, and Directus.
@@ -378,7 +378,7 @@ Designed for developers, networking engineers, and businesses requiring full OS 
 | **VPS Extended 2** | `vps-ext-2` | 2 vCPU, 4 GB RAM, 80 GB NVMe, 20 TB Bandwidth, 1 Dedicated IPv4, /64 IPv6 | 50-Day (Non-Renewable) | **$18.50** | Best Efficiency |
 | **VPS Pro Enterprise**| `vps-pro-ent`| 8 vCPU, 16 GB RAM, 320 GB NVMe, 30 TB Bandwidth, 1 Dedicated IPv4, /64 IPv6 | Monthly Recurring | **$48.00** | High Performance |
 
-### 5.2 Coolify Application Hosting (PaaS) Family
+### 5.2 STX Hosting Application Hosting (PaaS) Family
 
 Designed for developers deploying modern web applications, microservices, and JAMstack backends without infrastructure maintenance:
 
@@ -463,4 +463,4 @@ For customers with web hosting plans, domain DNS records (`MX`, `DKIM`, `SPF`, `
 
 ## 7. Deliverable C Summary & Architectural Sign-off
 
-Deliverable C establishes a concrete, cohesive, and resilient target architecture that harmonizes ShanuTechX's existing Next.js web applications with Coolify's orchestration engine. By enforcing strict separation of planes, adopting a realistic two-phase VPS rollout, and deploying a secure Platform Abstraction Layer for shared application hosting, the platform guarantees enterprise security, zero cross-tenant compromise, and maximum commercial velocity.
+Deliverable C establishes a concrete, cohesive, and resilient target architecture that harmonizes ShanuTechX's existing Next.js web applications with STX Hosting's orchestration engine. By enforcing strict separation of planes, adopting a realistic two-phase VPS rollout, and deploying a secure Platform Abstraction Layer for shared application hosting, the platform guarantees enterprise security, zero cross-tenant compromise, and maximum commercial velocity.

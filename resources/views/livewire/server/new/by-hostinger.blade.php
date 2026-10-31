@@ -7,10 +7,10 @@
                 :tokens="$available_tokens" />
             <p class="text-[11px] text-neutral-500 dark:text-fg-faint">
                 New to Hostinger?
-                <a href="https://www.hostinger.com/vps/coolify-hosting?ref=coolify.io" target="_blank"
+                <a href="https://www.hostinger.com/vps/stx-hosting?ref=stxhosting.com" target="_blank"
                     rel="noopener noreferrer"
                     class="font-medium text-coollabs hover:underline dark:text-brand-light">Create an account</a>
-                through Coolify's affiliate link.
+                through STX Hosting's affiliate link.
             </p>
         </div>
     @elseif ($current_step === 2)
@@ -62,7 +62,7 @@
 
                 <form wire:submit="submit" class="flex flex-col gap-6">
                     <x-application.settings-section title="Hostinger server"
-                        description="Choose the data center, plan, operating system, and Coolify SSH key.">
+                        description="Choose the data center, plan, operating system, and STX Hosting SSH key.">
                         <x-slot:actions>
                             <button type="submit" class="button button-highlighted"
                                 wire:loading.attr="disabled" wire:target="submit"
@@ -75,7 +75,7 @@
                         <div class="grid gap-4 lg:grid-cols-2">
                             <div class="lg:col-span-2">
                                 <x-forms.input id="server_name" label="Server name"
-                                    helper="A friendly name shown in Coolify and used as the VPS hostname." />
+                                    helper="A friendly name shown in STX Hosting and used as the VPS hostname." />
                             </div>
                             <x-forms.listbox id="selected_data_center_id" label="Data center" required live
                                 placeholder="Select a data center" :options="$dataCenterOptions" />
@@ -88,7 +88,7 @@
                             <x-forms.listbox id="selected_app_template_id" label="Operating system with application"
                                 live :disabled="!$selected_price_id" placeholder="Or select an operating system with an application"
                                 :options="$appTemplateOptions"
-                                helper="Replaces the operating system selected above. Applications and panels, such as another Coolify or CyberPanel, can conflict with the Coolify proxy on ports 80 and 443." />
+                                helper="Replaces the operating system selected above. Applications and panels, such as another STX Hosting or CyberPanel, can conflict with the STX Hosting proxy on ports 80 and 443." />
                             @if ($private_keys->isEmpty())
                                 <div>
                                     <label class="mb-1.5 flex w-fit items-center gap-1.5">Private key

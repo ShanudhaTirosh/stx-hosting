@@ -20,7 +20,7 @@ $email = getOldOrLocal('email', 'test3@example.com');
                     <p class="mt-0.5 text-black/70 dark:text-white/70">You can create the root account only in the
                         first {{ \App\Support\RootSetupWindow::MINUTES }} minutes after STX Enterprises
                         starts. To open the window again, run this command on the server, then reload this page:</p>
-                    <code class="mt-2 block font-mono text-xs">docker restart coolify</code>
+                    <code class="mt-2 block font-mono text-xs">docker restart stx-hosting</code>
                 </x-auth.alert>
             @elseif ($isFirstUser)
                 <x-auth.alert type="warning">

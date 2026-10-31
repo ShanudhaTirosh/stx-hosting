@@ -6,14 +6,14 @@ Use this as the first check when deciding where a new feature belongs.
 
 | Question | Owner |
 | --- | --- |
-| What should happen for this user, team, app, database, or deployment? | Coolify |
-| Which connected host should receive this request? | Coolify chooses, Flux routes |
+| What should happen for this user, team, app, database, or deployment? | STX Hosting |
+| Which connected host should receive this request? | STX Hosting chooses, Flux routes |
 | How do we get a command to a NATed host? | Flux |
 | Do this concrete operation on this host. | coold |
-| Is this allowed for this Coolify user/team? | Coolify |
-| Is this host operation dangerous even if Coolify asked for it? | coold deny filter |
+| Is this allowed for this STX Hosting user/team? | STX Hosting |
+| Is this host operation dangerous even if STX Hosting asked for it? | coold deny filter |
 
-## Coolify owns
+## STX Hosting owns
 
 - Users, teams, roles, RBAC, API tokens, sessions, SSO/OAuth.
 - Projects, environments, applications, services, databases, servers.
@@ -50,11 +50,11 @@ host; Flux does not know it is part of an nginx deployment.
 - Builder subprocess supervision when the host advertises builder capability.
 - Host-level safety checks such as container-create deny filters.
 
-coold does not store Coolify secrets, users, teams, app ownership, deployment
+coold does not store STX Hosting secrets, users, teams, app ownership, deployment
 history, billing data, or business audit.
 
 ## Boundary test
 
 If a different orchestrator could reuse the same operation with its own app
 model, it probably belongs in coold. If the operation only makes sense because
-of Coolify's product model, it belongs in Coolify.
+of STX Hosting's product model, it belongs in STX Hosting.
