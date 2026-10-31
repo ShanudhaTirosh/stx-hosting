@@ -112,7 +112,7 @@ class CleanupOrphanedPreviewContainersJob implements ShouldBeEncrypted, ShouldBe
     {
         try {
             $output = instant_remote_process([
-                "docker ps -a --filter 'label=coolify.pullRequestId' --format '{{json .}}'",
+                "docker ps -a --filter 'label=stx.pullRequestId' --format '{{json .}}'; docker ps -a --filter 'label=coolify.pullRequestId' --format '{{json .}}'",
             ], $server, false);
 
             if (empty($output)) {
@@ -139,7 +139,7 @@ class CleanupOrphanedPreviewContainersJob implements ShouldBeEncrypted, ShouldBe
     private function extractPullRequestId($container): ?int
     {
         $labels = data_get($container, 'Labels', '');
-        if (preg_match('/coolify\.pullRequestId=(\d+)/', $labels, $matches)) {
+        if (preg_match('/(?:stx|coolify)\.pullRequestId=(\d+)/', $labels, $matches)) {
             return (int) $matches[1];
         }
 

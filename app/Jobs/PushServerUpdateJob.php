@@ -253,7 +253,7 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
             $this->applications,
             $this->containers
                 ->map(fn ($container) => collect(data_get($container, 'labels')))
-                ->filter(fn (Collection $labels) => $labels->has('coolify.managed') && isContainerOfType($labels, 'application'))
+                ->filter(fn (Collection $labels) => ($labels->has('stx.managed') || $labels->has('coolify.managed')) && isContainerOfType($labels, 'application'))
         );
 
         foreach ($this->containers as $container) {
@@ -265,7 +265,7 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
                 $containerStatus = "$containerStatus:$containerHealth";
             }
             $labels = collect(data_get($container, 'labels'));
-            $coolify_managed = $labels->has('coolify.managed');
+            $coolify_managed = $labels->has('stx.managed') || $labels->has('coolify.managed');
 
             if (! $coolify_managed) {
                 continue;
@@ -275,7 +275,7 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
             }
 
             $name = data_get($container, 'name');
-            if ($name === 'coolify-log-drain' && $this->isRunning($containerStatus)) {
+            if (($name === 'stx-log-drain' || $name === 'coolify-log-drain') && $this->isRunning($containerStatus)) {
                 $this->foundLogDrainContainer = true;
                 $this->logDrainContainerLabels = $labels->all();
             }
@@ -286,7 +286,7 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
                     continue;
                 }
                 $applicationId = (string) $applicationId;
-                $pullRequestId = $labels->get('coolify.pullRequestId', '0');
+                $pullRequestId = $labels->get('stx.pullRequestId', $labels->get('coolify.pullRequestId', '0'));
                 try {
                     if ($pullRequestId === '0') {
                         $application = $this->applicationsById->get((string) $applicationId);
@@ -361,8 +361,8 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
                 }
             } else {
                 $uuid = $labels->get('com.docker.compose.service');
-                $type = $labels->get('coolify.type');
-                if ($name === 'coolify-proxy' && $this->isRunning($containerStatus)) {
+                $type = $labels->get('stx.type', $labels->get('coolify.type'));
+                if (($name === 'stx-proxy' || $name === 'coolify-proxy') && $this->isRunning($containerStatus)) {
                     $this->foundProxy = true;
                 } elseif ($type === 'service' && $this->isRunning($containerStatus)) {
                 } else {
@@ -829,7 +829,7 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
                 try {
                     if (CheckProxy::run($this->server)) {
                         StartProxy::run($this->server, async: false);
-                        $this->server->team?->notify(new ContainerRestarted('coolify-proxy', $this->server, restartedResource: $this->server));
+                        $this->server->team?->notify(new ContainerRestarted('stx-proxy', $this->server, restartedResource: $this->server));
                     }
                 } catch (\Throwable $e) {
                 }

@@ -98,7 +98,7 @@ class RestartProxyJob implements ShouldBeEncrypted, ShouldQueue
      */
     private function buildRestartCommands(string $configuration): array
     {
-        $containerName = $this->server->isSwarm() ? 'coolify-proxy_traefik' : 'coolify-proxy';
+        $containerName = $this->server->isSwarm() ? 'stx-proxy_traefik' : 'stx-proxy';
         $stopTimeout = 30;
 
         SaveProxyConfiguration::run($this->server, $configuration);

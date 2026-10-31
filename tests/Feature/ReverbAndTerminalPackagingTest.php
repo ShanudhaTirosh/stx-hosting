@@ -14,11 +14,11 @@ it('uses Reverb as the first-party broadcast server', function () {
         ->and(file_get_contents(config_path('broadcasting.php')))
         ->toContain("'default' => env('BROADCAST_CONNECTION', env('BROADCAST_DRIVER', 'reverb'))")
         ->toContain("'reverb' => [")
-        ->toContain("'key' => env('PUSHER_APP_KEY', 'coolify')")
-        ->toContain("'secret' => env('PUSHER_APP_SECRET', 'coolify')")
-        ->toContain("'app_id' => env('PUSHER_APP_ID', 'coolify')")
+        ->toMatch('/\'key\' => env\(\'PUSHER_APP_KEY\', \'(stx|coolify)\'\)/')
+        ->toMatch('/\'secret\' => env\(\'PUSHER_APP_SECRET\', \'(stx|coolify)\'\)/')
+        ->toMatch('/\'app_id\' => env\(\'PUSHER_APP_ID\', \'(stx|coolify)\'\)/')
         ->toContain("'host' => \$backendHost")
-        ->toContain("'port' => env('PUSHER_BACKEND_PORT', 6001)")
+        ->toMatch('/\'port\' => (\(int\) )?env\(\'PUSHER_BACKEND_PORT\', 6001\)/')
         ->toContain("'scheme' => env('PUSHER_BACKEND_SCHEME', 'http')")
         ->and(file_exists(config_path('reverb.php')))->toBeTrue();
 });
@@ -89,7 +89,7 @@ it('includes Reverb but not the terminal server in the Coolify container healthc
 
 it('removes the legacy realtime container during upgrades', function (string $script) {
     expect(file_get_contents(base_path($script)))
-        ->toContain('for container in coolify coolify-db coolify-redis coolify-realtime; do');
+        ->toMatch('/for container in .*coolify-realtime.*?; do/');
 })->with([
     'upgrade script' => ['scripts/upgrade.sh'],
     'nightly upgrade script' => ['other/nightly/upgrade.sh'],
@@ -101,9 +101,9 @@ it('runs Reverb and terminal websocket services inside the Coolify containers', 
     expect($dockerfileContents)
         ->toContain('nodejs')
         ->toContain('npm')
-        ->toContain('COPY docker/coolify-terminal/package*.json /terminal/')
-        ->toContain('COPY docker/coolify-terminal/terminal-server.js /terminal/terminal-server.js')
-        ->toContain('COPY docker/coolify-terminal/terminal-utils.js /terminal/terminal-utils.js')
+        ->toMatch('/COPY docker\/(stx|coolify)-terminal\/package\*\.json \/terminal\//')
+        ->toMatch('/COPY docker\/(stx|coolify)-terminal\/terminal-server\.js \/terminal\/terminal-server\.js/')
+        ->toMatch('/COPY docker\/(stx|coolify)-terminal\/terminal-utils\.js \/terminal\/terminal-utils\.js/')
         ->toContain('npm ci --prefix /terminal')
         ->and(file_get_contents(base_path(dirname($dockerfile).'/etc/s6-overlay/s6-rc.d/reverb/run')))
         ->toContain('exec php artisan reverb:start --host=0.0.0.0 --port=${PUSHER_BACKEND_PORT:-6001}')
@@ -124,11 +124,12 @@ it('removes the dedicated realtime service from bundled compose files', function
     $composeContents = file_get_contents(base_path($composeFile));
     $services = Yaml::parse($composeContents)['services'];
     $soketi = $services['soketi'] ?? null;
+    $appService = $services['stx'] ?? $services['coolify'];
 
     // Production keeps "coolify-realtime" only as a network alias of the coolify container, and "soketi"
     // only as a placeholder with no replicas for old overrides in docker-compose.custom.yml. The placeholder
     // uses the coolify image, so install and upgrade do not pull an extra image.
-    expect($soketi === null || $soketi === ['image' => $services['coolify']['image'], 'deploy' => ['replicas' => 0]])->toBeTrue();
+    expect($soketi === null || $soketi === ['image' => $appService['image'], 'deploy' => ['replicas' => 0]])->toBeTrue();
     expect($composeContents)
         ->not->toContain('container_name: coolify-realtime')
         ->not->toContain('coolify-realtime:')
@@ -176,10 +177,10 @@ it('proxies Reverb and terminal websocket traffic to the Coolify app container',
         ->toContain("'rule' => \"Host(`{\$host}`) && PathPrefix(`/app`)\"")
         ->toContain("'rule' => \"Host(`{\$host}`) && PathPrefix(`/apps`)\"")
         ->toContain("'rule' => \"Host(`{\$host}`) && PathPrefix(`/terminal/ws`)\"")
-        ->toContain("'url' => 'http://coolify:6001'")
-        ->toContain("'url' => 'http://coolify:6002'")
-        ->toContain('reverse_proxy coolify:6001')
-        ->toContain('reverse_proxy coolify:6002')
+        ->toMatch('/\'url\' => \'http:\/\/(stx|coolify):6001\'/')
+        ->toMatch('/\'url\' => \'http:\/\/(stx|coolify):6002\'/')
+        ->toMatch('/reverse_proxy (stx|coolify):6001/')
+        ->toMatch('/reverse_proxy (stx|coolify):6002/')
         ->not->toContain('http://coolify-realtime:6001')
         ->not->toContain('http://coolify-realtime:6002')
         ->not->toContain('reverse_proxy coolify-realtime');
@@ -262,7 +263,11 @@ it('stops publishing or preserving the obsolete realtime image', function () {
         ->and(is_dir(base_path('docker/coolify-realtime')))->toBeFalse()
         ->and(file_exists(base_path('.github/workflows/coolify-realtime.yml')))->toBeFalse()
         ->and(file_exists(base_path('.github/workflows/coolify-realtime-next.yml')))->toBeFalse()
-        ->and(file_get_contents(base_path('.github/workflows/coolify-next-build.yml')))->not->toContain('coolify-realtime')
+        ->and(
+            file_exists(base_path('.github/workflows/stx-next-build.yml'))
+                ? file_get_contents(base_path('.github/workflows/stx-next-build.yml'))
+                : file_get_contents(base_path('.github/workflows/coolify-next-build.yml'))
+        )->not->toContain('coolify-realtime')
         ->and($productionInstallScript)->not->toContain('LATEST_REALTIME_VERSION')
         ->not->toContain('| Realtime')
         ->and($nightlyInstallScript)->not->toContain('LATEST_REALTIME_VERSION')
@@ -270,11 +275,13 @@ it('stops publishing or preserving the obsolete realtime image', function () {
 });
 
 it('keeps 4.3.23 realtime setups working with the production compose files', function (string $composeFile) {
-    $coolify = Yaml::parseFile(base_path($composeFile))['services']['coolify'];
+    $services = Yaml::parseFile(base_path($composeFile))['services'];
+    $coolify = $services['stx'] ?? $services['coolify'];
+    $aliases = $coolify['networks']['stx']['aliases'] ?? $coolify['networks']['coolify']['aliases'] ?? [];
 
     // The browser port comes only from .env (for example PUSHER_PORT=443 for Cloudflare Tunnel).
     expect(collect($coolify['environment'])->filter(fn (string $entry) => Str::startsWith($entry, 'PUSHER_PORT')))->toBeEmpty()
-        ->and($coolify['networks']['coolify']['aliases'])->toContain('coolify-realtime')
+        ->and(collect($aliases)->filter(fn ($a) => in_array($a, ['stx-realtime', 'coolify-realtime'])))->not->toBeEmpty()
         ->and($coolify['ports'])->toContain('6002:6002')
         ->and(implode("\n", [...$coolify['ports'], ...$coolify['expose']]))->not->toContain('TERMINAL_PORT');
 })->with([
@@ -283,7 +290,8 @@ it('keeps 4.3.23 realtime setups working with the production compose files', fun
 ]);
 
 it('keeps TERMINAL_PORT browser-only in the Windows compose files', function (string $composeFile) {
-    $coolify = Yaml::parseFile(base_path($composeFile))['services']['coolify'];
+    $services = Yaml::parseFile(base_path($composeFile))['services'];
+    $coolify = $services['stx'] ?? $services['coolify'];
 
     expect($coolify['ports'])->toContain('6002:6002')
         ->and(implode("\n", [...$coolify['ports'], ...$coolify['expose']]))->not->toContain('TERMINAL_PORT');

@@ -323,7 +323,7 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
                 $databasesToBackup = ['stx', 'coolify'];
                 $this->directory_name = $this->container_name = 'stx-db';
                 $ip = Str::slug($this->server->ip);
-                $this->backup_dir = backup_dir().'/stx'."/coolify-db-$ip";
+                $this->backup_dir = backup_dir().'/stx'."/stx-db-$ip";
             }
             foreach ($databasesToBackup as $database) {
                 // Reset per-database state, so a failure before this database's execution exists

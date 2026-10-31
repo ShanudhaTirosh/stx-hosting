@@ -135,13 +135,13 @@ class GetContainersStatus implements ShouldBeUnique
             $this->applications,
             $this->containers
                 ->map(fn ($container) => format_docker_labels_to_json(data_get($container, $this->server->isSwarm() ? 'Spec.Labels' : 'Config.Labels') ?? []))
-                ->filter(fn (Collection $labels) => (bool) $labels->get('coolify.pullRequestId') && isContainerOfType($labels, 'application'))
+                ->filter(fn (Collection $labels) => (bool) ($labels->get('stx.pullRequestId') ?? $labels->get('coolify.pullRequestId')) && isContainerOfType($labels, 'application'))
         );
 
         foreach ($this->containers as $container) {
             if ($this->server->isSwarm()) {
                 $labels = data_get($container, 'Spec.Labels');
-                $uuid = data_get($labels, 'coolify.name');
+                $uuid = data_get($labels, 'stx.name') ?? data_get($labels, 'coolify.name');
             } else {
                 $labels = data_get($container, 'Config.Labels');
             }
@@ -156,7 +156,7 @@ class GetContainersStatus implements ShouldBeUnique
             $isServiceContainer = isContainerOfType($flatLabels, 'service');
             [$parentService, $serviceSubType, $serviceSubResource] = resolveServiceContainerOwner($services, $flatLabels);
             if ($isApplicationContainer) {
-                $pullRequestId = data_get($labels, 'coolify.pullRequestId');
+                $pullRequestId = data_get($labels, 'stx.pullRequestId') ?? data_get($labels, 'coolify.pullRequestId');
                 if ($pullRequestId) {
                     $applicationId = resolveContainerApplicationId($this->applications, $flatLabels, $foreignApplicationIdsByUuid);
                     $preview = $applicationId
@@ -197,7 +197,9 @@ class GetContainersStatus implements ShouldBeUnique
                         $containerName = data_get($labels, 'com.docker.compose.service');
                         // Fallback for Docker Swarm which uses different labels
                         if (! $containerName && $this->server->isSwarm()) {
-                            $containerName = data_get($labels, 'coolify.serviceName')
+                            $containerName = data_get($labels, 'stx.serviceName')
+                                ?? data_get($labels, 'coolify.serviceName')
+                                ?? data_get($labels, 'stx.name')
                                 ?? data_get($labels, 'coolify.name')
                                 ?? data_get($labels, 'com.docker.stack.namespace');
                         }
@@ -222,7 +224,7 @@ class GetContainersStatus implements ShouldBeUnique
                 }
             } else {
                 $uuid = data_get($labels, 'com.docker.compose.service');
-                $type = data_get($labels, 'coolify.type');
+                $type = data_get($labels, 'stx.type') ?? data_get($labels, 'coolify.type');
 
                 if ($uuid) {
                     if ($type === 'service') {
@@ -234,7 +236,7 @@ class GetContainersStatus implements ShouldBeUnique
                                 if ($isPublic) {
                                     $foundTcpProxy = $this->containers->filter(function ($value, $key) use ($proxyUuid) {
                                         if ($this->server->isSwarm()) {
-                                            return data_get($value, 'Spec.Name') === "coolify-proxy_$proxyUuid";
+                                            return data_get($value, 'Spec.Name') === "stx-proxy_$proxyUuid" || data_get($value, 'Spec.Name') === "coolify-proxy_$proxyUuid";
                                         } else {
                                             return data_get($value, 'Name') === "/$proxyUuid-proxy";
                                         }
@@ -248,7 +250,7 @@ class GetContainersStatus implements ShouldBeUnique
                                     // Clean up orphaned proxy when is_public=false
                                     $orphanedProxy = $this->containers->filter(function ($value, $key) use ($proxyUuid) {
                                         if ($this->server->isSwarm()) {
-                                            return data_get($value, 'Spec.Name') === "coolify-proxy_$proxyUuid";
+                                            return data_get($value, 'Spec.Name') === "stx-proxy_$proxyUuid" || data_get($value, 'Spec.Name') === "coolify-proxy_$proxyUuid";
                                         } else {
                                             return data_get($value, 'Name') === "/$proxyUuid-proxy";
                                         }
@@ -287,7 +289,7 @@ class GetContainersStatus implements ShouldBeUnique
                             if ($isPublic) {
                                 $foundTcpProxy = $this->containers->filter(function ($value, $key) use ($uuid) {
                                     if ($this->server->isSwarm()) {
-                                        return data_get($value, 'Spec.Name') === "coolify-proxy_$uuid";
+                                        return data_get($value, 'Spec.Name') === "stx-proxy_$uuid" || data_get($value, 'Spec.Name') === "coolify-proxy_$uuid";
                                     } else {
                                         return data_get($value, 'Name') === "/$uuid-proxy";
                                     }
@@ -301,7 +303,7 @@ class GetContainersStatus implements ShouldBeUnique
                                 // Clean up orphaned proxy when is_public=false
                                 $orphanedProxy = $this->containers->filter(function ($value, $key) use ($uuid) {
                                     if ($this->server->isSwarm()) {
-                                        return data_get($value, 'Spec.Name') === "coolify-proxy_$uuid";
+                                        return data_get($value, 'Spec.Name') === "stx-proxy_$uuid" || data_get($value, 'Spec.Name') === "coolify-proxy_$uuid";
                                     } else {
                                         return data_get($value, 'Name') === "/$uuid-proxy";
                                     }
@@ -315,7 +317,7 @@ class GetContainersStatus implements ShouldBeUnique
                         }
                     }
                 }
-                if (data_get($container, 'Name') === '/coolify-db') {
+                if (data_get($container, 'Name') === '/stx-db' || data_get($container, 'Name') === '/coolify-db') {
                     $foundDatabases[] = 0;
                 }
             }

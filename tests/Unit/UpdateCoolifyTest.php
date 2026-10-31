@@ -400,7 +400,7 @@ it('does not start a second upgrade while a recent upgrade status is in progress
     $action = updateCoolifyTestActionWithStatus('3|Pulling Docker images|'.now()->subMinutes(2)->toIso8601String());
 
     expect(fn () => $action->handle(manual_update: true))
-        ->toThrow(Exception::class, 'Another Coolify upgrade is already running');
+        ->toThrow(Exception::class, 'upgrade is already running');
 
     expect(Activity::query()->count())->toBe(0)
         ->and(InstanceSettings::findOrFail(0)->new_version_available)->toBeFalsy();

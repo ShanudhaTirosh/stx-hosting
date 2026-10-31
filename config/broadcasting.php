@@ -6,7 +6,7 @@
  * value is treated as unset. The browser-facing PUSHER_HOST must never be used here.
  */
 $backendHost = env('PUSHER_BACKEND_HOST');
-if (blank($backendHost) || $backendHost === 'stx-realtime') {
+if (blank($backendHost) || $backendHost === 'stx-realtime' || $backendHost === 'coolify-realtime') {
     $backendHost = '127.0.0.1';
 }
 
@@ -47,7 +47,7 @@ return [
             'app_id' => env('PUSHER_APP_ID', 'stx'),
             'options' => [
                 'host' => $backendHost,
-                'port' => env('PUSHER_BACKEND_PORT', 6001),
+                'port' => (int) env('PUSHER_BACKEND_PORT', 6001),
                 'scheme' => env('PUSHER_BACKEND_SCHEME', 'http'),
                 'encrypted' => true,
                 'useTLS' => env('PUSHER_BACKEND_SCHEME', 'http') === 'https',
@@ -67,7 +67,7 @@ return [
             'app_id' => env('PUSHER_APP_ID', 'stx'),
             'options' => [
                 'host' => $backendHost,
-                'port' => env('PUSHER_BACKEND_PORT', 6001),
+                'port' => (int) env('PUSHER_BACKEND_PORT', 6001),
                 'scheme' => env('PUSHER_BACKEND_SCHEME', 'http'),
                 'encrypted' => true,
                 'useTLS' => env('PUSHER_BACKEND_SCHEME', 'http') === 'https',

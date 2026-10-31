@@ -246,7 +246,7 @@ class CleanupDocker implements ShouldBeUnique
     }
 
     /**
-     * Build a command that removes stopped Coolify containers, except the proxy and the
+     * Build a command that removes stopped STX Hosting containers, except the proxy and the
      * containers of databases, applications and services.
      *
      * docker container prune only excludes a container that matches all of its label!= filters
@@ -254,14 +254,15 @@ class CleanupDocker implements ShouldBeUnique
      */
     private function buildContainerPruneCommand(): string
     {
-        return "docker ps -a --filter status=created --filter status=exited --filter status=dead --filter label=coolify.managed=true --format '{{.ID}} coolify.proxy={{.Label \"coolify.proxy\"}} coolify.type={{.Label \"coolify.type\"}}' | ".
-            "grep -v -E 'coolify\.proxy=true |coolify\.type=(database|application|service)$' | ".
+        return "docker ps -a --filter status=created --filter status=exited --filter status=dead --format '{{.ID}} stx.managed={{.Label \"stx.managed\"}} coolify.managed={{.Label \"coolify.managed\"}} proxy={{.Label \"stx.proxy\"}}{{.Label \"coolify.proxy\"}} type={{.Label \"stx.type\"}}{{.Label \"coolify.type\"}}' | ".
+            "grep -E 'managed=true' | ".
+            "grep -v -E 'proxy=true|type=(database|application|service)$' | ".
             "awk '{print $1}' | xargs -r docker rm";
     }
 
     /**
-     * Build a command that removes unused images of the Coolify helper, realtime and sentinel,
-     * from any registry. They have the coolify.managed=true label, so the generic image prune
+     * Build a command that removes unused images of the STX helper, realtime and sentinel,
+     * from any registry. They have the stx.managed=true / coolify.managed=true label, so the generic image prune
      * skips them. The current helper version stays, and docker rmi (without -f) keeps images
      * that a container uses, for example the running sentinel.
      */
@@ -270,8 +271,8 @@ class CleanupDocker implements ShouldBeUnique
         $escapedHelperVersion = preg_replace('/([.\\\\+*?\[\]^$(){}|])/', '\\\\$1', $helperImageVersion);
 
         return "docker images --format '{{.Repository}}:{{.Tag}}' | ".
-            "grep -E '(^|/)coollabsio/(coolify-helper|coolify-realtime|sentinel):' | ".
-            "grep -v -E ':<none>$|(^|/)coollabsio/coolify-helper:{$escapedHelperVersion}$' | ".
+            "grep -E '(^|/)(stxhosting|coollabsio)/(stx-helper|coolify-helper|stx-realtime|coolify-realtime|sentinel):' | ".
+            "grep -v -E ':<none>$|(^|/)(stxhosting|coollabsio)/(stx-helper|coolify-helper):{$escapedHelperVersion}$' | ".
             'xargs -r docker rmi 2>/dev/null || true';
     }
 
@@ -295,19 +296,16 @@ class CleanupDocker implements ShouldBeUnique
             return preg_replace('/([.\\\\+*?\[\]^$(){}|])/', '\\\\$1', $repo);
         })->implode('|');
 
-        // Build grep pattern to exclude Coolify infrastructure images (current version only)
+        // Build grep pattern to exclude STX Hosting infrastructure images (current version only)
         // This pattern matches the image name regardless of registry prefix:
-        // - ghcr.io/coollabsio/coolify-helper:1.0.12
-        // - docker.io/coollabsio/coolify-helper:1.0.12
-        // - coollabsio/coolify-helper:1.0.12
-        // Pattern: (^|/)coollabsio/coolify-helper:VERSION$
+        // Pattern: (^|/)(stxhosting|coollabsio)/(stx-helper|coolify-helper):VERSION$
         $escapedHelperVersion = preg_replace('/([.\\\\+*?\[\]^$(){}|])/', '\\\\$1', $helperImageVersion);
-        $infraExcludePattern = "(^|/)coollabsio/coolify-helper:{$escapedHelperVersion}$";
+        $infraExcludePattern = "(^|/)(stxhosting|coollabsio)/(stx-helper|coolify-helper):{$escapedHelperVersion}$";
 
         // Delete unused images that:
         // - Are not application images (don't match app repos)
-        // - Are not current Coolify helper image (any registry)
-        // - Don't have coolify.managed=true label
+        // - Are not current helper image (any registry)
+        // - Don't have stx.managed=true / coolify.managed=true label
         // Images in use by containers will fail silently with docker rmi
         // Pattern matches both uuid:tag and uuid_servicename:tag (Docker Compose with build)
         // Images pulled by digest have no tag and are not dangling, so they are listed as repo@digest
@@ -324,7 +322,7 @@ class CleanupDocker implements ShouldBeUnique
 
         $commands[] = "docker images --digests --format '{{if eq .Tag \"<none>\"}}{{.Repository}}@{{.Digest}}{{else}}{{.Repository}}:{{.Tag}}{{end}}' | ".
             $grepCommands.' | '.
-            "xargs -r -I {} sh -c 'docker inspect --format \"{{index .Config.Labels \\\"coolify.managed\\\"}}\" \"{}\" 2>/dev/null | grep -q true || docker rmi \"{}\" 2>/dev/null' || true";
+            "xargs -r -I {} sh -c 'docker inspect --format \"{{if index .Config.Labels \\\"stx.managed\\\"}}{{index .Config.Labels \\\"stx.managed\\\"}}{{else}}{{index .Config.Labels \\\"coolify.managed\\\"}}{{end}}\" \"{}\" 2>/dev/null | grep -q true || docker rmi \"{}\" 2>/dev/null' || true";
 
         return implode(' && ', $commands);
     }
