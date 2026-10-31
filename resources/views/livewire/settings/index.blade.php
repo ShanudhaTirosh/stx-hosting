@@ -70,8 +70,8 @@
                 <x-application.settings-section title="Development helper">
                     <x-forms.input canGate="update" :canResource="$settings" id="dev_helper_version"
                         label="Version override"
-                        helper="Override the default helper image version. Leave empty to use {{ config('constants.coolify.helper_version') }}."
-                        placeholder="{{ config('constants.coolify.helper_version') }}" />
+                        helper="Override the default helper image version. Leave empty to use {{ config('constants.stx.helper_version', config('constants.coolify.helper_version')) }}."
+                        placeholder="{{ config('constants.stx.helper_version', config('constants.coolify.helper_version')) }}" />
                 </x-application.settings-section>
             @endif
         </form>

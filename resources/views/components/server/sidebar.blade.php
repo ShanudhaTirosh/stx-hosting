@@ -216,7 +216,7 @@
             'group' => 'Danger Zone',
             // STX Hosting host (id 0) cannot be deleted. Other servers may still use
             // host.docker.internal (e.g. Lima VMs) and must keep the Danger menu.
-            'visible' => ! $server->is_coolify_host,
+            'visible' => ! $server->is_stx_host && ! $server->is_coolify_host,
         ],
     ];
 

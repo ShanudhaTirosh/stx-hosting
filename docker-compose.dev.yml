@@ -163,5 +163,5 @@ volumes:
 
 networks:
   stx:
-    name: coolify
+    name: stx
     external: false

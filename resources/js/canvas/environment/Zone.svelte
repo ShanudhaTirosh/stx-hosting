@@ -57,7 +57,7 @@
             class="inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border px-2 text-[11px] font-medium {zone.is_reachable
               ? 'border-warning/40 bg-warning/10 text-warning-700 dark:text-warning'
               : 'border-red-200 bg-red-50 text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400'}"
-            title={zone.is_reachable ? 'Coolify can connect to this server, but cannot use it (for example, Docker is missing)' : 'Coolify cannot connect to this server. The status of its resources is unknown.'}
+            title={zone.is_reachable ? 'STX Hosting can connect to this server, but cannot use it (for example, Docker is missing)' : 'Coolify cannot connect to this server. The status of its resources is unknown.'}
           >
             <span class="size-1.5 rounded-full {zone.is_reachable ? 'bg-warning' : 'bg-red-500'}"></span>
             {zone.is_reachable ? 'Not usable' : 'Unreachable'}

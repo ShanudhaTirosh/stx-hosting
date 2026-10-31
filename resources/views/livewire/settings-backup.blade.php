@@ -45,7 +45,7 @@
                         description="STX Hosting needs an internal database resource to create automatic backups."
                         icon-name="database" size="sm">
                         <x-slot:actions>
-                            <x-forms.button wire:click="addSTX HostingDatabase" isHighlighted>
+                            <x-forms.button wire:click="addStxDatabase" isHighlighted>
                                 Configure backup
                             </x-forms.button>
                         </x-slot:actions>

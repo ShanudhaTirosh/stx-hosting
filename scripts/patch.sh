@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # Patches STX Hosting 4.0 to 4.4 to the security fix release of its own line.
-# Only the coolify container is recreated, the compose files and the other containers stay as they are.
+# Only the STX container is recreated, the compose files and the other containers stay as they are.
 # Usage: curl -fsSL ${CDN:-https://cdn.stxhosting.com/stx}/patch.sh | sudo bash
 set -euo pipefail
 
-SOURCE_DIR=/data/coolify/source
+SOURCE_DIR=/data/stx/source
+if [ ! -d "$SOURCE_DIR" ] && [ -d "/data/coolify/source" ]; then
+	SOURCE_DIR=/data/coolify/source
+fi
+
 ENV_FILE="$SOURCE_DIR/.env"
 TIMESTAMP="$(date +%Y-%m-%d-%H-%M-%S)"
 LOG_FILE="$SOURCE_DIR/patch-$TIMESTAMP.log"
@@ -29,8 +33,8 @@ main() {
 	heading "Patching STX Hosting $current_version to $patch_version"
 	pull_image
 	update_env_file
-	restart_coolify
-	wait_for_coolify
+	restart_stx
+	wait_for_stx
 }
 
 check_installation() {
@@ -48,9 +52,19 @@ check_installation() {
 	ok "STX Hosting is installed in $SOURCE_DIR"
 }
 
+get_container_name() {
+	if docker ps --format '{{.Names}}' | grep -q '^stx$'; then
+		echo "stx"
+	else
+		echo "coolify"
+	fi
+}
+
 read_version() {
+	local container
+	container=$(get_container_name)
 	# Copy the file out of the container, because this also works when the mitigation advice was followed and the container is stopped
-	current_version="$(docker cp coolify:/var/www/html/config/constants.php - 2> /dev/null | tar -xO 2> /dev/null | awk -F "'" "/'version' =>/ && !found { print \$(NF - 1); found = 1 }")" && [ -n "$current_version" ] || die "could not read the STX Hosting version from the coolify container"
+	current_version="$(docker cp ${container}:/var/www/html/config/constants.php - 2> /dev/null | tar -xO 2> /dev/null | awk -F "'" "/'version' =>/ && !found { print \$(NF - 1); found = 1 }")" && [ -n "$current_version" ] || die "could not read the STX Hosting version from the container"
 	ok "STX Hosting $BOLD$current_version$RESET is installed"
 }
 
@@ -76,14 +90,16 @@ check_compose_files() {
 }
 
 pull_image() {
-	LATEST_IMAGE="$patch_version" "${compose[@]}" pull coolify < /dev/null >> "$LOG_FILE" 2>&1 || die "could not pull STX Hosting $patch_version, nothing was changed (log: $LOG_FILE)"
+	local container
+	container=$(get_container_name)
+	LATEST_IMAGE="$patch_version" "${compose[@]}" pull "${container}" < /dev/null >> "$LOG_FILE" 2>&1 || die "could not pull STX Hosting $patch_version, nothing was changed (log: $LOG_FILE)"
 	ok "pulled STX Hosting $patch_version"
 }
 
 update_env_file() {
 	local key updated
 	cp "$ENV_FILE" "$BACKUP_FILE"
-	for key in LATEST_IMAGE COOLIFY_VERSION; do
+	for key in LATEST_IMAGE STX_VERSION COOLIFY_VERSION; do
 		if grep -q "^$key=" "$ENV_FILE"; then
 			updated="$(sed "s|^$key=.*|$key=$patch_version|" "$ENV_FILE")"
 			printf '%s\n' "$updated" > "$ENV_FILE"
@@ -92,24 +108,27 @@ update_env_file() {
 	ok "backed up .env to $BACKUP_FILE"
 }
 
-restart_coolify() {
-	# Detached, because the STX Hosting 4.4 terminal runs inside the coolify container and closes when it stops
-	LATEST_IMAGE="$patch_version" nohup "${compose[@]}" up -d --no-deps coolify < /dev/null >> "$LOG_FILE" 2>&1 &
-	wait $! || die "could not restart the coolify container (log: $LOG_FILE)"
-	ok "restarted the coolify container"
+restart_stx() {
+	local container
+	container=$(get_container_name)
+	# Detached, because the STX Hosting terminal runs inside the container and closes when it stops
+	LATEST_IMAGE="$patch_version" nohup "${compose[@]}" up -d --no-deps "${container}" < /dev/null >> "$LOG_FILE" 2>&1 &
+	wait $! || die "could not restart the STX Hosting container (log: $LOG_FILE)"
+	ok "restarted the STX Hosting container"
 }
 
-wait_for_coolify() {
-	local status
+wait_for_stx() {
+	local status container
+	container=$(get_container_name)
 	for _ in $(seq 60); do
-		status="$(docker inspect --format '{{.State.Health.Status}}' coolify 2> /dev/null || true)"
+		status="$(docker inspect --format '{{.State.Health.Status}}' "${container}" 2> /dev/null || true)"
 		if [ "$status" = healthy ]; then
-			ok "STX Hosting $BOLD$patch_version$RESET is healthy and runs PHP $(docker exec coolify php -r 'echo PHP_VERSION;')"
+			ok "STX Hosting $BOLD$patch_version$RESET is healthy and runs PHP $(docker exec "${container}" php -r 'echo PHP_VERSION;')"
 			return
 		fi
 		sleep 5
 	done
-	info "roll back with: cp $BACKUP_FILE $ENV_FILE && LATEST_IMAGE=$current_version ${compose[*]} up -d --no-deps coolify"
+	info "roll back with: cp $BACKUP_FILE $ENV_FILE && LATEST_IMAGE=$current_version ${compose[*]} up -d --no-deps ${container}"
 	die "STX Hosting $patch_version is not healthy after 5 minutes, check it with: docker logs stx 2>/dev/null || docker logs coolify"
 }
 

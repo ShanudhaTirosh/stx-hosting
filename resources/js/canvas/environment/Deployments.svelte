@@ -6,7 +6,7 @@
 
   let { deployments, nodeById, onshow } = $props();
 
-  const KEY = 'coolify-canvas-deployments-open';
+  const KEY = 'stx-canvas-deployments-open';
   const STATUS = {
     in_progress: ['In progress', 'busy'],
     queued: ['Queued', 'busy'],

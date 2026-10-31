@@ -16,7 +16,7 @@
                         class="logs-section-status-badge" />
                 </x-slot:actions>
                 <div class="settings-log-panel">
-                    <livewire:project.shared.get-logs :server="$server" container="coolify-proxy"
+                    <livewire:project.shared.get-logs :server="$server" container="stx-proxy"
                         displayName="STX Hosting Proxy" :collapsible="false" />
                 </div>
             </x-application.settings-section>

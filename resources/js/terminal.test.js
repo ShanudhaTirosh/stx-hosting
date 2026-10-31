@@ -19,7 +19,7 @@ test('formatTerminalSessionRemainingTime formats the eight hour terminal limit c
 
 function terminalComponent() {
     let factory;
-    const storage = new Map([['coolify-console-history:server:container', '["secret"]']]);
+    const storage = new Map([['stx-console-history:server:container', '["secret"]']]);
     const localStorage = {
         get length() { return storage.size; },
         key: (index) => [...storage.keys()][index],

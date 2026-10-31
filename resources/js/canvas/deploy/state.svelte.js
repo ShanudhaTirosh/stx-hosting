@@ -537,7 +537,7 @@ export async function runFlow(action = 'deploy') {
     if (action === 'deploy') save('deployed', true);
   }
   r.title = ok ? 'Done' : 'Stopped';
-  r.sub = ok ? (action === 'save' ? 'Saved in Coolify. Deploy them from there or from here.' : 'Every step finished.') : 'A step failed. Fix it and try again.';
+  r.sub = ok ? (action === 'save' ? 'Saved in STX Hosting. Deploy them from there or from here.' : 'Every step finished.') : 'A step failed. Fix it and try again.';
   cv.running = false;
 }
 
@@ -580,7 +580,7 @@ async function deployAll(shipped, live) {
   return many ? `${results.length} resources deployed.` : results[0].value;
 }
 
-// Poll the deployment (Coolify's own log view also polls every 2 s).
+// Poll the deployment (STX Hosting's own log view also polls every 2 s).
 // Logs go to the resource's own pane (key).
 async function followDeployment(label, deploymentUuid, key, live) {
   logLine(`Deployment ${deploymentUuid}`, 'dim', key);

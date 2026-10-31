@@ -24,21 +24,21 @@
 #      STX Hosting runs its migrations and seeders on start; no queued or scheduled job runs.
 #
 # Environment overrides:
-#   VM_NAME (coolify-restore-test), VM_MEMORY (4096), VM_VCPUS (4), VM_DISK_SIZE (60G),
-#   IMAGE_DIR (/var/lib/libvirt/images/coolify-restore-test),
-#   NAT_NETWORK (default), OFFLINE_NETWORK (coolify-restore-offline),
+#   VM_NAME (stx-restore-test), VM_MEMORY (4096), VM_VCPUS (4), VM_DISK_SIZE (60G),
+#   IMAGE_DIR (/var/lib/libvirt/images/stx-restore-test),
+#   NAT_NETWORK (default), OFFLINE_NETWORK (stx-restore-offline),
 #   OFFLINE_SUBNET (192.168.241)
 
 set -euo pipefail
 
-VM_NAME=${VM_NAME:-coolify-restore-test}
+VM_NAME=${VM_NAME:-stx-restore-test}
 BUILDER_NAME=$VM_NAME-builder
 VM_MEMORY=${VM_MEMORY:-4096}
 VM_VCPUS=${VM_VCPUS:-4}
 VM_DISK_SIZE=${VM_DISK_SIZE:-60G}
-IMAGE_DIR=${IMAGE_DIR:-/var/lib/libvirt/images/coolify-restore-test}
+IMAGE_DIR=${IMAGE_DIR:-/var/lib/libvirt/images/stx-restore-test}
 NAT_NETWORK=${NAT_NETWORK:-default}
-OFFLINE_NETWORK=${OFFLINE_NETWORK:-coolify-restore-offline}
+OFFLINE_NETWORK=${OFFLINE_NETWORK:-stx-restore-offline}
 OFFLINE_SUBNET=${OFFLINE_SUBNET:-192.168.241}
 # Both VMs use the same MAC address: the guest network config matches the NIC by MAC.
 VM_MAC=52:54:00:c0:1f:01
@@ -195,7 +195,7 @@ build_base_image() {
 [ "${1:-}" = "destroy" ] && {
     delete_vm "$VM_NAME"
     delete_vm "$BUILDER_NAME"
-    rm -f "$IMAGE_DIR"/coolify-base-*.qcow2
+    rm -f "$IMAGE_DIR"/stx-base-*.qcow2
     echo "Deleted VM $VM_NAME, its disk, and the STX Hosting base images."
     exit 0
 }
@@ -217,12 +217,12 @@ done
 [ -e /dev/kvm ] || die "/dev/kvm is not available."
 
 if [ -z "$VERSION" ]; then
-    VERSION=$(curl -fsSL ${CDN:-https://cdn.stxhosting.com/stx}/versions.json | jq -r '.coolify.v4.version')
+    VERSION=$(curl -fsSL ${CDN:-https://cdn.stxhosting.com/stx}/versions.json | jq -r '.stx.v4.version')
     echo "Latest stable version: $VERSION"
 fi
 [[ "${CLOUD_BACKUP,,}" =~ ^(y|yes)$ ]] && SELF_HOSTED=false || SELF_HOSTED=true
 [[ "$VERSION" =~ ^[A-Za-z0-9._-]+$ ]] || die "Version '$VERSION' contains characters that are not allowed."
-BASE_IMAGE="$IMAGE_DIR/coolify-base-$VERSION.qcow2"
+BASE_IMAGE="$IMAGE_DIR/stx-base-$VERSION.qcow2"
 
 # Other VMs and containers can use most of the host memory. A VM that does not fit
 # makes the host swap until it stops responding, so stop before it starts.
@@ -268,9 +268,9 @@ fi
 
 log "Copying the backup into the VM"
 if gzip -t "$BACKUP_FILE" 2>/dev/null; then
-    gzip -dc "$BACKUP_FILE" | vm_ssh 'cat >/root/coolify-backup.dmp'
+    gzip -dc "$BACKUP_FILE" | vm_ssh 'cat >/root/stx-backup.dmp'
 else
-    scp "${SSH_OPTS[@]}" "$BACKUP_FILE" "root@$VM_IP:/root/coolify-backup.dmp"
+    scp "${SSH_OPTS[@]}" "$BACKUP_FILE" "root@$VM_IP:/root/stx-backup.dmp"
 fi
 
 log "Restoring the backup and starting STX Hosting (migrations run on start)"
@@ -280,7 +280,7 @@ log "Restoring the backup and starting STX Hosting (migrations run on start)"
     printf 'SELF_HOSTED=%q\n' "$SELF_HOSTED"
     cat <<'REMOTE'
 set -euo pipefail
-cd /data/coolify/source
+cd /data/stx/source
 
 for _ in $(seq 1 60); do
     [ "$(docker inspect -f '{{.State.Health.Status}}' coolify-db 2>/dev/null)" = healthy ] && break
@@ -289,7 +289,7 @@ done
 
 # Start the same image tag again after the restore.
 LATEST_IMAGE=$(docker inspect -f '{{.Config.Image}}' coolify | sed 's/.*://')
-docker stop coolify >/dev/null
+docker stop stx 2>/dev/null || docker stop coolify >/dev/null
 # coolify-realtime only exists before 4.4; compose recreates it when the restored version still uses it.
 docker rm -f coolify-realtime >/dev/null 2>&1 || true
 
@@ -305,14 +305,14 @@ sed -i '/^SELF_HOSTED=/d' .env
 echo "SELF_HOSTED=${SELF_HOSTED}" >>.env
 
 # Recreate the database: tables from a newer fresh install must not remain.
-docker exec coolify-db psql -q -U coolify -d postgres -v ON_ERROR_STOP=1 \
+docker exec stx-db 2>/dev/null || docker exec stx 2>/dev/null || docker exec coolify-db psql -q -U coolify -d postgres -v ON_ERROR_STOP=1 \
     -c 'DROP DATABASE coolify WITH (FORCE)' -c 'CREATE DATABASE coolify OWNER coolify'
 echo "Running pg_restore..."
-docker exec -i coolify-db pg_restore --exit-on-error --no-acl --no-owner -U coolify -d coolify </root/coolify-backup.dmp
+docker exec -i coolify-db pg_restore --exit-on-error --no-acl --no-owner -U coolify -d coolify </root/stx-backup.dmp
 
 # Drop cached data of the fresh installation.
 REDIS_PASSWORD=$(grep '^REDIS_PASSWORD=' .env | cut -d= -f2-)
-docker exec coolify-redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning FLUSHALL >/dev/null
+docker exec stx-redis 2>/dev/null || docker exec stx 2>/dev/null || docker exec coolify-redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning FLUSHALL >/dev/null
 
 COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
 [ -f docker-compose.custom.yml ] && COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.custom.yml"
@@ -325,22 +325,22 @@ LATEST_IMAGE=$LATEST_IMAGE docker compose --env-file .env $COMPOSE_FILES up -d -
 # The container reports healthy while migrations still run on a large database.
 # Seeders continue in the background; with many servers they can run for a long time.
 echo "Waiting for migrations to finish..."
-while docker exec coolify sh -c "ps aux | grep -q '[a]rtisan start:migration'"; do
+while docker exec stx 2>/dev/null || docker exec coolify sh -c "ps aux | grep -q '[a]rtisan start:migration'"; do
     sleep 5
 done
 
 echo
-echo "--- Migration output (docker logs stx 2>/dev/null || docker logs coolify) ---"
-docker logs stx 2>/dev/null || docker logs coolify 2>&1 | sed -n '/Migration is enabled/,/Seeder is enabled/p'
+echo "--- Migration output (docker logs stx 2>/dev/null || docker logs stx 2>/dev/null || docker logs coolify) ---"
+docker logs stx 2>/dev/null || docker logs stx 2>/dev/null || docker logs coolify 2>&1 | sed -n '/Migration is enabled/,/Seeder is enabled/p'
 echo
 echo "--- Errors after start ---"
-docker logs stx 2>/dev/null || docker logs coolify 2>&1 | grep -iE 'error|exception|fail' | tail -n 30 || true
+docker logs stx 2>/dev/null || docker logs stx 2>/dev/null || docker logs coolify 2>&1 | grep -iE 'error|exception|fail' | tail -n 30 || true
 echo
 echo "--- Pending migrations ---"
-docker exec coolify php artisan migrate:status --pending || true
+docker exec stx 2>/dev/null || docker exec coolify php artisan migrate:status --pending || true
 echo
 echo "--- Queue workers and scheduler ---"
-if docker exec coolify sh -c "ps aux | grep -qE '[a]rtisan (horizon|schedule:work|queue:work)'"; then
+if docker exec stx 2>/dev/null || docker exec coolify sh -c "ps aux | grep -qE '[a]rtisan (horizon|schedule:work|queue:work)'"; then
     echo "ERROR: A queue worker or the scheduler runs."
     exit 1
 fi

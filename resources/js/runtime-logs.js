@@ -258,9 +258,9 @@ export function initializeRuntimeLogsComponent() {
             lastTouchY: 0,
             scrollDebounce: null,
             destroyed: false,
-            colorLogs: localStorage.getItem('coolify-color-logs') === 'true',
-            textView: prefersTextView(localStorage.getItem('coolify-log-text-view')),
-            logFilters: readLogFilters(localStorage.getItem('coolify-log-filters')),
+            colorLogs: (localStorage.getItem('stx-color-logs') || localStorage.getItem('coolify-color-logs')) === 'true',
+            textView: prefersTextView((localStorage.getItem('stx-log-text-view') || localStorage.getItem('coolify-log-text-view'))),
+            logFilters: readLogFilters((localStorage.getItem('stx-log-filters') || localStorage.getItem('coolify-log-filters'))),
             searchQuery: '',
             appliedQuery: '',
             matchCount: 0,
@@ -519,19 +519,19 @@ export function initializeRuntimeLogsComponent() {
 
             toggleLogFilter(level) {
                 this.logFilters[level] = !this.logFilters[level];
-                localStorage.setItem('coolify-log-filters', JSON.stringify(this.logFilters));
+                localStorage.setItem('stx-log-filters', JSON.stringify(this.logFilters));
                 this.applyFilters();
             },
 
             toggleColorLogs() {
                 this.colorLogs = !this.colorLogs;
-                localStorage.setItem('coolify-color-logs', this.colorLogs);
+                localStorage.setItem('stx-color-logs', this.colorLogs);
             },
 
             // Plain text lines without columns, row borders, or expandable details.
             toggleTextView() {
                 this.textView = !this.textView;
-                localStorage.setItem('coolify-log-text-view', this.textView);
+                localStorage.setItem('stx-log-text-view', this.textView);
                 this.$nextTick(() => {
                     virtualizer?.measure();
                     this.$refs.list?.querySelectorAll('.runtime-log-virtual-row').forEach((el) => this.measureRow(el));

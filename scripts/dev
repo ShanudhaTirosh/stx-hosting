@@ -12,20 +12,20 @@
 #
 # Each branch is one instance: Compose project, container, volumes, and VMs are
 # named after it, so stop + start keeps the same data. Detached HEAD uses the
-# checkout directory name. Set COOLIFY_DEV_INSTANCE=<name> to override.
+# checkout directory name. Set STX_DEV_INSTANCE=<name> to override.
 #
 # Server backend (auto): KVM on Linux with /dev/kvm and root/sudo, Lima on macOS when
 # limactl (Lima >= 2.0) is installed, else the testing-host container. Lima VMs are
-# named coolify-dev-<slot>-<profile>; rebuild one with: limactl delete -f <vm>
+# named stx-dev-<slot>-<profile>; rebuild one with: limactl delete -f <vm>
 #
 # Ports: the main checkout uses 8000 (Reverb 6001, terminal 6002, db 5432, redis 6379,
 # vite 5173). Worktrees use 20000 + slot*10: app +0, Reverb +1, terminal +2, db +3,
 # redis +4, vite +5, mailpit +6/+7, minio +8/+9.
 #
-# Env: COOLIFY_DEV_SERVER_BACKEND=auto|lima|testing-host, COOLIFY_DEV_KVM_PROFILE=<profile>
-#      COOLIFY_DEV_GPU=1 passes the host NVIDIA GPU through to the KVM VM (ubuntu-root only)
+# Env: STX_DEV_SERVER_BACKEND=auto|lima|testing-host, STX_DEV_KVM_PROFILE=<profile>
+#      STX_DEV_GPU=1 passes the host NVIDIA GPU through to the KVM VM (ubuntu-root only)
 #
-# Side by side: COOLIFY_DEV_INSTANCE=<name> COOLIFY_DEV_SIDE_BY_SIDE=1 starts a second instance of
+# Side by side: STX_DEV_INSTANCE=<name> STX_DEV_SIDE_BY_SIDE=1 starts a second instance of
 # this checkout without stopping the other ones (for example a transfer target, see
 # scripts/transfer-test). It gets its own SSH key folder; the instance remembers the mode.
 #
@@ -40,7 +40,7 @@ GIT_COMMON_DIR="$(git rev-parse --path-format=absolute --git-common-dir)"
 # Shared by all worktrees, so slots, APP_KEYs, and data survive worktree removal.
 ENV_DIR="$(dirname "$GIT_COMMON_DIR")/.dev-instances"
 SLOTS_FILE="$ENV_DIR/slots"
-QEMU_STORAGE="${DEVELOPMENT_QEMU_STORAGE_PATH:-/var/lib/libvirt/images/coolify-development}"
+QEMU_STORAGE="${DEVELOPMENT_QEMU_STORAGE_PATH:-/var/lib/libvirt/images/stx-development}"
 LEGACY_CONTAINERS=(coolify coolify-db coolify-redis coolify-vite coolify-mail coolify-minio coolify-minio-init stx-testing-host)
 
 usage() {
@@ -62,14 +62,14 @@ is_linked_worktree() {
 }
 
 current_instance() {
-  if [[ -n "${COOLIFY_DEV_INSTANCE:-}" ]]; then
-    normalize_name "$COOLIFY_DEV_INSTANCE"
+  if [[ -n "${STX_DEV_INSTANCE:-}" ]]; then
+    normalize_name "$STX_DEV_INSTANCE"
     return
   fi
   normalize_name "$(git symbolic-ref --quiet --short HEAD || basename "$ROOT")"
 }
 
-project_name() { echo "coolify-dev-$1"; }
+project_name() { echo "stx-dev-$1"; }
 env_file() { echo "$ENV_DIR/$1.env"; }
 env_value() { grep -E "^$2=" "$(env_file "$1")" | cut -d= -f2-; }
 is_side_by_side() { [[ -f "$(env_file "$1")" ]] && grep -qxF 'DEV_SIDE_BY_SIDE=1' "$(env_file "$1")"; }
@@ -119,7 +119,7 @@ ensure_env() {
   slot="$(instance_slot "$name")"
   env_file="$(env_file "$name")"
 
-  if ! is_linked_worktree && [[ -z "${COOLIFY_DEV_INSTANCE:-}" ]]; then
+  if ! is_linked_worktree && [[ -z "${STX_DEV_INSTANCE:-}" ]]; then
     app=8000 reverb=6001 terminal=6002 db=5432 redis=6379 vite=5173
     mail=1025 mail_ui=8025 minio=9000 minio_ui=9001
   else
@@ -142,7 +142,7 @@ ensure_env() {
   fi
   printf '%s\n' "$existing_key" >"$ENV_DIR/$name.appkey"
 
-  local side_by_side="${COOLIFY_DEV_SIDE_BY_SIDE:-}"
+  local side_by_side="${STX_DEV_SIDE_BY_SIDE:-}"
   if [[ -z "$side_by_side" ]] && is_side_by_side "$name"; then
     side_by_side=1
   fi
@@ -192,9 +192,9 @@ compose() {
 }
 
 select_backend() {
-  backend="${COOLIFY_DEV_SERVER_BACKEND:-auto}"
+  backend="${STX_DEV_SERVER_BACKEND:-auto}"
   if [[ "$backend" != "auto" && "$backend" != "lima" && "$backend" != "testing-host" ]]; then
-    echo 'COOLIFY_DEV_SERVER_BACKEND must be auto, lima, or testing-host.' >&2
+    echo 'STX_DEV_SERVER_BACKEND must be auto, lima, or testing-host.' >&2
     exit 2
   fi
   privileged=()
@@ -203,7 +203,7 @@ select_backend() {
   fi
   if [[ "$backend" == "lima" ]]; then
     command -v limactl >/dev/null || {
-      echo 'COOLIFY_DEV_SERVER_BACKEND=lima needs limactl (brew install lima).' >&2
+      echo 'STX_DEV_SERVER_BACKEND=lima needs limactl (brew install lima).' >&2
       exit 2
     }
   elif [[ "$backend" == "auto" && "$(uname -s)" == Darwin ]] && command -v limactl >/dev/null; then
@@ -220,7 +220,7 @@ select_backend() {
   fi
 }
 
-wait_for_coolify() {
+wait_for_stx() {
   local container attempt status
   container="$(project_name "$instance")"
   for ((attempt = 0; attempt < 150; attempt++)); do
@@ -276,11 +276,11 @@ tailscale_serve() {
 vm_domains() {
   command -v virsh >/dev/null || return 0
   "${privileged[@]}" virsh --connect qemu:///system list "$@" --name 2>/dev/null |
-    grep -E "^coolify-dev-${instance}--" || true
+    grep -E "^stx-dev-${instance}--" || true
 }
 
-# Lima VMs of an instance are named coolify-dev-<slot>-<profile>; Lima names allow no "--".
-lima_vm() { echo "coolify-dev-$(env_value "$instance" DEVELOPMENT_QEMU_SLOT)-$1"; }
+# Lima VMs of an instance are named stx-dev-<slot>-<profile>; Lima names allow no "--".
+lima_vm() { echo "stx-dev-$(env_value "$instance" DEVELOPMENT_QEMU_SLOT)-$1"; }
 
 lima_vms() {
   command -v limactl >/dev/null || return 0
@@ -305,7 +305,7 @@ lima_config() {
       ;;
   esac
   user=root
-  [[ "$1" == *-non-root ]] && user=coolify
+  [[ "$1" == *-non-root ]] && user=stx
   key="$(sed -n "s/^ *'public_key' => '\(.*\)',\$/\1/p" config/development-qemu.php 2>/dev/null)"
   if [[ -z "$key" ]]; then
     echo 'Cannot read public_key from config/development-qemu.php.' >&2
@@ -389,7 +389,7 @@ start_lima_vm() {
   fi
   limactl start --tty=false "$vm"
   port="$(limactl list --format '{{.SSHLocalPort}}' "$vm")"
-  compose "$instance" exec -T coolify php artisan dev:qemu:seed "$profile" --as-localhost \
+  compose "$instance" exec -T stx php artisan dev:qemu:seed "$profile" --as-localhost \
     --ip=host.docker.internal --port="$port"
 }
 
@@ -397,14 +397,14 @@ start_backend() {
   stop_other_checkout_instances
   echo "==> Instance ${instance} → $(env_value "$instance" APP_URL) (backend: ${backend})"
   compose "$instance" up -d --build
-  wait_for_coolify
+  wait_for_stx
   tailscale_serve on
   if [[ "$backend" == "kvm" ]]; then
     local host="${DEV_BIND_ADDRESS:-127.0.0.1}"
     [[ "$host" == 0.0.0.0 ]] && host=127.0.0.1
     echo "Using KVM profile: $profile"
     local gpu=()
-    [[ "${COOLIFY_DEV_GPU:-}" == 1 ]] && gpu=(--gpu)
+    [[ "${STX_DEV_GPU:-}" == 1 ]] && gpu=(--gpu)
     # Use this instance database and encryption key, without a stale environment or config cache.
     # Send logs to stderr to avoid root-owned files in storage/logs.
     APP_ENV=local APP_CONFIG_CACHE="$ROOT/bootstrap/cache/dev-qemu-$$.php" \
@@ -414,13 +414,13 @@ start_backend() {
       DEVELOPMENT_QEMU_INSTANCE="$instance" \
       DEVELOPMENT_QEMU_SLOT="$(env_value "$instance" DEVELOPMENT_QEMU_SLOT)" \
       DEVELOPMENT_QEMU_DOCKER_NETWORK="$(project_name "$instance")" \
-      DEVELOPMENT_QEMU_COOLIFY_CONTAINER="$(project_name "$instance")" \
+      DEVELOPMENT_QEMU_STX_CONTAINER="$(project_name "$instance")" \
       "${privileged[@]}" php artisan dev:qemu "$profile" --as-localhost "${gpu[@]}"
   elif [[ "$backend" == "lima" ]]; then
     echo "Using Lima profile: $profile"
     start_lima_vm
   else
-    compose "$instance" exec -T coolify php artisan db:seed --class=ServerSeeder --force
+    compose "$instance" exec -T stx php artisan db:seed --class=ServerSeeder --force
   fi
 }
 
@@ -428,7 +428,7 @@ stop_backend() {
   local domain
   if [[ "$backend" == "kvm" ]]; then
     for domain in $(vm_domains --state-running); do
-      if [[ -z "$profile_arg" || "$domain" == "coolify-dev-${instance}--${profile_arg}" ]]; then
+      if [[ -z "$profile_arg" || "$domain" == "stx-dev-${instance}--${profile_arg}" ]]; then
         "${privileged[@]}" virsh --connect qemu:///system shutdown "$domain"
       fi
     done
@@ -475,10 +475,10 @@ cmd_destroy() {
       "${privileged[@]}" virsh --connect qemu:///system destroy "$domain" >/dev/null 2>&1 || true
       "${privileged[@]}" virsh --connect qemu:///system undefine "$domain" >/dev/null
     done
-    "${privileged[@]}" rm -f "$QEMU_STORAGE/coolify-dev-${name}--"*
-    if "${privileged[@]}" virsh --connect qemu:///system net-info "coolify-dev-${slot}" >/dev/null 2>&1; then
-      "${privileged[@]}" virsh --connect qemu:///system net-destroy "coolify-dev-${slot}" >/dev/null 2>&1 || true
-      "${privileged[@]}" virsh --connect qemu:///system net-undefine "coolify-dev-${slot}" >/dev/null
+    "${privileged[@]}" rm -f "$QEMU_STORAGE/stx-dev-${name}--"*
+    if "${privileged[@]}" virsh --connect qemu:///system net-info "stx-dev-${slot}" >/dev/null 2>&1; then
+      "${privileged[@]}" virsh --connect qemu:///system net-destroy "stx-dev-${slot}" >/dev/null 2>&1 || true
+      "${privileged[@]}" virsh --connect qemu:///system net-undefine "stx-dev-${slot}" >/dev/null
     fi
     if [[ -n "$subnet" ]]; then
       "${privileged[@]}" iptables -D LIBVIRT_FWI -s "$subnet" -d "10.221.${slot}.0/24" -o "cdevbr${slot}" -j ACCEPT >/dev/null 2>&1 || true
@@ -516,7 +516,7 @@ case "$command" in
 esac
 
 profile_arg="${1:-}"
-profile="${profile_arg:-${COOLIFY_DEV_KVM_PROFILE:-ubuntu-root}}"
+profile="${profile_arg:-${STX_DEV_KVM_PROFILE:-ubuntu-root}}"
 select_backend
 
 case "$command" in
@@ -583,6 +583,6 @@ case "$command" in
       usage >&2
       exit 2
     }
-    compose "$instance" exec coolify "$@"
+    compose "$instance" exec stx "$@"
     ;;
 esac

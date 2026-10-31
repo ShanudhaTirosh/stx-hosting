@@ -494,6 +494,7 @@ body {
     @apply text-sm font-sans antialiased scrollbar overflow-x-clip;
 }
 
+.stx-monaco-editor,
 .coolify-monaco-editor {
     @apply min-w-0 w-full;
     overflow: hidden;
@@ -501,6 +502,8 @@ body {
     border: 1px solid var(--coollabs-line, #e5e5e5);
 }
 
+.stx-monaco-editor .monaco-editor,
+.stx-monaco-editor .overflow-guard,
 .coolify-monaco-editor .monaco-editor,
 .coolify-monaco-editor .overflow-guard {
     max-width: 100%;
@@ -6233,7 +6236,7 @@ html .application-settings-navigation .menu-item-icon {
     inherits: false;
 }
 
-/* Canvases at full zoom: the grid dots turn into small Coolify logos, one
+/* Canvases at full zoom: the grid dots turn into small STX logos, one
    per 20px tile. setCanvasDots() (environment-canvas.js) sets .canvas-zoom-max. */
 .canvas-zoom-max {
     --canvas-dots-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath transform='translate(8 8) scale(0.0125)' d='M64 256H0V64h64Zm0-192V0h256v64Zm0 192h256v64H64Z' fill='rgb(0 0 0 / 0.13)'/%3E%3C/svg%3E");

@@ -147,7 +147,7 @@ services:
   #   entrypoint: >
   #     /bin/sh -c "
   #     echo 'Waiting for MaxIO to be ready...';
-  #     until mc alias set local http://coolify-maxio:9000 maxioadmin maxioadmin 2>/dev/null; do
+  #     until mc alias set local http://stx-maxio:9000 maxioadmin maxioadmin 2>/dev/null; do
   #       echo 'MaxIO not ready yet, waiting...';
   #       sleep 2;
   #     done;

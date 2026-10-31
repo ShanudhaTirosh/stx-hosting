@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
  */
 function get_versions_data(): ?array
 {
-    return Cache::remember('coolify:versions:all', 3600, function () {
+    return Cache::remember('stx:versions:all', 3600, function () {
         $versionsPath = base_path('versions.json');
 
         if (! File::exists($versionsPath)) {
@@ -97,7 +97,10 @@ function cdn_retry_delay_ms(int $attempt, Throwable $exception): int
  */
 function refresh_versions_file(int $tries = 3): ?array
 {
-    $response = cdn_http($tries)->get(config('constants.coolify.versions_url'));
+    Cache::forget('stx:versions:all');
+    Cache::forget('coolify:versions:all');
+
+    $response = cdn_http($tries)->get(config('constants.stx.versions_url', config('constants.coolify.versions_url')));
     $versions = $response->json();
     if ($response->failed() || ! is_array($versions)) {
         Log::warning('Could not fetch versions.json from the CDN, using the local file', ['status' => $response->status()]);
@@ -105,24 +108,24 @@ function refresh_versions_file(int $tries = 3): ?array
         return null;
     }
 
-    $latestVersion = data_get($versions, 'coolify.v4.version');
-    $currentVersion = config('constants.coolify.version');
+    $latestVersion = data_get($versions, 'stx.v4.version', data_get($versions, 'coolify.v4.version'));
+    $currentVersion = config('constants.stx.version', config('constants.coolify.version'));
 
-    $existingCoolifyVersion = null;
+    $existingStxVersion = null;
     if (File::exists(base_path('versions.json'))) {
         $existingVersions = json_decode(File::get(base_path('versions.json')), true);
-        $existingCoolifyVersion = data_get($existingVersions, 'coolify.v4.version');
+        $existingStxVersion = data_get($existingVersions, 'stx.v4.version', data_get($existingVersions, 'coolify.v4.version'));
     }
 
     $bestVersion = $latestVersion;
 
-    if ($existingCoolifyVersion && version_compare($existingCoolifyVersion, $bestVersion, '>')) {
-        Log::warning('CDN served older Coolify version than cache', [
+    if ($existingStxVersion && version_compare($existingStxVersion, $bestVersion, '>')) {
+        Log::warning('CDN served older STX Hosting version than cache', [
             'cdn_version' => $latestVersion,
-            'cached_version' => $existingCoolifyVersion,
+            'cached_version' => $existingStxVersion,
             'current_version' => $currentVersion,
         ]);
-        $bestVersion = $existingCoolifyVersion;
+        $bestVersion = $existingStxVersion;
     }
 
     if (version_compare($bestVersion, $currentVersion, '<')) {

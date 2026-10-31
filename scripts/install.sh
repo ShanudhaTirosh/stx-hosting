@@ -19,7 +19,10 @@ CDN="${CDN:-https://cdn.stxhosting.com/stx}"
 DATE=$(date +"%Y%m%d-%H%M%S")
 
 OS_TYPE=$(grep -w "ID" /etc/os-release | cut -d "=" -f 2 | tr -d '"')
-ENV_FILE="/data/coolify/source/.env"
+ENV_FILE="/data/stx/source/.env"
+if [ ! -f "$ENV_FILE" ] && [ -f "/data/stx/source/.env" ]; then
+    ENV_FILE="/data/stx/source/.env"
+fi
 DOCKER_VERSION="latest"
 # TODO: Ask for a user
 CURRENT_USER=$USER
@@ -40,24 +43,24 @@ create_data_directory() {
 }
 
 # Run only after the checks and downloads succeed, so a failed run does not change the data directories (#11973).
-create_coolify_directories() {
-    for COOLIFY_DIRECTORY in /data/coolify/{applications,databases,backups,services,proxy,proxy/dynamic,sentinel}; do
+create_stx_directories() {
+    for COOLIFY_DIRECTORY in /data/stx/{applications,databases,backups,services,proxy,proxy/dynamic,sentinel}; do
         create_data_directory "$COOLIFY_DIRECTORY"
     done
-    mkdir -p /data/coolify/images /data/coolify/ssh/{keys,mux}
+    mkdir -p /data/stx/images /data/stx/ssh/{keys,mux}
 }
 
 # STX Hosting's own directories, used by the coolify container (UID 9999)
-set_coolify_directory_permissions() {
-    chown -R 9999:root /data/coolify/{source,ssh,images}
-    chmod -R 700 /data/coolify/{source,ssh,images}
+set_stx_directory_permissions() {
+    chown -R 9999:root /data/stx/{source,ssh,images}
+    chmod -R 700 /data/stx/{source,ssh,images}
 }
 
-# The installation log and the downloaded files go to /data/coolify/source, so only it is created before the checks.
-create_data_directory /data/coolify
-mkdir -p /data/coolify/source
+# The installation log and the downloaded files go to /data/stx/source, so only it is created before the checks.
+create_data_directory /data/stx
+mkdir -p /data/stx/source
 
-INSTALLATION_LOG_WITH_DATE="/data/coolify/source/installation-${DATE}.log"
+INSTALLATION_LOG_WITH_DATE="/data/stx/source/installation-${DATE}.log"
 
 # Terminal UI: the terminal only shows the step list, everything else goes to the log file
 TOTAL_STEPS=9
@@ -359,9 +362,9 @@ DOCKER_ADDRESS_POOL_BASE=${DOCKER_ADDRESS_POOL_BASE:-"$DOCKER_ADDRESS_POOL_BASE_
 DOCKER_ADDRESS_POOL_SIZE=${DOCKER_ADDRESS_POOL_SIZE:-$DOCKER_ADDRESS_POOL_SIZE_DEFAULT}
 
 # Load Docker address pool configuration from .env file if it exists and environment variables were not provided
-if [ -f "/data/coolify/source/.env" ] && [ "$DOCKER_POOL_BASE_PROVIDED" = false ] && [ "$DOCKER_POOL_SIZE_PROVIDED" = false ]; then
-    ENV_DOCKER_ADDRESS_POOL_BASE=$(grep -E "^DOCKER_ADDRESS_POOL_BASE=" /data/coolify/source/.env | cut -d '=' -f2 || true)
-    ENV_DOCKER_ADDRESS_POOL_SIZE=$(grep -E "^DOCKER_ADDRESS_POOL_SIZE=" /data/coolify/source/.env | cut -d '=' -f2 || true)
+if [ -f "/data/stx/source/.env" ] && [ "$DOCKER_POOL_BASE_PROVIDED" = false ] && [ "$DOCKER_POOL_SIZE_PROVIDED" = false ]; then
+    ENV_DOCKER_ADDRESS_POOL_BASE=$(grep -E "^DOCKER_ADDRESS_POOL_BASE=" /data/stx/source/.env | cut -d '=' -f2 || true)
+    ENV_DOCKER_ADDRESS_POOL_SIZE=$(grep -E "^DOCKER_ADDRESS_POOL_SIZE=" /data/stx/source/.env | cut -d '=' -f2 || true)
 
     if [ -n "$ENV_DOCKER_ADDRESS_POOL_BASE" ]; then
         DOCKER_ADDRESS_POOL_BASE="$ENV_DOCKER_ADDRESS_POOL_BASE"
@@ -878,15 +881,15 @@ step_start "Downloading required files from CDN"
 log "Downloading configuration files in parallel..."
 
 # Download files in parallel for faster installation
-curl -fsSL -L $CDN/docker-compose.yml -o /data/coolify/source/docker-compose.yml &
+curl -fsSL -L $CDN/docker-compose.yml -o /data/stx/source/docker-compose.yml &
 PID1=$!
-curl -fsSL -L $CDN/docker-compose.prod.yml -o /data/coolify/source/docker-compose.prod.yml &
+curl -fsSL -L $CDN/docker-compose.prod.yml -o /data/stx/source/docker-compose.prod.yml &
 PID2=$!
-curl -fsSL -L $CDN/.env.production -o /data/coolify/source/.env.production &
+curl -fsSL -L $CDN/.env.production -o /data/stx/source/.env.production &
 PID3=$!
-curl -fsSL -L $CDN/upgrade.sh -o /data/coolify/source/upgrade.sh &
+curl -fsSL -L $CDN/upgrade.sh -o /data/stx/source/upgrade.sh &
 PID4=$!
-curl -fsSL -L $CDN/upgrade-postgres.sh -o /data/coolify/source/upgrade-postgres.sh &
+curl -fsSL -L $CDN/upgrade-postgres.sh -o /data/stx/source/upgrade-postgres.sh &
 PID5=$!
 
 # Wait for all downloads to complete and check for errors
@@ -902,7 +905,7 @@ if [ "$DOWNLOAD_FAILED" = true ]; then
     exit 1
 fi
 
-chmod +x /data/coolify/source/upgrade.sh /data/coolify/source/upgrade-postgres.sh
+chmod +x /data/stx/source/upgrade.sh /data/stx/source/upgrade-postgres.sh
 log "All configuration files downloaded successfully"
 step_done
 
@@ -914,12 +917,12 @@ if [ -f "$ENV_FILE" ]; then
     cp "$ENV_FILE" "$ENV_FILE-$DATE"
     # Merge .env.production values into .env
     echo " - Merging .env.production values into .env"
-    awk -F '=' '!seen[$1]++' "$ENV_FILE" "/data/coolify/source/.env.production" > "$ENV_FILE.tmp" && mv "$ENV_FILE.tmp" "$ENV_FILE"
+    awk -F '=' '!seen[$1]++' "$ENV_FILE" "/data/stx/source/.env.production" > "$ENV_FILE.tmp" && mv "$ENV_FILE.tmp" "$ENV_FILE"
     echo " - .env file merged successfully"
 else
     # If no .env exists, copy .env.production to .env
     echo " - No .env file found, copying .env.production to .env"
-    cp "/data/coolify/source/.env.production" "$ENV_FILE"
+    cp "/data/stx/source/.env.production" "$ENV_FILE"
 fi
 log "Environment file setup completed"
 
@@ -1009,7 +1012,14 @@ step_done
 
 step_start "Checking SSH key for localhost access"
 SSH_KEY_DETAIL="existing key"
-create_coolify_directories
+create_stx_directories
+
+# Symlink between /data/stx and /data/coolify for backward compatibility
+if [ -d "/data/coolify" ] && [ ! -d "/data/stx" ]; then
+    ln -s /data/coolify /data/stx 2>/dev/null || true
+elif [ -d "/data/stx" ] && [ ! -d "/data/coolify" ]; then
+    ln -s /data/stx /data/coolify 2>/dev/null || true
+fi
 if [ ! -f ~/.ssh/authorized_keys ]; then
     mkdir -p ~/.ssh
     chmod 700 ~/.ssh
@@ -1018,32 +1028,32 @@ if [ ! -f ~/.ssh/authorized_keys ]; then
 fi
 
 set +e
-IS_COOLIFY_VOLUME_EXISTS=$(docker volume ls | grep coolify-db | wc -l)
+IS_STX_VOLUME_EXISTS=$(docker volume ls | grep -E "stx-db|coolify-db" | wc -l)
 set -e
 
-if [ "$IS_COOLIFY_VOLUME_EXISTS" -eq 0 ]; then
+if [ "$IS_STX_VOLUME_EXISTS" -eq 0 ]; then
     echo " - Generating SSH key."
     SSH_KEY_DETAIL="generated new key"
-    test -f /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal && rm -f /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal
-    test -f /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub && rm -f /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub
-    ssh-keygen -t ed25519 -a 100 -f /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal -q -N "" -C coolify
-    chown 9999 /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal
+    test -f /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal && rm -f /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal
+    test -f /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub && rm -f /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub
+    ssh-keygen -t ed25519 -a 100 -f /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal -q -N "" -C coolify
+    chown 9999 /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal
     # Remove only the key from a previous install (comment "coolify", or "root@coolify" before September 2024), not other keys that contain "coolify"
     sed -i -E "/[[:space:]](root@)?coolify[[:space:]]*$/d" ~/.ssh/authorized_keys
-    cat /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub >>~/.ssh/authorized_keys
-    rm -f /data/coolify/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub
+    cat /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub >>~/.ssh/authorized_keys
+    rm -f /data/stx/ssh/keys/id.$CURRENT_USER@host.docker.internal.pub
 fi
 
-set_coolify_directory_permissions
+set_stx_directory_permissions
 log "SSH key check completed"
 step_done "$SSH_KEY_DETAIL"
 
 step_start "Pulling images" "stx-platform · postgres · redis · helper"
 # fd 3 is closed so the detached container restart in upgrade.sh does not hold the terminal open
 if [[ $- == *x* ]]; then
-    bash -x /data/coolify/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-docker.io}" "true" 3>&-
+    bash -x /data/stx/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-docker.io}" "true" 3>&-
 else
-    bash /data/coolify/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-docker.io}" "true" 3>&-
+    bash /data/stx/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-docker.io}" "true" 3>&-
 fi
 step_done
 
@@ -1051,10 +1061,10 @@ step_start "Starting STX Hosting" "v${LATEST_VERSION}"
 echo " - Waiting for STX Hosting to be ready..."
 
 # Wait for upgrade.sh background process to complete
-# upgrade.sh writes status to /data/coolify/source/.upgrade-status
+# upgrade.sh writes status to /data/stx/source/.upgrade-status
 # Status file format: step|message|timestamp
 # Step 6 = "Upgrade complete", file deleted 10 seconds after
-UPGRADE_STATUS_FILE="/data/coolify/source/.upgrade-status"
+UPGRADE_STATUS_FILE="/data/stx/source/.upgrade-status"
 MAX_WAIT=180
 WAITED=0
 SEEN_STATUS_FILE=false
@@ -1070,7 +1080,7 @@ while [ $WAITED -lt $MAX_WAIT ]; do
             break
         elif [ "$STATUS" = "error" ]; then
             echo " - ERROR: Upgrade failed: $MESSAGE"
-            echo " - Please check the upgrade logs: /data/coolify/source/upgrade-*.log"
+            echo " - Please check the upgrade logs: /data/stx/source/upgrade-*.log"
             exit 1
         else
             if [ $((WAITED % 10)) -eq 0 ]; then
@@ -1102,7 +1112,7 @@ if [ $WAITED -ge $MAX_WAIT ]; then
         sleep 20
     else
         echo " - ERROR: Upgrade timed out after ${MAX_WAIT}s"
-        echo " - Please check the upgrade logs: /data/coolify/source/upgrade-*.log"
+        echo " - Please check the upgrade logs: /data/stx/source/upgrade-*.log"
         exit 1
     fi
 fi
@@ -1112,7 +1122,7 @@ echo " - Verifying STX Hosting is healthy..."
 HEALTH_WAIT=60
 HEALTH_WAITED=0
 while [ $HEALTH_WAITED -lt $HEALTH_WAIT ]; do
-    HEALTH=$(docker inspect --format='{{.State.Health.Status}}' coolify 2>/dev/null || echo "unknown")
+    HEALTH=$(docker inspect --format='{{.State.Health.Status}}' stx 2>/dev/null || docker inspect --format='{{.State.Health.Status}}' coolify 2>/dev/null || echo "unknown")
     if [ "$HEALTH" = "healthy" ]; then
         log "STX Hosting container is healthy"
         echo " - STX Hosting is ready!"
@@ -1124,7 +1134,7 @@ done
 
 if [ "$HEALTH" != "healthy" ]; then
     echo " - ERROR: STX Hosting container is not healthy after ${HEALTH_WAIT}s. Status: $HEALTH"
-    echo " - Please check: docker logs stx 2>/dev/null || docker logs coolify"
+    echo " - Please check: docker logs stx 2>/dev/null || docker logs stx 2>/dev/null || docker logs coolify"
     exit 1
 fi
 step_done
@@ -1167,10 +1177,10 @@ for IP in $PRIVATE_IPS; do
     fi
 done
 
-if [ "$IS_COOLIFY_VOLUME_EXISTS" -eq 0 ] && { [ -z "$ROOT_USER_EMAIL" ] || [ -z "$ROOT_USER_PASSWORD" ]; }; then
-    printf '\n  %s! Create the root account within 10 minutes. If the time ends, run %sdocker restart stx 2>/dev/null || docker restart coolify%s%s and try again.%s\n' "$C_YELLOW" "$C_BOLD" "$C_RESET" "$C_YELLOW" "$C_RESET" >&3
+if [ "$IS_STX_VOLUME_EXISTS" -eq 0 ] && { [ -z "$ROOT_USER_EMAIL" ] || [ -z "$ROOT_USER_PASSWORD" ]; }; then
+    printf '\n  %s! Create the root account within 10 minutes. If the time ends, run %sdocker restart stx 2>/dev/null || docker restart stx 2>/dev/null || docker restart coolify%s%s and try again.%s\n' "$C_YELLOW" "$C_BOLD" "$C_RESET" "$C_YELLOW" "$C_RESET" >&3
 fi
-printf '\n  %s! Back up %s/data/coolify/source/.env%s%s to a safe place outside this server (e.g. a password manager).%s\n' "$C_YELLOW" "$C_BOLD" "$C_RESET" "$C_YELLOW" "$C_RESET" >&3
+printf '\n  %s! Back up %s/data/stx/source/.env%s%s to a safe place outside this server (e.g. a password manager).%s\n' "$C_YELLOW" "$C_BOLD" "$C_RESET" "$C_YELLOW" "$C_RESET" >&3
 printf '  %sLog file: %s%s\n\n' "$C_DIM" "$INSTALLATION_LOG_WITH_DATE" "$C_RESET" >&3
 
 log_section "Installation Complete"

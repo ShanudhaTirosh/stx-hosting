@@ -18,11 +18,11 @@ import { FitAddon } from '@xterm/addon-fit';
 const terminalDebugParameter = new URLSearchParams(window.location.search).get('terminal-debug');
 
 if (terminalDebugParameter === '1' || terminalDebugParameter === '0') {
-    localStorage.setItem('coolify-terminal-debug', terminalDebugParameter);
+    localStorage.setItem('stx-terminal-debug', terminalDebugParameter);
 }
 
 const terminalDebugEnabled = import.meta.env.DEV
-    || localStorage.getItem('coolify-terminal-debug') === '1';
+    || (localStorage.getItem('stx-terminal-debug') || localStorage.getItem('coolify-terminal-debug')) === '1';
 
 const baseApplicationTerminalTheme = {
     black: '#675f70',
@@ -236,8 +236,8 @@ export function initializeTerminalComponent() {
             terminalSessionStartedAt: null,
             terminalSessionRemainingSeconds: null,
             terminalSessionCountdownInterval: null,
-            selectedTheme: applicationTerminalThemes[localStorage.getItem('coolify-console-theme')]
-                ? localStorage.getItem('coolify-console-theme')
+            selectedTheme: applicationTerminalThemes[(localStorage.getItem('stx-console-theme') || localStorage.getItem('coolify-console-theme'))]
+                ? (localStorage.getItem('stx-console-theme') || localStorage.getItem('coolify-console-theme'))
                 : 'system',
 
             ...terminalSessionStartMethods,
@@ -331,7 +331,7 @@ export function initializeTerminalComponent() {
                     this.sendCommandWhenReady({ terminalToken: token });
                 });
 
-                // Coolify did not issue a token (container stopped, no shell, access denied).
+                // STX Hosting did not issue a token (container stopped, no shell, access denied).
                 this.$wire.on('terminal-session-failed', ({ message }) => {
                     this.failTerminalSessionStart(message);
                 });
@@ -524,7 +524,7 @@ export function initializeTerminalComponent() {
                 }
 
                 this.selectedTheme = themeName;
-                localStorage.setItem('coolify-console-theme', themeName);
+                localStorage.setItem('stx-console-theme', themeName);
 
                 if (this.term) {
                     const cursorBlink = this.term.options.cursorBlink;
@@ -914,7 +914,7 @@ export function initializeTerminalComponent() {
                 try {
                     for (let index = localStorage.length - 1; index >= 0; index--) {
                         const key = localStorage.key(index);
-                        if (key?.startsWith('coolify-console-history:')) {
+                        if (key?.startsWith('stx-console-history:')) {
                             localStorage.removeItem(key);
                         }
                     }

@@ -1,5 +1,5 @@
 @php
-    use App\Actions\CoolifyTask\RunRemoteProcess;
+    use App\Actions\StxTask\RunRemoteProcess;
 
     $exitCode = data_get($activity, 'properties.exitCode');
     $activityStatus = match (true) {

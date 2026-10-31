@@ -24,7 +24,7 @@
                             class="logs-section-status-badge" />
                     </x-slot:actions>
                     <div class="settings-log-panel">
-                        <livewire:project.shared.get-logs :server="$server" container="coolify-sentinel"
+                        <livewire:project.shared.get-logs :server="$server" container="stx-sentinel"
                             displayName="Sentinel" :collapsible="false" />
                     </div>
                 @else

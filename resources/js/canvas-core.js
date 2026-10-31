@@ -39,7 +39,7 @@ export function freeSpot(box, others, gap = BOX_GAP, fits = () => true) {
   return best;
 }
 
-// ── API (Coolify's API controllers at /canvas/api, browser session) ───
+// ── API (STX Hosting's API controllers at /canvas/api, browser session) ───
 
 /** The team of the open canvas page (data-team), fixed when the page was opened. */
 function canvasTeam() {
@@ -91,7 +91,7 @@ export function canvasDotsOffset(root, viewport) {
 export function setCanvasDots(root, size, x, y, atMaxZoom = false) {
   root.style.setProperty('--canvas-dots-size', `${size}px ${size}px`);
   root.style.setProperty('--canvas-dots-position', `${x}px ${y}px`);
-  // Fully zoomed in: the grid dots turn into small Coolify logos (app.css).
+  // Fully zoomed in: the grid dots turn into small STX logos (app.css).
   root.classList.toggle('canvas-zoom-max', atMaxZoom);
 }
 

@@ -207,6 +207,11 @@ class All extends Component
         }
     }
 
+    public function saveStxDefaultVariables()
+    {
+        return $this->saveCoolifyDefaultVariables();
+    }
+
     public function saveCoolifyDefaultVariables()
     {
         try {

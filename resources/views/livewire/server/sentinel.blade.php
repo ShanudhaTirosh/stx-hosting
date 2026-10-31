@@ -42,7 +42,7 @@
                             <p><span class="font-medium">Last error:</span> <code class="break-all">{{ $sentinelPushProblem }}</code></p>
                         @endif
                         <ul class="list-disc space-y-1 pl-4">
-                            <li>Confirm that the <code>coolify-sentinel</code> container is running.</li>
+                            <li>Confirm that the <code>stx-sentinel</code> container is running.</li>
                             <li>
                                 <a class="font-medium underline underline-offset-2"
                                     href="{{ route('server.sentinel.logs', ['server_uuid' => $server->uuid]) }}"

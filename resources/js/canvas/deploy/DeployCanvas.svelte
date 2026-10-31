@@ -13,9 +13,9 @@
 
   // The deploy canvas: header, step palette, and the canvas with the step
   // cards. The state lives in state.svelte.js (init() runs before the mount).
-  // Theme: same as Coolify (html.dark).
+  // Theme: same as STX Hosting (html.dark).
   let dark = $state(document.documentElement.classList.contains('dark'));
-  // Palette: full or icons only ('coolify-canvas:collapsed').
+  // Palette: full or icons only ('stx-canvas:collapsed').
   let folded = $state(load('collapsed', false));
   // Small screens: a notice that the canvas is not optimized for mobile. CSS
   // shows it below 768px; closed once, it stays closed.
@@ -136,7 +136,7 @@
                 <a href={url} target="_blank" rel="noopener noreferrer" title="Open {url}">{url.replace(/^https?:\/\//, '')}<Icon name={ICONS.out} /></a>
               {/each}
             {:else}
-              <a href={cv.result.href} target="_blank">Open in Coolify</a>
+              <a href={cv.result.href} target="_blank">Open in STX Hosting</a>
             {/if}
             <button class="cv-x" title="Hide" onclick={hideResult}><Icon name={ICONS.x} /></button>
           </div>

@@ -28,7 +28,7 @@
                     ]"
                         helper="Switch registries if the current source is rate limited." />
 
-                    @if (!is_null(config('constants.coolify.autoupdate', null)))
+                    @if (!is_null(config('constants.stx.autoupdate', config('constants.coolify.autoupdate', null)))
                         <x-forms.listbox disabled id="is_auto_update_enabled" label="Automatic updates"
                             helper="Controlled by the AUTOUPDATE environment variable." :options="[
                                 ['value' => true, 'label' => 'Enabled'],
@@ -42,7 +42,7 @@
                             ]" />
                     @endif
 
-                    @if (is_null(config('constants.coolify.autoupdate', null)) && $is_auto_update_enabled)
+                    @if (is_null(config('constants.stx.autoupdate', config('constants.coolify.autoupdate', null)) && $is_auto_update_enabled)
                         <x-forms.input required id="auto_update_frequency" label="Update frequency"
                             placeholder="0 0 * * *"
                             helper="Cron expression or preset for installing updates." />

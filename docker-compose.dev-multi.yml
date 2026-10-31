@@ -41,7 +41,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: "${REDIS_PASSWORD:-null}"
-      COOLIFY_CONTAINER_ROLE: "${COOLIFY_CONTAINER_ROLE:-all}"
+      STX_CONTAINER_ROLE: "${STX_CONTAINER_ROLE:-all}"
       PUSHER_HOST: "${PUSHER_HOST:-}"
       # Browser-facing ports must match the host-published ports of this instance.
       PUSHER_PORT: "${FORWARD_PUSHER_PORT:-6001}"
@@ -62,8 +62,8 @@ services:
       DEVELOPMENT_QEMU_STX_CONTAINER: "${COMPOSE_PROJECT_NAME:-stx-dev}"
       # Host paths of the volumes that testing-host mounts at /data/stx and /data/stx/backups.
       # STX Hosting uses them only for the testing-host server (it shares the host Docker daemon), not for KVM servers.
-      DEV_STX_DATA_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_stx_data"
-      DEV_STX_BACKUPS_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_backups_data"
+      DEV_STX_DATA_VOLUME: "${COMPOSE_PROJECT_NAME:-stx-dev}_stx_data"
+      DEV_STX_BACKUPS_VOLUME: "${COMPOSE_PROJECT_NAME:-stx-dev}_backups_data"
     healthcheck:
       test: curl -sf http://127.0.0.1:8080/api/health || exit 1
       interval: 5s
@@ -147,13 +147,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - stx_data:/data/stx
       # Same path as on the Docker host, so bind mounts created through the host daemon resolve.
-      - stx_data:/var/lib/docker/volumes/${COMPOSE_PROJECT_NAME:-coolify-dev}_stx_data/_data
+      - stx_data:/var/lib/docker/volumes/${COMPOSE_PROJECT_NAME:-stx-dev}_stx_data/_data
       - backups_data:/data/stx/backups
       - postgres_data:/data/stx/_volumes/database
       - redis_data:/data/stx/_volumes/redis
       - minio_data:/data/stx/_volumes/minio
     networks:
-      coolify:
+      stx:
         # Seeders use this hostname for the localhost server.
         aliases:
           - stx-testing-host
@@ -181,7 +181,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      coolify:
+      stx:
         # The seeded "Local MinIO" storage (S3StorageSeeder) uses http://stx-minio:9000.
         aliases:
           - stx-minio

@@ -1,6 +1,6 @@
 /**
  * Deploy canvas: build a deploy workflow (project → server → source →
- * settings → deploy) from nodes, run it through Coolify's API controllers
+ * settings → deploy) from nodes, run it through STX Hosting's API controllers
  * (at /canvas/api, with the browser session) and follow the deployment logs.
  *
  * Mounted on the /canvas page into [data-deploy-canvas] by
@@ -11,8 +11,8 @@
 import { api } from './canvas-core.js';
 
 // ── Settings ───────────────────────────────────────────────────────────
-export const LOG_POLL_MS = 2000;       // Deployment log refresh (Coolify's own log view uses 2 s too).
-export const STORE = 'coolify-canvas';  // localStorage prefix (flow, view).
+export const LOG_POLL_MS = 2000;       // Deployment log refresh (STX Hosting's own log view uses 2 s too).
+export const STORE = 'stx-canvas';  // localStorage prefix (flow, view).
 
 // ── Small helpers ──────────────────────────────────────────────────────
 // Icons: the app's reicon glyphs (rendered by the page into
@@ -312,7 +312,7 @@ export const TYPES = {
     title: 'Domains', sub: 'Your own public addresses', stage: 'config', icon: ICONS.globe, for: ['git', 'image', 'dockerfile'],
     fields: [
       { key: 'domains', label: 'Domains', kind: 'textarea', placeholder: 'https://app.example.com', required: true, mono: true, rows: 2 },
-      { key: 'note', kind: 'note', text: 'Without this step, Coolify makes an address from the server’s wildcard domain (or sslip.io).' },
+      { key: 'note', kind: 'note', text: 'Without this step, STX Hosting makes an address from the server’s wildcard domain (or sslip.io).' },
     ],
     run: async (ctx, d) => {
       const domains = domainList(d.domains);
@@ -502,7 +502,7 @@ export function defaults(type) {
   for (const f of TYPES[type].fields) if (f.value !== undefined) data[f.key] = f.value;
   return data;
 }
-// The Coolify page of a created resource (its deployment, while one runs).
+// The STX Hosting page of a created resource (its deployment, while one runs).
 export function resourceHref(ctx) {
   const base = `/project/${ctx.project}/environment/${ctx.environment}`;
   const kind = { application: 'application', service: 'service', database: 'database' }[ctx.resource.kind];

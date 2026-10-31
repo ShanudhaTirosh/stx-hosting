@@ -89,6 +89,3 @@ networks:
   stx:
     name: stx
     external: true
-  coolify:
-    name: coolify
-    external: true

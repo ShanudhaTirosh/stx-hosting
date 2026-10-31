@@ -74,12 +74,12 @@ function containerOwnerUuid(Collection|array|string $labels, string $type): ?str
 {
     $labels = is_string($labels) ? format_docker_labels_to_json($labels) : collect($labels);
 
-    $uuid = $labels->get("coolify.{$type}Uuid");
+    $uuid = $labels->get("stx.{$type}Uuid") ?? $labels->get("coolify.{$type}Uuid");
     if (filled($uuid)) {
         return (string) $uuid;
     }
 
-    if (! $labels->has("coolify.{$type}Id")) {
+    if (! $labels->has("stx.{$type}Id") && ! $labels->has("coolify.{$type}Id")) {
         return null;
     }
 
@@ -636,13 +636,21 @@ function get_port_from_dockerfile($dockerfile): ?int
 function defaultDatabaseLabels($database)
 {
     $labels = collect([]);
+    $labels->push('stx.managed=true');
     $labels->push('coolify.managed=true');
+    $labels->push('stx.type=database');
     $labels->push('coolify.type=database');
+    $labels->push('stx.databaseUuid='.$database->uuid);
     $labels->push('coolify.databaseUuid='.$database->uuid);
+    $labels->push('stx.resourceName='.Str::slug($database->name));
     $labels->push('coolify.resourceName='.Str::slug($database->name));
+    $labels->push('stx.serviceName='.Str::slug($database->name));
     $labels->push('coolify.serviceName='.Str::slug($database->name));
+    $labels->push('stx.projectName='.Str::slug($database->project()->name));
     $labels->push('coolify.projectName='.Str::slug($database->project()->name));
+    $labels->push('stx.environmentName='.Str::slug($database->environment->name));
     $labels->push('coolify.environmentName='.Str::slug($database->environment->name));
+    $labels->push('stx.database.subType='.$database->type());
     $labels->push('coolify.database.subType='.$database->type());
 
     return $labels;
@@ -651,20 +659,34 @@ function defaultDatabaseLabels($database)
 function defaultLabels(string $uuid, $name, string $projectName, string $resourceName, string $environment, $pull_request_id = 0, string $type = 'application', $subType = null, ?string $subUuid = null, $subName = null)
 {
     $labels = collect([]);
+    $version = config('constants.stx.version', config('constants.coolify.version'));
+    $labels->push('stx.managed=true');
     $labels->push('coolify.managed=true');
-    $labels->push('coolify.version='.config('constants.coolify.version'));
+    $labels->push('stx.version='.$version);
+    $labels->push('coolify.version='.$version);
+    $labels->push('stx.'.$type.'Uuid='.$uuid);
     $labels->push('coolify.'.$type.'Uuid='.$uuid);
+    $labels->push("stx.type=$type");
     $labels->push("coolify.type=$type");
+    $labels->push('stx.name='.Str::slug($name));
     $labels->push('coolify.name='.Str::slug($name));
+    $labels->push('stx.resourceName='.Str::slug($resourceName));
     $labels->push('coolify.resourceName='.Str::slug($resourceName));
+    $labels->push('stx.projectName='.Str::slug($projectName));
     $labels->push('coolify.projectName='.Str::slug($projectName));
+    $labels->push('stx.serviceName='.Str::slug($subName ?? $resourceName));
     $labels->push('coolify.serviceName='.Str::slug($subName ?? $resourceName));
+    $labels->push('stx.environmentName='.Str::slug($environment));
     $labels->push('coolify.environmentName='.Str::slug($environment));
 
+    $labels->push('stx.pullRequestId='.$pull_request_id);
     $labels->push('coolify.pullRequestId='.$pull_request_id);
     if ($type === 'service') {
+        $subUuid && $labels->push('stx.service.subUuid='.$subUuid);
         $subUuid && $labels->push('coolify.service.subUuid='.$subUuid);
+        $subType && $labels->push('stx.service.subType='.$subType);
         $subType && $labels->push('coolify.service.subType='.$subType);
+        $subName && $labels->push('stx.service.subName='.Str::slug($subName));
         $subName && $labels->push('coolify.service.subName='.Str::slug($subName));
     }
 

@@ -21,10 +21,10 @@ function help {
 }
 
 function logs {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T coolify tail -f storage/logs/laravel.log
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T stx tail -f storage/logs/laravel.log
 }
 function test {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T coolify php artisan test --testsuite=Feature -p
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T stx php artisan test --testsuite=Feature -p
 }
 
 function sync:cdn {
@@ -32,21 +32,31 @@ function sync:cdn {
 }
 
 function db:reset {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data coolify php artisan migrate:fresh --seed
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data stx php artisan migrate:fresh --seed
 }
 function db:reset-prod {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data coolify php artisan migrate:fresh --force --seed --seeder=ProductionSeeder ||
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data stx php artisan migrate:fresh --force --seed --seeder=ProductionSeeder ||
         php artisan migrate:fresh --force --seed --seeder=ProductionSeeder
 }
+function stx {
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data stx sh
+}
 function coolify {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data coolify sh
+    stx "$@"
 }
 
+function stx:root {
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec stx sh
+}
 function coolify:root {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec coolify sh
+    stx:root "$@"
+}
+
+function stx:proxy {
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec stx-proxy sh
 }
 function coolify:proxy {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec coolify-proxy sh
+    stx:proxy "$@"
 }
 
 function redis {
@@ -58,7 +68,7 @@ function vite {
 }
 
 function tinker {
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data coolify php artisan tinker
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -u www-data stx php artisan tinker
 }
 
 function default {

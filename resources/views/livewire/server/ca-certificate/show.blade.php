@@ -35,7 +35,7 @@
                 <div class="mt-4">
                     <p class="mb-1.5 text-xs font-medium text-neutral-500 dark:text-fg-dim">Read-only bind mount</p>
                     <x-forms.copy-input
-                        text="- /data/stx/ssl/stx-ca.crt:/etc/ssl/certs/coolify-ca.crt:ro" />
+                        text="- /data/stx/ssl/stx-ca.crt:/etc/ssl/certs/stx-ca.crt:ro" />
                 </div>
             </x-application.settings-section>
 

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ServersController;
 use App\Http\Controllers\Api\ServicesController;
 use App\Http\Controllers\Api\SharedVariableCanvasController;
 use App\Http\Controllers\Api\TagCanvasController;
+use App\Http\Controllers\Commerce\InvoiceViewController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FileBrowserDownloadController;
 use App\Http\Controllers\OauthController;
@@ -22,7 +23,10 @@ use App\Http\Controllers\ProjectIconController;
 use App\Http\Controllers\TeamAvatarController;
 use App\Http\Controllers\UploadController;
 use App\Http\Middleware\UseSessionTeamApiToken;
+use App\Livewire\Admin\Billing\ProofReviewQueue;
 use App\Livewire\Admin\Index as AdminIndex;
+use App\Livewire\Admin\Inventory\VpsInventoryStudio;
+use App\Livewire\Admin\Operations\ProvisioningQueue;
 use App\Livewire\Analytics;
 use App\Livewire\Boarding\Index as BoardingIndex;
 use App\Livewire\Dashboard;
@@ -40,6 +44,13 @@ use App\Livewire\Notifications\Pushover as NotificationPushover;
 use App\Livewire\Notifications\Slack as NotificationSlack;
 use App\Livewire\Notifications\Telegram as NotificationTelegram;
 use App\Livewire\Notifications\Webhook as NotificationWebhook;
+use App\Livewire\Portal\Apps\AppDetail;
+use App\Livewire\Portal\Apps\AppList;
+use App\Livewire\Portal\BillingOverview;
+use App\Livewire\Portal\Checkout;
+use App\Livewire\Portal\Databases\DatabaseList;
+use App\Livewire\Portal\ServiceDetail;
+use App\Livewire\Portal\ServicesList;
 use App\Livewire\Profile\Appearance as ProfileAppearance;
 use App\Livewire\Profile\Index as ProfileIndex;
 use App\Livewire\Project\Application\Backup\Index as ApplicationBackupIndex;
@@ -126,6 +137,7 @@ use App\Livewire\SharedVariables\Team\Index as TeamSharedVariablesIndex;
 use App\Livewire\Source\Gitea\Change as GiteaChange;
 use App\Livewire\Source\Github\Change as GitHubChange;
 use App\Livewire\Source\Gitlab\Change as GitLabChange;
+use App\Livewire\Status\PublicStatus;
 use App\Livewire\Storage\Index as StorageIndex;
 use App\Livewire\Storage\Show as StorageShow;
 use App\Livewire\Subscription\Index as SubscriptionIndex;
@@ -158,7 +170,7 @@ Route::post('/auth/link', [Controller::class, 'acceptLink'])->middleware('thrott
 
 Route::get('/auth/{provider}/redirect', [OauthController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->name('auth.callback');
-Route::get('/status', \App\Livewire\Status\PublicStatus::class)->name('status.public');
+Route::get('/status', PublicStatus::class)->name('status.public');
 
 // Local/testing previews for HTTP error pages and the Laravel debug renderer (never in production).
 if (app()->environment(['local', 'testing'])) {
@@ -272,22 +284,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/deployments/{uuid}', [DeployController::class, 'deployment_by_uuid'])->middleware(['api.ability:read']);
     });
     Route::get('/admin', AdminIndex::class)->name('admin.index');
-    Route::get('/admin/billing/proofs', \App\Livewire\Admin\Billing\ProofReviewQueue::class)->name('admin.billing.proofs');
-    Route::get('/admin/inventory/vps', \App\Livewire\Admin\Inventory\VpsInventoryStudio::class)->name('admin.inventory.vps');
-    Route::get('/admin/operations/provisioning', \App\Livewire\Admin\Operations\ProvisioningQueue::class)->name('admin.operations.provisioning');
+    Route::get('/admin/billing/proofs', ProofReviewQueue::class)->name('admin.billing.proofs');
+    Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
+    Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
 
     // Customer Self-Service Portal
-    Route::get('/portal', \App\Livewire\Portal\ServicesList::class)->name('portal.index');
-    Route::get('/portal/services', \App\Livewire\Portal\ServicesList::class)->name('portal.services');
-    Route::get('/portal/services/{uuid}', \App\Livewire\Portal\ServiceDetail::class)->name('portal.service.detail');
-    Route::get('/portal/apps', \App\Livewire\Portal\Apps\AppList::class)->name('portal.apps');
-    Route::get('/portal/apps/{uuid}', \App\Livewire\Portal\Apps\AppDetail::class)->name('portal.apps.detail');
-    Route::get('/portal/databases', \App\Livewire\Portal\Databases\DatabaseList::class)->name('portal.databases');
-    Route::get('/portal/billing', \App\Livewire\Portal\BillingOverview::class)->name('portal.billing');
-    Route::get('/portal/invoices/{uuid}', [\App\Http\Controllers\Commerce\InvoiceViewController::class, 'show'])->name('portal.invoices.show');
-    Route::get('/invoices/{uuid}', [\App\Http\Controllers\Commerce\InvoiceViewController::class, 'show'])->name('invoices.show');
-    Route::get('/portal/checkout', \App\Livewire\Portal\Checkout::class)->name('portal.checkout');
-    Route::get('/orders', \App\Livewire\Portal\Checkout::class)->name('orders.checkout');
+    Route::get('/portal', ServicesList::class)->name('portal.index');
+    Route::get('/portal/services', ServicesList::class)->name('portal.services');
+    Route::get('/portal/services/{uuid}', ServiceDetail::class)->name('portal.service.detail');
+    Route::get('/portal/apps', AppList::class)->name('portal.apps');
+    Route::get('/portal/apps/{uuid}', AppDetail::class)->name('portal.apps.detail');
+    Route::get('/portal/databases', DatabaseList::class)->name('portal.databases');
+    Route::get('/portal/billing', BillingOverview::class)->name('portal.billing');
+    Route::get('/portal/invoices/{uuid}', [InvoiceViewController::class, 'show'])->name('portal.invoices.show');
+    Route::get('/invoices/{uuid}', [InvoiceViewController::class, 'show'])->name('invoices.show');
+    Route::get('/portal/checkout', Checkout::class)->name('portal.checkout');
+    Route::get('/orders', Checkout::class)->name('orders.checkout');
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');
 
     Route::get('/subscription', SubscriptionShow::class)->name('subscription.show');
@@ -374,6 +386,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             if (isDev()) {
                 $ipAddresses = $ipAddresses->merge([
+                    'stx-testing-host',
                     'coolify-testing-host',
                     'host.docker.internal',
                     'localhost',

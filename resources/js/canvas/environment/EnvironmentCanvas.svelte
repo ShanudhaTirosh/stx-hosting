@@ -101,7 +101,7 @@
   const USAGE_POLL_MS = 30000;
   const timers = { save: 0, refresh: 0, toast: 0, view: 0 };
   // Zoom and pan are kept per team and page, so a reload opens the canvas where it was.
-  const viewKey = `coolify-canvas-view:${ds.team || ''}:${window.location.pathname}`;
+  const viewKey = `stx-canvas-view:${ds.team || ''}:${window.location.pathname}`;
   let restoredView = readView(viewKey);
   if (restoredView) view = restoredView;
 

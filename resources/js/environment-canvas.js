@@ -778,4 +778,4 @@ export function readView(key, storage = globalThis.localStorage) {
 
 // Small screens: a notice that the canvas is not optimized for mobile. Shown below 768px (md);
 // closed once, it stays closed on every canvas (same key as the deploy canvas notice).
-export const MOBILE_NOTICE_KEY = 'coolify-canvas:mobile-notice-dismissed';
+export const MOBILE_NOTICE_KEY = 'stx-canvas:mobile-notice-dismissed';

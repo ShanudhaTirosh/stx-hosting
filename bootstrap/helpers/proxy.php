@@ -337,7 +337,7 @@ function collectProxyDockerNetworksByServer(Server $server)
     if (is_null($proxyType) || $proxyType === 'NONE') {
         return collect();
     }
-    $networks = instant_remote_process(['docker inspect --format="{{json .NetworkSettings.Networks }}" coolify-proxy'], $server, false);
+    $networks = instant_remote_process(['docker inspect --format="{{json .NetworkSettings.Networks }}" stx-proxy 2>/dev/null || docker inspect --format="{{json .NetworkSettings.Networks }}" coolify-proxy'], $server, false);
 
     return collect($networks)->map(function ($network) {
         return collect(json_decode($network))->keys();
@@ -392,13 +392,13 @@ function collectDockerNetworksByServer(Server $server)
     $allNetworks = $allNetworks->flatten()->unique()->filter(fn ($network) => isUsableDockerNetworkName($network));
     if ($server->isSwarm()) {
         if ($networks->count() === 0) {
-            $networks = collect(['coolify-overlay']);
-            $allNetworks = collect(['coolify-overlay']);
+            $networks = collect(['stx-overlay', 'coolify-overlay']);
+            $allNetworks = collect(['stx-overlay', 'coolify-overlay']);
         }
     } else {
         if ($networks->count() === 0) {
-            $networks = collect(['coolify']);
-            $allNetworks = collect(['coolify']);
+            $networks = collect(['stx', 'coolify']);
+            $allNetworks = collect(['stx', 'coolify']);
         }
     }
 

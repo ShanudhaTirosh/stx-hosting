@@ -127,7 +127,7 @@ export const terminalSessionStartMethods = {
         this.clearSessionStartTimeout();
     },
 
-    /** Coolify refused to issue a terminal token (`terminal-session-failed`). */
+    /** STX Hosting refused to issue a terminal token (`terminal-session-failed`). */
     failTerminalSessionStart(message) {
         this.pendingCommand = null;
         this.failTerminalConnection(message || TERMINAL_CONNECTION_ERRORS.connectionFailed, { override: true });

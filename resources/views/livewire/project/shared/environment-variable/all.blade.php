@@ -48,7 +48,7 @@
                             ]" :disabled="! auth()->user()->can('manageEnvironment', $resource)" />
                     </div>
                 @endif
-                <x-forms.checkbox instantSave="saveSTX HostingDefaultVariables" id="include_coolify_default_variables"
+                <x-forms.checkbox instantSave="saveStxDefaultVariables" id="include_coolify_default_variables"
                     label="Include STX Hosting default variables"
                     helper="Adds COOLIFY_APP_NAME, COOLIFY_PROJECT_NAME, COOLIFY_ENVIRONMENT_NAME and COOLIFY_SERVER_IP to the container at runtime. A variable that you define with the same name wins. Takes effect after the next deploy or restart."
                     :disabled="! auth()->user()->can('manageEnvironment', $resource)" />
@@ -69,7 +69,7 @@
                 @can('manageEnvironment', $resource)
                     <x-callout type="info" title="Note">
                         Inline comments with space before # (e.g., <code class="font-mono">KEY=value #comment</code>) are stripped.
-                        To set flags, put <code class="font-mono"># coolify: literal buildtime=false runtime=false</code>
+                        To set flags, put <code class="font-mono"># stx: literal buildtime=false runtime=false</code>
                         directly above a variable line. Without this line, the flags of a variable do not change.
                     </x-callout>
                     <x-forms.textarea rows="10" class="whitespace-pre-wrap font-sans" id="variables"

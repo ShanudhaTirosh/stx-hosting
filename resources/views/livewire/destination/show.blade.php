@@ -34,7 +34,7 @@
                                 </p>
                                 <p>Delete or move every attached resource before deleting this destination.</p>
                                 <x-slot:action>
-                                    @if ($network !== 'coolify')
+                                    @if ($network !== 'stx' && $network !== 'coolify')
                                         <x-modal-confirmation title="Confirm Destination Deletion?"
                                             buttonTitle="Delete destination" isErrorButton submitAction="delete"
                                             :actions="['This permanently deletes the destination and its Docker network.']"

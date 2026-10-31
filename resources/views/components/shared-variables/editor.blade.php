@@ -159,7 +159,7 @@
             <form wire:submit="submit" class="flex flex-col gap-4 p-4">
                 <x-unsaved-bar action="submit" />
                 <x-callout type="info" title="Note">
-                    To make a variable literal, put <code class="font-mono"># coolify: literal</code> directly above
+                    To make a variable literal, put <code class="font-mono"># stx: literal</code> directly above
                     its line. Without this line, the flag does not change.
                 </x-callout>
                 <x-forms.textarea canGate="update" :canResource="$resource" rows="20"
