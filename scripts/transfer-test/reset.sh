@@ -47,7 +47,7 @@ helper="$(tinker "$A" 'echo config("constants.coolify.helper_image").":".config(
 for profile in "${TRANSFER_PROFILES[@]}"; do
   # An unreleased helper version cannot be pulled; tag the newest local helper image with that version instead.
   ssh_vm "$profile" "docker image inspect $helper >/dev/null 2>&1 || docker pull -q $helper >/dev/null 2>&1 || {
-      latest=\$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '(^|/)coollabsio/coolify-helper:' | sort -V | tail -1)
+      latest=\$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '(^|/)stxhosting/platform-helper:' | sort -V | tail -1)
       [ -n \"\$latest\" ] && docker tag \"\$latest\" $helper && echo \"  \$(hostname): tagged \$latest as $helper (not published yet)\"
     }"
 done

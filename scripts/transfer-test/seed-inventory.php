@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Seed a rich transfer-demo inventory on the current Coolify instance, in the database only: a server
+ * Seed a rich transfer-demo inventory on the current STX Hosting instance, in the database only: a server
  * "transfer-full-demo" on the testing-host container with many resource types. Nothing is deployed.
  * For live transfers between two instances, use the other scripts of scripts/transfer-test (see README.md).
  * Run: ./scripts/dev exec php artisan tinker --execute "require 'scripts/transfer-test/seed-inventory.php';"
@@ -177,7 +177,7 @@ $report['destination'] = $dest->uuid;
 // --- Project / environments ---
 $project = Project::firstOrCreate(
     ['name' => 'Transfer Full Demo', 'team_id' => $teamId],
-    ['description' => 'Resources to migrate between Coolify instances']
+    ['description' => 'Resources to migrate between STX Hosting instances']
 );
 $project->uuid = $project->uuid ?: new_public_id();
 $production = $project->environments()->where('name', 'production')->first()
@@ -232,7 +232,7 @@ $report['github_app'] = $ghApp->uuid;
 // 1) Nixpacks git app with GH source
 $appNix = Application::create([
     'name' => 'demo-nixpacks-app',
-    'git_repository' => 'https://github.com/coollabsio/coolify-examples',
+    'git_repository' => 'https://github.com/stxhosting/platform-examples',
     'git_branch' => 'nodejs',
     'build_pack' => 'nixpacks',
     'ports_exposes' => '3000',
@@ -321,7 +321,7 @@ $preview = new ApplicationPreview;
 $preview->forceFill([
     'application_id' => $appNix->id,
     'pull_request_id' => 101,
-    'pull_request_html_url' => 'https://github.com/coollabsio/coolify-examples/pull/101',
+    'pull_request_html_url' => 'https://github.com/stxhosting/platform-examples/pull/101',
     'fqdn' => 'https://pr-101.nixpacks.demo.transfer.local',
     'status' => 'exited',
     'git_type' => 'github',
@@ -341,7 +341,7 @@ $previewVol->save();
 // 2) Dockerfile app
 $appDocker = Application::create([
     'name' => 'demo-dockerfile-app',
-    'git_repository' => 'https://github.com/coollabsio/coolify-examples',
+    'git_repository' => 'https://github.com/stxhosting/platform-examples',
     'git_branch' => 'main',
     'build_pack' => 'dockerfile',
     'ports_exposes' => '80',
@@ -359,7 +359,7 @@ $appDocker->tags()->syncWithoutDetaching([$tagDemo->id]);
 // 3) Docker image / static-ish
 $appImage = Application::create([
     'name' => 'demo-image-app',
-    'git_repository' => 'coollabsio/coolify-examples',
+    'git_repository' => 'stxhosting/platform-examples',
     'git_branch' => 'main',
     'build_pack' => 'dockercompose',
     'ports_exposes' => '80',

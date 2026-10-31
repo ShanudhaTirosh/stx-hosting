@@ -1,6 +1,6 @@
 services:
   coolify:
-    image: coolify:dev
+    image: stx:dev
     pull_policy: never
     build:
       context: .
@@ -22,7 +22,7 @@ services:
       PHP_OPCACHE_REVALIDATE_FREQ: 0
       PHP_OPCACHE_MEMORY_CONSUMPTION: 256
       PHP_OPCACHE_MAX_ACCELERATED_FILES: 30000
-      COOLIFY_CONTAINER_ROLE: "${COOLIFY_CONTAINER_ROLE:-all}"
+      STX_CONTAINER_ROLE: "${STX_CONTAINER_ROLE:-all}"
       PUSHER_HOST: "${PUSHER_HOST:-}"
       PUSHER_PORT: "${PUSHER_PORT:-6001}"
       PUSHER_BACKEND_PORT: "${PUSHER_BACKEND_PORT:-6001}"

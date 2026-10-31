@@ -16,12 +16,12 @@ function shouldChangeOwnership(string $path): bool
         }
     }
 
-    $isCoolifyPath = Str::startsWith($path, '/data/coolify') || Str::startsWith($path, '/tmp/coolify') || Str::startsWith($path, '/data/stx') || Str::startsWith($path, '/tmp/stx');
+    $isStxPath = Str::startsWith($path, '/data/stx') || Str::startsWith($path, '/tmp/stx') || Str::startsWith($path, '/data/coolify') || Str::startsWith($path, '/tmp/coolify');
 
-    return $isCoolifyPath;
+    return $isStxPath;
 }
 /**
- * Gives the SSH user the Coolify-created (root-owned) files in a directory and closes the
+ * Gives the SSH user the STX Hosting-created (root-owned) files in a directory and closes the
  * directory to other users. Files that belong to container users (such as a database data
  * folder) and the modes of mounted files stay as they are, so containers can still read them.
  */

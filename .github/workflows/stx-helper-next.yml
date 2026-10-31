@@ -1,11 +1,11 @@
-name: Coolify Helper Image Development
+name: STX Hosting Helper Image Development
 
 on:
   push:
     branches: [ "next" ]
     paths:
-      - .github/workflows/coolify-helper-next.yml
-      - docker/coolify-helper/Dockerfile
+      - .github/workflows/stx-helper-next.yml
+      - docker/stx-helper/Dockerfile
 
 permissions:
   contents: read
@@ -14,7 +14,7 @@ permissions:
 env:
   GITHUB_REGISTRY: ghcr.io
   DOCKER_REGISTRY: docker.io
-  IMAGE_NAME: "coollabsio/coolify-helper"
+  IMAGE_NAME: "stxhosting/platform-helper"
 
 jobs:
   build-push:
@@ -56,14 +56,14 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/coolify-helper/Dockerfile
+          file: docker/stx-helper/Dockerfile
           platforms: ${{ matrix.platform }}
           push: true
           tags: |
             ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next-${{ matrix.arch }}
             ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next-${{ matrix.arch }}
           labels: |
-            coolify.managed=true
+            stx.managed=true
 
   merge-manifest:
     runs-on: ubuntu-24.04

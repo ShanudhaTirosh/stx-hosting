@@ -154,12 +154,12 @@ When working on STX Hosting, keep the following in mind:
 
 1. **Database Migrations**: After switching branches or making changes to the database structure, always run migrations:
    ```bash
-   docker exec -it coolify php artisan migrate
+   docker exec -it stx php artisan migrate
    ```
 
 2. **Resetting Development Setup**: To reset your development setup to a clean database with default values:
    ```bash
-   docker exec -it coolify php artisan migrate:fresh --seed
+   docker exec -it stx php artisan migrate:fresh --seed
    ```
 
 3. **Troubleshooting**: If you encounter unexpected behavior, ensure your database is up-to-date with the latest migrations and if possible reset the development setup to eliminate any environment-specific issues.
@@ -178,9 +178,9 @@ If you encounter issues or break your database or something else, follow these s
    npm run clean
    ```
 
-3. Remove STX Hosting volumes (it is possible that the volumes have no `coolify` prefix on your machine, in that case remove the prefix from the command):
+3. Remove STX Hosting volumes (it is possible that the volumes have no `stx` prefix on your machine, in that case remove the prefix from the command):
    ```bash
-   docker volume rm coolify_dev_backups_data coolify_dev_postgres_data coolify_dev_redis_data coolify_dev_coolify_data coolify_dev_minio_data
+   docker volume rm stx_dev_backups_data stx_dev_postgres_data stx_dev_redis_data stx_dev_stx_data stx_dev_minio_data
    ```
 
 4. Remove unused images:
@@ -195,7 +195,7 @@ If you encounter issues or break your database or something else, follow these s
 
 6. Run database migrations and seeders:
    ```bash
-   docker exec -it coolify php artisan migrate:fresh --seed
+   docker exec -it stx php artisan migrate:fresh --seed
    ```
 
 After completing these steps, you'll have a fresh development setup.

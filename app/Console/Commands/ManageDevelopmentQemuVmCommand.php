@@ -11,7 +11,7 @@ class ManageDevelopmentQemuVmCommand extends Command
 {
     protected $signature = 'dev:qemu {profiles?* : Profile keys from config/development-qemu.php} {--as-localhost : Use the VM for the localhost server (id 0)} {--fresh : Destroy and recreate the selected VMs instead of reusing them} {--gpu : Pass the NVIDIA GPU of the host through to the VM and install its driver}';
 
-    protected $description = 'Start (or create) selected development QEMU VMs and seed their Coolify servers';
+    protected $description = 'Start (or create) selected development QEMU VMs and seed their STX Hosting servers';
 
     public function handle(): int
     {

@@ -166,7 +166,7 @@ foreach ([['deploykey-app', 'nixpacks', null, $deployKey->id, 'git@github.com:ac
 }
 // The is_static setter sets port 80; the user can set another port after that.
 Application::where('name', 'static-site')->firstOrFail()->forceFill(['ports_exposes' => '8080'])->saveQuietly();
-// Keys that only older Coolify versions accepted. Deployments skip them with a warning.
+// Keys that only older STX Hosting versions accepted. Deployments skip them with a warning.
 $legacy = EnvironmentVariable::create(['key' => 'LEGACY_KEY', 'value' => 'legacy', 'resourceable_type' => $app->getMorphClass(), 'resourceable_id' => Application::where('name', 'static-site')->value('id')]);
 DB::table('environment_variables')->where('id', $legacy->id)->update(['key' => 'legacy-key']);
 $legacyShared = $shared(['type' => 'server', 'server_id' => $server->id, 'key' => 'LEGACY_SHARED', 'value' => 'legacy']);

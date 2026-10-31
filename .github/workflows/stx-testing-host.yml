@@ -1,10 +1,10 @@
-name: Coolify Testing Host
+name: STX Hosting Testing Host
 
 on:
   push:
     branches: [ "next" ]
     paths:
-      - .github/workflows/coolify-testing-host.yml
+      - .github/workflows/stx-testing-host.yml
       - docker/testing-host/Dockerfile
 
 permissions:
@@ -12,7 +12,7 @@ permissions:
 
 env:
   DOCKER_REGISTRY: docker.io
-  IMAGE_NAME: "coollabsio/coolify-testing-host"
+  IMAGE_NAME: "stxhosting/platform-testing-host"
 
 jobs:
   build-push:
@@ -48,7 +48,7 @@ jobs:
           tags: |
             ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.arch }}
           labels: |
-            coolify.managed=true
+            stx.managed=true
 
   merge-manifest:
     runs-on: ubuntu-24.04

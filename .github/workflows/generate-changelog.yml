@@ -4,8 +4,8 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - .github/workflows/coolify-helper.yml
-      - .github/workflows/coolify-helper-next.yml
+      - .github/workflows/stx-helper.yml
+      - .github/workflows/stx-helper-next.yml
       - .github/workflows/pr-quality.yaml
   workflow_dispatch:
 

@@ -15,7 +15,7 @@
  * Requirements: traffic analytics is enabled on the server (Sentinel and the proxy run),
  * and the server can download the GeoIP database for countries and cities.
  *
- * Usage (in the Coolify container):
+ * Usage (in the STX Hosting container):
  *   ./scripts/dev exec php scripts/generate-traffic.php                      # burst of 3000, then 120 min at ~300/min
  *   ./scripts/dev exec php scripts/generate-traffic.php --minutes=0          # burst only
  *   ./scripts/dev exec php scripts/generate-traffic.php --server=<uuid> --rate=600 --burst=5000

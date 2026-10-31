@@ -31,7 +31,7 @@ for profile in "${TRANSFER_PROFILES[@]}"; do
   r="$(api POST "$A_PORT" "/servers/$S/migrate" "$TA" "$(jq -nc --arg u "http://localhost:$B_PORT" --arg t "$TB" '{target_url:$u,target_token:$t}')")"
   check 'second transfer refused by the prechecks' grep -q 'already transferred' <<<"$r"
   r="$(api DELETE "$A_PORT" "/servers/$S?delete_from_provider=true" "$TA")"
-  check 'A refuses to delete the cloud server of the archive' grep -q 'managed by another Coolify instance' <<<"$r"
+  check 'A refuses to delete the cloud server of the archive' grep -q 'managed by another STX Hosting instance' <<<"$r"
 
   echo '-- target B'
   b="$(api GET "$B_PORT" "/servers/$S/transfer" "$TB")"

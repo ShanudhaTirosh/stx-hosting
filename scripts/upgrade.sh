@@ -1,7 +1,7 @@
 #!/bin/bash
 ## Do not modify this file. You will lose the ability to autoupdate!
 
-CDN="https://cdn.coollabs.io/coolify"
+CDN="${CDN:-https://cdn.stxhosting.com/stx}"
 LATEST_IMAGE=${1:-latest}
 LATEST_HELPER_VERSION=${2:-latest}
 ENV_FILE="/data/coolify/source/.env"
@@ -46,7 +46,7 @@ network_gateway_with_prefix() {
 }
 
 # Make sure the coolify network exists and the helper image can read it.
-# It is created when starting Coolify with docker compose
+# It is created when starting STX Hosting with docker compose
 ensure_coolify_network() {
     log "Checking Docker network 'coolify'..."
     if ! docker network inspect coolify >/dev/null 2>&1; then
@@ -71,7 +71,7 @@ ensure_coolify_network() {
     local gateway
     gateway=$(network_gateway_with_prefix coolify)
     if [ -n "$gateway" ]; then
-        local message="Docker Engine $(docker version --format '{{.Server.Version}}' 2>/dev/null) reports the gateway of the 'coolify' network as ${gateway}, which Coolify cannot read (Docker Engine bug, fixed in 28.0.1). Run 'systemctl restart docker' (this restarts all containers) or upgrade Docker Engine, then upgrade Coolify again."
+        local message="Docker Engine $(docker version --format '{{.Server.Version}}' 2>/dev/null) reports the gateway of the 'coolify' network as ${gateway}, which STX Hosting cannot read (Docker Engine bug, fixed in 28.0.1). Run 'systemctl restart docker' (this restarts all containers) or upgrade Docker Engine, then upgrade STX Hosting again."
         log "ERROR: ${message}"
         write_status "error" "$message"
         echo "     ERROR: ${message}"
@@ -99,13 +99,13 @@ pull_image() {
 
 echo ""
 echo "=========================================="
-echo "   Coolify Upgrade - ${DATE}"
+echo "   STX Hosting Upgrade - ${DATE}"
 echo "=========================================="
 echo ""
 
 # Initialize log file with header
 echo "============================================================" >>"$LOGFILE"
-echo "Coolify Upgrade Log" >>"$LOGFILE"
+echo "STX Hosting Upgrade Log" >>"$LOGFILE"
 echo "Started: $(date '+%Y-%m-%d %H:%M:%S')" >>"$LOGFILE"
 echo "Target Version: ${LATEST_IMAGE}" >>"$LOGFILE"
 echo "Helper Version: ${LATEST_HELPER_VERSION}" >>"$LOGFILE"
@@ -247,7 +247,7 @@ echo "3/6 Pulling Docker images..."
 echo "     This may take a few minutes depending on your connection."
 
 # Also pull the helper image (not in compose files but needed for upgrade)
-HELPER_IMAGE="${REGISTRY_URL:-docker.io}/coollabsio/coolify-helper:${LATEST_HELPER_VERSION}"
+HELPER_IMAGE="${REGISTRY_URL:-docker.io}/stxhosting/platform-helper:${LATEST_HELPER_VERSION}"
 echo "     - Pulling $HELPER_IMAGE..."
 log "Pulling image: $HELPER_IMAGE"
 if pull_image "$HELPER_IMAGE"; then
@@ -286,7 +286,7 @@ log_section "Step 4/6: Stopping and restarting containers"
 write_status "4" "Stopping containers"
 echo ""
 echo "4/6 Stopping containers and starting new ones..."
-echo "     This step will restart all Coolify containers."
+echo "     This step will restart all STX Hosting containers."
 echo "     Check the log file for details: ${LOGFILE}"
 
 # From this point forward, we need to ensure the script continues even if
@@ -343,14 +343,14 @@ nohup bash -c "
     fi
 
     log 'Running docker compose up...'
-    if docker run -v /data/coolify/source:/data/coolify/source -v /var/run/docker.sock:/var/run/docker.sock \${DOCKER_CONFIG_MOUNT} --rm \${REGISTRY_URL:-docker.io}/coollabsio/coolify-helper:\${LATEST_HELPER_VERSION} bash -c \"LATEST_IMAGE=\${LATEST_IMAGE} docker compose --env-file /data/coolify/source/.env \${COMPOSE_FILES} up -d --remove-orphans --wait --wait-timeout 60\" >>\"\$LOGFILE\" 2>&1; then
+    if docker run -v /data/coolify/source:/data/coolify/source -v /var/run/docker.sock:/var/run/docker.sock \${DOCKER_CONFIG_MOUNT} --rm \${REGISTRY_URL:-docker.io}/stxhosting/platform-helper:\${LATEST_HELPER_VERSION} bash -c \"LATEST_IMAGE=\${LATEST_IMAGE} docker compose --env-file /data/coolify/source/.env \${COMPOSE_FILES} up -d --remove-orphans --wait --wait-timeout 60\" >>\"\$LOGFILE\" 2>&1; then
         log 'Docker compose up completed'
     elif [ \"\$(docker inspect --format '{{.State.Running}}' coolify 2>/dev/null)\" = 'true' ]; then
-        # A slow first start (for example long migrations) can pass the wait timeout. Coolify is still starting.
+        # A slow first start (for example long migrations) can pass the wait timeout. STX Hosting is still starting.
         log 'Docker compose up did not finish waiting, but the coolify container is running'
     else
         log 'ERROR: Docker compose up failed and the coolify container is not running'
-        write_status 'error' \"Coolify did not start. Check the upgrade log: \$LOGFILE\"
+        write_status 'error' \"STX Hosting did not start. Check the upgrade log: \$LOGFILE\"
         exit 1
     fi
 
@@ -360,7 +360,7 @@ nohup bash -c "
     log 'Step 6/6: Upgrade complete'
     echo '============================================================' >>\"\$LOGFILE\"
     write_status '6' 'Upgrade complete'
-    log 'Coolify upgrade completed successfully'
+    log 'STX Hosting upgrade completed successfully'
     log \"Version: \${LATEST_IMAGE}\"
     echo '' >>\"\$LOGFILE\"
     echo '============================================================' >>\"\$LOGFILE\"
@@ -381,9 +381,9 @@ echo "5/6 Containers are being restarted in the background..."
 echo "6/6 Upgrade process initiated!"
 echo ""
 echo "=========================================="
-echo "   Coolify upgrade to ${LATEST_IMAGE} in progress"
+echo "   STX Hosting upgrade to ${LATEST_IMAGE} in progress"
 echo "=========================================="
 echo ""
 echo "   The upgrade will continue in the background."
-echo "   Coolify will be available again shortly."
+echo "   STX Hosting will be available again shortly."
 echo "   Log file: ${LOGFILE}"

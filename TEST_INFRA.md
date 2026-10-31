@@ -206,66 +206,66 @@ tests/
 
 ## 7. Test Runner Invocation Commands & Execution Matrix
 
-All tests run in the Dockerized STX Hosting development container environment (`coolify`), backed by PostgreSQL (`coolify-db`) and Redis (`coolify-redis`).
+All tests run in the Dockerized STX Hosting development container environment (`stx`), backed by PostgreSQL (`stx-db`) and Redis (`stx-redis`).
 
 ### 7.1 Running Full Test Suites
 ```bash
 # Execute entire E2E and Hosting test suite via Pest
-docker exec coolify vendor/bin/pest tests/Feature/E2E tests/Feature/Hosting
+docker exec stx vendor/bin/pest tests/Feature/E2E tests/Feature/Hosting
 
 # Execute via Laravel Artisan test runner (compact output)
-docker exec coolify php artisan test --compact tests/Feature/E2E tests/Feature/Hosting
+docker exec stx php artisan test --compact tests/Feature/E2E tests/Feature/Hosting
 ```
 
 ### 7.2 Running Specific Test Suites
 ```bash
 # RBAC & Tenant Isolation (Features 3-7)
-docker exec coolify vendor/bin/pest tests/Feature/Hosting/RbacThreeTierTest.php
+docker exec stx vendor/bin/pest tests/Feature/Hosting/RbacThreeTierTest.php
 
 # Resource Limits & Quotas (Features 8-12)
-docker exec coolify vendor/bin/pest tests/Feature/Hosting/ResourceLimitsEnforcementTest.php
+docker exec stx vendor/bin/pest tests/Feature/Hosting/ResourceLimitsEnforcementTest.php
 
 # Entitlements & Subscriptions (Features 13-17)
-docker exec coolify vendor/bin/pest tests/Feature/Hosting/EntitlementsLifecycleTest.php
+docker exec stx vendor/bin/pest tests/Feature/Hosting/EntitlementsLifecycleTest.php
 
 # Template Permissions & Gating (Features 18-21)
-docker exec coolify vendor/bin/pest tests/Feature/Hosting/TemplateAccessControlTest.php
+docker exec stx vendor/bin/pest tests/Feature/Hosting/TemplateAccessControlTest.php
 
 # Tier 3: Cross-Feature Interaction Matrix
-docker exec coolify vendor/bin/pest tests/Feature/E2E/CrossFeatureCombinationsTest.php
+docker exec stx vendor/bin/pest tests/Feature/E2E/CrossFeatureCombinationsTest.php
 
 # Tier 4: Real-World Scenarios
-docker exec coolify vendor/bin/pest tests/Feature/E2E/RealWorldScenariosTest.php
+docker exec stx vendor/bin/pest tests/Feature/E2E/RealWorldScenariosTest.php
 
 # Tier 5: Adversarial & Security Isolation
-docker exec coolify vendor/bin/pest tests/Feature/E2E/AdversarialIsolationTest.php
+docker exec stx vendor/bin/pest tests/Feature/E2E/AdversarialIsolationTest.php
 ```
 
 ### 7.3 Running by Test Tier Groups
 ```bash
 # Run Tier 1 Feature Coverage tests
-docker exec coolify vendor/bin/pest --group=tier1
+docker exec stx vendor/bin/pest --group=tier1
 
 # Run Tier 2 Boundary & Edge tests
-docker exec coolify vendor/bin/pest --group=tier2
+docker exec stx vendor/bin/pest --group=tier2
 
 # Run Tier 3 Combinatorial tests
-docker exec coolify vendor/bin/pest --group=tier3
+docker exec stx vendor/bin/pest --group=tier3
 
 # Run Tier 4 Real-World Workflows
-docker exec coolify vendor/bin/pest --group=tier4
+docker exec stx vendor/bin/pest --group=tier4
 
 # Run Tier 5 Adversarial Hardening tests
-docker exec coolify vendor/bin/pest --group=tier5
+docker exec stx vendor/bin/pest --group=tier5
 ```
 
 ### 7.4 Filtering by Specific Feature or Case
 ```bash
 # Filter tests for a specific feature (e.g. Feature 10 limit gates)
-docker exec coolify vendor/bin/pest --filter="F10"
+docker exec stx vendor/bin/pest --filter="F10"
 
 # Filter by scenario name
-docker exec coolify vendor/bin/pest --filter="Scenario 1"
+docker exec stx vendor/bin/pest --filter="Scenario 1"
 ```
 
 ---

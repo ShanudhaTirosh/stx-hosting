@@ -62,10 +62,10 @@ vm_field() {
 
 running() { [[ "$(docker inspect --format '{{.State.Running}}' "$1" 2>/dev/null)" == true ]]; }
 
-# tinker <container> <php>: run PHP in a Coolify container.
+# tinker <container> <php>: run PHP in a STX Hosting container.
 tinker() { docker exec -u www-data "$1" php artisan tinker --execute "$2" 2>/dev/null; }
 
-# php_file <container> <file>: run a PHP file of this kit in a Coolify container.
+# php_file <container> <file>: run a PHP file of this kit in a STX Hosting container.
 php_file() {
   docker cp "$2" "$1:/tmp/$(basename "$2")" >/dev/null &&
     docker exec -u www-data "$1" php artisan tinker --execute "require '/tmp/$(basename "$2")';" 2>&1 | grep -v '^$'

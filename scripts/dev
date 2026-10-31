@@ -153,7 +153,7 @@ COMPOSE_PROJECT_NAME=$(project_name "$name")
 DEV_CHECKOUT=${ROOT}
 DEVELOPMENT_QEMU_INSTANCE=${name}
 DEVELOPMENT_QEMU_SLOT=${slot}
-APP_NAME=Coolify-${name}
+APP_NAME=STX Hosting-${name}
 APP_URL=$(app_url "$app")
 APP_KEY=${existing_key}
 APP_PORT=${app}
@@ -234,7 +234,7 @@ wait_for_coolify() {
     sleep 2
   done
 
-  echo 'Coolify did not become healthy within 5 minutes.' >&2
+  echo 'STX Hosting did not become healthy within 5 minutes.' >&2
   return 1
 }
 
@@ -378,7 +378,7 @@ provision:
 YAML
 }
 
-# Coolify connects over the SSH port that Lima forwards to the host loopback, which
+# STX Hosting connects over the SSH port that Lima forwards to the host loopback, which
 # host.docker.internal reaches in Docker Desktop, OrbStack, and Colima.
 start_lima_vm() {
   local vm config port

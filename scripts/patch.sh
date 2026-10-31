@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Patches Coolify 4.0 to 4.4 to the security fix release of its own line.
+# Patches STX Hosting 4.0 to 4.4 to the security fix release of its own line.
 # Only the coolify container is recreated, the compose files and the other containers stay as they are.
-# Usage: curl -fsSL https://cdn.coollabs.io/coolify/patch.sh | sudo bash
+# Usage: curl -fsSL ${CDN:-https://cdn.stxhosting.com/stx}/patch.sh | sudo bash
 set -euo pipefail
 
 SOURCE_DIR=/data/coolify/source
@@ -26,7 +26,7 @@ main() {
 	read_version
 	select_patch_version
 	check_compose_files
-	heading "Patching Coolify $current_version to $patch_version"
+	heading "Patching STX Hosting $current_version to $patch_version"
 	pull_image
 	update_env_file
 	restart_coolify
@@ -36,7 +36,7 @@ main() {
 check_installation() {
 	heading "Checking the installation"
 	[ "$EUID" = 0 ] || die "run this script as root, for example with sudo"
-	[ -f "$ENV_FILE" ] && [ -f "$SOURCE_DIR/docker-compose.prod.yml" ] || die "Coolify is not installed in $SOURCE_DIR"
+	[ -f "$ENV_FILE" ] && [ -f "$SOURCE_DIR/docker-compose.prod.yml" ] || die "STX Hosting is not installed in $SOURCE_DIR"
 	docker compose version > /dev/null 2>&1 || die "the Docker Compose plugin is not installed"
 	compose=(docker compose --env-file "$ENV_FILE" -f "$SOURCE_DIR/docker-compose.yml" -f "$SOURCE_DIR/docker-compose.prod.yml")
 	if [ -f "$SOURCE_DIR/docker-compose.custom.yml" ]; then
@@ -45,39 +45,39 @@ check_installation() {
 	if [ -f "$SOURCE_DIR/docker-compose.postgres-upgrade.yml" ]; then
 		compose+=(-f "$SOURCE_DIR/docker-compose.postgres-upgrade.yml")
 	fi
-	ok "Coolify is installed in $SOURCE_DIR"
+	ok "STX Hosting is installed in $SOURCE_DIR"
 }
 
 read_version() {
 	# Copy the file out of the container, because this also works when the mitigation advice was followed and the container is stopped
-	current_version="$(docker cp coolify:/var/www/html/config/constants.php - 2> /dev/null | tar -xO 2> /dev/null | awk -F "'" "/'version' =>/ && !found { print \$(NF - 1); found = 1 }")" && [ -n "$current_version" ] || die "could not read the Coolify version from the coolify container"
-	ok "Coolify $BOLD$current_version$RESET is installed"
+	current_version="$(docker cp coolify:/var/www/html/config/constants.php - 2> /dev/null | tar -xO 2> /dev/null | awk -F "'" "/'version' =>/ && !found { print \$(NF - 1); found = 1 }")" && [ -n "$current_version" ] || die "could not read the STX Hosting version from the coolify container"
+	ok "STX Hosting $BOLD$current_version$RESET is installed"
 }
 
 select_patch_version() {
-	[[ "$current_version" =~ ^4\.([0-4])\.([0-9]+)$ ]] || die "Coolify $current_version has no security fix release, upgrade to the latest version from the dashboard instead"
+	[[ "$current_version" =~ ^4\.([0-4])\.([0-9]+)$ ]] || die "STX Hosting $current_version has no security fix release, upgrade to the latest version from the dashboard instead"
 	patch_version="${PATCH_VERSIONS[${BASH_REMATCH[1]}]}"
 	if [ "${BASH_REMATCH[2]}" -ge "${patch_version##*.}" ]; then
-		ok "Coolify $current_version already includes the security fixes"
+		ok "STX Hosting $current_version already includes the security fixes"
 		exit 0
 	fi
 }
 
 check_compose_files() {
 	local has_realtime=false needs_realtime=true
-	if grep -q 'coollabsio/coolify-realtime:' "$SOURCE_DIR/docker-compose.prod.yml"; then
+	if grep -q 'stxhosting/platform-realtime:' "$SOURCE_DIR/docker-compose.prod.yml"; then
 		has_realtime=true
 	fi
 	if [[ "$patch_version" == 4.4.* ]]; then
 		needs_realtime=false
 	fi
-	[ "$has_realtime" = "$needs_realtime" ] || die "the compose files in $SOURCE_DIR do not belong to Coolify $current_version, update to ${PATCH_VERSIONS[4]} instead: curl -fsSL https://cdn.coollabs.io/coolify/upgrade.sh | sudo bash -s ${PATCH_VERSIONS[4]}"
-	ok "the compose files belong to Coolify $current_version"
+	[ "$has_realtime" = "$needs_realtime" ] || die "the compose files in $SOURCE_DIR do not belong to STX Hosting $current_version, update to ${PATCH_VERSIONS[4]} instead: curl -fsSL ${CDN:-https://cdn.stxhosting.com/stx}/upgrade.sh | sudo bash -s ${PATCH_VERSIONS[4]}"
+	ok "the compose files belong to STX Hosting $current_version"
 }
 
 pull_image() {
-	LATEST_IMAGE="$patch_version" "${compose[@]}" pull coolify < /dev/null >> "$LOG_FILE" 2>&1 || die "could not pull Coolify $patch_version, nothing was changed (log: $LOG_FILE)"
-	ok "pulled Coolify $patch_version"
+	LATEST_IMAGE="$patch_version" "${compose[@]}" pull coolify < /dev/null >> "$LOG_FILE" 2>&1 || die "could not pull STX Hosting $patch_version, nothing was changed (log: $LOG_FILE)"
+	ok "pulled STX Hosting $patch_version"
 }
 
 update_env_file() {
@@ -93,7 +93,7 @@ update_env_file() {
 }
 
 restart_coolify() {
-	# Detached, because the Coolify 4.4 terminal runs inside the coolify container and closes when it stops
+	# Detached, because the STX Hosting 4.4 terminal runs inside the coolify container and closes when it stops
 	LATEST_IMAGE="$patch_version" nohup "${compose[@]}" up -d --no-deps coolify < /dev/null >> "$LOG_FILE" 2>&1 &
 	wait $! || die "could not restart the coolify container (log: $LOG_FILE)"
 	ok "restarted the coolify container"
@@ -104,13 +104,13 @@ wait_for_coolify() {
 	for _ in $(seq 60); do
 		status="$(docker inspect --format '{{.State.Health.Status}}' coolify 2> /dev/null || true)"
 		if [ "$status" = healthy ]; then
-			ok "Coolify $BOLD$patch_version$RESET is healthy and runs PHP $(docker exec coolify php -r 'echo PHP_VERSION;')"
+			ok "STX Hosting $BOLD$patch_version$RESET is healthy and runs PHP $(docker exec coolify php -r 'echo PHP_VERSION;')"
 			return
 		fi
 		sleep 5
 	done
 	info "roll back with: cp $BACKUP_FILE $ENV_FILE && LATEST_IMAGE=$current_version ${compose[*]} up -d --no-deps coolify"
-	die "Coolify $patch_version is not healthy after 5 minutes, check it with: docker logs coolify"
+	die "STX Hosting $patch_version is not healthy after 5 minutes, check it with: docker logs coolify"
 }
 
 main

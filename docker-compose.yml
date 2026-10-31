@@ -15,13 +15,13 @@ services:
             - redis
     postgres:
         image: postgres:15-alpine
-        container_name: coolify-db
+        container_name: stx-db
         restart: always
         networks:
             - coolify
     redis:
         image: redis:7-alpine
-        container_name: coolify-redis
+        container_name: stx-redis
         restart: always
         networks:
             - coolify

@@ -35,7 +35,7 @@ call POST "/applications/$APP1/tags" '{"tag_name":"transfer-demo"}' >/dev/null |
 call POST "/applications/$APP1/scheduled-tasks" '{"name":"hello","command":"echo hello","frequency":"*/30 * * * *"}' >/dev/null || true
 
 echo '== server 1: Dockerfile app (staging)'
-DF=$(printf 'FROM nginx:alpine\nRUN echo "built by Coolify A" > /usr/share/nginx/html/index.html\nEXPOSE 80\n' | base64 -w0)
+DF=$(printf 'FROM nginx:alpine\nRUN echo "built by STX Hosting A" > /usr/share/nginx/html/index.html\nEXPOSE 80\n' | base64 -w0)
 APP2=$(call POST /applications/dockerfile "$(jq -nc --arg p "$P1" --arg s "$S1" --arg d "$DF" '{project_uuid:$p,server_uuid:$s,environment_name:"staging",name:"nginx-dockerfile",dockerfile:$d,ports_exposes:"80",instant_deploy:false}')" | uuid)
 
 echo '== server 1: PostgreSQL with a backup, Redis'

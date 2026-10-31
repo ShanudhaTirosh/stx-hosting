@@ -1,6 +1,6 @@
 # Temporary: releases the 4.0 to 4.3 security fixes from the v4.0.x to v4.3.x branches without moving latest.
 # Delete this workflow once 4.5 ships.
-name: TMP Release Coolify Hotfix
+name: TMP Release STX Hosting Hotfix
 run-name: tmp ${{ inputs.branch }}
 
 on:
@@ -19,13 +19,13 @@ on:
 permissions: {}
 
 concurrency:
-  group: tmp-coolify-hotfix-release
+  group: tmp-stx-hotfix-release
   cancel-in-progress: false
 
 env:
   GITHUB_REGISTRY: ghcr.io
   DOCKER_REGISTRY: docker.io
-  IMAGE_NAME: coollabsio/coolify
+  IMAGE_NAME: stxhosting/platform
 
 jobs:
   validate:
@@ -102,7 +102,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: true
           build-args: |
-            COOLIFY_VERSION=${{ needs.validate.outputs.version }}
+            STX_VERSION=${{ needs.validate.outputs.version }}
           labels: |
             org.opencontainers.image.revision=${{ needs.validate.outputs.sha }}
           tags: |
@@ -156,4 +156,4 @@ jobs:
             --target "${SHA}" \
             --title "v${VERSION}" \
             --latest=false \
-            --notes "Security fix release for Coolify ${VERSION%.*}. Apply it with: curl -fsSL https://cdn.coollabs.io/coolify/patch.sh | sudo bash"
+            --notes "Security fix release for STX Hosting ${VERSION%.*}. Apply it with: curl -fsSL https://cdn.coollabs.io/stx/patch.sh | sudo bash"

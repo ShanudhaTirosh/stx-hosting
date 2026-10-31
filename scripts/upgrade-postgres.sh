@@ -1,5 +1,5 @@
 #!/bin/bash
-## Explicit Coolify internal PostgreSQL major-version migrator.
+## Explicit STX Hosting internal PostgreSQL major-version migrator.
 ## This script is intentionally not run by upgrade.sh automatically.
 
 set -Eeuo pipefail
@@ -217,7 +217,7 @@ validate_common_requirements() {
     touch "$LOGFILE"
     chmod 700 "$BACKUP_DIR"
 
-    [ -f "$ENV_FILE" ] || fail "Missing ${ENV_FILE}. Run this on a self-hosted Coolify server."
+    [ -f "$ENV_FILE" ] || fail "Missing ${ENV_FILE}. Run this on a self-hosted STX Hosting server."
     command -v docker >/dev/null 2>&1 || fail "Docker is required."
     docker info >/dev/null 2>&1 || fail "Docker daemon is not reachable."
 }
@@ -237,15 +237,15 @@ rollback_postgres() {
 
     CURRENT_COOLIFY_IMAGE_TAG=$(current_coolify_image_tag)
 
-    log "Rolling back Coolify internal PostgreSQL."
+    log "Rolling back STX Hosting internal PostgreSQL."
     log "Previous image: ${PREVIOUS_IMAGE}"
     log "Previous volume: ${PREVIOUS_VOLUME}"
     log "Previous mount path: ${PREVIOUS_MOUNT_PATH}"
-    log "Current Coolify image tag: ${CURRENT_COOLIFY_IMAGE_TAG:-latest}"
+    log "Current STX Hosting image tag: ${CURRENT_COOLIFY_IMAGE_TAG:-latest}"
 
     docker volume inspect "$PREVIOUS_VOLUME" >/dev/null 2>&1 || fail "Previous volume '${PREVIOUS_VOLUME}' does not exist."
 
-    log "Stopping Coolify application container before rollback."
+    log "Stopping STX Hosting application container before rollback."
     docker stop coolify >>"$LOGFILE" 2>&1 || true
 
     log "Removing current coolify-db container. Current upgraded volume is kept untouched."
@@ -259,8 +259,8 @@ rollback_postgres() {
         rm -f "$OVERRIDE_FILE"
     fi
 
-    log "Starting Coolify stack with rollback database volume."
-    start_stack "$CURRENT_COOLIFY_IMAGE_TAG" >>"$LOGFILE" 2>&1 || fail "Could not start Coolify stack after rollback. See ${LOGFILE}."
+    log "Starting STX Hosting stack with rollback database volume."
+    start_stack "$CURRENT_COOLIFY_IMAGE_TAG" >>"$LOGFILE" 2>&1 || fail "Could not start STX Hosting stack after rollback. See ${LOGFILE}."
 
     log "Rollback completed successfully."
     cat <<EOF | tee -a "$LOGFILE"
@@ -276,7 +276,7 @@ upgrade_postgres() {
     TARGET_MOUNT_PATH=$(mount_path_for_major "$TARGET_MAJOR")
     validate_common_requirements
 
-    log "Starting Coolify internal PostgreSQL major upgrade."
+    log "Starting STX Hosting internal PostgreSQL major upgrade."
     log "Target major: ${TARGET_MAJOR}"
     log "Target image: ${TARGET_IMAGE}"
     log "Target volume: ${TARGET_VOLUME}"
@@ -286,7 +286,7 @@ upgrade_postgres() {
     DB_DATABASE=$(get_env_var DB_DATABASE coolify)
 
     if ! docker ps -a --format '{{.Names}}' | grep -qx 'coolify-db'; then
-        fail "Container 'coolify-db' was not found. Start Coolify before running this script."
+        fail "Container 'coolify-db' was not found. Start STX Hosting before running this script."
     fi
 
     if ! docker ps --format '{{.Names}}' | grep -qx 'coolify-db'; then
@@ -317,7 +317,7 @@ upgrade_postgres() {
     log "Current active volume: ${PREVIOUS_VOLUME}"
     log "Current image: ${PREVIOUS_IMAGE}"
     log "Current mount path: ${PREVIOUS_MOUNT_PATH}"
-    log "Current Coolify image tag: ${CURRENT_COOLIFY_IMAGE_TAG:-latest}"
+    log "Current STX Hosting image tag: ${CURRENT_COOLIFY_IMAGE_TAG:-latest}"
 
     if [ "$CURRENT_MAJOR" -eq "$TARGET_MAJOR" ]; then
         log "PostgreSQL is already on major ${TARGET_MAJOR}. Nothing to do."
@@ -332,7 +332,7 @@ upgrade_postgres() {
         fail "Target volume '${TARGET_VOLUME}' already exists. Set COOLIFY_POSTGRES_TARGET_VOLUME to a new name or remove the old failed target volume."
     fi
 
-    log "Stopping Coolify application container to prevent writes during dump."
+    log "Stopping STX Hosting application container to prevent writes during dump."
     docker stop coolify >>"$LOGFILE" 2>&1 || true
 
     log "Creating compressed dump at ${DUMP_FILE}."
@@ -362,7 +362,7 @@ upgrade_postgres() {
     log "Restoring dump into target volume."
     gunzip -c "$DUMP_FILE" | docker exec -i "$TEMP_CONTAINER" psql -U postgres -d postgres >>"$LOGFILE" 2>&1
 
-    log "Smoke-checking restored Coolify database."
+    log "Smoke-checking restored STX Hosting database."
     docker exec "$TEMP_CONTAINER" psql -U "$DB_USERNAME" -d "$DB_DATABASE" -Atc 'SELECT 1;' | grep -qx '1' || fail "Restored database smoke check failed."
 
     log "Saving rollback metadata to ${ROLLBACK_FILE}."
@@ -377,10 +377,10 @@ upgrade_postgres() {
     log "Stopping old coolify-db container. Previous volume '${PREVIOUS_VOLUME}' will be kept for rollback."
     docker rm -f coolify-db >>"$LOGFILE" 2>&1 || true
 
-    log "Starting Coolify stack with PostgreSQL ${TARGET_MAJOR}."
-    start_stack "$CURRENT_COOLIFY_IMAGE_TAG" >>"$LOGFILE" 2>&1 || fail "Could not start Coolify stack with upgraded PostgreSQL. See ${LOGFILE}."
+    log "Starting STX Hosting stack with PostgreSQL ${TARGET_MAJOR}."
+    start_stack "$CURRENT_COOLIFY_IMAGE_TAG" >>"$LOGFILE" 2>&1 || fail "Could not start STX Hosting stack with upgraded PostgreSQL. See ${LOGFILE}."
 
-    log "Coolify internal PostgreSQL upgrade completed successfully."
+    log "STX Hosting internal PostgreSQL upgrade completed successfully."
     print_rollback_instructions
 }
 

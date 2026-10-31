@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Write what Coolify runs on a VM of the source to a file: the workload containers (normalized docker inspect) and the
-# files that Coolify writes in /data/coolify. Take one after the source deployed and one after the target deployed
+# Write what STX Hosting runs on a VM of the source to a file: the workload containers (normalized docker inspect) and the
+# files that STX Hosting writes in /data/coolify. Take one after the source deployed and one after the target deployed
 # again, then compare them with `diff`. Values that change with every deployment are left out.
 #
 # Usage: scripts/transfer-test/runtime-snapshot.sh <profile> <output file>

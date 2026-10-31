@@ -1,4 +1,4 @@
-name: Build Coolify Main
+name: Build STX Hosting Main
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   packages: write
 
 concurrency:
-  group: coolify-main-build
+  group: stx-main-build
   cancel-in-progress: false
 
 env:
   GITHUB_REGISTRY: ghcr.io
   DOCKER_REGISTRY: docker.io
-  IMAGE_NAME: "coollabsio/coolify"
+  IMAGE_NAME: "stxhosting/platform"
 
 jobs:
   build-push:
@@ -65,7 +65,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: true
           build-args: |
-            COOLIFY_VERSION=${{ steps.version.outputs.version }}
+            STX_VERSION=${{ steps.version.outputs.version }}
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
           tags: |

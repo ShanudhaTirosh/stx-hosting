@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-REPOSITORY=${HELPER_IMAGE_REPOSITORY:-docker.io/coollabsio/coolify-helper}
+REPOSITORY=${HELPER_IMAGE_REPOSITORY:-docker.io/stxhosting/platform-helper}
 DEFAULT_TAG="dev-$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
 COOLIFY_CONTAINER=${COOLIFY_CONTAINER:-$("$ROOT_DIR/scripts/dev" container)}
 
@@ -13,7 +13,7 @@ Usage: $0 <command> [tag]
 
 Commands:
   build [tag]   Build the local helper image
-  use [tag]     Configure local Coolify to use an existing helper image
+  use [tag]     Configure local STX Hosting to use an existing helper image
   verify [tag]  Verify tools and run a Docker Compose socket smoke test
   deploy [tag]  Deploy seeded Dockerfile, Compose, and Nixpacks applications
   reset         Clear the local helper version override
@@ -27,13 +27,13 @@ require_local_coolify() {
     local is_dev
 
     if ! docker inspect "$COOLIFY_CONTAINER" >/dev/null 2>&1; then
-        echo "Coolify container '$COOLIFY_CONTAINER' is not running." >&2
+        echo "STX Hosting container '$COOLIFY_CONTAINER' is not running." >&2
         exit 1
     fi
 
     is_dev=$(docker exec "$COOLIFY_CONTAINER" php artisan tinker --execute 'echo isDev() ? "yes" : "no";' 2>/dev/null | tail -1)
     if [[ $is_dev != yes ]]; then
-        echo "The running Coolify instance is not in development mode." >&2
+        echo "The running STX Hosting instance is not in development mode." >&2
         exit 1
     fi
 }
@@ -76,11 +76,11 @@ use_helper() {
     local selected
     selected=$(docker exec "$COOLIFY_CONTAINER" php artisan tinker --execute 'echo getHelperVersion();' 2>/dev/null | tail -1)
     if [[ $selected != "$tag" ]]; then
-        echo "Coolify selected helper '$selected' instead of '$tag'." >&2
+        echo "STX Hosting selected helper '$selected' instead of '$tag'." >&2
         exit 1
     fi
 
-    echo "Coolify now uses $image"
+    echo "STX Hosting now uses $image"
 }
 
 verify_helper() {

@@ -197,7 +197,7 @@ class CheckProxy
                     exit 0;
                 fi;
                 # Check for dual-stack or docker processes
-                if [ \$count -le 2 ] && (echo \"\$ss_output\" | grep -q 'docker\\|coolify'); then
+                if [ \$count -le 2 ] && (echo \"\$ss_output\" | grep -q 'docker\\|stx\\|coolify'); then
                     echo 'port_free';
                     exit 0;
                 fi;
@@ -217,7 +217,7 @@ class CheckProxy
                     echo 'port_free';
                     exit 0;
                 fi;
-                if [ \$count -le 2 ] && (echo \"\$netstat_output\" | grep -q 'docker\\|coolify'); then
+                if [ \$count -le 2 ] && (echo \"\$netstat_output\" | grep -q 'docker\\|stx\\|coolify'); then
                     echo 'port_free';
                     exit 0;
                 fi;
@@ -358,8 +358,8 @@ class CheckProxy
                     return false;
                 }
 
-                // Try to detect if this is our coolify-proxy
-                if (strpos($details, 'docker') !== false || strpos($details, $proxyContainerName) !== false) {
+                // Try to detect if this is our proxy (STX Hosting or legacy)
+                if (strpos($details, 'docker') !== false || strpos($details, 'stx') !== false || strpos($details, $proxyContainerName) !== false) {
                     // It's likely our docker or proxy, which is fine
                     return false;
                 }

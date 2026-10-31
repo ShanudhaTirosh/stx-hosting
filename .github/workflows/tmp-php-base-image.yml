@@ -25,8 +25,8 @@ concurrency:
 
 env:
   GITHUB_REGISTRY: ghcr.io
-  PHP_IMAGE: ghcr.io/coollabsio/php
-  BASE_IMAGE: ghcr.io/coollabsio/serversideup-php
+  PHP_IMAGE: ghcr.io/stxhosting/php
+  BASE_IMAGE: ghcr.io/stxhosting/serversideup-php
   # serversideup/docker-php v4.5.1
   SERVERSIDEUP_CONTEXT: https://github.com/serversideup/docker-php.git#92b16c9ee63bde4f75cdcc7ebe96aee36a896f88
 

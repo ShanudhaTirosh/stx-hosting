@@ -11,7 +11,7 @@
 
 `next` is the only long-lived development branch. Do not create `release/v*` branches.
 
-Release workflows never edit or commit versions. Stable versions come from `config/constants.php`; RC versions come from `coolify.nightly.version` in `versions.json` and `other/nightly/versions.json`.
+Release workflows never edit or commit versions. Stable versions come from `config/constants.php`; RC versions come from `stx.nightly.version` in `versions.json` and `other/nightly/versions.json`.
 
 ## Where changes go
 
@@ -27,12 +27,12 @@ feature/* → next → RC
 ```
 
 1. Merge feature branches into `next`.
-2. Set `coolify.nightly.version` in both version files to the intended RC, such as `4.5-rc.1`.
+2. Set `stx.nightly.version` in both version files to the intended RC, such as `4.5-rc.1`.
 3. Every push to `next` runs **Build STX Hosting Next**. It publishes `sha-<short-sha>`, `4.5-rc.1.<short-sha>`, and the moving `next` tag. It never publishes the exact `4.5-rc.1` tag.
 4. Create a reviewed draft GitHub Release named `v4.5-rc.1` and mark it as a prerelease.
 5. Run **Release STX Hosting RC** manually from `next` and enter `v4.5-rc.1`.
 6. The workflow validates the draft and configured nightly version, builds the exact RC, publishes `4.5-rc.1`, updates the `next` image tag, and publishes the draft prerelease.
-7. Advance `coolify.nightly.version` to the next intended RC version.
+7. Advance `stx.nightly.version` to the next intended RC version.
 
 ## Stable release flow
 

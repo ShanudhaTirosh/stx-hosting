@@ -4,7 +4,7 @@
 # tags: whatsapp,api,gateway,messaging,automation,webhooks,postgresql,redis
 # logo: svgs/openwa.png
 # port: 2785
-# Production stack with PostgreSQL + Redis. Coolify/Traefik handle routing; no docker-proxy needed.
+# Production stack with PostgreSQL + Redis. STX Hosting/Traefik handle routing; no docker-proxy needed.
 
 services:
   openwa:

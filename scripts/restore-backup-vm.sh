@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# Restore a Coolify instance backup into an offline KVM VM to test database migrations.
+# Restore a STX Hosting instance backup into an offline KVM VM to test database migrations.
 #
 # Usage:
 #   scripts/restore-backup-vm.sh           asks for the inputs below
-#   scripts/restore-backup-vm.sh destroy   deletes the VM, its disk, and the Coolify base images
+#   scripts/restore-backup-vm.sh destroy   deletes the VM, its disk, and the STX Hosting base images
 #
 # Inputs (asked interactively, so they do not go into the shell history):
 #   Backup file  pg_dump custom-format backup (.dmp), optionally gzipped (.gz)
 #   APP_KEY      APP_KEY of the instance that created the backup (base64:...), not shown
-#   Version      Coolify version or image tag, e.g. 4.3.23 or sha-99c8409 (empty: latest stable)
-#   Cloud        y for a Coolify Cloud backup: starts Coolify with SELF_HOSTED=false, as Cloud runs.
+#   Version      STX Hosting version or image tag, e.g. 4.3.23 or sha-99c8409 (empty: latest stable)
+#   Cloud        y for a STX Hosting Cloud backup: starts STX Hosting with SELF_HOSTED=false, as Cloud runs.
 #                Self-hosted mode on a Cloud backup adds the localhost server and makes app:init
 #                try SSH to every server, so Reverb does not start and the container stays unhealthy.
 #
 # Flow:
 #   1. Base image (once per version, until destroy): a separate builder VM with internet access installs
-#      Coolify. It never receives the backup. Its disk is kept as the base image.
+#      STX Hosting. It never receives the backup. Its disk is kept as the base image.
 #   2. The restore VM boots from a copy of the base image on a host-only network without
 #      internet access and without DNS. It never has internet access, so the restored
 #      instance cannot reach real servers, notification channels, or Stripe.
 #   3. The script confirms that the VM is offline, copies the backup, replaces the database,
-#      sets APP_KEY, turns off Horizon and the scheduler, and starts Coolify.
-#      Coolify runs its migrations and seeders on start; no queued or scheduled job runs.
+#      sets APP_KEY, turns off Horizon and the scheduler, and starts STX Hosting.
+#      STX Hosting runs its migrations and seeders on start; no queued or scheduled job runs.
 #
 # Environment overrides:
 #   VM_NAME (coolify-restore-test), VM_MEMORY (4096), VM_VCPUS (4), VM_DISK_SIZE (60G),
@@ -162,7 +162,7 @@ EOF
         --graphics none --noautoconsole >/dev/null
 }
 
-# build_base_image <path>: installs Coolify in a builder VM with internet access and keeps its disk.
+# build_base_image <path>: installs STX Hosting in a builder VM with internet access and keeps its disk.
 build_base_image() {
     local base=$1
     if [ ! -f "$UBUNTU_IMAGE" ]; then
@@ -176,8 +176,8 @@ build_base_image() {
     VM_IP=$(wait_for_ip "$BUILDER_NAME")
     wait_for_ssh "$VM_IP"
 
-    log "Installing Coolify $VERSION in the builder VM (no backup data in this VM)"
-    vm_ssh "curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash -s -- $VERSION"
+    log "Installing STX Hosting $VERSION in the builder VM (no backup data in this VM)"
+    vm_ssh "curl -fsSL ${CDN:-https://cdn.stxhosting.com/stx}/install.sh | bash -s -- $VERSION"
 
     vm_ssh 'shutdown -h now' || true
     for _ in $(seq 1 60); do
@@ -196,7 +196,7 @@ build_base_image() {
     delete_vm "$VM_NAME"
     delete_vm "$BUILDER_NAME"
     rm -f "$IMAGE_DIR"/coolify-base-*.qcow2
-    echo "Deleted VM $VM_NAME, its disk, and the Coolify base images."
+    echo "Deleted VM $VM_NAME, its disk, and the STX Hosting base images."
     exit 0
 }
 [ $# -eq 0 ] || usage
@@ -206,8 +206,8 @@ read -r -e -p "Backup file (.dmp or .gz): " BACKUP_FILE
 BACKUP_FILE=${BACKUP_FILE/#\~/$HOME}
 read -r -s -p "APP_KEY of the backed-up instance (input is hidden): " APP_KEY
 echo
-read -r -p "Coolify version or image tag (empty for latest stable): " VERSION
-read -r -p "Is this a Coolify Cloud backup? [y/N]: " CLOUD_BACKUP
+read -r -p "STX Hosting version or image tag (empty for latest stable): " VERSION
+read -r -p "Is this a STX Hosting Cloud backup? [y/N]: " CLOUD_BACKUP
 
 [ -s "$BACKUP_FILE" ] || die "Backup file '$BACKUP_FILE' does not exist or is empty."
 [[ "$APP_KEY" == base64:* ]] || die "APP_KEY must start with 'base64:'."
@@ -217,7 +217,7 @@ done
 [ -e /dev/kvm ] || die "/dev/kvm is not available."
 
 if [ -z "$VERSION" ]; then
-    VERSION=$(curl -fsSL https://cdn.coollabs.io/coolify/versions.json | jq -r '.coolify.v4.version')
+    VERSION=$(curl -fsSL ${CDN:-https://cdn.stxhosting.com/stx}/versions.json | jq -r '.coolify.v4.version')
     echo "Latest stable version: $VERSION"
 fi
 [[ "${CLOUD_BACKUP,,}" =~ ^(y|yes)$ ]] && SELF_HOSTED=false || SELF_HOSTED=true
@@ -247,7 +247,7 @@ if [ ! -f "$SSH_KEY" ]; then
 fi
 
 if [ -f "$BASE_IMAGE" ]; then
-    log "Using the cached base image for Coolify $VERSION"
+    log "Using the cached base image for STX Hosting $VERSION"
 else
     build_base_image "$BASE_IMAGE"
 fi
@@ -273,7 +273,7 @@ else
     scp "${SSH_OPTS[@]}" "$BACKUP_FILE" "root@$VM_IP:/root/coolify-backup.dmp"
 fi
 
-log "Restoring the backup and starting Coolify (migrations run on start)"
+log "Restoring the backup and starting STX Hosting (migrations run on start)"
 # Send APP_KEY through stdin, so it does not show in the process list of this host or the VM.
 {
     printf 'APP_KEY=%q\n' "$APP_KEY"
@@ -317,7 +317,7 @@ docker exec coolify-redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning FLUSH
 COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
 [ -f docker-compose.custom.yml ] && COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.custom.yml"
 [ -f docker-compose.postgres-upgrade.yml ] && COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.postgres-upgrade.yml"
-echo "Starting Coolify $LATEST_IMAGE..."
+echo "Starting STX Hosting $LATEST_IMAGE..."
 # --pull never: the VM is offline, all images come from the base image.
 # shellcheck disable=SC2086
 LATEST_IMAGE=$LATEST_IMAGE docker compose --env-file .env $COMPOSE_FILES up -d --pull never --wait --wait-timeout 600
@@ -353,13 +353,13 @@ cat <<EOF
 
 $(printf '\033[1;32m')Restore finished.$(printf '\033[0m')
 
-  Coolify UI (from this host):   http://$VM_IP:8000
+  STX Hosting UI (from this host):   http://$VM_IP:8000
   From your workstation:         ssh -N -L 8000:$VM_IP:8000 -L 6001:$VM_IP:6001 -L 6002:$VM_IP:6002 root@$HOST_ADDR
                                  then open http://localhost:8000
   Log in with a user account from the backup.
 
   SSH into the VM:               ssh -i $SSH_KEY root@$VM_IP
-  Coolify logs:                  ssh -i $SSH_KEY root@$VM_IP docker logs -f coolify
+  STX Hosting logs:                  ssh -i $SSH_KEY root@$VM_IP docker logs -f coolify
   Delete the VM:                 $0 destroy
 
   The VM never had internet access. Horizon and the scheduler are off, so no job runs.

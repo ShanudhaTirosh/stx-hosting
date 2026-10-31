@@ -3,7 +3,7 @@
 # Railpack end-to-end deploy smoke test against the local dev stack.
 #
 # Walks a curated set of Railpack example apps from
-# ApplicationSeeder, triggers a deploy via the Coolify API,
+# ApplicationSeeder, triggers a deploy via the STX Hosting API,
 # waits for the deployment queue to finish, then exec()s into the resulting
 # container and checks that COOLIFY_*, SOURCE_COMMIT, and any RAILPACK_*
 # build inputs landed correctly. Optionally curls the FQDN.

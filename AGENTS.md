@@ -12,7 +12,7 @@ For UI/UX design specifications, principles, and visual standards, consult the l
 
 ## Development Environment
 
-Docker Compose-based dev setup with services: coolify (app, which also runs Reverb WebSockets and the terminal server), postgres, redis, vite, testing-host, mailpit, minio.
+Docker Compose-based dev setup with services: stx (app, which also runs Reverb WebSockets and the terminal server), postgres, redis, vite, testing-host, mailpit, minio.
 
 ```bash
 # One dev instance per git branch (containers, volumes, VMs named after the branch)
@@ -29,7 +29,7 @@ Docker Compose-based dev setup with services: coolify (app, which also runs Reve
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
-The main checkout serves its branch at `localhost:8000` (Reverb `6001`, terminal `6002`, db `5432`, redis `6379`, vite `5173`). Worktrees get a port block at `20000 + slot*10` (app `+0`, Reverb `+1`, terminal `+2`, db `+3`, redis `+4`, vite `+5`). Each instance has its own libvirt network `coolify-dev-<slot>` (`10.221.<slot>.0/24`) and VMs `coolify-dev-<branch>--<profile>`; VMs are reused, use `php artisan dev:qemu <profile> --fresh` to rebuild one. On macOS with Lima >= 2.0 (`brew install lima`), the localhost VM is the Lima instance `coolify-dev-<slot>-<profile>` (same profiles, users, and SSH key); STX Hosting reaches it through Lima's forwarded SSH port on `host.docker.internal`, and only guest ports 80/443 are forwarded to the Mac. Rebuild it with `limactl delete -f <vm>`. Force it with `COOLIFY_DEV_SERVER_BACKEND=lima`. To pass the host NVIDIA GPU through to the KVM localhost VM (`ubuntu-root` only), start with `COOLIFY_DEV_GPU=1 ./scripts/dev start` (or `php artisan dev:qemu ubuntu-root --as-localhost --gpu`). This attaches every PCI function of the GPU, gives the VM 4 GiB, stops `nvidia-persistenced` on the host, and installs the NVIDIA driver and container toolkit in the VM. The host cannot use the GPU while the VM runs. Remove it with `--fresh` without `--gpu`. If `APP_URL` in `.env` is a `*.ts.net` host, the browser ports are published with `tailscale serve`. Set `COOLIFY_DEV_INSTANCE=<name>` to run another instance from the same checkout.
+The main checkout serves its branch at `localhost:8000` (Reverb `6001`, terminal `6002`, db `5432`, redis `6379`, vite `5173`). Worktrees get a port block at `20000 + slot*10` (app `+0`, Reverb `+1`, terminal `+2`, db `+3`, redis `+4`, vite `+5`). Each instance has its own libvirt network `stx-dev-<slot>` (`10.221.<slot>.0/24`) and VMs `stx-dev-<branch>--<profile>`; VMs are reused, use `php artisan dev:qemu <profile> --fresh` to rebuild one. On macOS with Lima >= 2.0 (`brew install lima`), the localhost VM is the Lima instance `stx-dev-<slot>-<profile>` (same profiles, users, and SSH key); STX Hosting reaches it through Lima's forwarded SSH port on `host.docker.internal`, and only guest ports 80/443 are forwarded to the Mac. Rebuild it with `limactl delete -f <vm>`. Force it with `COOLIFY_DEV_SERVER_BACKEND=lima`. To pass the host NVIDIA GPU through to the KVM localhost VM (`ubuntu-root` only), start with `COOLIFY_DEV_GPU=1 ./scripts/dev start` (or `php artisan dev:qemu ubuntu-root --as-localhost --gpu`). This attaches every PCI function of the GPU, gives the VM 4 GiB, stops `nvidia-persistenced` on the host, and installs the NVIDIA driver and container toolkit in the VM. The host cannot use the GPU while the VM runs. Remove it with `--fresh` without `--gpu`. If `APP_URL` in `.env` is a `*.ts.net` host, the browser ports are published with `tailscale serve`. Set `COOLIFY_DEV_INSTANCE=<name>` to run another instance from the same checkout.
 
 ## Testing the Self-Hosted Upgrade Process
 
@@ -44,7 +44,7 @@ Use the following workflow to test a self-hosted upgrade:
 2. Set the current STX Hosting version and rebuild the cached configuration:
 
    ```bash
-   docker exec -e COOLIFY_VERSION=4.3.0 coolify php artisan config:cache
+   docker exec -e STX_VERSION=4.3.0 stx php artisan config:cache
    ```
 
 3. In the STX Hosting UI, click **Check for Updates**.
@@ -197,7 +197,7 @@ Before you rate a vulnerability or write an advisory, find the security boundary
 - Do not put exploit details, payloads, or unreleased advisory IDs in commits, PR descriptions, code comments, or this file.
 
 ### Event Broadcasting
-- Laravel Reverb WebSocket server for real-time updates (port 6001) and a Node terminal WebSocket server (port 6002), both run inside the `coolify` container as s6 services
+- Laravel Reverb WebSocket server for real-time updates (port 6001) and a Node terminal WebSocket server (port 6002), both run inside the `stx` container as s6 services
 - Server-side broadcasts use `PUSHER_BACKEND_HOST`/`PUSHER_BACKEND_PORT` (defaults `127.0.0.1:6001`); `PUSHER_HOST`/`PUSHER_PORT` are browser-facing only
 - Status change events: `ApplicationStatusChanged`, `ServiceStatusChanged`, `DatabaseStatusChanged`, `ProxyStatusChanged`
 - Livewire components subscribe to private team channels via `getListeners()`
@@ -235,11 +235,11 @@ STX Hosting seeds **instance-owned** rows at primary key `0`. That value is a se
 | Root team | `Team::find(0)`, `team_id === 0` | Instance / root team. Cloud billing and many skip-checks exempt `team_id === 0`. |
 | Localhost server | `Server::find(0)` / `findOrFail(0)` | The machine running STX Hosting. Upgrades, instance backups, and docker inspect target this server. |
 | Instance settings | `InstanceSettings` with `id = 0` | Singleton settings row. Tests must seed `InstanceSettings::create(['id' => 0])` (or `forceCreate`). |
-| Instance Postgres | `StandalonePostgresql` `id = 0`, name `coolify-db` | STX Hosting’s own database. UI treats `database_id === 0` as the instance DB (e.g. hide delete on backup screens). |
+| Instance Postgres | `StandalonePostgresql` `id = 0`, name `stx-db` | STX Hosting’s own database. UI treats `database_id === 0` as the instance DB (e.g. hide delete on backup screens). |
 | Local docker dest | `StandaloneDocker` `id = 0` | Destination on the localhost server (`destination_id = 0`). |
 | Root user / default GitHub App | seeders | First-install defaults. |
 
-**Do not assign `id = 0` to new or non-instance rows.** In particular, `ScheduledDatabaseBackup` and `ScheduledTask` are ordinary schedules. Legacy installs may still have a `coolify-db` backup at `id = 0`; resolve that backup via the `coolify-db` relation / uuid, not `ScheduledDatabaseBackup::find(0)`.
+**Do not assign `id = 0` to new or non-instance rows.** In particular, `ScheduledDatabaseBackup` and `ScheduledTask` are ordinary schedules. Legacy installs may still have a `stx-db` backup at `id = 0`; resolve that backup via the `stx-db` relation / uuid, not `ScheduledDatabaseBackup::find(0)`.
 
 `0` is a PHP/Eloquent landmine (`empty(0)` is true; keyset pagination `where('id', '>', $cursor)` starting at `0` skips the row). Queries that page by id must include `id = 0` on the first page (no lower bound, or cursor `< 0`). Prefer `chunkById()` over a hand-rolled `id > 0` cursor.
 

@@ -63,7 +63,7 @@ $ubuntuDestination = StandaloneDocker::where('server_id', $ubuntu->id)->firstOrF
 $onUbuntu = fn (Environment $env, string $name) => Application::create([
     'name' => $name, 'environment_id' => $env->id, 'destination_id' => $ubuntuDestination->id, 'destination_type' => $ubuntuDestination->getMorphClass(),
     'build_pack' => 'dockerimage', 'docker_registry_image_name' => 'traefik/whoami', 'docker_registry_image_tag' => 'latest', 'ports_exposes' => '80',
-    'git_repository' => 'coollabsio/coolify', 'git_branch' => 'main',
+    'git_repository' => 'stxhosting/platform', 'git_branch' => 'main',
 ]);
 $otherServerApp = $onUbuntu($environment, 'fake-on-ubuntu');
 $staging = Environment::firstOrCreate(['project_id' => $project->id, 'name' => 'fake-staging']);

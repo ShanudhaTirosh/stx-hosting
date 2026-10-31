@@ -21,7 +21,7 @@ import {
     validateSshArgs,
 } from './terminal-utils.js';
 
-async function postToCoolify(path, headers, body = null) {
+async function postToStxPlatform(path, headers, body = null) {
     return new Promise((resolve, reject) => {
         const requestBody = body === null ? '' : JSON.stringify(body);
         const request = http.request({
@@ -58,6 +58,8 @@ async function postToCoolify(path, headers, body = null) {
         request.on('error', reject);
         request.end(requestBody);
     });
+}
+const postToCoolify = postToStxPlatform;
 }
 
 function parseResponseData(contentType = '', responseText = '') {
