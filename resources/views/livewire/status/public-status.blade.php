@@ -112,10 +112,16 @@
                     SEARCH MONITORS
                 </label>
                 <div class="relative">
-                    <svg class="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <svg class="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input id="search-monitors" type="text" wire:model.live.debounce.300ms="searchQuery"
                         placeholder="Search by name or URL"
-                        class="w-full pl-9 pr-4 py-2 rounded-xl border border-zinc-800 bg-[#1a1b22] text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500">
+                        style="background-color: #27272a !important; color: #ffffff !important;"
+                        class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-zinc-700/80 text-xs placeholder-neutral-400 focus:outline-none focus:border-zinc-500 shadow-inner">
+                    @if ($searchQuery)
+                        <button type="button" wire:click="$set('searchQuery', '')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -150,6 +156,8 @@
                         ? preg_replace('#^https?://#', '', $monitor->target_url)
                         : ($monitor->target_host ?: '');
 
+                    $showTarget = (!str_contains($badgeType, 'VPS HOST NODE') && !str_contains($badgeType, 'TCP') && !empty($targetDisplay));
+
                     // Calculate active bars from checks count
                     $totalBars = 60;
                     $checksCount = $monitor->checks_count ?: ($monitor->checks()->count() ?: 1);
@@ -168,7 +176,7 @@
                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 uppercase tracking-wider text-neutral-400">
                                     {{ $badgeType }}
                                 </span>
-                                @if ($targetDisplay)
+                                @if ($showTarget)
                                     <span class="truncate text-neutral-400 font-mono text-[11px]">
                                         {{ $targetDisplay }}
                                     </span>
