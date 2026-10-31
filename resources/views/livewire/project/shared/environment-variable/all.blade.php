@@ -48,9 +48,9 @@
                             ]" :disabled="! auth()->user()->can('manageEnvironment', $resource)" />
                     </div>
                 @endif
-                <x-forms.checkbox instantSave="saveStxDefaultVariables" id="include_coolify_default_variables"
+                <x-forms.checkbox instantSave="saveStxDefaultVariables" id="include_stx_default_variables"
                     label="Include STX Hosting default variables"
-                    helper="Adds COOLIFY_APP_NAME, COOLIFY_PROJECT_NAME, COOLIFY_ENVIRONMENT_NAME and COOLIFY_SERVER_IP to the container at runtime. A variable that you define with the same name wins. Takes effect after the next deploy or restart."
+                    helper="Adds STX_APP_NAME, STX_PROJECT_NAME, STX_ENVIRONMENT_NAME and STX_SERVER_IP to the container at runtime. A variable that you define with the same name wins. Takes effect after the next deploy or restart."
                     :disabled="! auth()->user()->can('manageEnvironment', $resource)" />
                 @if ($this->hasLogRedactionSetting())
                     <div class="grid w-full items-end gap-4 sm:grid-cols-2">

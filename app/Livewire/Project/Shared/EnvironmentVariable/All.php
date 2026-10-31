@@ -57,6 +57,8 @@ class All extends Component
 
     public bool $use_build_secrets = false;
 
+    public bool $include_stx_default_variables = true;
+
     public bool $include_coolify_default_variables = true;
 
     public bool $redact_all_env_values_in_logs = true;
@@ -115,8 +117,10 @@ class All extends Component
     {
         $this->is_env_sorting_enabled = data_get($this->resource, 'settings.is_env_sorting_enabled', false);
         $this->use_build_secrets = data_get($this->resource, 'settings.use_build_secrets', false);
-        $coolifyDefaultVariablesOwner = $this->resource instanceof Application ? $this->resource->settings : $this->resource;
-        $this->include_coolify_default_variables = data_get($coolifyDefaultVariablesOwner, 'include_coolify_default_variables') !== false;
+        $stxDefaultVariablesOwner = $this->resource instanceof Application ? $this->resource->settings : $this->resource;
+        $val = data_get($stxDefaultVariablesOwner, 'include_stx_default_variables', data_get($stxDefaultVariablesOwner, 'include_coolify_default_variables')) !== false;
+        $this->include_stx_default_variables = $val;
+        $this->include_coolify_default_variables = $val;
         if ($this->hasLogRedactionSetting()) {
             $this->redact_all_env_values_in_logs = $this->resource->redactsAllEnvValuesInLogs();
         }
@@ -209,6 +213,8 @@ class All extends Component
 
     public function saveStxDefaultVariables()
     {
+        $this->include_coolify_default_variables = $this->include_stx_default_variables;
+
         return $this->saveCoolifyDefaultVariables();
     }
 
@@ -216,6 +222,7 @@ class All extends Component
     {
         try {
             $this->authorize('manageEnvironment', $this->resource);
+            $this->include_stx_default_variables = $this->include_coolify_default_variables;
 
             if ($this->resource instanceof Application) {
                 $this->resource->settings->include_coolify_default_variables = $this->include_coolify_default_variables;

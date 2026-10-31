@@ -54,6 +54,7 @@ function get_traefik_versions(): ?array
  */
 function invalidate_versions_cache(): void
 {
+    Cache::forget('stx:versions:all');
     Cache::forget('coolify:versions:all');
 }
 
@@ -98,6 +99,7 @@ function cdn_retry_delay_ms(int $attempt, Throwable $exception): int
 function refresh_versions_file(int $tries = 3): ?array
 {
     Cache::forget('stx:versions:all');
+    Cache::forget('stx:versions:all');
     Cache::forget('coolify:versions:all');
 
     $response = cdn_http($tries)->get(config('constants.stx.versions_url', config('constants.coolify.versions_url')));
@@ -131,7 +133,7 @@ function refresh_versions_file(int $tries = 3): ?array
     if (version_compare($bestVersion, $currentVersion, '<')) {
         Log::warning('Version downgrade prevented in CheckForUpdatesJob', [
             'cdn_version' => $latestVersion,
-            'cached_version' => $existingCoolifyVersion,
+            'cached_version' => $existingStxVersion,
             'current_version' => $currentVersion,
             'attempted_best' => $bestVersion,
             'using' => $currentVersion,
@@ -139,6 +141,7 @@ function refresh_versions_file(int $tries = 3): ?array
         $bestVersion = $currentVersion;
     }
 
+    data_set($versions, 'stx.v4.version', $bestVersion);
     data_set($versions, 'coolify.v4.version', $bestVersion);
 
     File::put(base_path('versions.json'), json_encode($versions, JSON_PRETTY_PRINT));
@@ -153,7 +156,7 @@ function refresh_versions_file(int $tries = 3): ?array
  */
 function update_helper_version(?array $versions): void
 {
-    $latestVersion = data_get($versions, 'coolify.helper.version');
+    $latestVersion = data_get($versions, 'stx.helper.version', data_get($versions, 'coolify.helper.version'));
     $settings = instanceSettings();
     if ($latestVersion && version_compare($latestVersion, (string) $settings->helper_version, '>')) {
         $settings->update(['helper_version' => $latestVersion]);

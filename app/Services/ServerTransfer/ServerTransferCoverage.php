@@ -21,6 +21,11 @@ use App\Models\GithubApp;
 use App\Models\GithubRunnerConfig;
 use App\Models\GithubRunnerExecution;
 use App\Models\GitlabApp;
+use App\Models\HostingEntitlement;
+use App\Models\HostingInvoice;
+use App\Models\HostingLimit;
+use App\Models\HostingPlan;
+use App\Models\HostingProduct;
 use App\Models\InstanceSettings;
 use App\Models\IntegrationToken;
 use App\Models\LocalFileVolume;
@@ -70,6 +75,7 @@ use App\Models\Tag;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\TelegramNotificationSettings;
+use App\Models\TemplatePermission;
 use App\Models\User;
 use App\Models\UserChangelogRead;
 use App\Models\VolumeBackupS3Replica;
@@ -239,7 +245,7 @@ final class ServerTransferCoverage
             'version' => 'The Coolify version that created the variable; the target sets its own.',
         ],
         Application::class => [
-            'team_id' => self::TEAM, 'environment_id' => self::LINKED, 'destination_type' => self::LINKED, 'destination_id' => self::LINKED,
+            'environment_id' => self::LINKED, 'destination_type' => self::LINKED, 'destination_id' => self::LINKED,
             'source_type' => self::LINKED, 'source_id' => self::LINKED, 'private_key_id' => self::LINKED,
         ],
         ApplicationSetting::class => ['application_id' => self::LINKED],
@@ -269,7 +275,7 @@ final class ServerTransferCoverage
         ServiceApplication::class => ['service_id' => self::LINKED],
         ServiceDatabase::class => ['service_id' => self::LINKED],
         StandalonePostgresql::class => [
-            'team_id' => self::TEAM, 'destination_type' => self::LINKED, 'destination_id' => self::LINKED, 'environment_id' => self::LINKED,
+            'destination_type' => self::LINKED, 'destination_id' => self::LINKED, 'environment_id' => self::LINKED,
             'config_hash' => 'Calculated again when the target starts the database.',
         ],
         StandaloneMysql::class => [
@@ -349,5 +355,11 @@ final class ServerTransferCoverage
         VolumeBackupS3Replica::class => 'Backup history.',
         DockerCleanupExecution::class => 'Execution history.',
         GithubRunnerExecution::class => 'Execution history. The source stops tracking the runners of the server when it is transferred.',
+        HostingEntitlement::class => 'STX Hosting billing data of the source instance.',
+        HostingInvoice::class => 'STX Hosting billing data of the source instance.',
+        HostingLimit::class => 'STX Hosting billing data of the source instance.',
+        HostingPlan::class => 'STX Hosting billing data of the source instance.',
+        HostingProduct::class => 'STX Hosting billing data of the source instance.',
+        TemplatePermission::class => 'Instance-wide template permissions, not server data.',
     ];
 }

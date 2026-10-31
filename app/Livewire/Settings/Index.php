@@ -258,7 +258,8 @@ class Index extends Component
             }
 
             $imageRef = escapeshellarg(coolifyHelperImage().":{$version}");
-            $buildCommand = "docker build -t {$imageRef} -f docker/coolify-helper/Dockerfile .";
+            $dockerfile = file_exists(base_path('docker/stx-helper/Dockerfile')) ? 'docker/stx-helper/Dockerfile' : 'docker/coolify-helper/Dockerfile';
+            $buildCommand = "docker build -t {$imageRef} -f {$dockerfile} .";
 
             $activity = remote_process(
                 command: [$buildCommand],
@@ -269,7 +270,7 @@ class Index extends Component
             $this->buildActivityId = $activity->id;
             $this->dispatch('activityMonitor', $activity->id);
 
-            $this->dispatch('success', "Building coolify-helper:{$version}...");
+            $this->dispatch('success', "Building stx-helper:{$version}...");
         } catch (\Exception $e) {
             return handleError($e, $this);
         }
