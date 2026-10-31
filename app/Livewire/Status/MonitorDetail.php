@@ -51,7 +51,7 @@ class MonitorDetail extends Component
             'avgLatency' => round($avgLatency, 1),
             'maxLatency' => round($maxLatency, 1),
             'minLatency' => round($minLatency, 1),
-        ])->layout('layouts.storefront', [
+        ])->layout('layouts.status', [
             'title' => "{$monitor->name} Telemetry & Latency Metrics — STX Status",
         ]);
     }

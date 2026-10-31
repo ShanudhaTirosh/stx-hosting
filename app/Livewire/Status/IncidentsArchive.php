@@ -32,7 +32,7 @@ class IncidentsArchive extends Component
 
         return view('livewire.status.incidents-archive', [
             'incidents' => $incidents,
-        ])->layout('layouts.storefront', [
+        ])->layout('layouts.status', [
             'title' => 'Incident History & Scheduled Maintenance Timeline — STX Status',
         ]);
     }

@@ -70,8 +70,8 @@ class PublicStatus extends Component
             'overallStatusText' => $overallStatusText,
             'overallStatusColor' => $overallStatusColor,
             'windowLabel' => $windowLabel,
-        ])->layout('layouts.storefront', [
-            'title' => 'STX Cloud & Infrastructure Health — Telemetry & Uptime',
+        ])->layout('layouts.status', [
+            'title' => 'STX Status — Cloud & Infrastructure Health',
         ]);
     }
 }
