@@ -8,6 +8,8 @@ class StxUpgradeStatus
 {
     public const FILE = '/data/stx/source/.upgrade-status';
 
+    public const LEGACY_FILE = '/data/coolify/source/.upgrade-status';
+
     public const STALE_AFTER_MINUTES = 10;
 
     /**
@@ -51,70 +53,65 @@ class StxUpgradeStatus
             if ($diffMinutes > $staleAfterMinutes) {
                 return ['status' => 'none', ...$base];
             }
-        } catch (\Throwable) {
-            return ['status' => 'none', ...$base];
-        }
 
-        if ($step === 'error') {
-            return [
-                'status' => 'error',
-                'step' => 0,
-                'message' => $message,
-                ...$base,
-            ];
-        }
+            if ($step === 'error') {
+                return [
+                    'status' => 'error',
+                    'message' => $message,
+                    ...$base,
+                ];
+            }
 
-        $stepInt = (int) $step;
+            $stepInt = (int) $step;
+            if ($stepInt >= 6) {
+                return [
+                    'status' => 'completed',
+                    'step' => $stepInt,
+                    'message' => $message,
+                    ...$base,
+                ];
+            }
 
-        if ($stepInt >= 6 && ! self::hasReachedTargetVersion($runningVersion, $targetVersion)) {
             return [
                 'status' => 'in_progress',
                 'step' => $stepInt,
-                'message' => "Waiting for STX Hosting {$targetVersion} to come online...",
+                'message' => $message,
                 ...$base,
             ];
+        } catch (\Throwable) {
+            return ['status' => 'none', ...$base];
         }
-
-        $status = $stepInt >= 6 ? 'complete' : 'in_progress';
-
-        return [
-            'status' => $status,
-            'step' => $stepInt,
-            'message' => $message,
-            ...$base,
-        ];
     }
 
+    /**
+     * True when the status file records an in-progress upgrade whose last update is
+     * recent enough that we should not start another upgrade yet.
+     */
     public static function isRunning(string $content, ?DateTimeInterface $now = null): bool
     {
-        $parts = explode('|', trim($content));
+        $content = trim($content);
+        if ($content === '') {
+            return false;
+        }
+
+        $parts = explode('|', $content);
         if (count($parts) < 3) {
             return false;
         }
 
         [$step, , $timestamp] = $parts;
-        if (! in_array($step, ['1', '2', '3', '4', '5'], true) || trim($timestamp) === '') {
+        if ($step === 'error' || (int) $step >= 6) {
             return false;
         }
 
         try {
             $statusTime = new \DateTime($timestamp);
+            $now = $now ?? new \DateTime;
+            $diffMinutes = ($now->getTimestamp() - $statusTime->getTimestamp()) / 60;
+
+            return $diffMinutes >= 0 && $diffMinutes < self::RUNNING_LOCK_EXPIRES_AFTER_MINUTES;
         } catch (\Throwable) {
             return false;
         }
-
-        $now = $now ?? new \DateTime;
-        $diffMinutes = ($now->getTimestamp() - $statusTime->getTimestamp()) / 60;
-
-        return $diffMinutes <= self::RUNNING_LOCK_EXPIRES_AFTER_MINUTES;
-    }
-
-    public static function hasReachedTargetVersion(string $runningVersion, string $targetVersion): bool
-    {
-        if ($runningVersion === '' || $targetVersion === '') {
-            return false;
-        }
-
-        return version_compare($runningVersion, $targetVersion, '>=');
     }
 }

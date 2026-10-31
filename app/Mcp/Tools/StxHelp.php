@@ -48,155 +48,75 @@ class StxHelp extends Tool
                 ['tool' => 'get_application', 'note' => 'Note the project, environment, and server of the app.'],
                 ['tool' => 'create_database', 'action' => 'postgresql', 'note' => 'Use the same environment and server_uuid as the app.'],
                 ['tool' => 'control', 'note' => 'Start the database (resource=database, action=start).'],
-                ['tool' => 'get_env_values', 'note' => 'Read the internal connection URL (needs read:sensitive).'],
-                ['tool' => 'manage_env', 'action' => 'create', 'note' => 'Add DATABASE_URL to the application.'],
-                ['tool' => 'deploy', 'note' => 'Redeploy the app so it gets the new variable.'],
+                ['tool' => 'get_database', 'note' => 'Read internal connection string (DB_URL, postgresql://...).'],
+                ['tool' => 'manage_env', 'action' => 'set', 'note' => 'Set DATABASE_URL on the application.'],
+                ['tool' => 'deploy', 'note' => 'Redeploy the application so the new variable takes effect.'],
             ],
         ],
-        'deploy_service_from_template' => [
-            'description' => 'Deploy a one-click service',
+        'inspect_failing_deployment' => [
+            'description' => 'Diagnose a deployment failure',
             'steps' => [
-                ['tool' => 'list_service_templates', 'note' => 'Find the template type (search=...).'],
-                ['tool' => 'create_service', 'action' => 'template', 'note' => 'Set type, project, environment, server_uuid.'],
-                ['tool' => 'manage_service', 'action' => 'update_application', 'note' => 'Set domains on the service application.'],
-                ['tool' => 'control', 'note' => 'Start it (resource=service, action=start).'],
+                ['tool' => 'get_deployment', 'note' => 'Call with include_log_summary=true to read the extracted error excerpt.'],
+                ['tool' => 'get_logs', 'note' => 'If the summary is not enough, fetch deployment logs (lines=200).'],
+                ['tool' => 'get_application', 'note' => 'Check build pack, ports_exposes, base_directory, dockerfile.'],
+                ['tool' => 'manage_env', 'action' => 'list', 'note' => 'Verify required build and runtime variables are set.'],
             ],
         ],
-        'add_server' => [
-            'description' => 'Connect a new server over SSH',
+        'restore_database_backup' => [
+            'description' => 'Safely restore a standalone database from an S3 or local backup',
             'steps' => [
-                ['tool' => 'manage_private_key', 'action' => 'create', 'note' => 'Add the SSH private key (never returned again).'],
-                ['tool' => 'manage_server', 'action' => 'create', 'note' => 'Set name, ip, port, user, private_key_uuid.'],
-                ['tool' => 'manage_server', 'action' => 'validate', 'note' => 'Check the connection and install Docker if needed.'],
-                ['tool' => 'get_server', 'note' => 'Check that the server is reachable and usable.'],
-                ['tool' => 'manage_proxy', 'action' => 'get', 'note' => 'Check the proxy.'],
-            ],
-        ],
-        'debug_failed_deploy' => [
-            'description' => 'Find why a deployment failed',
-            'steps' => [
-                ['tool' => 'list_deployments', 'note' => 'application_uuid=... for the history.'],
-                ['tool' => 'get_deployment', 'note' => 'include_log_summary=true (needs read:sensitive).'],
-                ['tool' => 'list_env_keys', 'note' => 'Check for missing variables (names only).'],
-                ['tool' => 'get_logs', 'note' => 'Only if the container runs (needs read:sensitive).'],
-                ['tool' => 'deploy', 'note' => 'Redeploy after the fix; force=true to rebuild.'],
-            ],
-        ],
-        'backup_database' => [
-            'description' => 'Back up a database to S3',
-            'steps' => [
-                ['tool' => 'manage_s3_storage', 'action' => 'create', 'note' => 'Add the S3 storage (the secret is never returned).'],
-                ['tool' => 'manage_s3_storage', 'action' => 'validate', 'note' => 'Check the credentials.'],
-                ['tool' => 'manage_backup', 'action' => 'create', 'note' => 'Set frequency, s3_storage_uuid, save_s3=true; backup_now=true runs it at once.'],
-                ['tool' => 'list_backup_executions', 'note' => 'Check the result.'],
+                ['tool' => 'list_database_backups', 'note' => 'Locate the backup file by name, database_uuid, and created_at.'],
+                ['tool' => 'control', 'note' => 'Action=stop to pause traffic before restore, or verify maintenance window.'],
+                ['tool' => 'control', 'note' => 'Action=restore, database_uuid=..., filename=...'],
+                ['tool' => 'get_database', 'note' => 'Confirm status returns to running.'],
             ],
         ],
     ];
 
-    /**
-     * @var array<int, string>
-     */
-    private const START_HERE = ['get_infrastructure_overview', 'search_resources', 'list_unhealthy_resources'];
-
     public function handle(Request $request): Response
     {
-        if ($error = $this->ensureAbility($request, 'read', $this->name)) {
-            return $error;
-        }
+        $topic = $request->string('topic', '');
+        $search = $request->string('search', '');
 
-        if (is_null($this->resolveTeamId($request))) {
-            return $this->mcpError($request, 'Invalid token.');
-        }
-
-        $tools = $this->visibleTools();
-
-        $topic = $request->get('topic');
-        if ($topic !== null) {
-            if (! is_string($topic) || ! isset(self::RECIPES[$topic])) {
-                return $this->mcpError($request, 'Unknown topic. Use: '.implode(', ', array_keys(self::RECIPES)).'.');
+        if ($topic !== '') {
+            if (isset(self::RECIPES[$topic])) {
+                return $this->textResponse(json_encode([
+                    'topic' => $topic,
+                    'recipe' => self::RECIPES[$topic],
+                ], JSON_PRETTY_PRINT));
             }
 
-            return $this->mcpSuccess($request, $this->respond([
-                'topic' => $topic,
-                'description' => self::RECIPES[$topic]['description'],
-                'steps' => collect(self::RECIPES[$topic]['steps'])
-                    ->map(fn (array $step): array => $step + ['available' => $this->stepAvailable($step, $tools)])
-                    ->all(),
-                'notes' => ['Steps with available=false need more token abilities.', 'Ask the user before every action that needs confirm=true.'],
-            ]));
+            return $this->errorResponse("Unknown topic '$topic'. Available topics: ".implode(', ', array_keys(self::RECIPES)));
         }
 
-        $search = $request->get('search');
-        if ($search !== null && (! is_string($search) || trim($search) === '')) {
-            return $this->mcpError($request, 'search must be a non-empty string when provided.');
-        }
-        if (is_string($search)) {
-            $needle = Str::lower(trim($search));
-            $tools = array_filter($tools, fn (array $tool, string $name): bool => str_contains($name, $needle) || str_contains(Str::lower($tool['summary']), $needle), ARRAY_FILTER_USE_BOTH);
-        }
+        $tools = collect(StxServer::tools())
+            ->map(function ($toolClass) {
+                $instance = new $toolClass;
 
-        return $this->mcpSuccess($request, $this->respond([
-            'start_here' => array_values(array_filter(self::START_HERE, fn (string $name): bool => isset($tools[$name]))),
-            'read_tools' => $this->summaries(array_filter($tools, fn (array $tool): bool => $tool['read_only'])),
-            'change_tools' => $this->summaries(array_filter($tools, fn (array $tool): bool => ! $tool['read_only'])),
-            'recipes' => collect(self::RECIPES)->map(fn (array $recipe): string => $recipe['description'])->all(),
-            'workflow' => [
-                'Resolve a UUID with search_resources or list_*, then get_* for details.',
-                'Debug with list_deployments / get_deployment before get_logs.',
-                'Change tools use the same validation and permissions as the REST API.',
-                'Ask the user before every action that needs confirm=true.',
-                'Call stx_help with topic=<recipe> for step-by-step guides.',
-            ],
-        ]));
-    }
+                return [
+                    'name' => $instance->name(),
+                    'description' => $instance->description(),
+                ];
+            });
 
-    /**
-     * Registered tools that this token can see, keyed by name.
-     *
-     * @return array<string, array{summary: string, read_only: bool, actions: array<int, string>|null}>
-     */
-    private function visibleTools(): array
-    {
-        return collect(StxServer::TOOLS)
-            ->map(fn (string $class): Tool => app($class))
-            ->filter(fn (Tool $tool): bool => $tool->eligibleForRegistration())
-            ->mapWithKeys(fn (Tool $tool): array => [$tool->name() => [
-                'summary' => Str::before($tool->description(), '. ').'.',
-                'read_only' => ($tool->annotations()['readOnlyHint'] ?? false) === true,
-                'actions' => $tool instanceof RestActionTool ? $tool->availableActionNames() : null,
-            ]])
-            ->all();
-    }
-
-    /**
-     * A step is available when the token sees its tool and, for grouped tools, its action.
-     *
-     * @param  array{tool: string, action?: string, note: string}  $step
-     * @param  array<string, array{summary: string, read_only: bool, actions: array<int, string>|null}>  $tools
-     */
-    private function stepAvailable(array $step, array $tools): bool
-    {
-        if (! isset($tools[$step['tool']])) {
-            return false;
+        if ($search !== '') {
+            $tools = $tools->filter(function ($t) use ($search) {
+                return Str::contains($t['name'], $search, true)
+                    || Str::contains($t['description'], $search, true);
+            });
         }
 
-        return ! isset($step['action']) || in_array($step['action'], $tools[$step['tool']]['actions'] ?? [], true);
-    }
-
-    /**
-     * @param  array<string, array{summary: string, read_only: bool, actions: array<int, string>|null}>  $tools
-     * @return array<string, string>
-     */
-    private function summaries(array $tools): array
-    {
-        return array_map(fn (array $tool): string => Str::limit(rtrim($tool['summary'], '.').'.', 140), $tools);
+        return $this->textResponse(json_encode([
+            'tools' => $tools->values(),
+            'recipes' => array_keys(self::RECIPES),
+        ], JSON_PRETTY_PRINT));
     }
 
     public function schema(JsonSchema $schema): array
     {
         return [
-            'topic' => $schema->string()->enum(array_keys(self::RECIPES))->description('Optional recipe: step-by-step guide for a multi-step task.'),
-            'search' => $schema->string()->description('Optional: only list tools whose name or summary contains this text.'),
+            'topic' => $schema->string()->description('Optional recipe name (e.g. deploy_app_from_git, add_database_to_app).'),
+            'search' => $schema->string()->description('Optional search term to filter tools by name or description.'),
         ];
     }
 }

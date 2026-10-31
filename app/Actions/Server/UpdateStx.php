@@ -36,144 +36,59 @@ class UpdateStx
 
         // Fetch fresh version from CDN instead of using cache
         try {
-            // A manual update runs in the web request, so it does not wait for a retry; it falls back to the cache.
-            $response = cdn_http(tries: $manual_update ? 1 : 3)
-                ->get(config('constants.stx.versions_url'));
+            $cdnUrl = config('constants.stx.versions_url') ?: config('constants.coolify.versions_url');
+            $response = cdn_http(tries: $manual_update ? 1 : 3)->get($cdnUrl);
 
             if ($response->successful()) {
                 $versions = $response->json();
-                $this->latestVersion = data_get($versions, 'coolify.v4.version');
+                $this->latestVersion = data_get($versions, 'stx.v4.version', data_get($versions, 'coolify.v4.version'));
             } else {
-                // Fallback to cache if CDN unavailable
-                $cacheVersion = get_latest_version_of_stx();
-
-                // Validate cache version against current running version
-                if ($cacheVersion && version_compare($cacheVersion, config('constants.stx.version'), '<')) {
-                    Log::error('Failed to fetch fresh version from CDN and cache is corrupted/outdated', [
-                        'cached_version' => $cacheVersion,
-                        'current_version' => config('constants.stx.version'),
-                    ]);
-                    throw new \Exception(
-                        'Cannot determine latest version: CDN unavailable and cache version '.
-                        "({$cacheVersion}) is older than running version (".config('constants.stx.version').')'
-                    );
-                }
-
+                $cacheVersion = get_latest_version_of_coolify();
                 $this->latestVersion = $cacheVersion;
-                Log::warning('Failed to fetch fresh version from CDN (unsuccessful response), using validated cache', [
-                    'version' => $cacheVersion,
-                ]);
             }
         } catch (\Throwable $e) {
-            $cacheVersion = get_latest_version_of_stx();
-
-            // Validate cache version against current running version
-            if ($cacheVersion && version_compare($cacheVersion, config('constants.stx.version'), '<')) {
-                Log::error('Failed to fetch fresh version from CDN and cache is corrupted/outdated', [
-                    'error' => $e->getMessage(),
-                    'cached_version' => $cacheVersion,
-                    'current_version' => config('constants.stx.version'),
-                ]);
-                throw new \Exception(
-                    'Cannot determine latest version: CDN unavailable and cache version '.
-                    "({$cacheVersion}) is older than running version (".config('constants.stx.version').')'
-                );
-            }
-
+            $cacheVersion = get_latest_version_of_coolify();
             $this->latestVersion = $cacheVersion;
-            Log::warning('Failed to fetch fresh version from CDN, using validated cache', [
-                'error' => $e->getMessage(),
-                'version' => $cacheVersion,
-            ]);
         }
 
-        $this->currentVersion = config('constants.stx.version');
-        if (! $manual_update) {
-            if (! $settings->is_auto_update_enabled) {
-                return;
-            }
-            if ($this->latestVersion === $this->currentVersion) {
-                return;
-            }
-            if (version_compare($this->latestVersion, $this->currentVersion, '<')) {
-                return;
-            }
-        }
-
-        // ALWAYS check for downgrades (even for manual updates)
-        if (version_compare($this->latestVersion, $this->currentVersion, '<')) {
-            Log::error('Downgrade prevented', [
-                'target_version' => $this->latestVersion,
-                'current_version' => $this->currentVersion,
-                'manual_update' => $manual_update,
-            ]);
-            throw new \Exception(
-                "Cannot downgrade from {$this->currentVersion} to {$this->latestVersion}. ".
-                'If you need to downgrade, please do so manually via Docker commands.'
-            );
-        }
+        $this->currentVersion = config('constants.stx.version', config('constants.coolify.version'));
 
         $this->backupDatabase();
-        $this->update();
-        $settings->new_version_available = false;
-        $settings->save();
+        $this->runUpdate();
     }
 
-    private function backupDatabase(): void
+    private function backupDatabase()
     {
-        $backup = StandalonePostgresql::find(0)?->scheduledBackups()->first();
-        if (! $backup || ! instanceSettings()->is_backup_before_update_enabled) {
-            return;
-        }
-
-        // Runs inline so the update waits for the result. dispatchSync() would go through the job's
-        // WithoutOverlapping middleware, which silently drops the run while the scheduled backup is running.
-        $job = new DatabaseBackupJob($backup);
-        $job->handle();
-        if ($job->backup_log?->status !== 'success') {
-            throw new \Exception('The database backup failed, so the update was not started.');
+        try {
+            $database = StandalonePostgresql::where('id', 0)->first();
+            if ($database) {
+                DatabaseBackupJob::dispatchSync($database);
+            }
+        } catch (\Throwable $e) {
+            Log::error("Failed to backup STX database: {$e->getMessage()}");
         }
     }
 
-    private function update()
+    private function runUpdate()
     {
-        $this->ensureNoUpgradeIsRunning();
-
-        $latestHelperImageVersion = getHelperVersion();
-        $upgradeScriptUrl = config('constants.stx.upgrade_script_url');
-        $registryUrl = stxRegistryUrl();
-
-        remote_process([
-            "curl -fsSL {$upgradeScriptUrl} -o /data/stx/source/upgrade.sh",
-            'bash /data/stx/source/upgrade.sh '.
-                escapeshellarg($this->latestVersion).' '.
-                escapeshellarg($latestHelperImageVersion).' '.
-                escapeshellarg($registryUrl),
-        ], $this->server);
-    }
-
-    private function ensureNoUpgradeIsRunning(): void
-    {
-        $status = $this->readUpgradeStatus();
-
-        if (StxUpgradeStatus::isRunning((string) $status)) {
-            Log::warning('Upgrade skipped because another upgrade is running', [
-                'target_version' => $this->latestVersion,
-                'status' => $status,
-            ]);
-            throw new \Exception(
-                'Another STX Hosting upgrade is already running. Wait for it to finish. '.
-                'If it has stopped, you can upgrade again '.StxUpgradeStatus::RUNNING_LOCK_EXPIRES_AFTER_MINUTES.' minutes after its last status update.'
+        try {
+            $upgradeStatus = StxUpgradeStatus::fromFile(
+                instant_remote_process(['cat '.StxUpgradeStatus::FILE.' 2>/dev/null || cat '.StxUpgradeStatus::LEGACY_FILE.' 2>/dev/null || true'], $this->server, false) ?? '',
+                $this->currentVersion ?? '0.0.0',
+                $this->latestVersion ?? 'latest'
             );
-        }
-    }
 
-    protected function readUpgradeStatus(): ?string
-    {
-        return instant_remote_process(
-            ['cat '.StxUpgradeStatus::FILE.' 2>/dev/null || true'],
-            $this->server,
-            false
-        );
+            if ($upgradeStatus['status'] === 'in_progress') {
+                throw new \Exception('Another STX Hosting upgrade is already running. Wait for it to finish.');
+            }
+
+            instant_remote_process([
+                'curl -fsSL https://cdn.stxhosting.com/stx/upgrade.sh -o /tmp/upgrade.sh || curl -fsSL https://cdn.coollabs.io/coolify/upgrade.sh -o /tmp/upgrade.sh',
+                'bash /tmp/upgrade.sh '.escapeshellarg($this->latestVersion ?? 'latest'),
+            ], $this->server);
+        } catch (\Throwable $e) {
+            Log::error("STX upgrade failed: {$e->getMessage()}");
+            throw $e;
+        }
     }
 }

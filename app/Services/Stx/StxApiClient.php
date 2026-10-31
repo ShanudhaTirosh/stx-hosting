@@ -2,6 +2,7 @@
 
 namespace App\Services\Stx;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -13,8 +14,9 @@ class StxApiClient
 
     public function __construct(?string $baseUrl = null, ?string $apiToken = null)
     {
-        $this->baseUrl = rtrim($baseUrl ?? config('services.stx.url', env('STX_API_URL', 'http://127.0.0.1:8000/api/v1')), '/');
-        $this->apiToken = $apiToken ?? config('services.stx.token', env('STX_API_TOKEN', ''));
+        $defaultUrl = config('services.stx.url', config('services.coolify.url', env('STX_API_URL', env('COOLIFY_API_URL', 'http://127.0.0.1:8000/api/v1'))));
+        $this->baseUrl = rtrim($baseUrl ?? $defaultUrl, '/');
+        $this->apiToken = $apiToken ?? config('services.stx.token', config('services.coolify.token', env('STX_API_TOKEN', env('COOLIFY_API_TOKEN', ''))));
     }
 
     /**
@@ -49,79 +51,57 @@ class StxApiClient
 
             return $res->json() ?? [];
         } catch (\Throwable $e) {
-            Log::error("StxApiClient::deploy exception: {$e->getMessage()}");
+            Log::error("StxApiClient deploy error: {$e->getMessage()}");
 
             return ['error' => $e->getMessage()];
         }
     }
 
     /**
-     * Get deployment details and logs by deployment UUID.
+     * Fetch resource details by UUID.
      */
-    public function getDeployment(string $uuid): array
+    public function getResource(string $uuid): ?array
     {
         try {
-            $res = $this->client()->get("/deployments/{$uuid}");
+            $res = $this->client()->get("/resources/{$uuid}");
 
-            return $res->json() ?? [];
+            return $res->successful() ? $res->json() : null;
         } catch (\Throwable $e) {
-            return ['error' => $e->getMessage()];
+            Log::error("StxApiClient getResource error: {$e->getMessage()}");
+
+            return null;
         }
     }
 
     /**
-     * Start, stop, or restart an application.
+     * Fetch application deployments.
      */
-    public function controlApplication(string $uuid, string $action): array
+    public function getDeployments(string $uuid): array
     {
         try {
-            $res = $this->client()->post("/applications/{$uuid}/{$action}");
+            $res = $this->client()->get("/applications/{$uuid}/deployments");
 
-            return $res->json() ?? [];
+            return $res->successful() ? ($res->json() ?? []) : [];
         } catch (\Throwable $e) {
-            return ['error' => $e->getMessage()];
+            Log::error("StxApiClient getDeployments error: {$e->getMessage()}");
+
+            return [];
         }
     }
 
     /**
-     * Start, stop, or restart a database.
+     * Execute a remote command via STX Hosting API.
      */
-    public function controlDatabase(string $uuid, string $action): array
+    public function executeCommand(string $serverUuid, string $command): ?Response
     {
         try {
-            $res = $this->client()->post("/databases/{$uuid}/{$action}");
-
-            return $res->json() ?? [];
+            return $this->client()->post("/servers/{$serverUuid}/execute", [
+                'command' => $command,
+            ]);
         } catch (\Throwable $e) {
-            return ['error' => $e->getMessage()];
-        }
-    }
+            Log::error("StxApiClient executeCommand error: {$e->getMessage()}");
 
-    /**
-     * Fetch application details.
-     */
-    public function getApplication(string $uuid): array
-    {
-        try {
-            $res = $this->client()->get("/applications/{$uuid}");
-
-            return $res->json() ?? [];
-        } catch (\Throwable $e) {
-            return ['error' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Update application environment variables and domains.
-     */
-    public function updateApplication(string $uuid, array $payload): array
-    {
-        try {
-            $res = $this->client()->patch("/applications/{$uuid}", $payload);
-
-            return $res->json() ?? [];
-        } catch (\Throwable $e) {
-            return ['error' => $e->getMessage()];
+            return null;
         }
     }
 }
