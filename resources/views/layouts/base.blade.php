@@ -364,6 +364,17 @@
         svg {
             max-width: 100%;
             max-height: 100%;
+            box-sizing: border-box;
+        }
+        .menu-item-icon, .card-icon-button svg, .empty-state svg, .loading-indicator {
+            flex-shrink: 0 !important;
+            display: inline-block !important;
+        }
+        .empty-state-well svg {
+            width: 1.5rem !important;
+            height: 1.5rem !important;
+            max-width: 2rem !important;
+            max-height: 2rem !important;
         }
     </style>
     @auth

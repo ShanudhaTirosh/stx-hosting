@@ -76,6 +76,38 @@
                         {{-- Dev Server-Timing HUD docks here, after the breadcrumb (local only; empty in production) --}}
                         <div id="server-timing-hud-slot" data-server-timing-hud-slot class="ml-2 hidden shrink-0 items-center"></div>
                     </div>
+                    @if (isInstanceAdmin() || \App\Services\RbacService::isOwner(auth()->user()))
+                        <div class="hidden sm:flex items-center gap-2 ml-3 shrink-0">
+                            @if (request()->is('admin*'))
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                    <span class="size-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                    Admin Console
+                                </span>
+                                <a href="{{ route('portal.index') }}" {{ wireNavigate() }} class="text-[11px] text-neutral-400 hover:text-white px-2 py-0.5 rounded hover:bg-white/5 transition-colors">
+                                    Switch to Portal &rarr;
+                                </a>
+                            @elseif (request()->is('portal*'))
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                    <span class="size-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                    Customer Portal
+                                </span>
+                                <a href="{{ route('admin.index') }}" {{ wireNavigate() }} class="text-[11px] text-neutral-400 hover:text-white px-2 py-0.5 rounded hover:bg-white/5 transition-colors">
+                                    Switch to Admin &rarr;
+                                </a>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 dark:bg-white/[0.04] text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-white/5">
+                                    Fleet Infra
+                                </span>
+                                <a href="{{ route('admin.index') }}" {{ wireNavigate() }} class="text-[11px] text-amber-500 hover:underline px-1 py-0.5">
+                                    Admin
+                                </a>
+                                <span class="text-neutral-500 text-[10px]">|</span>
+                                <a href="{{ route('portal.index') }}" {{ wireNavigate() }} class="text-[11px] text-cyan-400 hover:underline px-1 py-0.5">
+                                    Portal
+                                </a>
+                            @endif
+                        </div>
+                    @endif
                     {{-- Page toolbars (the canvases) dock here on desktop. --}}
                     <div id="page-toolbar-slot" class="flex shrink-0 items-center empty:hidden"></div>
                     <div id="configuration-warning-hud-slot" class="relative shrink-0"></div>

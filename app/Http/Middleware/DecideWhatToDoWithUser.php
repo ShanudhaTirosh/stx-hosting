@@ -42,6 +42,11 @@ class DecideWhatToDoWithUser
                 return redirect()->route('onboarding');
             }
 
+            // If a non-admin regular customer visits the root route '/', direct them to the customer portal
+            if (auth()->check() && $request->path() === '/' && !isInstanceAdmin() && !\App\Services\RbacService::isOwner(auth()->user())) {
+                return redirect()->route('portal.index');
+            }
+
             return $next($request);
         }
         // Instance admins can access settings and admin routes regardless of subscription

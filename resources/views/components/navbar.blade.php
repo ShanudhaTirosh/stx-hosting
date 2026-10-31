@@ -85,6 +85,36 @@
     }">
     {{-- Search is only useful when workspace resources are available --}}
     @if (isSubscribed() || ! isCloud())
+        @if (isInstanceAdmin() || \App\Services\RbacService::isOwner(auth()->user()))
+            <div class="px-1 pb-2" :class="collapsed && 'lg:hidden'">
+                @if (request()->is('admin*'))
+                    <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs">
+                        <span class="flex items-center gap-1.5 text-amber-500 font-semibold">
+                            <span class="size-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            Admin Console
+                        </span>
+                        <a href="{{ route('portal.index') }}" {{ wireNavigate() }} class="text-[11px] text-neutral-400 hover:text-white transition-colors underline font-medium">To Portal</a>
+                    </div>
+                @elseif (request()->is('portal*'))
+                    <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-xs">
+                        <span class="flex items-center gap-1.5 text-cyan-400 font-semibold">
+                            <span class="size-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                            Customer Portal
+                        </span>
+                        <a href="{{ route('admin.index') }}" {{ wireNavigate() }} class="text-[11px] text-neutral-400 hover:text-white transition-colors underline font-medium">To Admin</a>
+                    </div>
+                @else
+                    <div class="flex items-center justify-between px-2 py-1.5 rounded-lg bg-neutral-100 dark:bg-white/[0.04] border border-neutral-200 dark:border-white/5 text-xs">
+                        <span class="text-neutral-600 dark:text-neutral-300 font-medium text-[11px]">Fleet Nodes</span>
+                        <div class="flex items-center gap-1.5">
+                            <a href="{{ route('admin.index') }}" {{ wireNavigate() }} class="text-[11px] text-amber-500 hover:underline">Admin</a>
+                            <span class="text-neutral-400 text-[10px]">|</span>
+                            <a href="{{ route('portal.index') }}" {{ wireNavigate() }} class="text-[11px] text-cyan-400 hover:underline">Portal</a>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
         <div class="px-1 pb-3" :class="collapsed && 'lg:px-0'">
             {{-- On pages with settings or sections the palette also searches the current page --}}
             <button @click="$dispatch('open-global-search')" type="button"
@@ -108,17 +138,30 @@
         @if (isSubscribed() || !isCloud())
             @php
                 // An entry with children opens a submenu in place of the main menu (back button + its pages).
+                $isPlatformAdmin = isInstanceAdmin() || \App\Services\RbacService::isOwner(auth()->user());
                 $navSections = collect([
-                    'Workspace' => [
-                        ['label' => 'Dashboard', 'icon' => 'dashboard', 'href' => '/', 'active' => request()->is('/', 'dashboard/*', 'canvas')],
+                    'Administration' => [
+                        ['label' => 'Admin Console', 'icon' => 'admin', 'href' => route('admin.index'), 'active' => request()->is('admin'), 'visible' => $isPlatformAdmin],
+                        ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('admin.operations.approvals'), 'active' => request()->is('admin/operations/approvals*'), 'visible' => $isPlatformAdmin],
+                        ['label' => 'VPS Inventory', 'icon' => 'servers', 'href' => route('admin.inventory.vps'), 'active' => request()->is('admin/inventory/vps*'), 'visible' => $isPlatformAdmin],
+                        ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('admin.operations.provisioning'), 'active' => request()->is('admin/operations/provisioning*'), 'visible' => $isPlatformAdmin],
+                        ['label' => 'Proof Reviews', 'icon' => 'subscription', 'href' => route('admin.billing.proofs'), 'active' => request()->is('admin/billing/proofs*'), 'visible' => $isPlatformAdmin],
+                    ],
+                    'Customer Portal' => [
+                        ['label' => 'My Services', 'icon' => 'layers', 'href' => route('portal.index'), 'active' => request()->is('portal', 'portal/services*')],
+                        ['label' => 'Applications', 'icon' => 'code', 'href' => route('portal.apps'), 'active' => request()->is('portal/apps*')],
+                        ['label' => 'Databases', 'icon' => 'database', 'href' => route('portal.databases'), 'active' => request()->is('portal/databases*')],
+                        ['label' => 'Billing & Invoices', 'icon' => 'subscription', 'href' => route('portal.billing'), 'active' => request()->is('portal/billing*')],
+                        ['label' => 'Order New Service', 'icon' => 'plus', 'href' => route('portal.checkout'), 'active' => request()->is('portal/checkout*')],
+                    ],
+                    'Infrastructure' => [
+                        ['label' => 'Fleet Dashboard', 'icon' => 'dashboard', 'href' => '/', 'active' => request()->is('/', 'dashboard/*', 'canvas')],
                         ['label' => 'Projects', 'icon' => 'projects', 'href' => route('project.index'), 'active' => request()->is('projects', 'projects/*', 'project/*')],
+                        ['label' => 'Terminal', 'icon' => 'browser-terminal', 'href' => route('terminal'), 'active' => request()->is('terminal*'), 'navigate' => false, 'visible' => auth()->user()?->can('canAccessTerminal')],
                         ['label' => 'Monitoring', 'icon' => 'graph', 'children' => [
                             ['label' => 'Analytics', 'icon' => 'analytics', 'href' => route('analytics'), 'active' => request()->is('analytics')],
                             ['label' => 'Metrics', 'icon' => 'graph', 'href' => route('metrics'), 'active' => request()->is('metrics')],
                         ]],
-                        ['label' => 'Terminal', 'icon' => 'browser-terminal', 'href' => route('terminal'), 'active' => request()->is('terminal*'), 'navigate' => false, 'visible' => auth()->user()?->can('canAccessTerminal')],
-                    ],
-                    'Infrastructure' => [
                         ['label' => 'Servers', 'icon' => 'servers', 'href' => '/servers', 'active' => request()->is('server/*', 'servers', 'servers/*')],
                         ['label' => 'Integrations', 'icon' => 'link', 'children' => [
                             ['label' => 'Sources', 'icon' => 'sources', 'href' => route('source.all'), 'active' => request()->is('sources', 'source/*')],
@@ -296,17 +339,7 @@
             </li>
             <li class="flex-1" aria-hidden="true"></li>
         @endif
-        @if (auth()->id() === 0 && (isCloud() || isDev()))
-            {{-- Part of the main menu: hidden while a submenu or a resource menu shows. --}}
-            <li x-show="navLevel === -1 && !submenu" @if (($activeSubmenu ?? null) || ($navContext ?? [])) x-cloak @endif>
-                <a title="Admin" {{ wireNavigate() }}
-                    class="nav-admin {{ request()->is('admin') ? 'menu-item-active menu-item' : 'menu-item' }}"
-                    :class="collapsed && 'lg:justify-center lg:px-0'" href="{{ route('admin.index') }}">
-                    <x-reicon name="fire" class="menu-item-icon" />
-                    <span class="menu-item-label" :class="collapsed && 'lg:hidden'">Admin</span>
-                </a>
-            </li>
-        @endif
+
         @if (isCloud() && ! isSubscribed())
             {{-- Unsubscribed cloud has no workspace items — keep these at the top of the list. --}}
             <li class="nav-section" aria-hidden="true"

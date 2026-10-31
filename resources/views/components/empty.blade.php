@@ -44,11 +44,12 @@
     <div class="empty-state-well {{ $minHeight }}">
         @if ($hasIcon)
             <div
-                class="{{ $iconBox }} flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-400 shadow-sm dark:border-white/[0.08] dark:bg-white/[0.035] dark:text-fg-faint">
+                class="{{ $iconBox }} flex shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-400 shadow-sm dark:border-white/[0.08] dark:bg-white/[0.035] dark:text-fg-faint"
+                style="width: 2.75rem; height: 2.75rem; min-width: 2.75rem; min-height: 2.75rem; overflow: hidden;">
                 @if ($hasIconSlot)
                     {{ $icon }}
                 @else
-                    <x-reicon :name="$iconName" class="{{ $iconSize }}" />
+                    <x-reicon :name="$iconName" class="{{ $iconSize }}" style="width: 1.5rem; height: 1.5rem; max-width: 1.5rem; max-height: 1.5rem; flex-shrink: 0;" />
                 @endif
             </div>
         @endif

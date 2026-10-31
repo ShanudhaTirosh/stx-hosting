@@ -5,7 +5,7 @@
             <p class="text-sm text-neutral-400">Manage your provisioned VPS nodes, application instances, and database credentials.</p>
         </div>
 
-        <a href="http://localhost:3000/vps" target="_blank" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded shadow flex items-center gap-1.5 transition-all">
+        <a href="{{ route('portal.checkout') }}" {{ wireNavigate() }} class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded shadow flex items-center gap-1.5 transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Order New Service
         </a>
@@ -61,7 +61,7 @@
                 <h3 class="text-base font-bold text-white">No active services found</h3>
                 <p class="text-xs text-neutral-400 max-w-sm mx-auto">You do not have any provisioned servers or containers yet. Browse our storefront catalog to deploy your first cloud VPS.</p>
                 <div class="pt-2">
-                    <a href="http://localhost:3000/vps" target="_blank" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded shadow inline-block">
+                    <a href="{{ route('portal.checkout') }}" {{ wireNavigate() }} class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded shadow inline-block">
                         Deploy Cloud VPS
                     </a>
                 </div>
