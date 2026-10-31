@@ -84,14 +84,14 @@ RUN apk upgrade && \
 COPY --from=nodejs /usr/local/bin/node /usr/local/bin/node
 COPY --from=nodejs /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
 RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
-COPY docker/coolify-terminal/package*.json /terminal/
+COPY docker/stx-terminal/package*.json /terminal/
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --prefix /terminal && \
     npm rebuild node-pty --prefix /terminal --update-binary && \
     rm -rf /terminal/node_modules/node-pty/prebuilds/darwin-* \
         /terminal/node_modules/node-pty/prebuilds/win32-*
-COPY docker/coolify-terminal/terminal-server.js /terminal/terminal-server.js
-COPY docker/coolify-terminal/terminal-utils.js /terminal/terminal-utils.js
+COPY docker/stx-terminal/terminal-server.js /terminal/terminal-server.js
+COPY docker/stx-terminal/terminal-utils.js /terminal/terminal-utils.js
 
 # =================================================================
 # Final Stage: Production image
@@ -105,10 +105,12 @@ ARG POSTGRES_VERSION
 ARG CLOUDFLARED_VERSION
 ARG NGINX_VERSION
 ARG PHP_UV_VERSION
+ARG STX_VERSION
 ARG COOLIFY_VERSION
 ARG CI=true
 
-ENV COOLIFY_VERSION=${COOLIFY_VERSION}
+ENV STX_VERSION=${STX_VERSION:-$COOLIFY_VERSION}
+ENV COOLIFY_VERSION=${COOLIFY_VERSION:-$STX_VERSION}
 
 WORKDIR /var/www/html
 

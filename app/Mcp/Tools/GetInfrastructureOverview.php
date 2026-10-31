@@ -133,7 +133,7 @@ class GetInfrastructureOverview extends Tool
         $nonRunningDatabases = $this->countUnhealthyDatabases($projects->pluck('id'));
 
         return $this->mcpSuccess($request, $this->respond([
-            'stx_version' => config('constants.coolify.version'),
+            'stx_version' => config('constants.stx.version', config('constants.coolify.version')),
             'servers' => $serverSummaries,
             'projects' => $projectSummaries,
             'counts' => [

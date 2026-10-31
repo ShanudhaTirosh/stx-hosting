@@ -1930,7 +1930,7 @@ class Application extends BaseModel
             $git_clone_command = "git clone{$depthFlag}{$submoduleFlags} --no-checkout -b {$escapedBranch}";
         }
         if ($pull_request_id !== 0) {
-            $pr_branch_name = "pr-{$pull_request_id}-coolify";
+            $pr_branch_name = "pr-{$pull_request_id}-stx";
         }
         if ($this->deploymentType() === 'source') {
             $source_html_url = data_get($this, 'source.html_url');
@@ -2368,7 +2368,7 @@ class Application extends BaseModel
             "120000) echo 'The Docker Compose file is a symbolic link.' >&2; exit 1 ;;",
             "*) echo 'No such file' >&2; exit 1 ;;",
             'esac;',
-            'if [ "$(git cat-file -s "$object")" -gt '.self::MAX_DOCKER_COMPOSE_SIZE_BYTES." ]; then echo '__COOLIFY_COMPOSE_TOO_LARGE__';",
+            'if [ "$(git cat-file -s "$object")" -gt '.self::MAX_DOCKER_COMPOSE_SIZE_BYTES." ]; then echo '__STX_COMPOSE_TOO_LARGE__';",
             'else git cat-file blob "$object"; fi;',
             '}',
         ]);
@@ -2430,7 +2430,7 @@ class Application extends BaseModel
         $commands = $this->composeFileReadCommands($uuid);
         try {
             $composeFileContent = instant_remote_process($commands, $this->destination->server);
-            if ($composeFileContent === '__COOLIFY_COMPOSE_TOO_LARGE__' || strlen($composeFileContent) > self::MAX_DOCKER_COMPOSE_SIZE_BYTES) {
+            if ($composeFileContent === '__STX_COMPOSE_TOO_LARGE__' || strlen($composeFileContent) > self::MAX_DOCKER_COMPOSE_SIZE_BYTES) {
                 throw new RuntimeException('Docker Compose file exceeds the 5 MiB size limit.');
             }
         } catch (\Exception $e) {
@@ -2440,7 +2440,7 @@ class Application extends BaseModel
             $this->save();
 
             if (str($e->getMessage())->contains('The Docker Compose file is a symbolic link.')) {
-                throw new RuntimeException("Docker Compose file at $workdir$composeFile (branch: {$this->git_branch}) is a symbolic link. Coolify reads only regular files from the repository. Commit the file itself instead of a link to it.");
+                throw new RuntimeException("Docker Compose file at $workdir$composeFile (branch: {$this->git_branch}) is a symbolic link. STX Hosting reads only regular files from the repository. Commit the file itself instead of a link to it.");
             }
             if (str($e->getMessage())->contains('No such file')) {
                 throw new RuntimeException("Docker Compose file not found at: $workdir$composeFile (branch: {$this->git_branch})<br><br>Check if you used the right extension (.yaml or .yml) in the compose file name.");
@@ -2470,7 +2470,7 @@ class Application extends BaseModel
                 $this->base_directory = $initialBaseDirectory;
                 $this->save();
 
-                throw new DeploymentException(e("The Docker Compose file at {$workdir}{$composeFile} (branch: {$this->git_branch}) is not safe to use, so Coolify did not load it. {$e->getMessage()}"));
+                throw new DeploymentException(e("The Docker Compose file at {$workdir}{$composeFile} (branch: {$this->git_branch}) is not safe to use, so STX Hosting did not load it. {$e->getMessage()}"));
             }
 
             $this->docker_compose_raw = $composeFileContent;

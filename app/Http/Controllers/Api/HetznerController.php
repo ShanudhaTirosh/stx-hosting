@@ -694,7 +694,7 @@ class HetznerController extends Controller
 
     #[OA\Post(
         summary: 'Create Hetzner Server',
-        description: 'Create a new server on Hetzner and register it in Coolify. A cloud-init script or extra SSH key IDs need a token with the deploy permission.',
+        description: 'Create a new server on Hetzner and register it in STX Hosting. A cloud-init script or extra SSH key IDs need a token with the deploy permission.',
         path: '/servers/hetzner',
         operationId: 'create-hetzner-server',
         security: [
@@ -938,7 +938,7 @@ class HetznerController extends Controller
             // Normalize server name to lowercase for RFC 1123 compliance
             $normalizedServerName = strtolower(trim($request->name));
 
-            // Prepare SSH keys array: Coolify key + user-selected Hetzner keys
+            // Prepare SSH keys array: STX Hosting key + user-selected Hetzner keys
             $sshKeys = array_merge(
                 [$sshKeyId],
                 $request->hetzner_ssh_key_ids
@@ -994,7 +994,7 @@ class HetznerController extends Controller
                 throw new \Exception('No public IP address available. Enable at least one of IPv4 or IPv6.');
             }
 
-            // Create server in Coolify database
+            // Create server in STX Hosting database
             $server = Team::createServerWithinLimit($teamId, [
                 'name' => $normalizedServerName,
                 'ip' => $ipAddress,

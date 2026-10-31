@@ -355,6 +355,6 @@ class VolumeBackupRecoveryJob implements ShouldBeEncrypted, ShouldBeUnique, Shou
 
     public static function stateFile(ScheduledVolumeBackupExecution $execution): string
     {
-        return '/tmp/coolify-volume-backup-'.$execution->uuid.'.stopped';
+        return '/tmp/stx-volume-backup-'.$execution->uuid.'.stopped';
     }
 }

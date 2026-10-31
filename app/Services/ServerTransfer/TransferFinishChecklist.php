@@ -268,7 +268,7 @@ class TransferFinishChecklist
             // A Docker image application keeps a default git_repository, but it never deploys from git.
             if (! in_array($application->uuid, $gitSourceApplications, true) && $application->build_pack !== 'dockerimage' && filled($application->git_repository) && (! $application->source || data_get($application->source, 'is_public') === true)) {
                 $items[] = $this->item('manual_webhook', $application->uuid, "Manual webhook of {$application->name}",
-                    'If the repository has a webhook to Coolify, change its URL, then push once.',
+                    'If the repository has a webhook to STX Hosting, change its URL, then push once.',
                     array_map(fn (string $provider, string $label) => ['label' => $label, 'value' => "{$this->instanceUrl()}/webhooks/source/{$provider}/events/manual"],
                         ['github', 'gitlab', 'bitbucket', 'gitea'], ['GitHub', 'GitLab', 'Bitbucket', 'Gitea']));
             }
@@ -348,7 +348,7 @@ class TransferFinishChecklist
             'sentinel' => $server->restartSentinel(),
             'dns_record' => app(CloudflareDnsProvider::class)->reclaimRecord(ManagedDnsRecord::where('uuid', $item['subject'])->firstOrFail())
                 ? ManagedDnsRecord::where('uuid', $item['subject'])->update(['owned' => true])
-                : throw new RuntimeException('Coolify could not take ownership: the record changed at Cloudflare, or Cloudflare cannot be reached.'),
+                : throw new RuntimeException('STX Hosting could not take ownership: the record changed at Cloudflare, or Cloudflare cannot be reached.'),
         };
     }
 

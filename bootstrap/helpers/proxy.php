@@ -222,7 +222,7 @@ function applyTraefikAccessLogCommands(Server $server, array $commands, bool $en
 /**
  * Container of the Traefik access log rotation sidecar that traffic analytics adds to the proxy.
  */
-const TRAEFIK_LOGROTATE_CONTAINER = 'coolify-proxy-logrotate';
+const TRAEFIK_LOGROTATE_CONTAINER = 'stx-proxy-logrotate';
 
 function applyTrafficAnalyticsToProxyConfigArray(Server $server, array $config): array
 {

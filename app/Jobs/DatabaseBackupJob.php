@@ -320,10 +320,10 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
             }
             $this->backup_dir = backup_dir().'/databases/'.str($this->team->name)->slug().'-'.$this->team->id.'/'.$this->directory_name;
             if ($this->database instanceof StandalonePostgresql && $this->database->isInstanceDatabase()) {
-                $databasesToBackup = ['coolify'];
+                $databasesToBackup = ['stx', 'coolify'];
                 $this->directory_name = $this->container_name = 'stx-db';
                 $ip = Str::slug($this->server->ip);
-                $this->backup_dir = backup_dir().'/coolify'."/coolify-db-$ip";
+                $this->backup_dir = backup_dir().'/stx'."/coolify-db-$ip";
             }
             foreach ($databasesToBackup as $database) {
                 // Reset per-database state, so a failure before this database's execution exists

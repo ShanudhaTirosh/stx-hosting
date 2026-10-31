@@ -59,7 +59,7 @@ async function postToStxPlatform(path, headers, body = null) {
         request.end(requestBody);
     });
 }
-const postToCoolify = postToStxPlatform;
+const postToStxPlatform = postToStxPlatform;
 }
 
 function parseResponseData(contentType = '', responseText = '') {
@@ -124,10 +124,10 @@ const verifyClient = async (req) => {
     logTerminal('log', 'Verifying websocket client.', requestContext);
 
     // Authenticate with Laravel backend
-    const result = await authenticateTerminalUpgrade(authHeaderCandidates, postToCoolify);
+    const result = await authenticateTerminalUpgrade(authHeaderCandidates, postToStxPlatform);
 
     if (result.authenticated) {
-        // The connection handler sends its requests with the XSRF token that Coolify accepted.
+        // The connection handler sends its requests with the XSRF token that STX Hosting accepted.
         req.terminalAuthHeaders = result.authHeaders;
         logTerminal('log', 'Websocket client authentication succeeded.', requestContext);
     } else if (result.error) {
@@ -206,7 +206,7 @@ wss.on('connection', async (ws, req) => {
     }
 
     try {
-        const response = await postToCoolify('/terminal/auth/ips', authHeaders);
+        const response = await postToStxPlatform('/terminal/auth/ips', authHeaders);
 
         if (response.status !== 200) {
             throw createHttpError(response);
@@ -395,7 +395,7 @@ async function handleCommand(ws, command, userId) {
     };
 
     // NOTE: - Initiates a process within the Terminal container
-    //         Establishes an SSH connection to root@coolify with RequestTTY enabled
+    //         Establishes an SSH connection to root@stx with RequestTTY enabled
     //         Executes the 'docker exec' command to connect to a specific container
     logTerminal('log', 'Spawning PTY process for terminal session.', {
         userId,
@@ -461,7 +461,7 @@ async function handleTerminalToken(userSession, token) {
     }
 
     try {
-        const response = await postToCoolify('/terminal/session', userSession.authHeaders, { token });
+        const response = await postToStxPlatform('/terminal/session', userSession.authHeaders, { token });
         if (response.status !== 200 || typeof response.data?.command !== 'string') {
             rejectTerminalToken(userSession, 'Unauthorized: Terminal token was rejected');
             return;

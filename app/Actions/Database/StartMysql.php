@@ -280,7 +280,7 @@ class StartMysql
             $environment_variables->push("MYSQL_PASSWORD={$this->database->mysql_password}");
         }
 
-        $this->addCoolifyEnvironmentVariables($environment_variables);
+        $this->addStxEnvironmentVariables($environment_variables);
 
         return $environment_variables->all();
     }

@@ -9,10 +9,10 @@
 # Optional profiles: vite, mailpit, minio, testing-host (scripts/dev enables them).
 
 services:
-  coolify:
+  stx:
     image: stx:dev
     pull_policy: never
-    container_name: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
+    container_name: "${COMPOSE_PROJECT_NAME:-stx-dev}"
     build:
       context: .
       dockerfile: ./docker/development/Dockerfile
@@ -58,8 +58,8 @@ services:
       # Same values as the host-side `php artisan dev:qemu` call (config/development-qemu.php).
       DEVELOPMENT_QEMU_INSTANCE: "${DEVELOPMENT_QEMU_INSTANCE:-}"
       DEVELOPMENT_QEMU_SLOT: "${DEVELOPMENT_QEMU_SLOT:-}"
-      DEVELOPMENT_QEMU_DOCKER_NETWORK: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
-      DEVELOPMENT_QEMU_STX_CONTAINER: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
+      DEVELOPMENT_QEMU_DOCKER_NETWORK: "${COMPOSE_PROJECT_NAME:-stx-dev}"
+      DEVELOPMENT_QEMU_STX_CONTAINER: "${COMPOSE_PROJECT_NAME:-stx-dev}"
       # Host paths of the volumes that testing-host mounts at /data/stx and /data/stx/backups.
       # STX Hosting uses them only for the testing-host server (it shares the host Docker daemon), not for KVM servers.
       DEV_STX_DATA_VOLUME: "${COMPOSE_PROJECT_NAME:-coolify-dev}_stx_data"
@@ -80,7 +80,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - coolify
+      - stx
 
   postgres:
     image: postgres:15-alpine
@@ -100,7 +100,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - coolify
+      - stx
 
   redis:
     image: redis:7-alpine
@@ -115,7 +115,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - coolify
+      - stx
 
   vite:
     profiles: ["vite"]
@@ -133,7 +133,7 @@ services:
       - .:/var/www/html/:cached
     command: sh -c "npm install && npm run dev"
     networks:
-      - coolify
+      - stx
 
   testing-host:
     profiles: ["testing-host"]
@@ -166,7 +166,7 @@ services:
       - "${DEV_BIND_ADDRESS:-0.0.0.0}:${FORWARD_MAILPIT_PORT:-1025}:1025"
       - "${DEV_BIND_ADDRESS:-0.0.0.0}:${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
     networks:
-      - coolify
+      - stx
 
   minio:
     profiles: ["minio"]
@@ -199,7 +199,7 @@ services:
       mc mb local/local --ignore-existing;
       "
     networks:
-      - coolify
+      - stx
 
 volumes:
   backups_data:
@@ -209,6 +209,6 @@ volumes:
   minio_data:
 
 networks:
-  coolify:
-    name: "${COMPOSE_PROJECT_NAME:-coolify-dev}"
+  stx:
+    name: "${COMPOSE_PROJECT_NAME:-stx-dev}"
     driver: bridge

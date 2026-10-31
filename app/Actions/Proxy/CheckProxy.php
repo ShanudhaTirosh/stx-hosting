@@ -41,7 +41,7 @@ class CheckProxy
         }
 
         // Determine proxy container name based on environment
-        $proxyContainerName = $server->isSwarm() ? 'coolify-proxy_traefik' : 'coolify-proxy';
+        $proxyContainerName = $server->isSwarm() ? 'stx-proxy_traefik' : 'stx-proxy';
 
         if ($server->isSwarm()) {
             $status = getContainerStatus($server, $proxyContainerName);

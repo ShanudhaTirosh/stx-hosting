@@ -1,5 +1,5 @@
 services:
-  coolify:
+  stx:
     image: stx:dev
     pull_policy: never
     build:
@@ -43,7 +43,7 @@ services:
       - ./docker/stx-terminal/terminal-utils.js:/terminal/terminal-utils.js
       - ./docker/development/etc/s6-overlay/scripts/init-setup.sh:/etc/s6-overlay/scripts/init-setup.sh:ro
     networks:
-      - coolify
+      - stx
   postgres:
     pull_policy: always
     ports:
@@ -91,7 +91,7 @@ services:
       - .:/var/www/html/:cached
     command: sh -c "npm install && npm run dev"
     networks:
-      - coolify
+      - stx
   testing-host:
     image: stx-testing-host:dev
     pull_policy: never
@@ -109,7 +109,7 @@ services:
       - dev_redis_data:/data/stx/_volumes/redis
       - dev_minio_data:/data/stx/_volumes/minio
     networks:
-      - coolify
+      - stx
   mailpit:
     image: axllent/mailpit:latest
     pull_policy: always
@@ -118,7 +118,7 @@ services:
       - "${FORWARD_MAILPIT_PORT:-1025}:1025"
       - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
     networks:
-      - coolify
+      - stx
   minio:
     image: coollabsio/maxio:latest
     pull_policy: always
@@ -132,7 +132,7 @@ services:
     volumes:
       - dev_minio_data:/data
     networks:
-      - coolify
+      - stx
   minio-init:
     image: ghcr.io/coollabsio/mx:0.1.0
     pull_policy: always
@@ -152,7 +152,7 @@ services:
       echo 'MinIO initialization complete - bucket local is ready';
       "
     networks:
-      - coolify
+      - stx
 
 volumes:
   dev_backups_data:
@@ -162,6 +162,6 @@ volumes:
   dev_minio_data:
 
 networks:
-  coolify:
+  stx:
     name: coolify
     external: false

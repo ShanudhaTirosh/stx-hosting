@@ -172,7 +172,7 @@ class Server extends BaseModel
      */
     private static ?array $identityMapCache = null;
 
-    protected $appends = ['is_coolify_host'];
+    protected $appends = ['is_coolify_host', 'is_stx_host'];
 
     protected static function booted()
     {
@@ -613,6 +613,13 @@ class Server extends BaseModel
         $this->backfillPlaceholderIp($ip);
 
         return $status;
+    }
+
+    protected function isStxHost(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->id === 0
+        );
     }
 
     protected function isCoolifyHost(): Attribute
@@ -1254,15 +1261,15 @@ class Server extends BaseModel
 $siteAddress {
     encode zstd gzip
     handle /app/* {
-        reverse_proxy coolify:6001
+        reverse_proxy stx:6001
     }
     handle /apps* {
-        reverse_proxy coolify:6001
+        reverse_proxy stx:6001
     }
     handle /terminal/ws {
-        reverse_proxy coolify:6002
+        reverse_proxy stx:6002
     }
-    reverse_proxy coolify:8080
+    reverse_proxy stx:8080
 }";
                 $base64 = base64_encode($caddy_file);
                 instant_remote_process([
@@ -1276,7 +1283,7 @@ $siteAddress {
     public function reloadCaddy()
     {
         return instant_remote_process([
-            'docker exec coolify-proxy caddy reload --config /config/caddy/Caddyfile.autosave',
+            'docker exec stx-proxy caddy reload 2>/dev/null || docker exec coolify-proxy caddy reload --config /config/caddy/Caddyfile.autosave',
         ], $this);
     }
 

@@ -91,7 +91,7 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'limits_cpus', type: 'string'),
                 new OA\Property(property: 'limits_cpuset', type: 'string', nullable: true),
                 new OA\Property(property: 'limits_cpu_shares', type: 'integer'),
-                new OA\Property(property: 'config_hash', type: 'string', nullable: true, description: 'Internal hash that Coolify uses to find configuration changes that need a restart. It changes only when the database starts, so do not use it to compare configurations.'),
+                new OA\Property(property: 'config_hash', type: 'string', nullable: true, description: 'Internal hash that STX Hosting uses to find configuration changes that need a restart. It changes only when the database starts, so do not use it to compare configurations.'),
                 new OA\Property(property: 'restart_count', type: 'integer'),
                 new OA\Property(property: 'last_restart_at', type: 'string', format: 'date-time', nullable: true),
                 new OA\Property(property: 'last_restart_type', type: 'string', nullable: true),

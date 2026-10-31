@@ -298,7 +298,7 @@ class StartPostgresql
             $environment_variables->push("POSTGRES_DB={$this->database->postgres_db}");
         }
 
-        $this->addCoolifyEnvironmentVariables($environment_variables);
+        $this->addStxEnvironmentVariables($environment_variables);
 
         return $environment_variables->all();
     }

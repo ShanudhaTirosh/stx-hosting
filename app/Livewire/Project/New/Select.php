@@ -69,7 +69,7 @@ class Select extends Component
         try {
             $this->parameters = get_route_parameters();
             if (isDev()) {
-                $this->existingPostgresqlUrl = 'postgres://coolify:password@coolify-db:5432';
+                $this->existingPostgresqlUrl = 'postgres://stx:password@stx-db:5432';
             }
             $projectUuid = data_get($this->parameters, 'project_uuid');
             $project = Project::ownedByCurrentTeam()->whereUuid($projectUuid)->firstOrFail();

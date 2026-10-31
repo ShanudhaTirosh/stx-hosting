@@ -899,7 +899,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
                 'hidden' => true,
                 'ignore_errors' => true,
             ], [
-                "docker network connect {$networkId} coolify-proxy >/dev/null 2>&1 || true",
+                "docker network connect {$networkId} stx-proxy 2>/dev/null || docker network connect {$networkId} coolify-proxy >/dev/null 2>&1 || true",
                 'hidden' => true,
                 'ignore_errors' => true,
             ]);
@@ -3193,7 +3193,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
     private function prepare_builder_image(bool $firstTry = true)
     {
         $this->checkForCancellation();
-        $helperImage = coolifyHelperImage();
+        $helperImage = stxHelperImage();
         $helperImage = "{$helperImage}:".getHelperVersion();
         // Get user home directory
         $this->serverUserHomeDir = instant_remote_process(['echo $HOME'], $this->server);
@@ -3990,7 +3990,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
         // Helper images without it fall back to the version of the Railpack CLI itself.
         $frontendImage = 'ghcr.io/railwayapp/railpack-frontend:v${RAILPACK_VERSION:-$(railpack --version | cut -d " " -f 3)}';
 
-        $buildxBuildCommand = "{$environmentPrefix}DOCKER_CONFIG=/root/.docker docker buildx build --builder coolify-railpack"
+        $buildxBuildCommand = "{$environmentPrefix}DOCKER_CONFIG=/root/.docker docker buildx build --builder stx-railpack"
             ." {$this->addHosts} --network host"
             ." --build-arg BUILDKIT_SYNTAX=\"{$frontendImage}\""
             ." {$cacheArgs}"
@@ -4001,7 +4001,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
             ." -t {$imageName}"
             ." {$this->workdir}";
 
-        return 'DOCKER_CONFIG=/root/.docker docker buildx create --name coolify-railpack --driver docker-container 2>/dev/null || true'
+        return 'DOCKER_CONFIG=/root/.docker docker buildx create --name stx-railpack --driver docker-container 2>/dev/null || true'
             ."\n".railpackBuilderLockedScript(railpackBuilderBootstrapScript().'; ('.$this->wrap_build_command_with_env_export($buildxBuildCommand).')');
     }
 
@@ -4106,7 +4106,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
 
         $this->execute_remote_command(
             [
-                executeInDocker($this->deployment_uuid, "mkdir -p {$this->workdir}/.coolify"),
+                executeInDocker($this->deployment_uuid, "mkdir -p {$this->workdir}/.stx"),
                 'hidden' => true,
             ],
             [
@@ -5329,7 +5329,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             } else {
                 if ($this->application->dockerfile || $this->application->build_pack === 'dockerfile' || $this->application->build_pack === 'dockerimage') {
                     $this->application_deployment_queue->addLogEntry('----------------------------------------');
-                    $this->application_deployment_queue->addLogEntry("WARNING: Dockerfile or Docker Image based deployment detected. The healthcheck needs a curl or wget command to check the health of the application. Please make sure that it is available in the image or turn off healthcheck on Coolify's UI.");
+                    $this->application_deployment_queue->addLogEntry('WARNING: Dockerfile or Docker Image based deployment detected. The healthcheck needs a curl or wget command to check the health of the application. Please make sure that it is available in the image or turn off healthcheck on STX Hosting UI.');
                     $this->application_deployment_queue->addLogEntry('----------------------------------------');
                 }
                 $this->application_deployment_queue->addLogEntry('New container is not healthy, rolling back to the old container.');
@@ -5552,7 +5552,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             ->implode(' ');
 
         // Docker ignores secret values for the build cache, so the hash goes in as a build arg
-        $this->build_secrets .= ' --build-arg '.escapeshellarg('COOLIFY_BUILD_SECRETS_HASH='.$this->generate_secrets_hash($variables));
+        $this->build_secrets .= ' --build-arg '.escapeshellarg('STX_BUILD_SECRETS_HASH='.$this->generate_secrets_hash($variables));
     }
 
     private function generate_secrets_hash($variables)
@@ -5728,7 +5728,8 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
                 return [$environmentVariable->key => escapeBashEnvValue($this->resolve_environment_variable_raw($environmentVariable))];
             });
             $secretsHash = $this->generate_secrets_hash($environmentVariables);
-            $argsToInsert->push("ARG COOLIFY_BUILD_SECRETS_HASH={$secretsHash}");
+            $argsToInsert->push("ARG STX_BUILD_SECRETS_HASH
+ARG COOLIFY_BUILD_SECRETS_HASH={$secretsHash}");
         }
 
         // Development logging to show what ARGs are being injected
@@ -5822,7 +5823,8 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             if (in_array($index, $fromEndLines, true)) {
                 $modified = true;
 
-                return [$line, 'ARG COOLIFY_BUILD_SECRETS_HASH'];
+                return [$line, 'ARG STX_BUILD_SECRETS_HASH
+ARG COOLIFY_BUILD_SECRETS_HASH'];
             }
 
             return [$line];

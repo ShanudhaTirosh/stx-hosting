@@ -1,6 +1,6 @@
 <?php
 
-it('uses yellow focus borders for normal v5 controls and purple focus borders for coolify buttons', function () {
+it('uses yellow focus borders for normal v5 controls and purple focus borders for stx buttons', function () {
     $v5Css = file_get_contents(resource_path('css/v5/app.css'));
     $buttonComponent = file_get_contents(resource_path('js/v5/components/ui/button.tsx'));
     $inputComponent = file_get_contents(resource_path('js/v5/components/ui/input.tsx'));

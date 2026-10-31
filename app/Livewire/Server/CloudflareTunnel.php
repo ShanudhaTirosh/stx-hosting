@@ -94,7 +94,7 @@ class CloudflareTunnel extends Component
                     $this->dispatch('warning', $warning);
                 }
             } else {
-                remote_process(['docker rm -f coolify-cloudflared'], $this->server, false, 10);
+                remote_process(['docker rm -f stx-cloudflared 2>/dev/null || docker rm -f coolify-cloudflared'], $this->server, false, 10);
             }
             $this->isCloudflareTunnelsEnabled = false;
             $this->server->settings->is_cloudflare_tunnel = false;

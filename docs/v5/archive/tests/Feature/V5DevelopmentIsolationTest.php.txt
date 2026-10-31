@@ -64,7 +64,7 @@ it('does not ship the v5 Flux runtime in the production container', function () 
 
     expect($productionCompose)
         ->not->toContain('COOLIFY_FLUX')
-        ->not->toContain('/data/coolify/flux')
+        ->not->toContain('/data/stx/flux')
         ->and($productionDockerfile)
         ->not->toContain('COOLIFY_FLUX_VERSION')
         ->not->toContain('/usr/local/bin/flux');

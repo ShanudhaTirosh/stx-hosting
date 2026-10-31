@@ -495,7 +495,7 @@ function dockerStopCommand(int $timeout, string $containers, Server|string|null 
 function dockerRemoveCommandWithTimeout(string $container, int $timeout = 60, int $killAfter = 10): string
 {
     $container = escapeShellValue($container);
-    $script = "if command -v timeout >/dev/null 2>&1; then output=\$(timeout -k {$killAfter}s {$timeout}s docker rm -f {$container} 2>&1); exit_code=\$?; else output=''; exit_code=124; fi; if [ \"\$exit_code\" -eq 124 ]; then echo '__COOLIFY_CONTAINER_REMOVE_TIMEOUT__'; elif [ \"\$exit_code\" -ne 0 ] && printf '%s' \"\$output\" | grep -q 'No such container:'; then exit 0; elif [ \"\$exit_code\" -ne 0 ]; then printf '%s\\n' \"\$output\" >&2; else printf '%s\\n' \"\$output\"; fi; exit \$exit_code";
+    $script = "if command -v timeout >/dev/null 2>&1; then output=\$(timeout -k {$killAfter}s {$timeout}s docker rm -f {$container} 2>&1); exit_code=\$?; else output=''; exit_code=124; fi; if [ \"\$exit_code\" -eq 124 ]; then echo '__STX_CONTAINER_REMOVE_TIMEOUT__'; elif [ \"\$exit_code\" -ne 0 ] && printf '%s' \"\$output\" | grep -q 'No such container:'; then exit 0; elif [ \"\$exit_code\" -ne 0 ]; then printf '%s\\n' \"\$output\" >&2; else printf '%s\\n' \"\$output\"; fi; exit \$exit_code";
 
     return 'bash -c '.escapeShellValue($script);
 }
@@ -1902,7 +1902,7 @@ function generateCustomDockerRunOptionsForDatabases($docker_run_options, $docker
  * @param  array  $yamlCompose  Parsed Docker Compose array
  * @return array Cleaned Docker Compose array with custom fields removed
  */
-function stripCoolifyCustomFields(array $yamlCompose): array
+function stripStxCustomFields(array $yamlCompose): array
 {
     foreach ($yamlCompose['services'] ?? [] as $serviceName => $service) {
         // Remove service-level custom fields
@@ -2289,4 +2289,9 @@ function railpackBuilderHelperCommand(string $buildxMetadataVolume, string $help
     $script = railpackBuilderLockedScript($command);
 
     return "docker run --rm -v {$buildxMetadataVolume}:/root/.docker/buildx -v /var/run/docker.sock:/var/run/docker.sock {$helperImage} bash -c '{$script}' 2>/dev/null || true";
+}
+
+function stripCoolifyCustomFields(array $yamlCompose): array
+{
+    return stripStxCustomFields($yamlCompose);
 }

@@ -269,7 +269,7 @@ class StartKeydb
             $environment_variables->push("REDIS_PASSWORD={$this->database->keydb_password}");
         }
 
-        $this->addCoolifyEnvironmentVariables($environment_variables);
+        $this->addStxEnvironmentVariables($environment_variables);
 
         return $environment_variables->all();
     }

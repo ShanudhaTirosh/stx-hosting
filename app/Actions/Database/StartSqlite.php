@@ -153,7 +153,7 @@ class StartSqlite
             $environment_variables->push("SQLITE_DATABASES={$this->database->sqlite_databases}");
         }
 
-        $this->addCoolifyEnvironmentVariables($environment_variables);
+        $this->addStxEnvironmentVariables($environment_variables);
 
         return $environment_variables->all();
     }

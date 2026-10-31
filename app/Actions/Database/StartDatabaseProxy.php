@@ -28,7 +28,7 @@ class StartDatabaseProxy
      */
     public const CONFIG_VERSION = '2';
 
-    public const CONFIG_VERSION_LABEL = 'coolify.databaseProxyConfigVersion';
+    public const CONFIG_VERSION_LABEL = 'stx.databaseProxyConfigVersion';
 
     /**
      * True when a running proxy has an older configuration and no recreation was claimed in the last

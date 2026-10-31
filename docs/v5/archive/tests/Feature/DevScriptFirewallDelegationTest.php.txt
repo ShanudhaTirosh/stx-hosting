@@ -3,45 +3,45 @@
 it('does not expose removed dev firewall commands', function () {
     $script = file_get_contents(base_path('scripts/dev.sh'));
 
-    expect($script)->not->toContain('coolify_firewall()')
+    expect($script)->not->toContain('stx_firewall()')
         ->and($script)->not->toContain('scripts/dev.sh firewall')
         ->and($script)->not->toContain('firewall <command>')
         ->and($script)->not->toContain('/api/v1/firewall/allow')
         ->and($script)->not->toContain('firewall_api_for_each_vm');
 });
 
-it('installs the coolify CLI in both application container images', function (string $dockerfile) {
+it('installs the stx CLI in both application container images', function (string $dockerfile) {
     $contents = file_get_contents(base_path($dockerfile));
 
     expect($contents)->toContain('ARG COOLIFY_CLI_VERSION=nightly')
-        ->and($contents)->toContain('coolify-linux-musl-${COOLIFY_CLI_ARCH}.tar.gz')
-        ->and($contents)->toContain('install -m 0755 /tmp/coolify /usr/local/bin/coolify');
+        ->and($contents)->toContain('stx-linux-musl-${COOLIFY_CLI_ARCH}.tar.gz')
+        ->and($contents)->toContain('install -m 0755 /tmp/stx /usr/local/bin/stx');
 })->with([
     'development image' => 'docker/development/Dockerfile',
     'production image' => 'docker/production/Dockerfile',
 ]);
 
-it('runs the coolify CLI from the development application container', function () {
+it('runs the stx CLI from the development application container', function () {
     $script = file_get_contents(base_path('scripts/dev.sh'));
 
-    expect($script)->toContain("printf '%s\\n' '/usr/local/bin/coolify'")
-        ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T coolify "$(coolify_cli_bin)" init bootstrap')
-        ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T coolify "$(coolify_cli_bin)" "$@"')
-        ->and($script)->toContain('ensure_coolify_container_ssh_key')
-        ->and($script)->not->toContain('.dev/bin/coolify')
-        ->and($script)->not->toContain('coolify-${os}-${arch}.tar.gz');
+    expect($script)->toContain("printf '%s\\n' '/usr/local/bin/stx'")
+        ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T stx "$(stx_cli_bin)" init bootstrap')
+        ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T stx "$(stx_cli_bin)" "$@"')
+        ->and($script)->toContain('ensure_stx_container_ssh_key')
+        ->and($script)->not->toContain('.dev/bin/stx')
+        ->and($script)->not->toContain('stx-${os}-${arch}.tar.gz');
 });
 
-it('syncs host-resolved Lima local names into the Coolify container hosts file', function () {
+it('syncs host-resolved Lima local names into the STX Hosting container hosts file', function () {
     $script = file_get_contents(base_path('scripts/dev.sh'));
 
     expect($script)->toContain('resolve_lima_dns_name()')
         ->and($script)->toContain('dscacheutil -q host -a name "$name"')
         ->and($script)->toContain('getent ahostsv4 "$name"')
-        ->and($script)->toContain('sync_lima_hosts_into_coolify_container()')
-        ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T -u root coolify sh -lc')
+        ->and($script)->toContain('sync_lima_hosts_into_stx_container()')
+        ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml exec -T -u root stx sh -lc')
         ->and($script)->toContain('cat "$next" > /etc/hosts')
-        ->and($script)->toContain('sync_lima_hosts_into_coolify_container')
+        ->and($script)->toContain('sync_lima_hosts_into_stx_container')
         ->and($script)->toContain('if [ "$naked" = "true" ]; then');
 });
 
@@ -67,21 +67,21 @@ it('supports a naked up mode that starts VMs and Docker Compose but skips server
         ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d "${compose_args[@]}"')
         ->and($script)->toContain('docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d')
         ->and($script)->toContain('if [ "$naked" = "true" ]; then')
-        ->and($script)->toContain('Skipping coolify bootstrap and Flux VM wiring')
-        ->and($script)->toContain('coolify_bootstrap_with_retry')
-        ->and($script)->toContain('--concurrency "$(coolify_bootstrap_concurrency)"')
-        ->and($script)->toContain('--ssh-timeout "$(coolify_bootstrap_ssh_timeout)"')
+        ->and($script)->toContain('Skipping stx bootstrap and Flux VM wiring')
+        ->and($script)->toContain('stx_bootstrap_with_retry')
+        ->and($script)->toContain('--concurrency "$(stx_bootstrap_concurrency)"')
+        ->and($script)->toContain('--ssh-timeout "$(stx_bootstrap_ssh_timeout)"')
         ->and($script)->toContain('--debug')
         ->and($script)->toContain('configure_flux_dev_for_vm "$index"')
         ->and($script)->toContain('sync_v5_dev_lima_servers');
 });
 
-it('retries dev coolify bootstrap because fresh Lima setup can complete across partial phases', function () {
+it('retries dev stx bootstrap because fresh Lima setup can complete across partial phases', function () {
     $script = file_get_contents(base_path('scripts/dev.sh'));
 
-    expect($script)->toContain('coolify_bootstrap_with_retry()')
+    expect($script)->toContain('stx_bootstrap_with_retry()')
         ->and($script)->toContain('local attempts=5')
-        ->and($script)->toContain('if coolify_bootstrap; then')
+        ->and($script)->toContain('if stx_bootstrap; then')
         ->and($script)->toContain('diagnose_coold_bootstrap_failure')
         ->and($script)->toContain('systemctl --failed --no-pager')
         ->and($script)->toContain('systemctl --no-pager --full status wg-quick@wg0 podman.socket corrosion coold')
@@ -94,7 +94,7 @@ it('seeds bootstrapped Lima VMs into v5 development server state', function () {
 
     expect($script)->toContain('sync_v5_dev_lima_servers()')
         ->and($script)->toContain('COOLIFY_CLI_SSH_USER="$ssh_user"')
-        ->and($script)->toContain('COOLIFY_CLI_SSH_USER="$(coolify_ssh_user)" docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d')
+        ->and($script)->toContain('COOLIFY_CLI_SSH_USER="$(stx_ssh_user)" docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d')
         ->and($script)->toContain('coold_vm_dns_name()')
         ->and($script)->toContain('$(coold_vm_dns_name "$index")')
         ->and($script)->toContain('v5:sync-dev-lima-servers')
@@ -132,12 +132,12 @@ it('sets the Lima guest hostname to the instance name for predictable mDNS', fun
 it('authorizes the seeded testing host key in dev Lima VMs', function () {
     $template = file_get_contents(base_path('dev/lima/coold.yaml'));
 
-    expect($template)->toContain('coolify_test_public_key=')
+    expect($template)->toContain('stx_test_public_key=')
         ->and($template)->toContain('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFuGmoeGq/pojrsyP1pszcNVuZx9iFkCELtxrh31QJ68')
         ->and($template)->toContain('authorized_keys')
-        ->and($template)->toContain('grep -qxF "$coolify_test_public_key"')
+        ->and($template)->toContain('grep -qxF "$stx_test_public_key"')
         ->and($template)->toContain('install_public_key root')
-        ->and($template)->toContain('install_public_key coolify')
+        ->and($template)->toContain('install_public_key stx')
         ->and($template)->toContain('owner="$(stat -c \'%u:%g\' "$home")"')
         ->and($template)->toContain('hostnamectl set-hostname "{{.Name}}"')
         ->and($template)->not->toContain('hostnamectl set-hostname myvm')
@@ -146,7 +146,7 @@ it('authorizes the seeded testing host key in dev Lima VMs', function () {
 });
 
 it('hardcodes the naked Lima VM ssh port for bootstrap testing', function () {
-    $template = file_get_contents(base_path('.dev/lima/coolify-naked-test.yaml'));
+    $template = file_get_contents(base_path('.dev/lima/stx-naked-test.yaml'));
 
     expect($template)->toContain('ssh:')
         ->and($template)->toContain('localPort: 60003');

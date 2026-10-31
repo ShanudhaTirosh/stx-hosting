@@ -8,7 +8,7 @@ services:
     image: "${REGISTRY_URL:-ghcr.io}/stxhosting/platform:${LATEST_IMAGE:-latest}"
     deploy:
       replicas: 0
-  coolify:
+  stx:
     image: "${REGISTRY_URL:-ghcr.io}/stxhosting/platform:${LATEST_IMAGE:-latest}"
     volumes:
       - type: bind
@@ -40,7 +40,7 @@ services:
       - "6001"
       - "6002"
     networks:
-      coolify:
+      stx:
         # Realtime ran in the stx-realtime container before 4.4; keep the name for existing proxy upstreams.
         aliases:
           - stx-realtime
@@ -86,5 +86,9 @@ volumes:
     name: stx-redis
 
 networks:
+  stx:
+    name: stx
+    external: true
   coolify:
+    name: coolify
     external: true

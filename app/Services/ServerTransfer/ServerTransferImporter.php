@@ -786,8 +786,8 @@ class ServerTransferImporter
                     $model = new SwarmDocker;
                     $model->forceFill([
                         'uuid' => SwarmDocker::where('uuid', $uuid)->exists() ? new_public_id() : $uuid,
-                        'name' => data_get($destination, 'name') ?: 'coolify-overlay',
-                        'network' => data_get($destination, 'network') ?: 'coolify-overlay',
+                        'name' => data_get($destination, 'name') ?: 'stx-overlay',
+                        'network' => data_get($destination, 'network') ?: 'stx-overlay',
                         'server_id' => $server->id,
                     ])->saveQuietly();
                 }
@@ -807,8 +807,8 @@ class ServerTransferImporter
                     $model = new StandaloneDocker;
                     $model->forceFill([
                         'uuid' => StandaloneDocker::where('uuid', $uuid)->exists() ? new_public_id() : $uuid,
-                        'name' => data_get($destination, 'name') ?: 'coolify',
-                        'network' => data_get($destination, 'network') ?: 'coolify',
+                        'name' => data_get($destination, 'name') ?: 'stx',
+                        'network' => data_get($destination, 'network') ?: 'stx',
                         'server_id' => $server->id,
                     ])->saveQuietly();
                 }

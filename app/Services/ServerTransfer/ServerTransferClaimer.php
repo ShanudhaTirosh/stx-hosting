@@ -26,7 +26,7 @@ class ServerTransferClaimer
      * The managed host records which claim owns it. Both instances can reach the host, so it is the one
      * place where an instance can learn that another instance took the server over.
      */
-    public const OWNER_MARKER_DIR = '/data/coolify/transfer';
+    public const OWNER_MARKER_DIR = '/data/stx/transfer';
 
     public const OWNER_MARKER_PATH = self::OWNER_MARKER_DIR.'/owner.json';
 
@@ -100,7 +100,7 @@ class ServerTransferClaimer
             return [
                 'server_uuid' => $server->uuid,
                 'claim' => $claim,
-                'message' => 'This Coolify instance now manages the server.',
+                'message' => 'This STX Hosting instance now manages the server.',
             ];
         });
     }

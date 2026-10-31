@@ -17,7 +17,7 @@ use App\Jobs\RegenerateSslCertJob;
 use App\Jobs\RevalidateUnusableS3StoragesJob;
 use App\Jobs\ScheduledJobManager;
 use App\Jobs\ServerManagerJob;
-use App\Jobs\UpdateCoolifyJob;
+use App\Jobs\UpdateStxJob;
 use App\Models\InstanceSettings;
 use App\Services\ScheduledJobDeliveryService;
 use Cron\CronExpression;
@@ -167,7 +167,7 @@ class Kernel extends ConsoleKernel
 
         if ($this->settings->is_auto_update_enabled) {
             $autoUpdateFrequency = $this->settings->auto_update_frequency;
-            $this->scheduleInstance->job($this->withCdnDelay(new UpdateCoolifyJob, $autoUpdateFrequency))
+            $this->scheduleInstance->job($this->withCdnDelay(new UpdateStxJob, $autoUpdateFrequency))
                 ->cron($autoUpdateFrequency)
                 ->timezone($this->instanceTimezone)
                 ->onOneServer();

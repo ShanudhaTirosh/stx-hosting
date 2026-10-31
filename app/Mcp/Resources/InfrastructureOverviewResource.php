@@ -15,7 +15,7 @@ class InfrastructureOverviewResource extends Resource
 
     protected string $name = 'stx-overview';
 
-    protected string $description = 'Team infrastructure overview JSON for the authenticated Coolify token.';
+    protected string $description = 'Team infrastructure overview JSON for the authenticated STX Hosting token.';
 
     protected string $uri = 'stx://overview';
 
@@ -81,7 +81,7 @@ class InfrastructureOverviewResource extends Resource
             ])->values()->all();
 
         return Response::text(json_encode([
-            'coolify_version' => config('constants.coolify.version'),
+            'stx_version' => config('constants.stx.version', config('constants.coolify.version')),
             'servers' => $servers,
             'projects' => $projects,
             'counts' => [

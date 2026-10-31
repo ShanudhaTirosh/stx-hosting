@@ -3,9 +3,9 @@
 cd /var/www/html
 
 . /etc/s6-overlay/scripts/container-role
-role="$(coolify_container_role_value)"
+role="$(stx_container_role_value)"
 
-if ! coolify_container_has_role flux; then
+if ! stx_container_has_role flux; then
     echo "   INFO  Flux is disabled for role '$role', sleeping."
     exec sleep infinity
 fi
@@ -16,7 +16,7 @@ if grep -qE '^COOLIFY_FLUX_ENABLED=false' .env 2>/dev/null || [ "${COOLIFY_FLUX_
 fi
 
 export COOLIFY_FLUX_GRPC_BIND="${COOLIFY_FLUX_GRPC_BIND:-0.0.0.0:6443}"
-export COOLIFY_FLUX_UNIX_SOCKET_PATH="${COOLIFY_FLUX_UNIX_SOCKET_PATH:-/run/coolify/flux.sock}"
+export COOLIFY_FLUX_UNIX_SOCKET_PATH="${COOLIFY_FLUX_UNIX_SOCKET_PATH:-/run/stx/flux.sock}"
 export COOLIFY_FLUX_JWT_PRIVATE_KEY_PATH="${COOLIFY_FLUX_JWT_PRIVATE_KEY_PATH:-/var/www/html/storage/app/flux/jwt.priv}"
 export COOLIFY_FLUX_JWT_PUBLIC_KEY_PATH="${COOLIFY_FLUX_JWT_PUBLIC_KEY_PATH:-/var/www/html/storage/app/flux/jwt.pub}"
 export COOLIFY_FLUX_ALLOW_PUBLIC_BIND="${COOLIFY_FLUX_ALLOW_PUBLIC_BIND:-1}"

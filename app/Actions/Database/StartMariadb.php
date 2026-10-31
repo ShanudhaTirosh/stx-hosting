@@ -268,7 +268,7 @@ class StartMariadb
             $environment_variables->push("MARIADB_PASSWORD={$this->database->mariadb_password}");
         }
 
-        $this->addCoolifyEnvironmentVariables($environment_variables);
+        $this->addStxEnvironmentVariables($environment_variables);
 
         return $environment_variables->all();
     }

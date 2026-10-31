@@ -205,7 +205,7 @@ class Advanced extends Component
 
         if (ApplicationSetting::isContainerNamePrefixInUse($prefix, $this->application->destination->server, $this->application->id)) {
             throw ValidationException::withMessages([
-                'customContainerNamePrefix' => 'This container name prefix is already in use by another application on this Coolify instance.',
+                'customContainerNamePrefix' => 'This container name prefix is already in use by another application on this STX Hosting instance.',
             ]);
         }
     }
@@ -215,7 +215,7 @@ class Advanced extends Component
         if ($this->application->settings->is_container_label_readonly_enabled === false) {
             return;
         }
-        $customLabels = str(implode('|coolify|', generateLabelsApplication($this->application)))->replace('|coolify|', "\n");
+        $customLabels = str(implode('|stx|', generateLabelsApplication($this->application)))->replace('|stx|', "\n");
         $this->application->custom_labels = base64_encode($customLabels);
         $this->application->save();
     }
@@ -335,7 +335,7 @@ class Advanced extends Component
 
             if ($this->customContainerNamePrefix && ApplicationSetting::isContainerNamePrefixInUse($this->customContainerNamePrefix, $this->application->destination->server, $this->application->id)) {
                 $this->customContainerNamePrefix = $this->application->settings->custom_container_name_prefix;
-                $this->dispatch('error', 'This container name prefix is already in use by another application on this Coolify instance.');
+                $this->dispatch('error', 'This container name prefix is already in use by another application on this STX Hosting instance.');
 
                 return;
             }

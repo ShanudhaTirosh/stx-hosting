@@ -57,7 +57,7 @@ class DeleteServer
             );
         }
 
-        logger()->debug($server ? 'Deleting server from Coolify' : 'Server already deleted from STX Hosting, skipping Coolify deletion');
+        logger()->debug($server ? 'Deleting server from STX Hosting' : 'Server already deleted from STX Hosting, skipping deletion');
 
         // If server is already deleted from STX Hosting, skip this part
         if (! $server) {
@@ -67,7 +67,7 @@ class DeleteServer
         try {
             $server->forceDelete();
         } catch (\Throwable $e) {
-            logger()->error('Failed to force delete server from Coolify', [
+            logger()->error('Failed to force delete server from STX Hosting', [
                 'error' => $e->getMessage(),
                 'server_id' => $server->id,
             ]);

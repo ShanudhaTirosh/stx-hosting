@@ -34,7 +34,27 @@ trait ExecutesDatabaseStartCommands
      *
      * @param  Collection<int, string>  $environmentVariables
      */
+    private function addStxEnvironmentVariables(Collection $environmentVariables): void
+    {
+        $definedKeys = $environmentVariables->map(fn ($variable) => str($variable)->before('=')->value());
+        $stxVariables = collect([
+            'STX_RESOURCE_UUID' => $this->database->uuid,
+            'STX_CONTAINER_NAME' => $this->database->uuid,
+            'COOLIFY_RESOURCE_UUID' => $this->database->uuid,
+            'COOLIFY_CONTAINER_NAME' => $this->database->uuid,
+        ])->except($definedKeys->all())->merge(stxDefaultEnvironmentVariables($this->database, $definedKeys));
+
+        foreach ($stxVariables as $key => $value) {
+            $environmentVariables->push($key.'='.escapeDollarSign($value));
+        }
+    }
+
     private function addCoolifyEnvironmentVariables(Collection $environmentVariables): void
+    {
+        $this->addStxEnvironmentVariables($environmentVariables);
+    }
+
+    private function _legacy_addCoolifyEnvironmentVariables(Collection $environmentVariables): void
     {
         $definedKeys = $environmentVariables->map(fn ($variable) => str($variable)->before('=')->value());
         $coolifyVariables = collect([

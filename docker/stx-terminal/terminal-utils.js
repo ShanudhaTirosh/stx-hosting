@@ -16,19 +16,19 @@ export const TERMINAL_CLOSE_CODES = Object.freeze({
 export const TERMINAL_REJECTED_SOCKET_TERMINATE_MS = 2000;
 
 /**
- * Limits the Coolify requests that one WebSocket upgrade can cause.
+ * Limits the STX Hosting requests that one WebSocket upgrade can cause.
  */
 export const MAX_XSRF_TOKEN_CANDIDATES = 5;
 
 /**
- * Builds the header sets that can authenticate terminal requests to Coolify, one
+ * Builds the header sets that can authenticate terminal requests to STX Hosting, one
  * for each XSRF-TOKEN cookie. The whole browser Cookie header is forwarded, so
  * Laravel finds its session cookie by its own name (SESSION_COOKIE or the slug
  * of APP_NAME).
  *
  * The browser sends more than one XSRF-TOKEN cookie when a Laravel app on a
  * parent domain also sets one (for example SESSION_DOMAIN=.example.com). Their
- * order in the header does not show which one is Coolify's, so the caller must
+ * order in the header does not show which one is STX Hosting's, so the caller must
  * try each one.
  *
  * @param {string | undefined} cookieHeader
@@ -55,14 +55,14 @@ export function getTerminalAuthHeaders(cookieHeader) {
 
 /**
  * Authenticates a terminal WebSocket upgrade with the browser's Laravel session
- * cookie and XSRF token. Returns the headers that Coolify accepted, for the
+ * cookie and XSRF token. Returns the headers that STX Hosting accepted, for the
  * requests that follow on the same connection.
  *
  * @param {Array<{ 'Cookie': string, 'X-XSRF-TOKEN': string }>} authHeaderCandidates from getTerminalAuthHeaders()
- * @param {(path: string, headers: object) => Promise<{ status: number }>} postToCoolify
+ * @param {(path: string, headers: object) => Promise<{ status: number }>} postToStxPlatform
  * @returns {Promise<{ authenticated: true, authHeaders: object } | { authenticated: false, closeCode: number, reason: string, status?: number, error?: Error }>}
  */
-export async function authenticateTerminalUpgrade(authHeaderCandidates, postToCoolify) {
+export async function authenticateTerminalUpgrade(authHeaderCandidates, postToStxPlatform) {
     if (authHeaderCandidates.length === 0) {
         return {
             authenticated: false,
@@ -75,7 +75,7 @@ export async function authenticateTerminalUpgrade(authHeaderCandidates, postToCo
 
     try {
         for (const authHeaders of authHeaderCandidates) {
-            const response = await postToCoolify('/terminal/auth', authHeaders);
+            const response = await postToStxPlatform('/terminal/auth', authHeaders);
 
             if (response.status === 200) {
                 return { authenticated: true, authHeaders };
@@ -128,7 +128,7 @@ export function createTerminalUpgradeHandler({ wss, authenticate, onRejected = (
             return;
         }
 
-        // The client may disconnect while Coolify is checking the session.
+        // The client may disconnect while STX Hosting is checking the session.
         const destroyOnError = () => socket.destroy();
         socket.on('error', destroyOnError);
 

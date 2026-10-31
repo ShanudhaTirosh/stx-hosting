@@ -18,16 +18,16 @@ $parseDatabaseHosts = function (mixed $hosts, mixed $fallback = 'coolify-db'): a
         'strlen',
     ));
 
-    return $fallbackHosts === [] ? ['coolify-db'] : $fallbackHosts;
+    return $fallbackHosts === [] ? ['stx-db', 'coolify-db'] : $fallbackHosts;
 };
 
 $pgsql = [
     'driver' => 'pgsql',
     'url' => env('DATABASE_URL'),
-    'host' => env('DB_HOST', 'coolify-db'),
+    'host' => env('DB_HOST', env('DB_HOST_FALLBACK', 'coolify-db')),
     'port' => env('DB_PORT', '5432'),
-    'database' => env('DB_DATABASE', 'coolify'),
-    'username' => env('DB_USERNAME', 'coolify'),
+    'database' => env('DB_DATABASE', 'stx'),
+    'username' => env('DB_USERNAME', 'stx'),
     'password' => env('DB_PASSWORD', ''),
     'charset' => 'utf8',
     'prefix' => '',
@@ -48,15 +48,15 @@ $pgsql = [
  */
 if (env('DB_READ_HOST')) {
     $pgsql['read'] = [
-        'host' => $parseDatabaseHosts(env('DB_READ_HOST'), env('DB_HOST', 'coolify-db')),
+        'host' => $parseDatabaseHosts(env('DB_READ_HOST'), env('DB_HOST', env('DB_HOST_FALLBACK', 'coolify-db'))),
         'port' => env('DB_READ_PORT', env('DB_PORT', '5432')),
-        'username' => env('DB_READ_USERNAME', env('DB_USERNAME', 'coolify')),
+        'username' => env('DB_READ_USERNAME', env('DB_USERNAME', 'stx')),
         'password' => env('DB_READ_PASSWORD', env('DB_PASSWORD', '')),
     ];
     $pgsql['write'] = [
-        'host' => $parseDatabaseHosts(env('DB_WRITE_HOST'), env('DB_HOST', 'coolify-db')),
+        'host' => $parseDatabaseHosts(env('DB_WRITE_HOST'), env('DB_HOST', env('DB_HOST_FALLBACK', 'coolify-db'))),
         'port' => env('DB_WRITE_PORT', env('DB_PORT', '5432')),
-        'username' => env('DB_WRITE_USERNAME', env('DB_USERNAME', 'coolify')),
+        'username' => env('DB_WRITE_USERNAME', env('DB_USERNAME', 'stx')),
         'password' => env('DB_WRITE_PASSWORD', env('DB_PASSWORD', '')),
     ];
     $pgsql['sticky'] = (bool) env('DB_STICKY', true);

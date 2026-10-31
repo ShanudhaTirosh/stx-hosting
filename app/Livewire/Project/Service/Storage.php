@@ -107,7 +107,7 @@ class Storage extends Component
     public function refreshStoragesFromEvent()
     {
         $this->refreshStorages();
-        $this->dispatch('warning', 'File storage changed. Usually it means that the file / directory is already defined on the server, so Coolify set it up for you properly on the UI.');
+        $this->dispatch('warning', 'File storage changed. Usually it means that the file / directory is already defined on the server, so STX Hosting set it up for you properly on the UI.');
     }
 
     public function refreshStorages()
@@ -160,7 +160,7 @@ class Storage extends Component
 
     /**
      * Loads the external volumes that the current Compose file of the resource declares and that the
-     * resource mounts as written. Coolify does not manage these volumes, so they have no storage entry.
+     * resource mounts as written. STX Hosting does not manage these volumes, so they have no storage entry.
      *
      * Not included:
      * - an external volume for which the resource still has the old storage entry with the generated

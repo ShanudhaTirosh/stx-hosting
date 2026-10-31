@@ -6,8 +6,8 @@
  * - Legacy mode (DEVELOPMENT_QEMU_INSTANCE unset): one set of VMs on the libvirt
  *   "default" network (192.168.122.0/24, bridge virbr0).
  * - Instance mode (DEVELOPMENT_QEMU_INSTANCE + DEVELOPMENT_QEMU_SLOT set): every dev
- *   instance gets its own isolated libvirt network "coolify-dev-{slot}" (10.221.{slot}.0/24,
- *   bridge cdevbr{slot}) and its own domains named "coolify-dev-{instance}--{profile}".
+ *   instance gets its own isolated libvirt network "stx-dev-{slot}" (10.221.{slot}.0/24,
+ *   bridge cdevbr{slot}) and its own domains named "stx-dev-{instance}--{profile}".
  *   MAC addresses stay identical to legacy mode because the prepared images match them.
  *
  * Values are computed here so the host and the Coolify container resolve identical settings.
@@ -19,7 +19,7 @@ $developmentQemuSlot = $developmentQemuInstance === null ? null : (int) env('DEV
 $developmentQemuProfiles = [
     'ubuntu-root' => [
         'label' => 'Ubuntu 24.04 (root)',
-        'domain' => 'coolify-dev-ubuntu-root',
+        'domain' => 'stx-dev-ubuntu-root',
         'uuid' => 'development-qemu-ubuntu-root',
         'name' => 'QEMU Ubuntu (root)',
         'ip' => '192.168.122.10',
@@ -32,11 +32,11 @@ $developmentQemuProfiles = [
     ],
     'ubuntu-non-root' => [
         'label' => 'Ubuntu 24.04 (non-root)',
-        'domain' => 'coolify-dev-ubuntu-non-root',
+        'domain' => 'stx-dev-ubuntu-non-root',
         'uuid' => 'development-qemu-ubuntu-non-root',
         'name' => 'QEMU Ubuntu (non-root)',
         'ip' => '192.168.122.11',
-        'user' => 'coolify',
+        'user' => 'stx',
         'mac' => '52:54:00:ca:00:02',
         'image' => 'ubuntu-noble-amd64.qcow2',
         'image_url' => 'https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img',
@@ -45,7 +45,7 @@ $developmentQemuProfiles = [
     ],
     'debian-root' => [
         'label' => 'Debian 12 (root)',
-        'domain' => 'coolify-dev-debian-root',
+        'domain' => 'stx-dev-debian-root',
         'uuid' => 'development-qemu-debian-root',
         'name' => 'QEMU Debian (root)',
         'ip' => '192.168.122.20',
@@ -58,11 +58,11 @@ $developmentQemuProfiles = [
     ],
     'debian-non-root' => [
         'label' => 'Debian 12 (non-root)',
-        'domain' => 'coolify-dev-debian-non-root',
+        'domain' => 'stx-dev-debian-non-root',
         'uuid' => 'development-qemu-debian-non-root',
         'name' => 'QEMU Debian (non-root)',
         'ip' => '192.168.122.21',
-        'user' => 'coolify',
+        'user' => 'stx',
         'mac' => '52:54:00:ca:00:04',
         'image' => 'debian-12-amd64.qcow2',
         'image_url' => 'https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2',
@@ -71,7 +71,7 @@ $developmentQemuProfiles = [
     ],
     'centos-root' => [
         'label' => 'CentOS Stream 9 (root)',
-        'domain' => 'coolify-dev-centos-root',
+        'domain' => 'stx-dev-centos-root',
         'uuid' => 'development-qemu-centos-root',
         'name' => 'QEMU CentOS Stream (root)',
         'ip' => '192.168.122.30',
@@ -84,11 +84,11 @@ $developmentQemuProfiles = [
     ],
     'centos-non-root' => [
         'label' => 'CentOS Stream 9 (non-root)',
-        'domain' => 'coolify-dev-centos-non-root',
+        'domain' => 'stx-dev-centos-non-root',
         'uuid' => 'development-qemu-centos-non-root',
         'name' => 'QEMU CentOS Stream (non-root)',
         'ip' => '192.168.122.31',
-        'user' => 'coolify',
+        'user' => 'stx',
         'mac' => '52:54:00:ca:00:06',
         'image' => 'centos-stream-9-amd64.qcow2',
         'image_url' => 'https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2',
@@ -97,7 +97,7 @@ $developmentQemuProfiles = [
     ],
     'alpine-root' => [
         'label' => 'Alpine Linux 3.24 (root)',
-        'domain' => 'coolify-dev-alpine-root',
+        'domain' => 'stx-dev-alpine-root',
         'uuid' => 'development-qemu-alpine-root',
         'name' => 'QEMU Alpine (root)',
         'ip' => '192.168.122.40',
@@ -111,11 +111,11 @@ $developmentQemuProfiles = [
     ],
     'alpine-non-root' => [
         'label' => 'Alpine Linux 3.24 (non-root)',
-        'domain' => 'coolify-dev-alpine-non-root',
+        'domain' => 'stx-dev-alpine-non-root',
         'uuid' => 'development-qemu-alpine-non-root',
         'name' => 'QEMU Alpine (non-root)',
         'ip' => '192.168.122.41',
-        'user' => 'coolify',
+        'user' => 'stx',
         'mac' => '52:54:00:ca:00:08',
         'image' => 'alpine-3.24-amd64.qcow2',
         'image_url' => 'https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/cloud/generic_alpine-3.24.1-x86_64-bios-cloudinit-r0.qcow2',
@@ -126,10 +126,10 @@ $developmentQemuProfiles = [
 ];
 
 foreach ($developmentQemuProfiles as $developmentQemuProfileKey => $developmentQemuProfile) {
-    $developmentQemuProfile['template'] = "coolify-dev-{$developmentQemuProfileKey}";
+    $developmentQemuProfile['template'] = "stx-dev-{$developmentQemuProfileKey}";
 
     if ($developmentQemuInstance !== null) {
-        $developmentQemuProfile['domain'] = "coolify-dev-{$developmentQemuInstance}--{$developmentQemuProfileKey}";
+        $developmentQemuProfile['domain'] = "stx-dev-{$developmentQemuInstance}--{$developmentQemuProfileKey}";
         $developmentQemuProfile['ip'] = "10.221.{$developmentQemuSlot}.".substr(strrchr($developmentQemuProfile['ip'], '.'), 1);
     }
 
@@ -138,7 +138,7 @@ foreach ($developmentQemuProfiles as $developmentQemuProfileKey => $developmentQ
 
 return [
     'public_key' => 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFuGmoeGq/pojrsyP1pszcNVuZx9iFkCELtxrh31QJ68',
-    'storage_path' => env('DEVELOPMENT_QEMU_STORAGE_PATH', '/var/lib/libvirt/images/coolify-development'),
+    'storage_path' => env('DEVELOPMENT_QEMU_STORAGE_PATH', '/var/lib/libvirt/images/stx-development'),
     'instance' => $developmentQemuInstance,
     'slot' => $developmentQemuSlot,
     'gateway' => $developmentQemuInstance === null ? '192.168.122.1' : "10.221.{$developmentQemuSlot}.1",
@@ -151,9 +151,9 @@ return [
     'gpu_memory' => (int) env('DEVELOPMENT_QEMU_GPU_MEMORY', 4096),
     'vcpus' => 2,
     'disk_size' => '20G',
-    'libvirt_network' => $developmentQemuInstance === null ? 'default' : "coolify-dev-{$developmentQemuSlot}",
+    'libvirt_network' => $developmentQemuInstance === null ? 'default' : "stx-dev-{$developmentQemuSlot}",
     'bridge' => $developmentQemuInstance === null ? 'virbr0' : "cdevbr{$developmentQemuSlot}",
-    'docker_network' => env('DEVELOPMENT_QEMU_DOCKER_NETWORK') ?: 'coolify',
-    'coolify_container' => env('DEVELOPMENT_QEMU_COOLIFY_CONTAINER') ?: 'coolify',
+    'docker_network' => env('DEVELOPMENT_QEMU_DOCKER_NETWORK') ?: 'stx',
+    'coolify_container' => env('DEVELOPMENT_QEMU_STX_CONTAINER', env('DEVELOPMENT_QEMU_COOLIFY_CONTAINER', 'coolify')),
     'profiles' => $developmentQemuProfiles,
 ];

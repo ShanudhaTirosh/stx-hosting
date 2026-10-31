@@ -34,7 +34,7 @@ services:
       - ./docker/stx-terminal/terminal-server.js:/terminal/terminal-server.js
       - ./docker/stx-terminal/terminal-utils.js:/terminal/terminal-utils.js
     networks:
-      - coolify
+      - stx
   postgres:
     pull_policy: always
     ports:
@@ -81,7 +81,7 @@ services:
       - .:/var/www/html/:cached
     command: sh -c "npm install && npm run dev"
     networks:
-      - coolify
+      - stx
   testing-host:
     image: stx-testing-host:dev
     pull_policy: never
@@ -98,7 +98,7 @@ services:
       - dev_redis_data:/data/stx/_volumes/redis
       - dev_minio_data:/data/stx/_volumes/minio
     networks:
-      - coolify
+      - stx
   mailpit:
     image: axllent/mailpit:latest
     pull_policy: always
@@ -107,7 +107,7 @@ services:
       - "${FORWARD_MAILPIT_PORT:-1025}:1025"
       - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
     networks:
-      - coolify
+      - stx
   # maxio:
   #   image: ghcr.io/coollabsio/maxio 
   #   pull_policy: always
@@ -120,7 +120,7 @@ services:
   #   volumes:
   #     - dev_maxio_data:/data
   #   networks:
-  #     - coolify
+  #     - stx
   minio:
     image: ghcr.io/coollabsio/minio:RELEASE.2025-10-15T17-29-55Z # Released on 15 October 2025
     pull_policy: always
@@ -136,7 +136,7 @@ services:
       - dev_minio_data:/data
       - dev_maxio_data:/data
     networks:
-      - coolify
+      - stx
   # maxio-init:
   #   image: ghcr.io/coollabsio/mx:0.1.0
   #   pull_policy: always
@@ -156,7 +156,7 @@ services:
   #     echo 'MaxIO initialization complete - bucket local is ready';
   #     "
   #   networks:
-  #     - coolify
+  #     - stx
   minio-init:
     image: ghcr.io/coollabsio/mx:0.1.0
     pull_policy: always
@@ -176,7 +176,7 @@ services:
       echo 'MinIO initialization complete - bucket local is ready';
       "
     networks:
-      - coolify
+      - stx
 
 volumes:
   dev_backups_data:
@@ -188,5 +188,5 @@ volumes:
 
 networks:
   stx:
-    name: coolify
+    name: stx
     external: false

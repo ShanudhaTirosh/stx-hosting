@@ -308,7 +308,7 @@ class HostingerController extends Controller
 
             return response()->json(array_filter([
                 'message' => $virtualMachineId
-                    ? 'The Hostinger VPS was purchased but could not be saved in Coolify. Manage it in hPanel.'
+                    ? 'The Hostinger VPS was purchased but could not be saved in STX Hosting. Manage it in hPanel.'
                     : 'Failed to create Hostinger server.',
                 'hostinger_virtual_machine_id' => $virtualMachineId,
             ]), 500);

@@ -14,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 use Throwable;
 
 /**
- * Moves a server to another Coolify instance outside the web request, because a large import can take
+ * Moves a server to another STX Hosting instance outside the web request, because a large import can take
  * longer than the nginx request timeout. The job payload is encrypted because it holds the target token.
  */
 class MigrateServerToInstanceJob implements ShouldBeEncrypted, ShouldBeUnique, ShouldQueue

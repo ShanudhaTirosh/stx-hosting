@@ -544,7 +544,7 @@ class ServerTransferExporter
                 && (! $application->source || data_get($application->source, 'is_public') === true))
             ->pluck('name');
         if ($manualWebhookApps->isNotEmpty()) {
-            $steps[] = 'If a repository of these applications has a manual webhook to Coolify, change its URL to the target: '
+            $steps[] = 'If a repository of these applications has a manual webhook to STX Hosting, change its URL to the target: '
                 .$manualWebhookApps->implode(', ').'. Use {target_url}/webhooks/source/github/events/manual, '
                 .'{target_url}/webhooks/source/gitlab/events/manual, {target_url}/webhooks/source/bitbucket/events/manual, '
                 .'or {target_url}/webhooks/source/gitea/events/manual.';

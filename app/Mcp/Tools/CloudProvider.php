@@ -54,7 +54,7 @@ class CloudProvider extends RestActionTool
             'delete_token' => ['method' => 'DELETE', 'path' => 'cloud-tokens/{uuid}', 'ability' => 'write', 'confirm' => true, 'description' => 'delete a provider token that no server uses'],
             'validate_token' => ['method' => 'POST', 'path' => 'cloud-tokens/{uuid}/validate', 'ability' => 'write', 'description' => 'check a stored provider token with the provider'],
             'catalog' => ['method' => 'GET', 'paths' => self::CATALOG_PATHS, 'ability' => 'read', 'description' => 'read a provider catalog; resource is <provider>_<catalog>, for example hetzner_locations (data: cloud_provider_token_uuid)'],
-            'provision_server' => ['method' => 'POST', 'paths' => self::PROVISION_PATHS, 'ability' => 'write', 'confirm' => true, 'description' => 'create a new paid server at the provider and add it to Coolify; resource is the provider (data: cloud_provider_token_uuid, private_key_uuid, name, and the provider fields, for example location, server_type, image for hetzner; a cloud-init or post-install script or extra SSH keys need deploy ability)'],
+            'provision_server' => ['method' => 'POST', 'paths' => self::PROVISION_PATHS, 'ability' => 'write', 'confirm' => true, 'description' => 'create a new paid server at the provider and add it to STX Hosting; resource is the provider (data: cloud_provider_token_uuid, private_key_uuid, name, and the provider fields, for example location, server_type, image for hetzner; a cloud-init or post-install script or extra SSH keys need deploy ability)'],
         ];
     }
 

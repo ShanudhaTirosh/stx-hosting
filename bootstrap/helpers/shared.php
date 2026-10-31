@@ -88,7 +88,7 @@ function base_configuration_dir(): string
         return '/data/stx';
     }
 
-    return '/data/coolify';
+    return '/data/stx';
 }
 function application_configuration_dir(): string
 {
@@ -725,7 +725,23 @@ function get_latest_sentinel_version(): string
     // Read the local versions.json, which CheckForUpdatesJob refreshes every hour. Do not ask the CDN for each server.
     return data_get(get_versions_data(), 'coolify.sentinel.version') ?? '0.0.0';
 }
+function get_latest_version_of_stx(): string
+{
+    try {
+        $versions = get_versions_data();
+
+        return data_get($versions, 'stx.v4.version', data_get($versions, 'coolify.v4.version', '0.0.0'));
+    } catch (Throwable $e) {
+        return '0.0.0';
+    }
+}
+
 function get_latest_version_of_coolify(): string
+{
+    return get_latest_version_of_stx();
+}
+
+function _legacy_get_latest_version_of_coolify(): string
 {
     try {
         $versions = get_versions_data();
@@ -757,14 +773,14 @@ function generateSSHKey(string $type = 'rsa')
 
         return [
             'private' => $key->toString('PKCS1'),
-            'public' => $key->getPublicKey()->toString('OpenSSH', ['comment' => 'coolify-generated-ssh-key']),
+            'public' => $key->getPublicKey()->toString('OpenSSH', ['comment' => 'stx-generated-ssh-key']),
         ];
     } elseif ($type === 'ed25519') {
         $key = EC::createKey('Ed25519');
 
         return [
             'private' => $key->toString('OpenSSH'),
-            'public' => $key->getPublicKey()->toString('OpenSSH', ['comment' => 'coolify-generated-ssh-key']),
+            'public' => $key->getPublicKey()->toString('OpenSSH', ['comment' => 'stx-generated-ssh-key']),
         ];
     }
     throw new Exception('Invalid key type');
@@ -1678,7 +1694,7 @@ function resolveHostToIp(string $host): string
 
 function service_templates_cache_key(): string
 {
-    return (string) config('constants.services.cache_key', 'coolify:service-templates-bundle');
+    return (string) config('constants.services.cache_key', 'stx:service-templates-bundle');
 }
 
 function service_templates_path(): string

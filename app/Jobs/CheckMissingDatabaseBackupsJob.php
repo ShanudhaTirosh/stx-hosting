@@ -58,7 +58,7 @@ class CheckMissingDatabaseBackupsJob implements ShouldBeEncrypted, ShouldBeUniqu
             return;
         }
 
-        // Another Coolify instance backs up the databases of a transferred server.
+        // Another STX Hosting instance backs up the databases of a transferred server.
         if ($backup->server()?->isTransferredAway()) {
             return;
         }

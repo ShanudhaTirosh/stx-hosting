@@ -84,9 +84,9 @@ class SaveProxyConfiguration
                 $containerName = $containerName->getValue();
             }
 
-            if ($containerName !== 'coolify-proxy') {
+            if ($containerName !== 'stx-proxy' && $containerName !== 'coolify-proxy') {
                 throw ValidationException::withMessages([
-                    'configuration' => ["The {$proxyService} container_name must be coolify-proxy. Coolify uses this name to manage the proxy."],
+                    'configuration' => ["The {$proxyService} container_name must be stx-proxy (or coolify-proxy). STX Hosting uses this name to manage the proxy."],
                 ]);
             }
         }

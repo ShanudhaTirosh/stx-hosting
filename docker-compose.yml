@@ -1,5 +1,9 @@
 services:
-    coolify:
+    stx:
+        aliases:
+            - stx
+
+            - coolify
         container_name: stx
         restart: always
         working_dir: /var/www/html
@@ -9,6 +13,8 @@ services:
             - "6001"
             - "6002"
         networks:
+            - stx
+
             - coolify
         depends_on:
             - postgres
@@ -18,15 +24,23 @@ services:
         container_name: stx-db
         restart: always
         networks:
+            - stx
+
             - coolify
     redis:
         image: redis:7-alpine
         container_name: stx-redis
         restart: always
         networks:
+            - stx
+
             - coolify
 networks:
-    coolify:
+    stx:
+        aliases:
+            - stx
+
+            - coolify
         name: coolify
         driver: bridge
         external: false

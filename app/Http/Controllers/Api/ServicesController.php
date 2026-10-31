@@ -1073,7 +1073,7 @@ class ServicesController extends Controller
         // The parameter was removed. Reject it instead of ignoring it, so old clients do not delete Docker resources they asked to keep.
         if ($request->boolean('delete_from_stx_only')) {
             return response()->json([
-                'message' => 'The delete_from_stx_only parameter is no longer supported. Nothing was deleted. Send the request without it: Coolify removes the service also when the server is not reachable.',
+                'message' => 'The delete_from_stx_only parameter is no longer supported. Nothing was deleted. Send the request without it: STX Hosting removes the service also when the server is not reachable.',
             ], 422);
         }
 
@@ -1144,7 +1144,7 @@ class ServicesController extends Controller
                             'force_domain_override' => ['type' => 'boolean', 'default' => false, 'description' => 'Force domain override even if conflicts are detected.'],
                             'is_container_label_escape_enabled' => ['type' => 'boolean', 'default' => true, 'description' => 'Escape special characters in labels. By default, $ (and other chars) is escaped. If you want to use env variables inside the labels, turn this off.'],
                             'redact_all_env_values_in_logs' => ['type' => 'boolean', 'default' => true, 'description' => 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'],
-                            'include_coolify_default_variables' => ['type' => 'boolean', 'default' => true, 'description' => 'Add the predefined COOLIFY_* variables (COOLIFY_URL, COOLIFY_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'],
+                            'include_coolify_default_variables' => ['type' => 'boolean', 'default' => true, 'description' => 'Add the predefined STX / COOLIFY_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'],
                         ],
                     )
                 ),
@@ -2055,7 +2055,7 @@ class ServicesController extends Controller
 
     #[OA\Post(
         summary: 'Migrate to Server',
-        description: 'Migrate a service to another destination/server owned by the authenticated team. Stops the service, optionally transfers persistent volume data when both servers are managed by Coolify, and updates database records. Redeploy after migration completes.',
+        description: 'Migrate a service to another destination/server owned by the authenticated team. Stops the service, optionally transfers persistent volume data when both servers are managed by STX Hosting, and updates database records. Redeploy after migration completes.',
         path: '/services/{uuid}/migrate',
         operationId: 'migrate-service-by-uuid',
         security: [['bearerAuth' => []]],
@@ -2501,7 +2501,7 @@ class ServicesController extends Controller
                             'mount_path' => ['type' => 'string', 'description' => 'The container mount path.'],
                             'content' => ['type' => 'string', 'nullable' => true, 'description' => 'File content (file only, optional). Needs the deploy ability when set.'],
                             'is_directory' => ['type' => 'boolean', 'description' => 'Whether this is a directory mount (file only, default false).'],
-                            'fs_path' => ['type' => 'string', 'description' => 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. Coolify never deletes a path outside the resource directory.'],
+                            'fs_path' => ['type' => 'string', 'description' => 'Host path. Required for directory mounts and host file mounts. Optional for file mounts with content (default: inside the resource directory). An absolute path can be anywhere on the host; a relative path is inside the resource directory. A directory or file mount outside the resource directory needs a token with the deploy permission. STX Hosting never deletes a path outside the resource directory.'],
                         ],
                         additionalProperties: false,
                     ),

@@ -130,7 +130,7 @@ class Patches extends Component
                 throw $e;
             }
             $this->auditPatchAction('reboot_requested', ['result' => 'started']);
-            $this->dispatch('success', 'Reboot started. The server is back in a few minutes, and Coolify then checks it again.');
+            $this->dispatch('success', 'Reboot started. The server is back in a few minutes, and STX Hosting then checks it again.');
         } catch (\Throwable $e) {
             return handleError($e, $this);
         }
@@ -205,7 +205,7 @@ class Patches extends Component
         $this->ensureManagedHere();
         $packageManager = data_get($this->server->settings->patch_check_result, 'package_manager');
         if (! ConfigureAutomaticSecurityUpdates::supportFor($packageManager)) {
-            throw new \Exception('Automatic security updates are supported only on Debian, Ubuntu, and RHEL-family servers. Run "Check for updates" first, so Coolify knows the package manager.');
+            throw new \Exception('Automatic security updates are supported only on Debian, Ubuntu, and RHEL-family servers. Run "Check for updates" first, so STX Hosting knows the package manager.');
         }
 
         $auditContext = ['enabled' => $enabled, 'time' => $time, 'package_manager' => $packageManager];
@@ -256,7 +256,7 @@ class Patches extends Component
     private function ensureManagedHere(): void
     {
         if ($this->server->isTransferredAway()) {
-            throw new \RuntimeException('This server is managed by another Coolify instance.');
+            throw new \RuntimeException('This server is managed by another STX Hosting instance.');
         }
     }
 

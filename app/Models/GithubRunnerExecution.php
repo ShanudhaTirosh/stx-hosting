@@ -153,7 +153,7 @@ class GithubRunnerExecution extends BaseModel
      */
     public function containerName(): string
     {
-        return 'coolify-runner-'.$this->uuid;
+        return 'stx-runner-'.$this->uuid;
     }
 
     /**

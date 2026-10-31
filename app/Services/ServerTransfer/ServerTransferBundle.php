@@ -63,7 +63,8 @@ class ServerTransferBundle
     {
         return array_merge([
             'schema_version' => self::SCHEMA_VERSION,
-            'coolify_version' => config('constants.coolify.version'),
+            'stx_version' => config('constants.stx.version', config('constants.coolify.version')),
+            'coolify_version' => config('constants.stx.version', config('constants.coolify.version')),
             'exported_at' => now()->toIso8601String(),
             'export_id' => new_public_id(),
         ], $payload);
@@ -84,12 +85,12 @@ class ServerTransferBundle
             $errors[] = 'Unsupported schema_version '.$bundle['schema_version'].'. Expected '.self::SCHEMA_VERSION.'.';
         }
 
-        $bundleVersion = data_get($bundle, 'coolify_version');
-        $instanceVersion = (string) config('constants.coolify.version');
+        $bundleVersion = data_get($bundle, 'stx_version', data_get($bundle, 'coolify_version'));
+        $instanceVersion = (string) config('constants.stx.version', config('constants.coolify.version'));
         if (! is_string($bundleVersion) || $bundleVersion === '') {
-            $errors[] = 'Missing coolify_version. Export the server again with Coolify '.$instanceVersion.' or newer.';
+            $errors[] = 'Missing stx_version/coolify_version. Export the server again with STX Hosting '.$instanceVersion.' or newer.';
         } elseif (version_compare($bundleVersion, $instanceVersion, '>')) {
-            $errors[] = "This bundle was exported from Coolify {$bundleVersion}. Upgrade this instance (Coolify {$instanceVersion}) to {$bundleVersion} or newer before you import it.";
+            $errors[] = "This bundle was exported from {$bundleVersion}. Upgrade this instance (STX Hosting {$instanceVersion}) to {$bundleVersion} or newer before you import it.";
         }
 
         if (! isset($bundle['export_id']) || ! is_string($bundle['export_id']) || $bundle['export_id'] === '') {

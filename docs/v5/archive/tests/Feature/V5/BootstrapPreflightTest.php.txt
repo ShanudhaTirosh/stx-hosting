@@ -163,7 +163,7 @@ it('rejects bootstrap when flux url is not configured', function () {
 
 it('queues the bootstrap when the flux url is configured', function () {
     createBootstrapPreflightTables();
-    Config::set('coold.flux_url', 'http://coolify.example.com:6443');
+    Config::set('coold.flux_url', 'http://stx.example.com:6443');
 
     [$user, $team, $cluster, $server] = createBootstrapPreflightClusterWithServer();
 
@@ -181,8 +181,8 @@ it('queues the bootstrap when the flux url is configured', function () {
 
 it('writes the marker with the same coold version that is persisted on the server row', function () {
     createBootstrapPreflightTables();
-    Config::set('coold.coolify_cli_bin', '/tmp/coolify');
-    Config::set('coold.flux_url', 'http://coolify.example.com:6443');
+    Config::set('coold.stx_cli_bin', '/tmp/stx');
+    Config::set('coold.flux_url', 'http://stx.example.com:6443');
 
     [, , $cluster, $server] = createBootstrapPreflightClusterWithServer([
         'namespaces' => ['default'],
