@@ -133,6 +133,7 @@ class StartSentinel
         ];
         $environments = array_merge($environments, self::sentinelTrafficEnvironment($server));
         $labels = [
+            'stx.managed' => 'true',
             'coolify.managed' => 'true',
         ];
         if (isDev()) {
@@ -147,7 +148,7 @@ class StartSentinel
         $trafficMount = self::collectsTraffic($server)
             ? '-v '.escapeshellarg("{$trafficLogDirectory}:{$trafficLogDirectory}:ro").' '
             : '';
-        $network = $server->isLocalhost() ? ' --network coolify' : '';
+        $network = $server->isLocalhost() ? ' --network stx' : '';
         // A userns-remap daemon refuses --pid host unless the container opts out of remapping.
         // On other daemons --userns host has no effect. https://docs.docker.com/engine/security/userns-remap/
         $dockerCommand = "docker run -d$network $dockerEnvironments --name stx-sentinel --restart unless-stopped -v /var/run/docker.sock:/var/run/docker.sock -v $mountDir:/app/db {$trafficMount}--userns host --pid host --health-cmd \"curl --fail http://127.0.0.1:8888/api/health || exit 1\" --health-start-period 120s --health-interval 10s --health-retries 3 --add-host=host.docker.internal:host-gateway --label $dockerLabels $image";

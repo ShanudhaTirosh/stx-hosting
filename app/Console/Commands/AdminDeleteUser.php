@@ -6,6 +6,8 @@ use App\Actions\Stripe\CancelSubscription;
 use App\Actions\User\DeleteUserResources;
 use App\Actions\User\DeleteUserServers;
 use App\Actions\User\DeleteUserTeams;
+use App\Models\Application;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -410,9 +412,9 @@ class AdminDeleteUser extends Command
             foreach ($servers as $server) {
                 $resources = $server->definedResources();
                 foreach ($resources as $resource) {
-                    if ($resource instanceof \App\Models\Application) {
+                    if ($resource instanceof Application) {
                         $allApplications->push($resource);
-                    } elseif ($resource instanceof \App\Models\Service) {
+                    } elseif ($resource instanceof Service) {
                         $allServices->push($resource);
                     } else {
                         $allDatabases->push($resource);
@@ -1072,7 +1074,7 @@ class AdminDeleteUser extends Command
                 if ($this->deletionState['phase_2_resources']) {
                     $this->warn('Phase 2 (Resources) was attempted:');
                     $this->warn('- Check remote servers for orphaned Docker containers');
-                    $this->warn('- Use: docker ps -a | grep coolify');
+                    $this->warn("- Use: docker ps -a | grep -E 'stx|coolify'");
                     $this->warn('- Manually remove if needed: docker rm -f <container_id>');
                     $this->newLine();
                 }

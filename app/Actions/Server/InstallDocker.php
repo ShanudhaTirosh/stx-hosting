@@ -39,8 +39,8 @@ class InstallDocker
         $found = StandaloneDocker::where('server_id', $server->id);
         if ($found->count() == 0 && $server->id) {
             StandaloneDocker::create([
-                'name' => 'coolify',
-                'network' => 'coolify',
+                'name' => 'stx',
+                'network' => 'stx',
                 'server_id' => $server->id,
             ]);
         }
@@ -89,12 +89,12 @@ class InstallDocker
             if ($server->isSwarm()) {
                 $command = $command->merge([
                     'docker network create --attachable --driver overlay stx-overlay >/dev/null 2>&1 || true',
-                    'docker network create --attachable --driver overlay coolify-overlay >/dev/null 2>&1 || true',
+                    'docker network create --attachable --driver overlay stx-overlay >/dev/null 2>&1 || docker network create --attachable --driver overlay coolify-overlay >/dev/null 2>&1 || true',
                 ]);
             } else {
                 $command = $command->merge([
                     'docker network create --attachable stx >/dev/null 2>&1 || true',
-                    'docker network create --attachable coolify >/dev/null 2>&1 || true',
+                    'docker network create --attachable stx >/dev/null 2>&1 || docker network create --attachable coolify >/dev/null 2>&1 || true',
                 ]);
                 $command = $command->merge([
                     "echo 'Done!'",

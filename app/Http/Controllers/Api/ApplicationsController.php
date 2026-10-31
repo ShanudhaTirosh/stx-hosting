@@ -54,6 +54,7 @@ class ApplicationsController extends Controller
         'include_source_commit_in_build',
         'is_env_sorting_enabled',
         'redact_all_env_values_in_logs',
+        'include_stx_default_variables',
         'include_coolify_default_variables',
         'is_pr_deployments_public_enabled',
         'stop_grace_period',
@@ -85,6 +86,7 @@ class ApplicationsController extends Controller
         'include_source_commit_in_build',
         'is_env_sorting_enabled',
         'redact_all_env_values_in_logs',
+        'include_stx_default_variables',
         'include_coolify_default_variables',
         'is_pr_deployments_public_enabled',
         'is_gzip_enabled',
@@ -3393,7 +3395,7 @@ class ApplicationsController extends Controller
 
         $this->authorize('update', $application);
 
-        if ($request->has('redact_all_env_values_in_logs') || $request->has('include_coolify_default_variables')) {
+        if ($request->has('redact_all_env_values_in_logs') || ($request->has('include_stx_default_variables') || $request->has('include_coolify_default_variables'))) {
             $this->authorize('manageEnvironment', $application);
         }
 

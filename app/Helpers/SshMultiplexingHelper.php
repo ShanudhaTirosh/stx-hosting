@@ -203,7 +203,7 @@ class SshMultiplexingHelper
     }
 
     /**
-     * Build an SCP command that downloads a remote file onto the Coolify host.
+     * Build an SCP command that downloads a remote file onto the STX Hosting host.
      */
     public static function generateScpDownloadCommand(Server $server, string $remoteSource, string $localDest): string
     {
@@ -390,7 +390,7 @@ class SshMultiplexingHelper
     }
 
     /**
-     * Use a PHP-side timeout, not the `timeout` binary: BusyBox `timeout` in the Coolify image
+     * Use a PHP-side timeout, not the `timeout` binary: BusyBox `timeout` in the STX Hosting image
      * kills ssh with SIGTERM, and Symfony turns that into an exception. Returns null on timeout.
      */
     private static function runWithTimeout(string $command, int $timeout): ?ProcessResult
@@ -444,7 +444,7 @@ class SshMultiplexingHelper
 
     private static function isMultiplexingEnabled(): bool
     {
-        return config('constants.ssh.mux_enabled') && ! config('constants.coolify.is_windows_docker_desktop');
+        return config('constants.ssh.mux_enabled') && ! config('constants.stx.is_windows_docker_desktop', config('constants.coolify.is_windows_docker_desktop'));
     }
 
     private static function validateSshKey(PrivateKey $privateKey): void

@@ -2138,7 +2138,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
         $environment_variables = $this->generate_runtime_environment_variables();
 
         // Each .env write first removes the file: with "Preserve repository", `docker cp` can copy a symlink
-        // from the repository to this name. Coolify writes a regular file instead of the link target.
+        // from the repository to this name. STX Hosting writes a regular file instead of the link target.
 
         // Handle empty environment variables
         if ($environment_variables->isEmpty()) {
@@ -2670,7 +2670,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
 
     /**
      * IDs of preview variables that have the same value as the production variable with the same key.
-     * Coolify copies each new production variable to the previews. With public PR deployments, a
+     * STX Hosting copies each new production variable to the previews. With public PR deployments, a
      * preview can run code from a fork, so it gets only the preview values that the user changed.
      *
      * @return array<int, int>
@@ -3268,7 +3268,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
     }
 
     /**
-     * @return int The number of deployments that Coolify created on additional servers, including ones that failed to dispatch
+     * @return int The number of deployments that STX Hosting created on additional servers, including ones that failed to dispatch
      */
     private function deploy_to_additional_destinations(): int
     {
@@ -4168,7 +4168,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
             return;
         }
 
-        throw new DeploymentException('Railpack deployments require the Docker buildx CLI plugin inside the Coolify helper container. The helper could not find buildx at /root/.docker/cli-plugins/docker-buildx. Pull the latest helper image and retry the deployment.');
+        throw new DeploymentException('Railpack deployments require the Docker buildx CLI plugin inside the STX Hosting helper container. The helper could not find buildx at /root/.docker/cli-plugins/docker-buildx. Pull the latest helper image and retry the deployment.');
     }
 
     private function build_railpack_image(): void
@@ -4545,7 +4545,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             $docker_compose['services'][$this->container_name]['stop_grace_period'] = $this->application->settings->stopGracePeriodSeconds().'s';
         }
 
-        // An enabled Coolify healthcheck replaces any HEALTHCHECK from the image or Dockerfile.
+        // An enabled STX Hosting healthcheck replaces any HEALTHCHECK from the image or Dockerfile.
         // When it is disabled, the container keeps the HEALTHCHECK of the image (if any).
         if (! $this->application->isHealthcheckDisabled()) {
             $healthcheck_command = $this->generate_healthcheck_commands();
@@ -4931,7 +4931,7 @@ LABEL coolify.deploymentId={$this->deployment_uuid}
 
     private function build_image()
     {
-        // Add Coolify related variables to the build args/secrets
+        // Add STX Hosting related variables to the build args/secrets
         if (! $this->dockerSecretsSupported) {
             // Traditional build args approach - generate COOLIFY_ variables locally
             $coolify_envs = $this->generate_coolify_env_variables(forBuildTime: true);
@@ -6006,7 +6006,7 @@ ARG COOLIFY_BUILD_SECRETS_HASH'];
 
     /**
      * Returns the Dockerfile path of a Compose build as written (relative to the project directory,
-     * or absolute), or null when Coolify cannot inspect it locally: a remote git context, a path that
+     * or absolute), or null when STX Hosting cannot inspect it locally: a remote git context, a path that
      * Compose fills in from variables, or an inline Dockerfile. The path is untrusted: the caller
      * quotes it and only uses the resolved file when it is inside the cloned repository.
      */
@@ -6030,7 +6030,7 @@ ARG COOLIFY_BUILD_SECRETS_HASH'];
     }
 
     /**
-     * Tells the user why Coolify cannot add ARG lines to a Compose service Dockerfile, and which
+     * Tells the user why STX Hosting cannot add ARG lines to a Compose service Dockerfile, and which
      * build-time variables to declare there. Only valid variable names are shown, never values.
      *
      * @param  Collection<string, mixed>  $variables

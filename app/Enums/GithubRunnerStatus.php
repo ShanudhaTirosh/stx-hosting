@@ -14,7 +14,7 @@ enum GithubRunnerStatus: string
     case TimedOut = 'timed_out';
 
     /**
-     * States that still need work from Coolify.
+     * States that still need work from STX Hosting.
      *
      * @return array<int, self>
      */

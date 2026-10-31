@@ -19,12 +19,12 @@ class DeleteServer
     public function handle(int $serverId, bool $deleteFromHetzner = false, ?int $hetznerServerId = null, ?int $cloudProviderTokenId = null, ?int $teamId = null, bool $deleteFromVultr = false, ?string $vultrInstanceId = null, bool $deleteFromDigitalOcean = false, ?int $digitalOceanDropletId = null, bool $deleteFromHostinger = false, ?int $hostingerVirtualMachineId = null)
     {
         $server = Server::withTrashed()->find($serverId);
-        // Another Coolify instance manages the cloud server of a transferred server.
+        // Another STX Hosting instance manages the cloud server of a transferred server.
         if ($server?->isTransferredAway()) {
             $deleteFromHetzner = $deleteFromVultr = $deleteFromDigitalOcean = $deleteFromHostinger = false;
         }
 
-        // Delete from Hetzner even if server is already gone from Coolify
+        // Delete from Hetzner even if server is already gone from STX Hosting
         if ($deleteFromHetzner && ($hetznerServerId || ($server && $server->hetzner_server_id))) {
             $this->deleteFromHetznerById(
                 $hetznerServerId ?? $server->hetzner_server_id,

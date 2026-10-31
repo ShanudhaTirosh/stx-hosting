@@ -919,7 +919,7 @@ class GlobalSearch extends Component
                     'type' => 'navigation',
                     'description' => 'Back up the STX Hosting instance database',
                     'link' => route('settings.backup'),
-                    'search_text' => 'settings instance backup coolify database restore',
+                    'search_text' => 'settings instance backup stx database restore',
                 ],
                 [
                     'name' => 'Instance Email',

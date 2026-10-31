@@ -10,10 +10,10 @@ enum ManagedDnsDeletionResult: string
     /** The provider record no longer exists. */
     case AlreadyGone = 'already_gone';
 
-    /** Coolify did not create the record, so it is never deleted. */
+    /** STX Hosting did not create the record, so it is never deleted. */
     case NotOwned = 'not_owned';
 
-    /** The record no longer carries Coolify's ownership comment or its value changed. */
+    /** The record no longer carries STX Hosting's ownership comment or its value changed. */
     case ChangedExternally = 'changed_externally';
 
     /** The provider could not be reached or rejected the request; retry later. */

@@ -51,7 +51,7 @@ class Kernel extends ConsoleKernel
         $this->scheduleInstance->call(fn () => app(CleanupStaleMultiplexedConnections::class)->handle())
             ->name('cleanup:ssh-mux')
             ->hourly()
-            ->when(fn () => config('constants.ssh.mux_enabled') && ! config('constants.coolify.is_windows_docker_desktop'));
+            ->when(fn () => config('constants.ssh.mux_enabled') && ! config('constants.stx.is_windows_docker_desktop', config('constants.coolify.is_windows_docker_desktop')));
         // Every cloud node reads its own versions.json, so each node refreshes it (no onOneServer).
         $this->scheduleInstance->call(fn () => refresh_versions_file())
             ->name('versions:refresh-local')
@@ -145,11 +145,11 @@ class Kernel extends ConsoleKernel
     }
 
     /**
-     * SCHEDULED_JOBS_DISPATCH_MODE, or the default: sequential on self-hosted, concurrent on Coolify Cloud.
+     * SCHEDULED_JOBS_DISPATCH_MODE, or the default: sequential on self-hosted, concurrent on STX Hosting Cloud.
      */
     private function scheduledJobsDispatchMode(): string
     {
-        $mode = strtolower(trim((string) config('constants.coolify.scheduled_jobs_dispatch_mode')));
+        $mode = strtolower(trim((string) config('constants.stx.scheduled_jobs_dispatch_mode', config('constants.coolify.scheduled_jobs_dispatch_mode'))));
 
         if (in_array($mode, ['sequential', 'concurrent'], true)) {
             return $mode;

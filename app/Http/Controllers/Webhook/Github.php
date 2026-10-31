@@ -349,7 +349,7 @@ class Github extends Controller
                 return response('Runner cleanup queued.');
             }
 
-            // The job ended without a Coolify runner, so its queued runner is no longer needed.
+            // The job ended without a STX Hosting runner, so its queued runner is no longer needed.
             GithubRunnerExecution::query()
                 ->where('github_app_id', $githubApp->id)
                 ->where('trigger_workflow_job_id', $jobId)

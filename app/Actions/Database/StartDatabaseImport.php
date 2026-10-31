@@ -42,7 +42,7 @@ class StartDatabaseImport
     public function __construct(private readonly DatabaseImportCommandBuilder $commands) {}
 
     /**
-     * The CoolifyTask timeout of an import. A restore can run until the SSH command timeout, so the
+     * The StxTask timeout of an import. A restore can run until the SSH command timeout, so the
      * job must not time out before it. It stays below the Horizon worker timeout, which is below the
      * queue retry_after, so the worker does not kill or run the job again while it runs.
      */
@@ -177,13 +177,13 @@ class StartDatabaseImport
         $commandList[] = 'chmod +x '.escapeshellarg($scriptPath);
         $commandList[] = 'docker cp '.escapeshellarg($scriptPath).' '.escapeshellarg("{$container}:{$scriptPath}");
         $commandList[] = 'rm -f '.escapeshellarg($scriptPath);
-        // The restore reports its own 124 and 255 as 1: Coolify reads those exit codes of the SSH
+        // The restore reports its own 124 and 255 as 1: STX Hosting reads those exit codes of the SSH
         // command as a local timeout or a lost connection and then stops the restore.
         $commandList[] = 'docker exec '.escapeshellarg($container).' sh -c '.escapeshellarg('"$0"; status=$?; [ "$status" -ne 124 ] && [ "$status" -ne 255 ] || status=1; exit "$status"').' '.escapeshellarg($scriptPath);
 
-        // The operation properties are set when the activity is created: the CoolifyTask job can
+        // The operation properties are set when the activity is created: the StxTask job can
         // load and save the activity before a later update, which would drop them again.
-        // The cleanup data (names and paths only, no credentials) lets Coolify stop and clean up
+        // The cleanup data (names and paths only, no credentials) lets STX Hosting stop and clean up
         // an import that it fails after a restart or because it is stale.
         return remote_process($commandList, $server, type_uuid: $resource->uuid, model: $resource, callEventOnFinish: 'DatabaseImportFinished', callEventData: $cleanup, timeout: self::jobTimeoutSeconds(), properties: [
             'operation' => ResourceStartActivity::DATABASE_IMPORT_OPERATION,
@@ -196,10 +196,10 @@ class StartDatabaseImport
     private function target(Model $resource): array
     {
         if ($resource instanceof ServiceDatabase) {
-            return [$resource->service?->server, $resource->name.'-'.$resource->service?->uuid, $resource->service?->destination?->network ?? 'coolify'];
+            return [$resource->service?->server, $resource->name.'-'.$resource->service?->uuid, $resource->service?->destination?->network ?? 'stx'];
         }
 
-        return [$resource->destination?->server, $resource->uuid, $resource->destination?->network ?? 'coolify'];
+        return [$resource->destination?->server, $resource->uuid, $resource->destination?->network ?? 'stx'];
     }
 
     /**

@@ -14,7 +14,7 @@ class ManageDevelopmentQemuVm
     /**
      * Start (or create) the selected VMs and seed their servers. Existing VMs are reused unless $fresh is set.
      * With $gpu, the host GPU is passed through and the container seeds the server, because it installs the
-     * driver over Coolify's SSH connection.
+     * driver over STX Hosting's SSH connection.
      *
      * @param  string|array<int, string>  $profileNames
      */
@@ -43,7 +43,7 @@ class ManageDevelopmentQemuVm
 
     private function seedInContainer(string $profileName, bool $keepOthers, bool $asLocalhost, bool $gpu): ProcessResult
     {
-        $container = escapeshellarg(config('development-qemu.coolify_container'));
+        $container = escapeshellarg(config('development-qemu.stx_container', config('development-qemu.coolify_container')));
         $command = "docker exec {$container} php artisan dev:qemu:seed ".escapeshellarg($profileName)
             .($keepOthers ? ' --keep-others' : '')
             .($asLocalhost ? ' --as-localhost' : '')

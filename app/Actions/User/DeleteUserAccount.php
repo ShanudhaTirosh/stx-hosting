@@ -117,7 +117,7 @@ class DeleteUserAccount
             : collect();
 
         return $this->subscriptionConfirmationActions($user)
-            ->concat($removedTeams->map(fn (Team $team): string => "The servers, projects, and Git sources of the team \"{$team->name}\" will be removed from Coolify. Nothing is stopped on the servers."))
+            ->concat($removedTeams->map(fn (Team $team): string => "The servers, projects, and Git sources of the team \"{$team->name}\" will be removed from STX Hosting. Nothing is stopped on the servers."))
             ->push('Your account will be permanently deleted from STX Hosting.')
             ->values()
             ->all();
@@ -125,7 +125,7 @@ class DeleteUserAccount
 
     /**
      * Whether self-service deletion removes the data of the user's single-member teams instead of
-     * asking the user to delete it first. On Coolify Cloud, a team without a paid or past-due
+     * asking the user to delete it first. On STX Hosting Cloud, a team without a paid or past-due
      * subscription cannot open its project and server pages, so the user could not do that.
      */
     public function removesTeamResources(User $user): bool
@@ -148,7 +148,7 @@ class DeleteUserAccount
     /**
      * The Stripe subscriptions that account deletion cancels, with the team each belongs to. These
      * are the subscription rows of the teams the user owns, and every open Stripe subscription of the
-     * user's email and of those teams' customers, also when Coolify has no row for it. Subscriptions
+     * user's email and of those teams' customers, also when STX Hosting has no row for it. Subscriptions
      * of a team that the user does not own are not cancelled.
      *
      * @return Collection<string, ?Team> keyed by Stripe subscription id

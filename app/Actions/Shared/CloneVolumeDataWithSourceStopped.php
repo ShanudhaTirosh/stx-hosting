@@ -162,7 +162,7 @@ class CloneVolumeDataWithSourceStopped
             return [];
         }
         [$type, $filters] = match (true) {
-            $source instanceof Application => ['application', ['label=coolify.pullRequestId=0']],
+            $source instanceof Application => ['application', ['label=stx.pullRequestId=0']],
             $source instanceof Service => ['service', []],
             default => ['database', []],
         };
@@ -292,13 +292,13 @@ class CloneVolumeDataWithSourceStopped
         } catch (Throwable $deployError) {
             Log::error("Failed to queue a redeploy of {$application->name} after a failed stop for a volume clone: ".$deployError->getMessage());
 
-            return "Some containers of '{$application->name}' stopped and others are still running. Coolify could not queue a redeploy of '{$application->name}' to bring back its stopped containers. Redeploy it manually.";
+            return "Some containers of '{$application->name}' stopped and others are still running. STX Hosting could not queue a redeploy of '{$application->name}' to bring back its stopped containers. Redeploy it manually.";
         }
 
         $sentence = "Some containers of '{$application->name}' stopped and others were still running, so STX Hosting started a redeploy of '{$application->name}' to bring back its stopped containers";
 
         return $commit === null
-            ? $sentence.'. Coolify could not find the commit that ran before, so the redeploy uses the configured commit or image tag.'
+            ? $sentence.'. STX Hosting could not find the commit that ran before, so the redeploy uses the configured commit or image tag.'
             : $sentence." with the commit that ran before ({$commit}).";
     }
 

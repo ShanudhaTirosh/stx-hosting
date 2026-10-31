@@ -76,11 +76,11 @@ class Init extends Command
 
         // Backward compatibility
         $this->replaceSlashInEnvironmentName();
-        $this->restoreCoolifyDbBackup();
+        $this->restoreStxDbBackup();
         $this->updateUserEmails();
         //
         $this->updateTraefikLabels();
-        $this->cleanupUnusedNetworkFromCoolifyProxy();
+        $this->cleanupUnusedNetworkFromProxy();
 
         try {
             $this->call('cleanup:redis', ['--restart' => true, '--clear-locks' => true]);
@@ -160,8 +160,9 @@ class Init extends Command
             echo "Could not setup dynamic configuration: {$e->getMessage()}\n";
         }
 
-        if (! is_null(config('constants.coolify.autoupdate', null))) {
-            if (config('constants.coolify.autoupdate') == true) {
+        $autoUpdate = config('constants.stx.autoupdate', config('constants.coolify.autoupdate', null));
+        if (! is_null($autoUpdate)) {
+            if ($autoUpdate == true) {
                 echo "Enabling auto-update\n";
                 $this->settings->update(['is_auto_update_enabled' => true]);
             } else {
@@ -217,7 +218,7 @@ class Init extends Command
         }
     }
 
-    private function cleanupUnusedNetworkFromCoolifyProxy()
+    private function cleanupUnusedNetworkFromProxy()
     {
         foreach ($this->servers as $server) {
             if (! $server->isFunctional()) {
@@ -234,15 +235,15 @@ class Init extends Command
                     $safe = escapeshellarg($network);
                     $out = instant_remote_process(["docker network inspect -f json {$safe} | jq '.[].Containers | if . == {} then null else . end'"], $server, false);
                     if (empty($out)) {
-                        $commands->push("docker network disconnect {$safe} coolify-proxy >/dev/null 2>&1 || true");
+                        $commands->push("docker network disconnect {$safe} stx-proxy >/dev/null 2>&1 || true");
                         $commands->push("docker network rm {$safe} >/dev/null 2>&1 || true");
                     } else {
                         $data = collect(json_decode($out, true));
                         if ($data->count() === 1) {
-                            // If only coolify-proxy itself is connected to that network (it should not be possible, but who knows)
-                            $isCoolifyProxyItself = data_get($data->first(), 'Name') === 'coolify-proxy';
+                            // If only stx-proxy itself is connected to that network (it should not be possible, but who knows)
+                            $isCoolifyProxyItself = data_get($data->first(), 'Name') === 'stx-proxy';
                             if ($isCoolifyProxyItself) {
-                                $commands->push("docker network disconnect {$safe} coolify-proxy >/dev/null 2>&1 || true");
+                                $commands->push("docker network disconnect {$safe} stx-proxy >/dev/null 2>&1 || true");
                                 $commands->push("docker network rm {$safe} >/dev/null 2>&1 || true");
                             }
                         }
@@ -252,14 +253,14 @@ class Init extends Command
                     remote_process(command: $commands, type: ActivityTypes::INLINE->value, server: $server, ignore_errors: false);
                 }
             } catch (\Throwable $e) {
-                echo "Error in cleaning up unused networks from coolify proxy: {$e->getMessage()}\n";
+                echo "Error in cleaning up unused networks from stx proxy: {$e->getMessage()}\n";
             }
         }
     }
 
-    private function restoreCoolifyDbBackup()
+    private function restoreStxDbBackup()
     {
-        if (version_compare('4.0.0-beta.179', config('constants.coolify.version'), '<=')) {
+        if (version_compare('4.0.0-beta.179', config('constants.stx.version', config('constants.coolify.version')), '<=')) {
             try {
                 $database = StandalonePostgresql::withTrashed()->find(0);
                 if ($database && $database->trashed()) {
@@ -286,7 +287,7 @@ class Init extends Command
         $endpoint = env('STX_TELEMETRY_ENDPOINT');
         if ($endpoint) {
             $id = config('app.id');
-            $version = config('constants.coolify.version');
+            $version = config('constants.stx.version', config('constants.coolify.version'));
             try {
                 Http::get("{$endpoint}?appId={$id}&version={$version}");
             } catch (\Throwable) {
@@ -297,7 +298,7 @@ class Init extends Command
 
     private function replaceSlashInEnvironmentName()
     {
-        if (version_compare('4.0.0-beta.298', config('constants.coolify.version'), '<=')) {
+        if (version_compare('4.0.0-beta.298', config('constants.stx.version', config('constants.coolify.version')), '<=')) {
             $environments = Environment::all();
             foreach ($environments as $environment) {
                 if (str_contains($environment->name, '/')) {

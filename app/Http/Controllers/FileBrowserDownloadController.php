@@ -46,7 +46,7 @@ class FileBrowserDownloadController extends Controller
             });
         }, $download['name'], [
             'Content-Type' => 'application/octet-stream',
-            // Stop nginx from buffering the response to a temp file on the Coolify host.
+            // Stop nginx from buffering the response to a temp file on the STX Hosting host.
             'X-Accel-Buffering' => 'no',
         ]);
     }

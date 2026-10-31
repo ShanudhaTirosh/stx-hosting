@@ -23,7 +23,7 @@ class EnsureContentFilesOnServer
     /**
      * @param  iterable<LocalFileVolume>  $fileStorages
      * @param  Closure(string, string): void  $log  Gets a log line and its type (`stdout` or `stderr`). Log lines never contain file content.
-     * @return int The number of files that Coolify wrote
+     * @return int The number of files that STX Hosting wrote
      */
     public function handle(iterable $fileStorages, Server $server, Closure $log): int
     {
@@ -50,8 +50,8 @@ class EnsureContentFilesOnServer
             match ($states[$index]) {
                 'missing', 'empty-directory' => $toWrite[] = [$fileStorage, $path],
                 'file' => null,
-                'directory' => $log("Warning: A directory that is not empty is at {$path} on the server. Coolify did not write the configuration file for {$fileStorage->mount_path}. Remove the directory on the server, then start the resource again.", 'stderr'),
-                'other' => $log("Warning: A symbolic link or a special file is at {$path} on the server. Coolify did not write the configuration file for {$fileStorage->mount_path}.", 'stderr'),
+                'directory' => $log("Warning: A directory that is not empty is at {$path} on the server. STX Hosting did not write the configuration file for {$fileStorage->mount_path}. Remove the directory on the server, then start the resource again.", 'stderr'),
+                'other' => $log("Warning: A symbolic link or a special file is at {$path} on the server. STX Hosting did not write the configuration file for {$fileStorage->mount_path}.", 'stderr'),
                 default => $log("Warning: STX Hosting cannot check the configuration file {$path} on the server.", 'stderr'),
             };
         }

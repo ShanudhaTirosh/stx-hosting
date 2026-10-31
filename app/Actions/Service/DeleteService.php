@@ -110,9 +110,9 @@ class DeleteService
         $legacyFilters = [];
         if ($subresource !== null) {
             $subType = $subresource instanceof ServiceDatabase ? 'database' : 'application';
-            $filters = ["label=coolify.service.subUuid={$subresource->uuid}", "label=coolify.service.subType={$subType}"];
+            $filters = ["label=stx.service.subUuid={$subresource->uuid}", "label=stx.service.subType={$subType}"];
             // Containers from before the UUID labels: the compose service key is the subresource name.
-            $legacyFilters = ["label=com.docker.compose.service={$subresource->name}", "label=coolify.service.subType={$subType}"];
+            $legacyFilters = ["label=com.docker.compose.service={$subresource->name}", "label=stx.service.subType={$subType}"];
         }
 
         // One sh -c line, so non-root servers run the whole script with sudo. A leading variable

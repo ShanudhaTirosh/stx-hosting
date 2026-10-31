@@ -21,7 +21,7 @@ class StartLogDrain
      */
     public const CONFIG_VERSION = '1';
 
-    public const CONFIG_VERSION_LABEL = 'coolify.logDrainConfigVersion';
+    public const CONFIG_VERSION_LABEL = 'stx.logDrainConfigVersion';
 
     /**
      * Whether a running log drain container was made with older files. Claims the refresh for
@@ -180,6 +180,7 @@ services:
     ports:
       - 127.0.0.1:24224:24224
     labels:
+      - stx.managed=true
       - coolify.managed=true
       - '.self::CONFIG_VERSION_LABEL.'='.self::CONFIG_VERSION.'
     restart: unless-stopped
@@ -199,7 +200,7 @@ Files:
 ");
             $license_key = $server->settings->logdrain_newrelic_license_key;
             $base_uri = $server->settings->logdrain_newrelic_base_uri;
-            $base_path = config('constants.coolify.base_config_path');
+            $base_path = config('constants.stx.base_config_path', config('constants.coolify.base_config_path'));
 
             $config_path = $base_path.'/log-drains';
             $fluent_bit_config = $config_path.'/fluent-bit.conf';

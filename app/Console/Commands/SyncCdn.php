@@ -103,14 +103,14 @@ class SyncCdn extends Command
                 return false;
             }
 
-            $releasesFile = tempnam(sys_get_temp_dir(), 'coolify-releases-');
+            $releasesFile = tempnam(sys_get_temp_dir(), 'stx-releases-');
             if ($releasesFile === false || file_put_contents($releasesFile, json_encode($response->json(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) === false) {
                 $this->error('Failed to create temporary releases.json.');
 
                 return false;
             }
 
-            $files[$releasesFile] = $nightly ? 'json/coolify/nightly/releases.json' : 'json/coolify/releases.json';
+            $files[$releasesFile] = $nightly ? 'json/stx/nightly/releases.json' : 'json/stx/releases.json';
 
             try {
                 return $this->syncFilesToGitHubRepo($files, $nightly);
@@ -329,30 +329,30 @@ class SyncCdn extends Command
             }
             if ($nightly) {
                 $files = [
-                    $versions_location => 'json/coolify/nightly/versions.json',
-                    $compose_file_location => 'json/coolify/nightly/docker-compose.yml',
-                    $compose_file_prod_location => 'json/coolify/nightly/docker-compose.prod.yml',
-                    $production_env_location => 'json/coolify/nightly/.env.production',
-                    $install_script_location => 'json/coolify/nightly/install.sh',
-                    $upgrade_script_location => 'json/coolify/nightly/upgrade.sh',
-                    $upgrade_postgres_script_location => 'json/coolify/nightly/upgrade-postgres.sh',
-                    $service_template_location => 'json/coolify/nightly/service-templates-latest.json',
+                    $versions_location => 'json/stx/nightly/versions.json',
+                    $compose_file_location => 'json/stx/nightly/docker-compose.yml',
+                    $compose_file_prod_location => 'json/stx/nightly/docker-compose.prod.yml',
+                    $production_env_location => 'json/stx/nightly/.env.production',
+                    $install_script_location => 'json/stx/nightly/install.sh',
+                    $upgrade_script_location => 'json/stx/nightly/upgrade.sh',
+                    $upgrade_postgres_script_location => 'json/stx/nightly/upgrade-postgres.sh',
+                    $service_template_location => 'json/stx/nightly/service-templates-latest.json',
                 ];
             } else {
                 $files = [
-                    $versions_location => 'json/coolify/versions.json',
-                    $compose_file_location => 'json/coolify/docker-compose.yml',
-                    $compose_file_prod_location => 'json/coolify/docker-compose.prod.yml',
-                    $production_env_location => 'json/coolify/.env.production',
-                    $install_script_location => 'json/coolify/install.sh',
-                    $upgrade_script_location => 'json/coolify/upgrade.sh',
-                    $upgrade_postgres_script_location => 'json/coolify/upgrade-postgres.sh',
-                    $patch_script_location => 'json/coolify/patch.sh',
-                    $service_template_location => 'json/coolify/service-templates-latest.json',
+                    $versions_location => 'json/stx/versions.json',
+                    $compose_file_location => 'json/stx/docker-compose.yml',
+                    $compose_file_prod_location => 'json/stx/docker-compose.prod.yml',
+                    $production_env_location => 'json/stx/.env.production',
+                    $install_script_location => 'json/stx/install.sh',
+                    $upgrade_script_location => 'json/stx/upgrade.sh',
+                    $upgrade_postgres_script_location => 'json/stx/upgrade-postgres.sh',
+                    $patch_script_location => 'json/stx/patch.sh',
+                    $service_template_location => 'json/stx/service-templates-latest.json',
                 ];
             }
 
-            $releasesTarget = $nightly ? 'json/coolify/nightly/releases.json' : 'json/coolify/releases.json';
+            $releasesTarget = $nightly ? 'json/stx/nightly/releases.json' : 'json/stx/releases.json';
 
             if ($this->option('purge')) {
                 $urls = array_map(

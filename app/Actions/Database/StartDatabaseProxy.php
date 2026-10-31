@@ -24,7 +24,7 @@ class StartDatabaseProxy
 
     /**
      * Version of the generated proxy configuration. Raise it when the configuration changes, so the
-     * status checks recreate proxies that an older Coolify version started with the old configuration.
+     * status checks recreate proxies that an older STX Hosting / Coolify version started with the old configuration.
      */
     public const CONFIG_VERSION = '2';
 
@@ -151,7 +151,7 @@ class StartDatabaseProxy
                 "mkdir -p $configuration_dir",
                 "echo '{$nginxconf_base64}' | base64 -d | tee $configuration_dir/nginx.conf > /dev/null",
                 "echo '{$dockercompose_base64}' | base64 -d | tee $configuration_dir/docker-compose.yaml > /dev/null",
-                // Pass -f so Compose uses only the file that Coolify wrote.
+                // Pass -f so Compose uses only the file that STX Hosting wrote.
                 "docker compose --project-directory {$configuration_dir} -f {$configuration_dir}/docker-compose.yaml pull",
                 // Remove the old proxy only after the pull, so a failed pull keeps it running.
                 dockerRemoveCommand($proxyContainerName),

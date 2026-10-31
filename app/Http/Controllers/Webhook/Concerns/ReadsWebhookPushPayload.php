@@ -108,7 +108,7 @@ trait ReadsWebhookPushPayload
     }
 
     /**
-     * An id that Coolify stores in or compares with an integer database
+     * An id that STX Hosting stores in or compares with an integer database
      * column, for example a pull request id or a repository project id.
      *
      * @throws InvalidWebhookPayloadException
@@ -150,7 +150,7 @@ trait ReadsWebhookPushPayload
 
     /**
      * An absolute http or https URL of the payload, for example a pull request
-     * link that Coolify stores and shows in the UI. A missing, null or empty
+     * link that STX Hosting stores and shows in the UI. A missing, null or empty
      * value gives null.
      *
      * @throws InvalidWebhookPayloadException When the value is not a valid URL, or is missing and required.

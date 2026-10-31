@@ -7,7 +7,7 @@ use Lorisleiva\Actions\Concerns\AsAction;
 
 /**
  * Installs the NVIDIA driver and the NVIDIA Container Toolkit on an Ubuntu development VM with a passed-through GPU,
- * then refreshes the server details so Coolify shows the GPU. Steps that are already done are skipped.
+ * then refreshes the server details so STX Hosting shows the GPU. Steps that are already done are skipped.
  *
  * @see https://ubuntu.com/server/docs/how-to/graphics/install-nvidia-drivers/
  * @see https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html

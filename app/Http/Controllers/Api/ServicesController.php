@@ -1144,7 +1144,7 @@ class ServicesController extends Controller
                             'force_domain_override' => ['type' => 'boolean', 'default' => false, 'description' => 'Force domain override even if conflicts are detected.'],
                             'is_container_label_escape_enabled' => ['type' => 'boolean', 'default' => true, 'description' => 'Escape special characters in labels. By default, $ (and other chars) is escaped. If you want to use env variables inside the labels, turn this off.'],
                             'redact_all_env_values_in_logs' => ['type' => 'boolean', 'default' => true, 'description' => 'Redact all environment variable values in logs. When false, only locked (shown once) values are redacted. Requires team admin permissions.'],
-                            'include_coolify_default_variables' => ['type' => 'boolean', 'default' => true, 'description' => 'Add the predefined STX / COOLIFY_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'],
+                            'include_stx_default_variables', 'include_coolify_default_variables' => ['type' => 'boolean', 'default' => true, 'description' => 'Add the predefined STX / COOLIFY_* variables (STX_URL, STX_FQDN, ...) to the environment. Requires team admin permissions. Redeploy to apply it.'],
                         ],
                     )
                 ),
@@ -1233,7 +1233,7 @@ class ServicesController extends Controller
 
         $this->authorize('update', $service);
 
-        if ($request->has('redact_all_env_values_in_logs') || $request->has('include_coolify_default_variables')) {
+        if ($request->has('redact_all_env_values_in_logs') || $request->has('include_stx_default_variables', 'include_coolify_default_variables')) {
             $this->authorize('manageEnvironment', $service);
         }
 
@@ -1242,7 +1242,7 @@ class ServicesController extends Controller
             $this->authorize('deploy', $service);
         }
 
-        $allowedFields = ['name', 'description', 'instant_deploy', 'docker_compose_raw', 'connect_to_docker_network', 'urls', 'force_domain_override', 'is_container_label_escape_enabled', 'redact_all_env_values_in_logs', 'include_coolify_default_variables'];
+        $allowedFields = ['name', 'description', 'instant_deploy', 'docker_compose_raw', 'connect_to_docker_network', 'urls', 'force_domain_override', 'is_container_label_escape_enabled', 'redact_all_env_values_in_logs', 'include_stx_default_variables', 'include_coolify_default_variables'];
 
         $validationRules = [
             'name' => 'string|max:255',
@@ -1257,7 +1257,7 @@ class ServicesController extends Controller
             'force_domain_override' => 'boolean',
             'is_container_label_escape_enabled' => 'boolean',
             'redact_all_env_values_in_logs' => 'boolean',
-            'include_coolify_default_variables' => 'boolean',
+            'include_stx_default_variables', 'include_coolify_default_variables' => 'boolean',
         ];
         $validationMessages = [
             'urls.*.array' => 'An item in the urls array has invalid fields. Only name and url fields are supported.',
@@ -1328,8 +1328,8 @@ class ServicesController extends Controller
         if ($request->has('redact_all_env_values_in_logs')) {
             $service->redact_all_env_values_in_logs = $request->boolean('redact_all_env_values_in_logs');
         }
-        if ($request->has('include_coolify_default_variables')) {
-            $service->include_coolify_default_variables = $request->boolean('include_coolify_default_variables');
+        if ($request->has('include_stx_default_variables', 'include_coolify_default_variables')) {
+            $service->include_coolify_default_variables = $request->boolean('include_stx_default_variables', 'include_coolify_default_variables');
         }
         $previousDnsHostnames = $this->serviceApplicationDnsHostnames($service);
         $service->save();

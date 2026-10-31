@@ -242,16 +242,16 @@ class SslHelper
      */
     public static function caCertificateFileCommands(string $certificate): array
     {
-        $caCertPath = config('constants.coolify.base_config_path').'/ssl/';
+        $caCertPath = config('constants.stx.base_config_path', config('constants.coolify.base_config_path')).'/ssl/';
         $base64Cert = base64_encode($certificate);
 
         return [
             "mkdir -p $caCertPath",
             "chown -R 9999:root $caCertPath",
             "chmod -R 700 $caCertPath",
-            "rm -rf $caCertPath/coolify-ca.crt",
-            "echo '{$base64Cert}' | base64 -d | tee $caCertPath/coolify-ca.crt > /dev/null",
-            "chmod 644 $caCertPath/coolify-ca.crt",
+            "rm -rf $caCertPath/stx-ca.crt",
+            "echo '{$base64Cert}' | base64 -d | tee $caCertPath/stx-ca.crt > /dev/null",
+            "chmod 644 $caCertPath/stx-ca.crt",
         ];
     }
 }

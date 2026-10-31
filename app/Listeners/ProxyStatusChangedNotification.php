@@ -26,7 +26,7 @@ class ProxyStatusChangedNotification implements ShouldQueueAfterCommit
             return;
         }
         $server->markProxyTransitionFinished();
-        $proxyContainerName = 'coolify-proxy';
+        $proxyContainerName = 'stx-proxy';
         $status = getContainerStatus($server, $proxyContainerName);
         $server->proxy->set('status', $status);
         $server->save();
@@ -64,7 +64,7 @@ class ProxyStatusChangedNotification implements ShouldQueueAfterCommit
 
         if ($status === 'created') {
             instant_remote_process([
-                dockerRemoveCommand('coolify-proxy'),
+                dockerRemoveCommand('stx-proxy').'; '.dockerRemoveCommand('coolify-proxy'),
             ], $server);
         }
     }

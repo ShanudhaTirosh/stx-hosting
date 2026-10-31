@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 /**
  * The `write` permission changes what runs on a server, and the `deploy` permission makes it run. A
- * change that Coolify runs on a server without a deployment needs both, so it needs a token with the
+ * change that STX Hosting runs on a server without a deployment needs both, so it needs a token with the
  * deploy permission (or root).
  */
 trait RequiresDeployAbility
