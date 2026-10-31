@@ -30,13 +30,16 @@ class Index extends Component
         $this->billingPeriod = $period;
     }
 
-    public function orderPlan(string $variantUuid, ?string $tierUuid = null): void
+    public function orderPlan(?string $variantUuid = null, ?string $tierUuid = null): void
     {
         $params = [
-            'plan' => $variantUuid,
             'currency' => $this->currency,
             'billing' => $this->billingPeriod,
         ];
+
+        if ($variantUuid) {
+            $params['plan'] = $variantUuid;
+        }
 
         if ($tierUuid) {
             $params['tier'] = $tierUuid;
@@ -47,7 +50,7 @@ class Index extends Component
 
     public function render()
     {
-        $products = Cache::remember('storefront_catalog_payload', 60, function () {
+        $products = Cache::remember('storefront_catalog_payload', 30, function () {
             return Product::with(['variants.pricingTiers' => function ($q) {
                 $q->where('is_active', true);
             }])
@@ -58,33 +61,41 @@ class Index extends Component
         });
 
         if ($this->selectedCategory !== 'all') {
-            $filteredProducts = $products->where('category', $this->selectedCategory);
+            $filteredProducts = $products->filter(function ($p) {
+                if ($this->selectedCategory === 'vps') {
+                    return $p->category === 'vps';
+                }
+                if ($this->selectedCategory === 'game-server') {
+                    return $p->category === 'game_server';
+                }
+                if ($this->selectedCategory === 'web-app') {
+                    return $p->category === 'web_hosting' || $p->category === 'app_hosting';
+                }
+                if ($this->selectedCategory === 'bot') {
+                    return $p->category === 'bot_hosting';
+                }
+                if ($this->selectedCategory === 'database') {
+                    return $p->category === 'database';
+                }
+                return $p->category === $this->selectedCategory;
+            });
         } else {
             $filteredProducts = $products;
         }
 
-        $categories = [
-            'all' => 'All Categories',
-            'vps' => 'Cloud VPS',
-            'bot_hosting' => 'Bot Hosting',
-            'web_hosting' => 'Web Hosting',
-            'database' => 'Managed Databases',
-            'app_hosting' => 'App Containers',
-            'game_server' => 'Game Servers',
-        ];
-
-        $monitors = Cache::remember('storefront_status_summary', 60, function () {
+        $monitorsSummary = Cache::remember('storefront_status_summary', 30, function () {
             return [
                 'total' => Monitor::where('is_public', true)->count(),
                 'active' => Monitor::where('is_public', true)->where('current_status', 'operational')->count(),
-                'uptime' => round(Monitor::where('is_public', true)->avg('uptime_percentage') ?: 99.98, 2),
+                'uptime' => round(Monitor::where('is_public', true)->avg('uptime_percentage') ?: 99.99, 2),
             ];
         });
 
         return view('livewire.storefront.index', [
             'products' => $filteredProducts,
-            'categories' => $categories,
-            'statusSummary' => $monitors,
-        ])->layout('layouts.simple', ['title' => 'STX Cloud Hosting & Infrastructure Storefront']);
+            'monitorsSummary' => $monitorsSummary,
+        ])->layout('layouts.storefront', [
+            'title' => "STX Enterprises — Sri Lanka's #1 Cloud, VPS & Infrastructure Platform",
+        ]);
     }
 }

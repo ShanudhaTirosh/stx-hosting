@@ -293,6 +293,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
     Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
     Route::get('/admin/operations/approvals', \App\Livewire\Admin\Operations\DeploymentApprovals::class)->name('admin.operations.approvals');
+    Route::get('/admin/status', \App\Livewire\Admin\Status\StatusStudio::class)->name('admin.status.index');
 
     // Customer Self-Service Portal
     Route::get('/portal', ServicesList::class)->name('portal.index');

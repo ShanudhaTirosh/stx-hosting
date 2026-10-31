@@ -11,36 +11,46 @@ class PublicStatus extends Component
 {
     public function render()
     {
-        $data = Cache::remember('public_status_page_data', 30, function () {
-            $monitors = Monitor::where('is_public', true)
-                ->where('is_active', true)
-                ->orderBy('display_order')
-                ->get();
+        $monitors = Monitor::where('is_public', true)
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->get();
 
-            $groupedMonitors = $monitors->groupBy('group_name');
+        $groupedMonitors = $monitors->groupBy('group_name');
 
-            $hasOutage = $monitors->contains('current_status', 'down');
-            $hasDegraded = $monitors->contains('current_status', 'degraded');
+        $activeIncidents = SystemIncident::with('updates')
+            ->where('status', '!=', 'resolved')
+            ->latest('created_at')
+            ->get();
 
-            $overallStatus = 'operational';
-            if ($hasOutage) {
-                $overallStatus = 'major_outage';
-            } elseif ($hasDegraded) {
-                $overallStatus = 'degraded_performance';
-            }
+        $resolvedIncidents = SystemIncident::with('updates')
+            ->where('status', 'resolved')
+            ->latest('created_at')
+            ->take(5)
+            ->get();
 
-            $incidents = SystemIncident::latest('created_at')->take(5)->get();
+        $hasOutage = $monitors->contains('current_status', 'down');
+        $hasDegraded = $monitors->contains('current_status', 'degraded');
+        $hasMaintenance = $activeIncidents->contains('incident_type', 'maintenance');
 
-            return [
-                'groupedMonitors' => $groupedMonitors,
-                'overallStatus' => $overallStatus,
-                'incidents' => $incidents,
-                'totalMonitors' => $monitors->count(),
-                'averageUptime' => round($monitors->avg('uptime_percentage') ?: 99.98, 2),
-            ];
-        });
+        $overallStatus = 'operational';
+        if ($hasOutage) {
+            $overallStatus = 'major_outage';
+        } elseif ($hasDegraded) {
+            $overallStatus = 'degraded_performance';
+        } elseif ($hasMaintenance) {
+            $overallStatus = 'maintenance';
+        }
 
-        return view('livewire.status.public-status', $data)
-            ->layout('layouts.simple', ['title' => 'System Status & Infrastructure Health — STX Enterprises']);
+        $averageUptime = round($monitors->avg('uptime_percentage') ?: 99.99, 2);
+
+        return view('livewire.status.public-status', [
+            'groupedMonitors' => $groupedMonitors,
+            'activeIncidents' => $activeIncidents,
+            'resolvedIncidents' => $resolvedIncidents,
+            'overallStatus' => $overallStatus,
+            'totalMonitors' => $monitors->count(),
+            'averageUptime' => $averageUptime,
+        ])->layout('layouts.simple', ['title' => 'System Status & Infrastructure Telemetry — STX Enterprises']);
     }
 }

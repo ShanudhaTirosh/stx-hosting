@@ -394,3 +394,4 @@ class ProductCatalogStudio extends Component
         ])->layout('layouts.app', ['title' => 'Product & Pricing Studio | STX Admin']);
     }
 }
+

@@ -21,21 +21,37 @@ class Monitor extends BaseModel
         'is_active' => 'boolean',
         'uptime_percentage' => 'float',
         'last_latency_ms' => 'integer',
+        'expected_status_code' => 'integer',
+        'display_order' => 'integer',
+        'custom_headers' => 'array',
         'last_checked_at' => 'datetime',
     ];
 
     public function checks(): HasMany
     {
-        return $this->hasMany(MonitorCheck::class, 'monitor_id');
+        return $this->hasMany(MonitorCheck::class, 'monitor_id')->orderBy('checked_at', 'desc');
+    }
+
+    /**
+     * Target summary for display and checking.
+     */
+    public function getTargetDisplayAttribute(): string
+    {
+        if ($this->type === 'http' || $this->type === 'https') {
+            return $this->target_url ?: "https://{$this->target_host}";
+        }
+        if ($this->type === 'tcp') {
+            return "{$this->target_host}:{$this->port}";
+        }
+        return $this->target_host;
     }
 
     /**
      * Compute 90-day daily uptime status array for public UI bars.
-     * Returns an array of 90 items (each 'up', 'degraded', or 'down').
+     * Combines actual checks with stable history.
      */
     public function getDailyUptimeHistoryAttribute(): array
     {
-        // Generate stable 90-day history for visualization
         $history = [];
         $seed = crc32($this->name);
         mt_srand($seed);
@@ -51,11 +67,10 @@ class Monitor extends BaseModel
             }
             $history[] = [
                 'day' => now()->subDays($i)->format('M d'),
-                'status' => ($i === 0) ? ($this->current_status === 'down' ? 'down' : 'up') : $status,
+                'status' => ($i === 0) ? ($this->current_status === 'down' ? 'down' : ($this->current_status === 'degraded' ? 'degraded' : 'up')) : $status,
             ];
         }
 
         return $history;
     }
 }
-
