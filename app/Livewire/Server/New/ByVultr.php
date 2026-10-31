@@ -81,6 +81,8 @@ class ByVultr extends Component
 
     public function mount(?string $selectedTokenUuid = null): void
     {
+        $this->authorize('create', Server::class);
+
         $this->authorize('viewAny', CloudProviderToken::class);
         $this->loadTokens();
         $this->selectTokenFromUrl($selectedTokenUuid);

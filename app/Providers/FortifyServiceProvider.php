@@ -58,6 +58,19 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::loginView(function () {
             $settings = instanceSettings();
+            foreach (['google', 'github', 'discord'] as $prov) {
+                $cId = env(strtoupper($prov).'_CLIENT_ID');
+                $cSecret = env(strtoupper($prov).'_CLIENT_SECRET');
+                if (filled($cId) && filled($cSecret)) {
+                    $setting = OauthSetting::firstOrNew(['provider' => $prov]);
+                    if (! $setting->exists || ! $setting->enabled) {
+                        $setting->client_id = $cId;
+                        $setting->client_secret = $cSecret;
+                        $setting->enabled = true;
+                        $setting->save();
+                    }
+                }
+            }
             $enabled_oauth_providers = OauthSetting::where('enabled', true)->get();
             $users = User::count();
             if ($users == 0 && $settings->isPasswordRegistrationAllowed()) {

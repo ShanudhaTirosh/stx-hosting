@@ -209,6 +209,8 @@ test('[Scenario 5] Adversarial defense: penetration probe, IDOR, and container s
     expect($maliciousCompose)->toContain('/var/run/docker.sock');
 
     // 4. Token Ability Clamping Defense
+    auth('web')->logout();
+    $this->flushSession();
     $token = $attacker->createToken('escalation-attempt', ['root', 'write:sensitive'], null);
     $token->accessToken->team_id = $attackerTeam->id;
     $token->accessToken->save();

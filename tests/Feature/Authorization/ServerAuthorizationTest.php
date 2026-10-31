@@ -6,7 +6,6 @@ use App\Livewire\Server\Index as ServerIndex;
 use App\Livewire\Server\LogDrains;
 use App\Livewire\Server\Navbar as ServerNavbar;
 use App\Livewire\Server\ValidateAndInstall;
-use App\Models\CloudProviderToken;
 use App\Models\InstanceSettings;
 use App\Models\Server;
 use App\Models\Team;
@@ -26,8 +25,13 @@ beforeEach(function () {
 
     $this->team = Team::factory()->create();
 
+    // Ensure root team (id=0) exists so admins can be instance admins
+    $rootTeam = Team::find(0) ?? Team::factory()->create(['id' => 0]);
+
     $this->admin = User::factory()->create();
     $this->admin->teams()->attach($this->team, ['role' => 'admin']);
+    // Make the admin an instance admin (root team member) so they can create servers
+    $this->admin->teams()->attach($rootTeam, ['role' => 'admin']);
 
     $this->member = User::factory()->create();
     $this->member->teams()->attach($this->team, ['role' => 'member']);
@@ -155,8 +159,9 @@ test('member cannot view security', function () {
 });
 
 // --- Server Policy: create ---
+// Only instance admins/owners (root team members) can create servers.
 
-test('admin can create server', function () {
+test('instance admin can create server', function () {
     $this->actingAs($this->admin);
     session(['currentTeam' => $this->team]);
 
@@ -170,7 +175,7 @@ test('member cannot create server', function () {
     expect(auth()->user()->can('create', Server::class))->toBeFalse();
 });
 
-test('admin can access new server page', function () {
+test('instance admin can access new server page', function () {
     $this->actingAs($this->admin);
     session(['currentTeam' => $this->team]);
 
@@ -180,105 +185,35 @@ test('admin can access new server page', function () {
         ->assertSeeLivewire(ServerCreate::class);
 });
 
-test('new server chooser lists providers before rendering a creation form', function () {
+test('new server displays direct manual connection flow', function () {
     $this->actingAs($this->admin);
     session(['currentTeam' => $this->team]);
 
     Livewire::test(ServerCreate::class)
-        ->assertSee('Hetzner')
-        ->assertSee('Vultr')
-        ->assertSee('DigitalOcean')
-        ->assertSee('IP address or domain')
-        ->assertDontSee('>Select<', false)
-        ->assertDontSee('Continue')
-        ->assertSee(route('server.create.type', ['type' => 'hetzner']))
-        ->assertSee(route('server.create.type', ['type' => 'vultr']))
-        ->assertSee(route('server.create.type', ['type' => 'digital-ocean']))
-        ->assertSee(route('server.create.type', ['type' => 'manual']))
-        ->assertDontSee('Add Server by IP Address');
+        ->assertSee('Connect Server')
+        ->assertSee('Connect a server')
+        ->assertSee('IP address or domain');
 });
 
-test('new server chooser uses compact mobile provider cards', function () {
+test('new server manual form renders key fields', function () {
     $this->actingAs($this->admin);
     session(['currentTeam' => $this->team]);
 
     Livewire::test(ServerCreate::class)
-        ->assertSee('application-settings-form flex flex-col gap-6', false)
-        ->assertSee('grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4', false)
-        ->assertSee('grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3', false)
-        ->assertSee('group flex min-h-32 flex-col rounded-xl', false)
-        ->assertSee('alt="Hetzner" class="size-8"', false)
-        ->assertDontSee('sm:min-h-80', false)
-        ->assertDontSee('size-9 sm:size-14 w-14 h-14', false)
-        ->assertDontSee('>Select<', false)
-        ->assertDontSee('<button', false);
+        ->assertSee('application-settings-form', false)
+        ->assertSee('Connect a server')
+        ->assertSee('IP address or domain');
 });
 
-test('new server provider pages render the selected creation flow', function (string $type, string $heading) {
+test('new server manual page renders connect server flow', function () {
     $this->actingAs($this->admin);
     session(['currentTeam' => $this->team]);
 
-    $response = $this->get(route('server.create.type', ['type' => $type]))
+    $this->get(route('server.create.type', ['type' => 'manual']))
         ->assertSuccessful()
-        ->assertSee($heading)
-        ->assertDontSee('<h1>New Server</h1>', false)
-        ->assertDontSee('Choose how to add your server');
-
-    $response->assertSeeInOrder(['New server', 'Change method', $heading]);
-})->with([
-    ['hetzner', 'Hetzner account'],
-    ['vultr', 'Vultr account'],
-    ['digital-ocean', 'DigitalOcean account'],
-    ['manual', 'Connect a server'],
-]);
-
-test('new server provider pages do not show the new token action in the header', function (string $type, string $heading) {
-    $this->actingAs($this->admin);
-    session(['currentTeam' => $this->team]);
-
-    $response = $this->get(route('server.create.type', ['type' => $type]))
-        ->assertSuccessful()
-        ->assertDontSee('+ New Token')
-        ->assertDontSee('+ Add New Token');
-
-    $header = str($response->getContent())
-        ->after('New server</h1>')
-        ->before('application-settings-form')
-        ->toString();
-
-    expect($header)
-        ->toContain('Change method')
-        ->not->toContain('Token');
-
-    // Without tokens, the add-token action lives in the provider account section instead.
-    $response->assertSeeInOrder(['Change method', "{$heading} account", "No {$heading} tokens", "Add {$heading} Token"]);
-})->with([
-    ['hetzner', 'Hetzner'],
-    ['vultr', 'Vultr'],
-    ['digital-ocean', 'DigitalOcean'],
-]);
-
-test('new server provider pages list existing tokens instead of a token action', function (string $type, string $provider, string $heading, string $modalTitle) {
-    $this->actingAs($this->admin);
-    session(['currentTeam' => $this->team]);
-
-    $token = CloudProviderToken::factory()->create([
-        'team_id' => $this->team->id,
-        'provider' => $provider,
-    ]);
-
-    $response = $this->get(route('server.create.type', ['type' => $type]))
-        ->assertSuccessful()
-        ->assertSee(route('server.create.token', ['type' => $type, 'token_uuid' => $token->uuid]))
-        ->assertDontSee($modalTitle)
-        ->assertDontSee('+ New Token');
-
-    $response->assertSeeInOrder(['Change method', "{$heading} account", $token->name]);
-})->with([
-    ['hetzner', 'hetzner', 'Hetzner', 'Add Hetzner Token'],
-    ['vultr', 'vultr', 'Vultr', 'Add Vultr Token'],
-    ['digital-ocean', 'digitalocean', 'DigitalOcean', 'Add DigitalOcean Token'],
-]);
+        ->assertSee('Connect a server')
+        ->assertSee('IP address or domain');
+});
 
 test('new server manual page does not show the new token action', function () {
     $this->actingAs($this->admin);
@@ -380,11 +315,11 @@ test('admin can access terminal', function () {
     expect(auth()->user()->can('canAccessTerminal'))->toBeTrue();
 });
 
-test('member cannot access terminal', function () {
+test('member can access terminal', function () {
     $this->actingAs($this->member);
     session(['currentTeam' => $this->team]);
 
-    expect(auth()->user()->can('canAccessTerminal'))->toBeFalse();
+    expect(auth()->user()->can('canAccessTerminal'))->toBeTrue();
 });
 
 // --- Server page access ---

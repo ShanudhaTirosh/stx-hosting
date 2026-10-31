@@ -105,11 +105,11 @@ class EntitlementService
         );
 
         return HostingEntitlement::create([
-            'team_id'            => $invoice->team_id,
+            'team_id' => $invoice->team_id,
             'hosting_product_id' => $plan->hosting_product_id,
-            'hosting_plan_id'    => $plan->id,
-            'status'             => EntitlementStatus::ACTIVE,
-            'expires_at'         => $expiresAt,
+            'hosting_plan_id' => $plan->id,
+            'status' => EntitlementStatus::ACTIVE,
+            'expires_at' => $expiresAt,
         ]);
     }
 }

@@ -5,6 +5,7 @@
             'in_progress' => 'In progress',
             'cancelled-by-user' => 'Cancelled',
             'queued' => 'Queued',
+            'pending_approval' => 'Pending Approval',
             'failed' => 'Failed',
             default => str($status)->headline()->toString(),
         };
@@ -12,6 +13,7 @@
         $type = match ($status) {
             'finished' => 'success',
             'in_progress', 'queued' => 'warning',
+            'pending_approval' => 'info',
             'failed' => 'error',
             default => 'neutral',
         };
@@ -80,8 +82,14 @@
                                 <p class="hidden truncate text-[12px] text-neutral-500 @2xl:block dark:text-fg-dim">
                                     {{ $deployment->server_name ?: '-' }}
                                 </p>
-                                <span class="hidden @2xl:block">
+                                <span class="hidden @2xl:flex items-center gap-2">
                                     <x-status-badge :status="$deploymentStatus" :type="$deploymentStatusType" />
+                                    @if ($deployment->status === 'pending_approval' && \App\Services\RbacService::isOwner(auth()->user()))
+                                        <button type="button" wire:click.prevent="approveDeployment({{ $deployment->id }})"
+                                            class="button button-highlighted text-xs py-1 px-2.5">
+                                            Approve
+                                        </button>
+                                    @endif
                                 </span>
                                 <p class="hidden truncate text-[12px] text-neutral-500 @2xl:block dark:text-fg-dim">
                                     {{ $deployment->created_at?->diffForHumans() ?? '-' }}
@@ -89,6 +97,12 @@
 
                                 <div class="mt-3 flex min-w-0 items-center gap-3 @2xl:hidden">
                                     <x-status-badge :status="$deploymentStatus" :type="$deploymentStatusType" />
+                                    @if ($deployment->status === 'pending_approval' && \App\Services\RbacService::isOwner(auth()->user()))
+                                        <button type="button" wire:click.prevent="approveDeployment({{ $deployment->id }})"
+                                            class="button button-highlighted text-xs py-1 px-2.5">
+                                            Approve
+                                        </button>
+                                    @endif
                                     <p class="min-w-0 truncate text-[11px] text-neutral-500 dark:text-fg-faint">
                                         {{ $environmentPath ?: '-' }}
                                         <span class="px-1 text-neutral-300 dark:text-white/15">·</span>
@@ -140,8 +154,14 @@
                                 <p class="hidden truncate text-[12px] text-neutral-500 @2xl:block dark:text-fg-dim">
                                     {{ $deployment->server_name ?: '-' }}
                                 </p>
-                                <span class="hidden @2xl:block">
+                                <span class="hidden @2xl:flex items-center gap-2">
                                     <x-status-badge :status="$deploymentStatus" :type="$deploymentStatusType" />
+                                    @if ($deployment->status === 'pending_approval' && \App\Services\RbacService::isOwner(auth()->user()))
+                                        <button type="button" wire:click.prevent="approveDeployment({{ $deployment->id }})"
+                                            class="button button-highlighted text-xs py-1 px-2.5">
+                                            Approve
+                                        </button>
+                                    @endif
                                 </span>
                                 <p class="hidden truncate text-[12px] text-neutral-500 @2xl:block dark:text-fg-dim">
                                     {{ $deployment->created_at?->diffForHumans() ?? '-' }}
@@ -149,6 +169,12 @@
 
                                 <div class="mt-3 flex min-w-0 items-center gap-3 @2xl:hidden">
                                     <x-status-badge :status="$deploymentStatus" :type="$deploymentStatusType" />
+                                    @if ($deployment->status === 'pending_approval' && \App\Services\RbacService::isOwner(auth()->user()))
+                                        <button type="button" wire:click.prevent="approveDeployment({{ $deployment->id }})"
+                                            class="button button-highlighted text-xs py-1 px-2.5">
+                                            Approve
+                                        </button>
+                                    @endif
                                     <p class="min-w-0 truncate text-[11px] text-neutral-500 dark:text-fg-faint">
                                         {{ $environmentPath ?: '-' }}
                                         <span class="px-1 text-neutral-300 dark:text-white/15">·</span>

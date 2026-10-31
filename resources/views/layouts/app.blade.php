@@ -50,7 +50,7 @@
                     <div class="flex items-baseline gap-1.5 min-w-0">
                         <a href="/" {{ wireNavigate() }} title="STX Enterprises"
                             class="flex shrink-0 items-center hover:opacity-80 transition-opacity">
-                            <img x-show="collapsed" x-cloak src="/coolify-logo.svg" alt="STX Enterprises"
+                            <img x-show="collapsed" x-cloak src="/STKcdr.svg" alt="STX Enterprises"
                                 class="size-5" />
                             <span x-show="!collapsed" class="text-[15px] font-bold tracking-tight text-black dark:text-white flex items-center gap-1">
                                 <span class="text-cyan-400 font-extrabold">STX</span> Enterprises
@@ -107,9 +107,9 @@
                         <div data-mobile-sidebar-brand
                             class="flex h-12 shrink-0 items-center justify-between gap-1.5 border-b border-neutral-200 px-4 dark:border-white/[0.06]">
                             <div class="flex min-w-0 items-baseline gap-1.5">
-                                <a href="/" {{ wireNavigate() }} title="Coolify"
-                                    class="text-[15px] font-semibold tracking-tight text-black transition-opacity hover:opacity-80 dark:text-white">
-                                    Coolify
+                                <a href="/" {{ wireNavigate() }} title="STX Enterprises"
+                                    class="text-[15px] font-semibold tracking-tight text-black transition-opacity hover:opacity-80 dark:text-white flex items-center gap-1">
+                                    <span class="text-cyan-400 font-extrabold">STX</span> Enterprises
                                 </a>
                                 <x-version class="!text-[10.5px] font-medium text-neutral-400 dark:text-fg-faint !opacity-100 hover:!opacity-100 hover:text-black dark:hover:text-fg" />
                             </div>
@@ -142,7 +142,7 @@
                 <div class="flex min-w-0 flex-1 items-center gap-2.5">
                     <a href="/"
                         class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 transition-opacity hover:opacity-80 dark:bg-white/[0.06]">
-                        <img src="/coolify-logo.svg" alt="STX Enterprises" class="w-[18px] h-[18px]" />
+                        <img src="/STKcdr.svg" alt="STX Enterprises" class="w-[18px] h-[18px]" />
                     </a>
                     <div class="min-w-0" x-data="{ collapsed: false }">
                         <livewire:switch-team />

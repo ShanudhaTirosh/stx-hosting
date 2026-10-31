@@ -91,4 +91,3 @@ class RbacService
         return $user->isInstanceAdmin();
     }
 }
-

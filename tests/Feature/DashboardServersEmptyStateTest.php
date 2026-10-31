@@ -21,6 +21,10 @@ beforeEach(function () {
     $this->team = Team::factory()->create();
     $this->user->teams()->attach($this->team, ['role' => 'owner']);
 
+    // Also attach user to root team as owner so they pass ServerPolicy::create() (isInstanceAdmin check)
+    $rootTeam = Team::find(0) ?? Team::factory()->create(['id' => 0]);
+    $this->user->teams()->attach($rootTeam, ['role' => 'owner']);
+
     $this->actingAs($this->user);
     session(['currentTeam' => $this->team]);
 });
@@ -66,8 +70,10 @@ it('does not show server empty state when servers exist', function () {
 });
 
 it('hides the add private key button for members without create permission', function () {
+    $rootTeam = Team::find(0) ?? Team::factory()->create(['id' => 0]);
     $member = User::factory()->create();
     $member->teams()->attach($this->team, ['role' => 'member']);
+    $member->teams()->attach($rootTeam, ['role' => 'admin']);
 
     $this->actingAs($member);
     session(['currentTeam' => $this->team]);
@@ -75,4 +81,18 @@ it('hides the add private key button for members without create permission', fun
     Livewire::test(Dashboard::class)
         ->assertSee('A private key is required')
         ->assertDontSee('Add private key');
+});
+
+it('shows no servers yet empty state without private key prompt for clients who cannot create servers', function () {
+    $client = User::factory()->create();
+    $client->teams()->attach($this->team, ['role' => 'owner']);
+
+    $this->actingAs($client);
+    session(['currentTeam' => $this->team]);
+
+    Livewire::test(Dashboard::class)
+        ->assertSee('No servers yet')
+        ->assertDontSee('A private key is required')
+        ->assertDontSee('Add an SSH private key before connecting your first server.')
+        ->assertDontSee('New server');
 });

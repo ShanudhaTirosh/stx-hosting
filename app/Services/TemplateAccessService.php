@@ -97,13 +97,12 @@ class TemplateAccessService
     public static function getTemplateRequirements(string $templateName): array
     {
         $requirements = [
-            'gitlab-ce'          => ['min_ram_mb' => 4096, 'min_cpu' => 2.0, 'disk_gb' => 20],
-            'wordpress'          => ['min_ram_mb' => 512,  'min_cpu' => 0.5, 'disk_gb' => 5],
-            'redis'              => ['min_ram_mb' => 256,  'min_cpu' => 0.25,'disk_gb' => 1],
+            'gitlab-ce' => ['min_ram_mb' => 4096, 'min_cpu' => 2.0, 'disk_gb' => 20],
+            'wordpress' => ['min_ram_mb' => 512,  'min_cpu' => 0.5, 'disk_gb' => 5],
+            'redis' => ['min_ram_mb' => 256,  'min_cpu' => 0.25, 'disk_gb' => 1],
             'enterprise-cluster' => ['min_ram_mb' => 8192, 'min_cpu' => 4.0, 'disk_gb' => 50],
         ];
 
         return $requirements[$templateName] ?? ['min_ram_mb' => 512, 'min_cpu' => 0.5, 'disk_gb' => 5];
     }
 }
-

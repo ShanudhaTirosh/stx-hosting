@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Enums\EntitlementStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * HostingEntitlement — Links a client team to a purchased product/plan.
@@ -36,13 +36,13 @@ class HostingEntitlement extends Model
     ];
 
     protected $casts = [
-        'team_id'            => 'integer',
+        'team_id' => 'integer',
         'hosting_product_id' => 'integer',
-        'hosting_plan_id'    => 'integer',
-        'granted_by'         => 'integer',
-        'expires_at'         => 'datetime',
-        'status'             => 'string',
-        'metadata'           => 'array',
+        'hosting_plan_id' => 'integer',
+        'granted_by' => 'integer',
+        'expires_at' => 'datetime',
+        'status' => 'string',
+        'metadata' => 'array',
     ];
 
     public function team(): BelongsTo
@@ -93,4 +93,3 @@ class HostingEntitlement extends Model
         return true;
     }
 }
-

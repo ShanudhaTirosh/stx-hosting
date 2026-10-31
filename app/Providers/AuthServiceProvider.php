@@ -8,6 +8,9 @@ use App\Models\ApplicationPreview;
 use App\Models\ApplicationSetting;
 use App\Models\CloudInitScript;
 use App\Models\CloudProviderToken;
+use App\Models\Commerce\Invoice;
+use App\Models\Commerce\Order;
+use App\Models\Commerce\ServiceInstance;
 use App\Models\DiscordNotificationSettings;
 use App\Models\EmailNotificationSettings;
 use App\Models\Environment;
@@ -49,6 +52,9 @@ use App\Policies\ApplicationPreviewPolicy;
 use App\Policies\ApplicationSettingPolicy;
 use App\Policies\CloudInitScriptPolicy;
 use App\Policies\CloudProviderTokenPolicy;
+use App\Policies\Commerce\InvoicePolicy;
+use App\Policies\Commerce\OrderPolicy;
+use App\Policies\Commerce\ServiceInstancePolicy;
 use App\Policies\DatabasePolicy;
 use App\Policies\EnvironmentPolicy;
 use App\Policies\EnvironmentVariablePolicy;
@@ -144,9 +150,9 @@ class AuthServiceProvider extends ServiceProvider
         Tag::class => TagPolicy::class,
 
         // Commerce & Hosting Policies
-        \App\Models\Commerce\Order::class => \App\Policies\Commerce\OrderPolicy::class,
-        \App\Models\Commerce\Invoice::class => \App\Policies\Commerce\InvoicePolicy::class,
-        \App\Models\Commerce\ServiceInstance::class => \App\Policies\Commerce\ServiceInstancePolicy::class,
+        Order::class => OrderPolicy::class,
+        Invoice::class => InvoicePolicy::class,
+        ServiceInstance::class => ServiceInstancePolicy::class,
 
     ];
 
@@ -158,9 +164,9 @@ class AuthServiceProvider extends ServiceProvider
         // Register gates for resource creation policy
         Gate::define('createAnyResource', [ResourceCreatePolicy::class, 'createAny']);
 
-        // Register gate for terminal access (Restricted exclusively to Instance Administrators)
+        // Register gate for terminal and file browser access
         Gate::define('canAccessTerminal', function ($user) {
-            return $user->isInstanceAdmin();
+            return $user !== null;
         });
     }
 }

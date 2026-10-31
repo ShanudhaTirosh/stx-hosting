@@ -5,6 +5,7 @@ namespace App\Livewire\Team;
 use App\Actions\User\RevokeUserTeamTokens;
 use App\Enums\Role;
 use App\Models\User;
+use App\Services\RbacService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,10 @@ class Member extends Component
     {
         try {
             $this->authorize('manageMembers', currentTeam());
+
+            if (RbacService::isOwner($this->member)) {
+                throw new \Exception('The platform Owner account cannot be modified.');
+            }
 
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
@@ -37,6 +42,10 @@ class Member extends Component
         try {
             $this->authorize('manageMembers', currentTeam());
 
+            if (! RbacService::isOwner(auth()->user())) {
+                throw new \Exception('Only the platform Owner can transfer or assign the Owner role.');
+            }
+
             if (Role::from(auth()->user()->role())->lt(Role::OWNER)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
                 throw new \Exception('You are not authorized to perform this action.');
@@ -53,6 +62,10 @@ class Member extends Component
         try {
             $this->authorize('manageMembers', currentTeam());
 
+            if (RbacService::isOwner($this->member)) {
+                throw new \Exception('The platform Owner account cannot be modified or demoted.');
+            }
+
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
                 throw new \Exception('You are not authorized to perform this action.');
@@ -68,6 +81,10 @@ class Member extends Component
     {
         try {
             $this->authorize('manageMembers', currentTeam());
+
+            if (RbacService::isOwner($this->member)) {
+                throw new \Exception('The platform Owner account cannot be removed.');
+            }
 
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {

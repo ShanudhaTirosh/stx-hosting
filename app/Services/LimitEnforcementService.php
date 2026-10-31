@@ -48,21 +48,21 @@ class LimitEnforcementService
 
         // 4. Default baseline fallback
         return [
-            'team_id'                => null,
-            'hosting_plan_id'        => null,
-            'max_projects'           => 5,
-            'max_deployments'        => 50,
-            'max_applications'       => 5,
-            'max_databases'          => 3,
-            'max_servers'            => 2,
+            'team_id' => null,
+            'hosting_plan_id' => null,
+            'max_projects' => 5,
+            'max_deployments' => 50,
+            'max_applications' => 5,
+            'max_databases' => 3,
+            'max_servers' => 2,
             'max_running_containers' => 10,
-            'max_cpu'                => 2.0,
-            'max_ram_mb'             => 4096,
-            'max_storage_gb'         => 50,
-            'max_bandwidth_gb'       => 200,
-            'max_smtp_accounts'      => 0,
-            'max_emails_per_day'     => 0,
-            'allowed_technologies'   => null,
+            'max_cpu' => 2.0,
+            'max_ram_mb' => 4096,
+            'max_storage_gb' => 50,
+            'max_bandwidth_gb' => 200,
+            'max_smtp_accounts' => 0,
+            'max_emails_per_day' => 0,
+            'allowed_technologies' => null,
             'allowed_template_categories' => null,
         ];
     }
@@ -103,13 +103,13 @@ class LimitEnforcementService
         }
 
         return [
-            'projects'           => $projectCount,
-            'applications'       => $appCount,
-            'databases'          => $dbCount,
-            'servers'            => $serverCount,
+            'projects' => $projectCount,
+            'applications' => $appCount,
+            'databases' => $dbCount,
+            'servers' => $serverCount,
             'running_containers' => $runningContainers,
-            'ram_mb'             => $totalRamMb,
-            'cpu'                => $totalCpu,
+            'ram_mb' => $totalRamMb,
+            'cpu' => $totalCpu,
         ];
     }
 
@@ -128,10 +128,10 @@ class LimitEnforcementService
         $usage = self::getCurrentUsage($team);
 
         $limitKeyMap = [
-            'project'     => ['max_projects', 'projects'],
+            'project' => ['max_projects', 'projects'],
             'application' => ['max_applications', 'applications'],
-            'database'    => ['max_databases', 'databases'],
-            'server'      => ['max_servers', 'servers'],
+            'database' => ['max_databases', 'databases'],
+            'server' => ['max_servers', 'servers'],
         ];
 
         if (! isset($limitKeyMap[$resourceType])) {
@@ -218,8 +218,7 @@ class LimitEnforcementService
 
         return [
             'limits_memory' => ($limits['max_ram_mb'] ?? 512).'m',
-            'limits_cpus'   => (string) min(1.0, (float) ($limits['max_cpu'] ?? 1.0)),
+            'limits_cpus' => (string) min(1.0, (float) ($limits['max_cpu'] ?? 1.0)),
         ];
     }
 }
-

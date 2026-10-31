@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * HostingPlan — A specific pricing tier / billing interval for a HostingProduct.
@@ -29,10 +29,10 @@ class HostingPlan extends Model
 
     protected $casts = [
         'hosting_product_id' => 'integer',
-        'price_cents'        => 'integer',
-        'term_days'          => 'integer',
-        'is_active'          => 'boolean',
-        'metadata'           => 'array',
+        'price_cents' => 'integer',
+        'term_days' => 'integer',
+        'is_active' => 'boolean',
+        'metadata' => 'array',
     ];
 
     /**
@@ -60,4 +60,3 @@ class HostingPlan extends Model
         return $this->hasMany(TemplatePermission::class, 'hosting_plan_id');
     }
 }
-

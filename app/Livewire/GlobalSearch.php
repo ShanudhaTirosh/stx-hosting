@@ -230,7 +230,11 @@ class GlobalSearch extends Component
         $user = auth()->user();
 
         // Quick Actions
-        if (in_array($type, ['server', 'storage', 'private-key'])) {
+        if ($type === 'server') {
+            return $user ? $user->can('create', Server::class) : false;
+        }
+
+        if (in_array($type, ['storage', 'private-key'])) {
             return $user->isAdmin() || $user->isOwner();
         }
 
@@ -1120,8 +1124,8 @@ class GlobalSearch extends Component
             ]);
         }
 
-        // Server - can be created if user is admin or owner
-        if ($user->isAdmin() || $user->isOwner()) {
+        // Server - can only be created by instance admins and owners
+        if ($user->can('create', Server::class)) {
             $items->push([
                 'name' => 'Server',
                 'description' => 'Add a new server to deploy your applications',
@@ -1363,6 +1367,10 @@ class GlobalSearch extends Component
     {
         if ($type === 'server') {
             $this->dispatch('closeSearchModal');
+
+            if (auth()->user()?->cannot('create', Server::class)) {
+                return;
+            }
 
             return redirectRoute($this, 'server.create');
         }

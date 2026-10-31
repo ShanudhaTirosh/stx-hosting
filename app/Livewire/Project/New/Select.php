@@ -5,6 +5,8 @@ namespace App\Livewire\Project\New;
 use App\Models\Project;
 use App\Models\Server;
 use App\Models\StandalonePostgresql;
+use App\Services\RbacService;
+use App\Services\TemplateAccessService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -125,7 +127,17 @@ class Select extends Component
                 'templateLastUpdated' => $templateLastUpdatedMap[$serviceKey] ?? null,
                 'website' => $this->serviceWebsiteUrl(data_get($service, 'documentation')),
             ] + service_logo_urls(data_get($service, 'logo')) + (array) $service;
-        })->all();
+        });
+
+        $user = auth()->user();
+        if ($user && ! RbacService::isOwner($user) && ! RbacService::isAdmin($user)) {
+            $team = currentTeam();
+            $services = $services->filter(function ($service) use ($team) {
+                return TemplateAccessService::canDeployTemplate($team, $service['id']);
+            });
+        }
+
+        $services = $services->all();
 
         // Extract unique categories from services
         $categories = collect($services)

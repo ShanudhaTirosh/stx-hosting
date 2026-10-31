@@ -3,7 +3,9 @@
 namespace App\Livewire\Dashboard;
 
 use App\Enums\ApplicationDeploymentStatus;
+use App\Jobs\ApplicationDeploymentJob;
 use App\Models\ApplicationDeploymentQueue;
+use App\Services\RbacService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +34,34 @@ class ActiveDeployments extends Component
     private const ACTIVE_STATUSES = [
         ApplicationDeploymentStatus::IN_PROGRESS->value,
         ApplicationDeploymentStatus::QUEUED->value,
+        ApplicationDeploymentStatus::PENDING_APPROVAL->value,
     ];
+
+    public function approveDeployment(int $id): void
+    {
+        try {
+            if (! auth()->check() || ! RbacService::isOwner(auth()->user())) {
+                throw new \Exception('Only the platform Owner can approve deployments.');
+            }
+
+            $deployment = ApplicationDeploymentQueue::findOrFail($id);
+            if ($deployment->status !== ApplicationDeploymentStatus::PENDING_APPROVAL->value) {
+                return;
+            }
+
+            $deployment->update([
+                'status' => ApplicationDeploymentStatus::IN_PROGRESS->value,
+            ]);
+
+            ApplicationDeploymentJob::dispatch(
+                application_deployment_queue_id: $deployment->id,
+            );
+
+            $this->dispatch('success', 'Deployment approved and dispatched.');
+        } catch (\Throwable $e) {
+            handleError($e, $this);
+        }
+    }
 
     /**
      * Not dehydrated, so it is loaded once per request and shared by both lists.

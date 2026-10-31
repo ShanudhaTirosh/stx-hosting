@@ -5,6 +5,7 @@ namespace App\Livewire\Server;
 use App\Actions\Proxy\CheckProxy;
 use App\Actions\Proxy\StartProxy;
 use App\Actions\Proxy\StopProxy;
+use App\Actions\Server\RebootServer;
 use App\Enums\ProxyTypes;
 use App\Jobs\RestartProxyJob;
 use App\Models\Server;
@@ -117,6 +118,22 @@ class Navbar extends Component
         } catch (\Throwable $e) {
             $this->restartInitiated = false;
 
+            return handleError($e, $this);
+        }
+    }
+
+    public function rebootVps()
+    {
+        try {
+            $this->authorize('update', $this->server);
+            RebootServer::run($this->server);
+            auditLog('ui.server.rebooted', [
+                'team_id' => $this->server->team_id,
+                'server_uuid' => $this->server->uuid,
+                'server_name' => $this->server->name,
+            ]);
+            $this->dispatch('success', 'VPS reboot initiated successfully. The server is restarting.');
+        } catch (\Throwable $e) {
             return handleError($e, $this);
         }
     }

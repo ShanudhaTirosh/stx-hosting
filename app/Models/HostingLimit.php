@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * HostingLimit — Configurable resource quota for a client team or hosting plan.
@@ -46,22 +46,22 @@ class HostingLimit extends Model
     ];
 
     protected $casts = [
-        'team_id'                    => 'integer',
-        'hosting_plan_id'            => 'integer',
-        'max_projects'               => 'integer',
-        'max_deployments'            => 'integer',
-        'max_applications'           => 'integer',
-        'max_databases'              => 'integer',
-        'max_servers'                => 'integer',
-        'max_running_containers'     => 'integer',
-        'max_cpu'                    => 'float',
-        'max_ram_mb'                 => 'integer',
-        'max_storage_gb'             => 'integer',
-        'max_bandwidth_gb'           => 'integer',
-        'max_smtp_accounts'          => 'integer',
-        'max_emails_per_day'         => 'integer',
-        'allowed_technologies'       => 'array',
-        'allowed_template_categories'=> 'array',
+        'team_id' => 'integer',
+        'hosting_plan_id' => 'integer',
+        'max_projects' => 'integer',
+        'max_deployments' => 'integer',
+        'max_applications' => 'integer',
+        'max_databases' => 'integer',
+        'max_servers' => 'integer',
+        'max_running_containers' => 'integer',
+        'max_cpu' => 'float',
+        'max_ram_mb' => 'integer',
+        'max_storage_gb' => 'integer',
+        'max_bandwidth_gb' => 'integer',
+        'max_smtp_accounts' => 'integer',
+        'max_emails_per_day' => 'integer',
+        'allowed_technologies' => 'array',
+        'allowed_template_categories' => 'array',
     ];
 
     protected static function boot(): void
@@ -99,4 +99,3 @@ class HostingLimit extends Model
         return $this->belongsTo(HostingPlan::class);
     }
 }
-

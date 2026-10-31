@@ -5,6 +5,7 @@ namespace App\Enums;
 enum ApplicationDeploymentStatus: string
 {
     case QUEUED = 'queued';
+    case PENDING_APPROVAL = 'pending_approval';
     case IN_PROGRESS = 'in_progress';
     case FINISHED = 'finished';
     case FAILED = 'failed';

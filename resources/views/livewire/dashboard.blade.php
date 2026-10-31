@@ -1,6 +1,6 @@
 <div class="application-settings-form w-full">
     <x-slot:title>
-        Dashboard | Coolify
+        Dashboard | STX Enterprises
     </x-slot>
 
     @if (session('error'))
@@ -246,7 +246,7 @@
         }">
             <x-section-heading title="Servers"
                 :href="$servers->count() > $dashboardItemLimit ? route('server.index') : null">
-                @can('createAnyResource')
+                @can('create', App\Models\Server::class)
                     <x-slot:titleAction>
                         <a href="{{ route('server.create') }}" {{ wireNavigate() }} class="{{ $titleIconButton }}"
                             title="New server" aria-label="New server">
@@ -262,25 +262,25 @@
             </x-section-heading>
 
             @if ($dashboardServers->isEmpty())
-                @if ($privateKeys->isEmpty())
-                    <x-empty title="A private key is required"
-                        description="Add an SSH private key before connecting your first server."
-                        icon-name="keys" size="sm">
-                        @can('create', App\Models\PrivateKey::class)
-                            <x-slot:contents>
-                                <a href="{{ route('security.private-key.index') }}" {{ wireNavigate() }}
-                                    class="button button-highlighted">
-                                    <x-reicon name="plus" class="size-3.5" />
-                                    Add private key
-                                </a>
-                            </x-slot:contents>
-                        @endcan
-                    </x-empty>
-                @else
-                    <x-empty title="No servers yet"
-                        description="Connect infrastructure for your deployments."
-                        icon-name="servers" size="sm">
-                        @can('createAnyResource')
+                @can('create', App\Models\Server::class)
+                    @if ($privateKeys->isEmpty())
+                        <x-empty title="A private key is required"
+                            description="Add an SSH private key before connecting your first server."
+                            icon-name="keys" size="sm">
+                            @can('create', App\Models\PrivateKey::class)
+                                <x-slot:contents>
+                                    <a href="{{ route('security.private-key.index') }}" {{ wireNavigate() }}
+                                        class="button button-highlighted">
+                                        <x-reicon name="plus" class="size-3.5" />
+                                        Add private key
+                                    </a>
+                                </x-slot:contents>
+                            @endcan
+                        </x-empty>
+                    @else
+                        <x-empty title="No servers yet"
+                            description="Connect infrastructure for your deployments."
+                            icon-name="servers" size="sm">
                             <x-slot:contents>
                                 <a href="{{ route('server.create') }}" {{ wireNavigate() }}
                                     class="button button-highlighted">
@@ -288,9 +288,14 @@
                                     New server
                                 </a>
                             </x-slot:contents>
-                        @endcan
+                        </x-empty>
+                    @endif
+                @else
+                    <x-empty title="No servers yet"
+                        description="Connect infrastructure for your deployments."
+                        icon-name="servers" size="sm">
                     </x-empty>
-                @endif
+                @endcan
             @else
                 <div x-cloak x-show="viewMode === 'grid'"
                     class="grid min-w-0 grid-cols-1 gap-3 @lg:grid-cols-2 @4xl:grid-cols-4">

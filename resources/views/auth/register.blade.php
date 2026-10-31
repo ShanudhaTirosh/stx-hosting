@@ -11,14 +11,14 @@ $email = getOldOrLocal('email', 'test3@example.com');
 ?>
 
 <x-layout-simple>
-    <x-auth.shell title="Coolify"
+    <x-auth.shell title="STX Enterprises"
         :description="$isFirstUser ? 'Create the root account for this instance.' : 'Create your account to get started.'">
         <div class="flex flex-col gap-4">
             @if ($isRootSetupWindowClosed)
                 <x-auth.alert type="warning">
                     <p class="font-medium">Setup window closed</p>
                     <p class="mt-0.5 text-black/70 dark:text-white/70">You can create the root account only in the
-                        first {{ \App\Support\RootSetupWindow::MINUTES }} minutes after Coolify
+                        first {{ \App\Support\RootSetupWindow::MINUTES }} minutes after STX Enterprises
                         starts. To open the window again, run this command on the server, then reload this page:</p>
                     <code class="mt-2 block font-mono text-xs">docker restart coolify</code>
                 </x-auth.alert>
@@ -27,7 +27,7 @@ $email = getOldOrLocal('email', 'test3@example.com');
                     <p class="font-medium">Full instance access</p>
                     <p class="mt-0.5 text-black/70 dark:text-white/70">This first account becomes the root user.
                         Create it within {{ \App\Support\RootSetupWindow::MINUTES }} minutes after
-                        Coolify starts.</p>
+                        STX Enterprises starts.</p>
                 </x-auth.alert>
             @endif
 

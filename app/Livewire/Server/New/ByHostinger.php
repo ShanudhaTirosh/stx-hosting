@@ -72,6 +72,8 @@ class ByHostinger extends Component
 
     public function mount(?string $selectedTokenUuid = null): mixed
     {
+        $this->authorize('create', Server::class);
+
         try {
             $this->authorize('viewAny', CloudProviderToken::class);
             $this->loadTokens();

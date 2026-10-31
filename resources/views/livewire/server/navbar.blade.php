@@ -5,7 +5,7 @@
             <div class="flex h-full min-h-0 flex-col gap-3">
                 @if ($server->id === 0)
                     <div class="shrink-0 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
-                        <span class="font-semibold">Note:</span> This is the localhost server where Coolify runs.
+                        <span class="font-semibold">Note:</span> This is the localhost server where STX Enterprises runs.
                         During proxy restart, the connection may be temporarily lost.
                         If logs stop updating, please refresh the browser after a few minutes.
                     </div>
@@ -207,6 +207,14 @@
                                 <x-reicon name="refresh" class="size-3.5 opacity-70" />
                                 Refresh Proxy Status
                             </button>
+                            @can('update', $server)
+                                <button type="button" class="listbox-option justify-start! gap-2.5! text-warning"
+                                    @click="open = false; document.getElementById('server-reboot-vps-trigger')?.click()"
+                                    role="menuitem">
+                                    <x-reicon name="restart" class="size-3.5 text-warning" />
+                                    Reboot VPS
+                                </button>
+                            @endcan
                         </x-split-action>
 
                         {{-- Programmatic open only (clicked from the Actions menu). Keep fully
@@ -215,7 +223,7 @@
                             <x-modal-confirmation title="Confirm Proxy Restart?" buttonTitle="Restart Proxy"
                                 submitAction="restart" :actions="[
                                     'This proxy will be stopped and started again.',
-                                    'All resources hosted on Coolify will be unavailable during the restart.',
+                                    'All resources hosted on STX Enterprises will be unavailable during the restart.',
                                 ]" :confirmWithText="false" :confirmWithPassword="false" step2ButtonText="Restart Proxy"
                                 :dispatchEvent="true" dispatchEventType="restartEvent">
                                 <x-slot:trigger>
@@ -226,8 +234,8 @@
                             </x-modal-confirmation>
                             <x-modal-confirmation title="Confirm Proxy Stopping?" buttonTitle="Stop Proxy"
                                 submitAction="stop(true)" :actions="[
-                                    'The Coolify proxy will be stopped.',
-                                    'All resources hosted on Coolify will be unavailable.',
+                                    'The STX Enterprises proxy will be stopped.',
+                                    'All resources hosted on STX Enterprises will be unavailable.',
                                 ]" :confirmWithText="false" :confirmWithPassword="false" step2ButtonText="Stop Proxy"
                                 :dispatchEvent="true" dispatchEventType="stopEvent">
                                 <x-slot:trigger>
@@ -236,6 +244,19 @@
                                     </button>
                                 </x-slot:trigger>
                             </x-modal-confirmation>
+                            @can('update', $server)
+                                <x-modal-confirmation title="Confirm VPS Reboot?" buttonTitle="Reboot VPS"
+                                    submitAction="rebootVps" :actions="[
+                                        'A reboot command will be sent directly to the server host over SSH.',
+                                        'The VPS will temporarily go offline while rebooting and come back online automatically.',
+                                    ]" :confirmWithText="false" :confirmWithPassword="false" step2ButtonText="Reboot VPS">
+                                    <x-slot:trigger>
+                                        <button id="server-reboot-vps-trigger" type="button">
+                                            Reboot VPS
+                                        </button>
+                                    </x-slot:trigger>
+                                </x-modal-confirmation>
+                            @endcan
                         </div>
                     @endcan
                 @endif
@@ -301,6 +322,14 @@
                             <x-reicon name="refresh" class="size-3.5 opacity-70" />
                             Refresh Proxy Status
                         </button>
+                        @can('update', $server)
+                            <button type="button" class="listbox-option justify-start! gap-2.5! text-warning"
+                                @click="open = false; document.getElementById('server-reboot-vps-trigger')?.click()"
+                                role="menuitem">
+                                <x-reicon name="restart" class="size-3.5 text-warning" />
+                                Reboot VPS
+                            </button>
+                        @endcan
                     </x-split-action>
                 @endif
             </div>

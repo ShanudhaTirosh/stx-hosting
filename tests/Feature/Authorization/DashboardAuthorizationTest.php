@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Dashboard;
+use App\Models\InstanceSettings;
 use App\Models\Project;
 use App\Models\Server;
 use App\Models\Team;
@@ -20,6 +21,27 @@ function setupDashboardUser(string $role): array
     $user->teams()->attach($team, ['role' => $role]);
 
     return [$user, $team];
+}
+
+/**
+ * Creates an instance admin: a user attached to the root team (id=0) with the given role.
+ * Instance admins are the only users who can create servers.
+ */
+function setupInstanceAdmin(string $role = 'admin'): array
+{
+    InstanceSettings::unguarded(fn () => InstanceSettings::updateOrCreate(['id' => 0], ['id' => 0]));
+
+    // Ensure the root team (id=0) exists
+    $rootTeam = Team::find(0) ?? Team::factory()->create(['id' => 0]);
+
+    $user = User::factory()->create();
+    $user->teams()->attach($rootTeam, ['role' => $role]);
+
+    // Also attach to a regular team (current session team)
+    $team = Team::factory()->create();
+    $user->teams()->attach($team, ['role' => $role]);
+
+    return [$user, $team, $rootTeam];
 }
 
 function createProjectForTeam(Team $team): void
@@ -80,9 +102,10 @@ test('member does not see add resource button on dashboard projects', function (
         ->assertDontSee('New Project');
 });
 
-// The "New server" button is only rendered in the empty servers state (a key exists, no servers yet).
-test('admin sees add server button on dashboard', function () {
-    [$user, $team] = setupDashboardUser('admin');
+// The "New server" button is only rendered for instance admins/owners (root team).
+// Team-level admins (non-root) do NOT see the button.
+test('instance admin sees add server button on dashboard', function () {
+    [$user, $team] = setupInstanceAdmin('admin');
 
     $this->actingAs($user);
     session(['currentTeam' => $team]);
@@ -92,6 +115,19 @@ test('admin sees add server button on dashboard', function () {
     Livewire::test(Dashboard::class)
         ->assertSee('No servers yet')
         ->assertSee(route('server.create'));
+});
+
+test('team-level admin does not see add server button on dashboard', function () {
+    [$user, $team] = setupDashboardUser('admin');
+
+    $this->actingAs($user);
+    session(['currentTeam' => $team]);
+
+    createPrivateKeyForTeam($team);
+
+    Livewire::test(Dashboard::class)
+        ->assertSee('No servers yet')
+        ->assertDontSee(route('server.create'));
 });
 
 test('member does not see add server button on dashboard', function () {

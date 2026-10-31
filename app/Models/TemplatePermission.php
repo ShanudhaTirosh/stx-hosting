@@ -31,11 +31,11 @@ class TemplatePermission extends Model
     ];
 
     protected $casts = [
-        'hosting_plan_id'     => 'integer',
-        'team_id'             => 'integer',
+        'hosting_plan_id' => 'integer',
+        'team_id' => 'integer',
         'is_globally_enabled' => 'boolean',
-        'is_allowed'          => 'boolean',
-        'metadata'            => 'array',
+        'is_allowed' => 'boolean',
+        'metadata' => 'array',
     ];
 
     public function team(): BelongsTo
@@ -48,4 +48,3 @@ class TemplatePermission extends Model
         return $this->belongsTo(HostingPlan::class, 'hosting_plan_id');
     }
 }
-

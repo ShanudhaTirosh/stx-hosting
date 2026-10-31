@@ -7,6 +7,9 @@
     <div class="auth-shell-content">
         <div class="auth-card">
             <div class="auth-card-heading">
+                <a href="/" class="flex justify-center mb-4">
+                    <img src="/STKcdr.svg" alt="STX Enterprises" class="h-12 w-auto" />
+                </a>
                 <h1>{{ $title }}</h1>
                 @if ($description)
                     <p>{{ $description }}</p>

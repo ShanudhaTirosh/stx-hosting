@@ -219,6 +219,8 @@ class VultrController extends Controller
             return invalidTokenResponse();
         }
 
+        $this->authorize('create', [Server::class]);
+
         $return = validateIncomingRequest($request);
         if ($return instanceof JsonResponse) {
             return $return;

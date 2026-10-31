@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * HostingProduct — A purchasable platform offering (VPS, App Hosting, Managed DB, etc.)
@@ -27,8 +27,8 @@ class HostingProduct extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'features'  => 'array',
-        'metadata'  => 'array',
+        'features' => 'array',
+        'metadata' => 'array',
     ];
 
     /**
@@ -53,4 +53,3 @@ class HostingProduct extends Model
         return $this->hasMany(HostingEntitlement::class, 'hosting_product_id');
     }
 }
-

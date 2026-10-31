@@ -12,6 +12,7 @@ use App\Models\EnvironmentVariable;
 use App\Models\Server;
 use App\Models\StandaloneDocker;
 use App\Notifications\Application\DeploymentFailed;
+use App\Services\RbacService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Spatie\Url\Url;
@@ -88,6 +89,19 @@ function queue_application_deployment(Application $application, string $deployme
             'parent_deployment_uuid' => $parent_deployment_uuid,
         ]);
 
+        $requiresApproval = auth()->check()
+            && RbacService::isAdmin(auth()->user())
+            && ! RbacService::isOwner(auth()->user())
+            && ! $is_webhook;
+
+        if ($requiresApproval) {
+            $deployment->update([
+                'status' => ApplicationDeploymentStatus::PENDING_APPROVAL->value,
+            ]);
+
+            return ['deployment' => $deployment, 'started' => false, 'pending_approval' => true];
+        }
+
         // Decide whether to start while the application and server rows are still locked,
         // so concurrent requests cannot both see an idle queue and start two deployments.
         $started = $no_questions_asked || next_queuable($server_id, $application_id, $commit, $pull_request_id);
@@ -113,6 +127,14 @@ function queue_application_deployment(Application $application, string $deployme
             'deployment_uuid' => $deployment_uuid,
             'force_rebuild' => $force_rebuild,
         ]);
+    }
+
+    if ($admission['pending_approval'] ?? false) {
+        return [
+            'status' => 'pending_approval',
+            'message' => 'Deployment requested. Awaiting platform Owner approval.',
+            'deployment_uuid' => $deployment_uuid,
+        ];
     }
 
     if ($admission['started']) {

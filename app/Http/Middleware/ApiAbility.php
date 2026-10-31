@@ -34,7 +34,13 @@ class ApiAbility extends CheckForAnyAbility
                 }
             }
 
-            if ($request->user()->tokenCan('root')) {
+            if ($token->can('root')) {
+                if (! $request->user()?->isInstanceAdmin()) {
+                    return response()->json([
+                        'message' => 'The root ability is strictly reserved for platform administrators.',
+                    ], 403);
+                }
+
                 return $next($request);
             }
 

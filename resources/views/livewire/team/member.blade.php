@@ -41,7 +41,7 @@
     @endcan
     <div class="flex justify-end">
         @can('manageMembers', currentTeam())
-            @if ($member->id !== Auth::id())
+            @if ($member->id !== Auth::id() && (! \App\Services\RbacService::isOwner($member) || \App\Services\RbacService::isOwner(Auth::user())))
                 <div x-data="{ open: false }" @keydown.escape.window="open = false">
                     <button type="button" class="button h-7! px-2.5! text-[11px]!" x-ref="trigger"
                         @click="open = !open" aria-haspopup="menu" :aria-expanded="open">

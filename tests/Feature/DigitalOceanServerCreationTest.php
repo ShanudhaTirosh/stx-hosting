@@ -31,6 +31,9 @@ beforeEach(function () {
     $this->user = User::factory()->create();
     $this->team->members()->attach($this->user->id, ['role' => 'owner']);
 
+    $rootTeam = Team::find(0) ?? Team::factory()->create(['id' => 0]);
+    $this->user->teams()->attach($rootTeam, ['role' => 'owner']);
+
     $this->actingAs($this->user);
     session(['currentTeam' => $this->team]);
 
