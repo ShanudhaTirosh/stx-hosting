@@ -32,6 +32,7 @@ class StatusStudio extends Component
     public string $monitorKeywordSearch = '';
     public bool $monitorIsPublic = true;
     public bool $monitorIsActive = true;
+    public bool $monitorIsVps = false; // When true, disables & hides IP/link on public status page
 
     // Incident Form State
     public bool $showIncidentModal = false;
@@ -96,7 +97,15 @@ class StatusStudio extends Component
         $this->monitorExpectedStatusCode = 200;
         $this->monitorIsPublic = true;
         $this->monitorIsActive = true;
+        $this->monitorIsVps = false;
         $this->showMonitorModal = true;
+    }
+
+    public function updatedMonitorType($val): void
+    {
+        if (in_array($val, ['tcp', 'ping'])) {
+            $this->monitorIsVps = true;
+        }
     }
 
     public function openEditMonitorModal(int $id)
@@ -116,6 +125,7 @@ class StatusStudio extends Component
         $this->monitorKeywordSearch = $m->keyword_search ?? '';
         $this->monitorIsPublic = (bool) $m->is_public;
         $this->monitorIsActive = (bool) $m->is_active;
+        $this->monitorIsVps = (bool) ($m->is_vps || in_array($m->type, ['tcp', 'ping']));
         $this->showMonitorModal = true;
     }
 
@@ -129,13 +139,15 @@ class StatusStudio extends Component
             'monitorTimeoutMs' => 'required|integer|min:500|max:30000',
         ]);
 
+        $isVps = $this->monitorIsVps || in_array($this->monitorType, ['tcp', 'ping']);
+
         $payload = [
             'name' => $this->monitorName,
             'public_label' => $this->monitorPublicLabel ?: $this->monitorName,
             'group_name' => $this->monitorGroupName,
             'type' => $this->monitorType,
-            'target_url' => $this->monitorTargetUrl ?: null,
-            'target_host' => $this->monitorTargetHost ?: '127.0.0.1',
+            'target_url' => trim($this->monitorTargetUrl) ?: null,
+            'target_host' => trim($this->monitorTargetHost) ?: '127.0.0.1',
             'port' => $this->monitorPort ?: 80,
             'interval_seconds' => $this->monitorInterval,
             'timeout_ms' => $this->monitorTimeoutMs,
@@ -143,6 +155,7 @@ class StatusStudio extends Component
             'keyword_search' => $this->monitorKeywordSearch ?: null,
             'is_public' => $this->monitorIsPublic,
             'is_active' => $this->monitorIsActive,
+            'is_vps' => $isVps,
         ];
 
         if ($this->editingMonitorId) {
@@ -158,6 +171,24 @@ class StatusStudio extends Component
         }
 
         $this->showMonitorModal = false;
+    }
+
+    public function clearMonitorUrl(int $id)
+    {
+        $monitor = Monitor::findOrFail($id);
+        $monitor->update(['target_url' => null]);
+        if ($this->editingMonitorId === $id) {
+            $this->monitorTargetUrl = '';
+        }
+        $this->dispatch('success', "Target URL removed for monitor '{$monitor->name}'.");
+    }
+
+    public function toggleMonitorIsVps(int $id)
+    {
+        $monitor = Monitor::findOrFail($id);
+        $monitor->update(['is_vps' => !$monitor->is_vps]);
+        $state = $monitor->is_vps ? 'VPS Mode (IP/link hidden publicly)' : 'Standard Web Service (link visible)';
+        $this->dispatch('info', "Monitor '{$monitor->name}': {$state}.");
     }
 
     public function deleteMonitor(int $id)

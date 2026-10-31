@@ -19,6 +19,7 @@ class Monitor extends BaseModel
     protected $casts = [
         'is_public' => 'boolean',
         'is_active' => 'boolean',
+        'is_vps' => 'boolean',
         'uptime_percentage' => 'float',
         'last_latency_ms' => 'integer',
         'expected_status_code' => 'integer',
@@ -30,6 +31,28 @@ class Monitor extends BaseModel
     public function checks(): HasMany
     {
         return $this->hasMany(MonitorCheck::class, 'monitor_id')->orderBy('checked_at', 'desc');
+    }
+
+    /**
+     * Determine if monitor is a VPS or private node where IP/host is hidden publicly.
+     */
+    public function getIsVpsNodeAttribute(): bool
+    {
+        return (bool) ($this->is_vps || $this->type === 'tcp' || $this->type === 'ping');
+    }
+
+    /**
+     * Target summary for safe public display (completely disables/masks IP/host/link for VPS).
+     */
+    public function getPublicTargetDisplayAttribute(): string
+    {
+        if ($this->is_vps_node) {
+            return '';
+        }
+        if ($this->type === 'http' || $this->type === 'https') {
+            return $this->target_url ? preg_replace('#^https?://#', '', $this->target_url) : '';
+        }
+        return '';
     }
 
     /**

@@ -127,10 +127,37 @@
                                 </td>
                                 <td class="py-3 px-3 text-neutral-500 dark:text-fg-dim">{{ $m->group_name }}</td>
                                 <td class="py-3 px-3">
-                                    <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono uppercase bg-neutral-100 dark:bg-white/[0.06] text-neutral-600 dark:text-fg-dim">
-                                        {{ $m->type }}
-                                    </span>
-                                    <span class="ml-1 text-[11px] text-neutral-400 font-mono">{{ $m->target_display }}</span>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono uppercase bg-neutral-100 dark:bg-white/[0.06] text-neutral-600 dark:text-fg-dim">
+                                            {{ $m->type }}
+                                        </span>
+                                        @if ($m->is_vps || $m->is_vps_node)
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20 cursor-pointer"
+                                                wire:click="toggleMonitorIsVps({{ $m->id }})"
+                                                title="Click to toggle VPS mode. Current: IP/Link is hidden on public status page">
+                                                VPS (IP Hidden)
+                                            </span>
+                                        @else
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-neutral-100 dark:bg-white/[0.04] text-neutral-400 cursor-pointer"
+                                                wire:click="toggleMonitorIsVps({{ $m->id }})"
+                                                title="Click to toggle VPS mode">
+                                                Standard
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-[11px] text-neutral-400 font-mono truncate max-w-[180px]">
+                                            {{ $m->target_display }}
+                                        </span>
+                                        @if ($m->target_url)
+                                            <button type="button" wire:click="clearMonitorUrl({{ $m->id }})"
+                                                wire:confirm="Remove target URL from '{{ $m->name }}'?"
+                                                title="Remove / Clear URL"
+                                                class="text-neutral-400 hover:text-rose-400 p-0.5 transition-colors">
+                                                <svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="py-3 px-3">
                                     <span @class([
@@ -394,7 +421,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block font-semibold mb-1">Probe Type</label>
-                            <select wire:model="monitorType" class="w-full rounded-lg border border-neutral-300 dark:border-white/[0.1] bg-white dark:bg-app px-3 py-2">
+                            <select wire:model.live="monitorType" class="w-full rounded-lg border border-neutral-300 dark:border-white/[0.1] bg-white dark:bg-app px-3 py-2">
                                 <option value="http">HTTP / HTTPS</option>
                                 <option value="tcp">TCP Socket Port</option>
                                 <option value="ping">ICMP Ping</option>
@@ -409,9 +436,29 @@
 
                     @if ($monitorType === 'http' || $monitorType === 'https')
                         <div>
-                            <label class="block font-semibold mb-1">Target URL</label>
-                            <input type="url" wire:model.defer="monitorTargetUrl" placeholder="https://api.shanutechx.com/health"
-                                class="w-full rounded-lg border border-neutral-300 dark:border-white/[0.1] bg-white dark:bg-app px-3 py-2 font-mono" />
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-semibold">Target URL</label>
+                                @if ($monitorTargetUrl)
+                                    <button type="button" wire:click="$set('monitorTargetUrl', '')"
+                                        class="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 font-mono transition-colors">
+                                        <svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        <span>Remove / Clear URL</span>
+                                    </button>
+                                @endif
+                            </div>
+                            <div class="relative">
+                                <input type="url" wire:model.defer="monitorTargetUrl" placeholder="https://api.shanutechx.com/health"
+                                    class="w-full rounded-lg border border-neutral-300 dark:border-white/[0.1] bg-white dark:bg-app px-3 py-2 font-mono pr-16" />
+                                @if ($monitorTargetUrl)
+                                    <button type="button" wire:click="$set('monitorTargetUrl', '')"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-100 dark:bg-white/[0.08] hover:bg-rose-500/20 hover:text-rose-400 text-neutral-400 transition-colors">
+                                        Clear
+                                    </button>
+                                @endif
+                            </div>
+                            <p class="text-[10px] text-neutral-400 mt-1">
+                                Public web endpoint to probe. Click &ldquo;Remove / Clear URL&rdquo; if you wish to unset it.
+                            </p>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -439,6 +486,22 @@
                             </div>
                         </div>
                     @endif
+
+                    {{-- VPS / Private Infrastructure Privacy Shield --}}
+                    <div class="p-3 rounded-xl border border-purple-500/20 bg-purple-500/5 dark:bg-purple-950/20 space-y-1">
+                        <label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" wire:model.live="monitorIsVps" class="mt-0.5 rounded text-purple-600 focus:ring-purple-500" />
+                            <div>
+                                <span class="font-bold text-black dark:text-white flex items-center gap-1.5">
+                                    VPS Node / Infrastructure Privacy Mode
+                                    <span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-mono font-bold">Privacy Shield</span>
+                                </span>
+                                <span class="block text-[11px] text-neutral-500 dark:text-neutral-400 leading-normal mt-0.5">
+                                    When enabled, the public status page will <strong>disable and completely hide the IP address, host, port, and link</strong>. Public viewers will only see the safe <strong>VPS HOST NODE</strong> badge.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
 
                     <div class="flex items-center gap-6 pt-2">
                         <label class="flex items-center gap-2 cursor-pointer">

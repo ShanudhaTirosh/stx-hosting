@@ -17,7 +17,14 @@
                     </span>
                 </div>
                 <p class="text-xs text-neutral-400 mt-1">
-                    Target: <span class="text-neutral-200 font-mono">{{ $monitor->target_url ?: ($monitor->target_host ?: 'Protected') }}</span>
+                    Target: 
+                    @if ($monitor->is_vps_node)
+                        <span class="text-neutral-400 font-mono italic">Protected VPS Infrastructure (IP &amp; Port Disabled)</span>
+                    @elseif ($monitor->target_url)
+                        <span class="text-neutral-200 font-mono">{{ $monitor->target_url }}</span>
+                    @else
+                        <span class="text-neutral-400 font-mono italic">No Public URL</span>
+                    @endif
                     @if ($monitor->last_checked_at)
                         &bull; Last probe: {{ $monitor->last_checked_at->format('h:i A') }}
                     @endif

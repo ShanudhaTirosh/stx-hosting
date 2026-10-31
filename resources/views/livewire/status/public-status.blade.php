@@ -144,19 +144,16 @@
                 @php
                     $isOnline = in_array($monitor->current_status, ['operational', 'up', null]);
                     $latencyFast = ($monitor->last_latency_ms && $monitor->last_latency_ms < 50);
-                    $badgeType = match(strtolower($monitor->type)) {
-                        'tcp' => 'VPS HOST NODE',
-                        'ping' => 'VPS PING NODE',
+                    $isVps = (bool) ($monitor->is_vps || $monitor->is_vps_node || $monitor->type === 'tcp' || $monitor->type === 'ping');
+                    $badgeType = $isVps ? 'VPS HOST NODE' : match(strtolower($monitor->type)) {
                         'https' => 'HTTPS',
                         'http' => 'HTTPS',
                         default => strtoupper($monitor->type),
                     };
 
-                    $targetDisplay = $monitor->target_url
-                        ? preg_replace('#^https?://#', '', $monitor->target_url)
-                        : ($monitor->target_host ?: '');
-
-                    $showTarget = (!str_contains($badgeType, 'VPS HOST NODE') && !str_contains($badgeType, 'TCP') && !empty($targetDisplay));
+                    // For VPS nodes or monitors with removed URLs, disable and hide IP/link from public status page
+                    $showTarget = (!$isVps && !empty($monitor->target_url));
+                    $targetDisplay = $showTarget ? preg_replace('#^https?://#', '', $monitor->target_url) : '';
 
                     // Calculate active bars from checks count
                     $totalBars = 60;
