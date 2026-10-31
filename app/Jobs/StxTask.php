@@ -95,7 +95,7 @@ class StxTask implements ShouldBeEncrypted, ShouldQueue
      */
     public function failed(?\Throwable $exception): void
     {
-        Log::channel('scheduled-errors')->error('StxTask permanently failed', [
+        Log::channel('scheduled-errors')->error('STX HostingTask permanently failed', [
             'job' => 'StxTask',
             'activity_id' => $this->activity->id,
             'server_uuid' => $this->activity->getExtraProperty('server_uuid'),

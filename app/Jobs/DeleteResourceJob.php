@@ -43,6 +43,7 @@ class DeleteResourceJob implements ShouldBeEncrypted, ShouldQueue
         public bool $deleteConnectedNetworks = true,
         public bool $deleteConfigurations = true,
         public bool $dockerCleanup = true,
+        public bool $deleteFromStxOnly = false,
         public bool $deleteFromCoolifyOnly = false,
     ) {
         $this->onQueue('high');
@@ -56,7 +57,7 @@ class DeleteResourceJob implements ShouldBeEncrypted, ShouldQueue
             return;
         }
 
-        if ($this->deleteFromCoolifyOnly) {
+        if ($this->deleteFromStxOnly || $this->deleteFromCoolifyOnly) {
             // No remote calls on this path: remove only the schedule records, so the scheduler does
             // not keep running backups of volumes that no longer exist in Coolify.
             $this->volumeBackupSchedules()->each->delete();

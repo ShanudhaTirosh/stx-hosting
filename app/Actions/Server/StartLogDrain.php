@@ -181,6 +181,7 @@ services:
       - 127.0.0.1:24224:24224
     labels:
       - stx.managed=true
+      - stx.managed=true
       - coolify.managed=true
       - '.self::CONFIG_VERSION_LABEL.'='.self::CONFIG_VERSION.'
     restart: unless-stopped

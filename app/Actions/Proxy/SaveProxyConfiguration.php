@@ -68,7 +68,7 @@ class SaveProxyConfiguration
     }
 
     /**
-     * Coolify finds the proxy by its container name, so a renamed or unnamed proxy shows as stopped (#7083).
+     * STX Hosting finds the proxy by its container name, so a renamed or unnamed proxy shows as stopped (#7083).
      */
     private function ensureDefaultContainerName(string $configuration): void
     {

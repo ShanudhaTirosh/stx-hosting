@@ -94,7 +94,7 @@ class VolumeBackupJob implements ShouldBeEncrypted, ShouldQueue
         try {
             $source = $this->backup->sourcePath();
             $containerName = 'volume-backup-'.$this->execution->uuid;
-            $image = coolifyHelperImage().':'.getHelperVersion();
+            $image = (function_exists('stxHelperImage') ? stxHelperImage() : coolifyHelperImage()).':'.getHelperVersion();
             $compressionCpuPercentage = BackupCompression::cpuPercentage($server->settings->backup_compression_cpu_percentage);
             $this->logCompressorInDevelopment($image, $server, $compressionCpuPercentage);
             $verifySourceCommand = $target instanceof LocalPersistentVolume && blank($target->host_path)
@@ -439,7 +439,7 @@ class VolumeBackupJob implements ShouldBeEncrypted, ShouldQueue
     {
         $s3->testConnection(shouldSave: true);
         $containerName = 'volume-upload-'.$this->execution->uuid;
-        $image = coolifyHelperImage().':'.getHelperVersion();
+        $image = (function_exists('stxHelperImage') ? stxHelperImage() : coolifyHelperImage()).':'.getHelperVersion();
         $resolveOptions = $this->minioClientResolveOptions($s3);
 
         try {

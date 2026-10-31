@@ -4250,6 +4250,7 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
         $dockerfile = base64_encode("FROM {$this->staticImage()}
 WORKDIR /usr/share/nginx/html/
 LABEL stx.deploymentId={$this->deployment_uuid}
+LABEL stx.deploymentId={$this->deployment_uuid}
 LABEL coolify.deploymentId={$this->deployment_uuid}
 COPY --from={$this->build_image_name} /app{$publishDir} .
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
@@ -4866,6 +4867,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
         $dockerfile = base64_encode("FROM {$this->staticImage()}
         WORKDIR /usr/share/nginx/html/
         LABEL stx.deploymentId={$this->deployment_uuid}
+LABEL stx.deploymentId={$this->deployment_uuid}
 LABEL coolify.deploymentId={$this->deployment_uuid}
         COPY . .
         RUN rm -f /usr/share/nginx/html/nginx.conf
@@ -5067,6 +5069,7 @@ LABEL coolify.deploymentId={$this->deployment_uuid}
             $publishDir = $publishDir ? "/{$publishDir}" : '';
             $dockerfile = base64_encode("FROM {$this->staticImage()}
 WORKDIR /usr/share/nginx/html/
+LABEL stx.deploymentId={$this->deployment_uuid}
 LABEL stx.deploymentId={$this->deployment_uuid}
 LABEL coolify.deploymentId={$this->deployment_uuid}
 COPY --from=$this->build_image_name /app{$publishDir} .
@@ -5485,6 +5488,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             $this->build_args = generateDockerBuildArgs($vars_with_metadata);
 
             if ($secrets_hash) {
+                $this->build_args->push('--build-arg '.escapeshellarg("STX_BUILD_SECRETS_HASH={$secrets_hash}"));
                 $this->build_args->push('--build-arg '.escapeshellarg("COOLIFY_BUILD_SECRETS_HASH={$secrets_hash}"));
             }
         }
@@ -5729,6 +5733,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
             });
             $secretsHash = $this->generate_secrets_hash($environmentVariables);
             $argsToInsert->push("ARG STX_BUILD_SECRETS_HASH
+ARG STX_BUILD_SECRETS_HASH={$secretsHash}
 ARG COOLIFY_BUILD_SECRETS_HASH={$secretsHash}");
         }
 
@@ -6110,8 +6115,10 @@ ARG COOLIFY_BUILD_SECRETS_HASH'];
                     $args = $args->toArray();
                 }
                 if ($args !== [] && array_is_list($args)) {
+                    $args[] = "STX_BUILD_SECRETS_HASH={$secretsHash}";
                     $args[] = "COOLIFY_BUILD_SECRETS_HASH={$secretsHash}";
                 } else {
+                    $args['STX_BUILD_SECRETS_HASH'] = $secretsHash;
                     $args['COOLIFY_BUILD_SECRETS_HASH'] = $secretsHash;
                 }
                 $service['build']['args'] = $args;

@@ -134,6 +134,7 @@ class StartSentinel
         $environments = array_merge($environments, self::sentinelTrafficEnvironment($server));
         $labels = [
             'stx.managed' => 'true',
+            'stx.managed' => 'true',
             'coolify.managed' => 'true',
         ];
         if (isDev()) {
