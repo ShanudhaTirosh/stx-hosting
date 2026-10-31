@@ -23,7 +23,7 @@
         @elseif ($status === 'error')
             <x-reicon name="alert-circle" class="size-4" />
         @elseif ($status === 'running')
-            <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            <svg class="size-4 animate-spin" width="16" height="16" style="max-width: 1rem; max-height: 1rem;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                 aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
                 </circle>

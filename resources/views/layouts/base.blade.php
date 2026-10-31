@@ -123,6 +123,7 @@
             const theme = localStorage.theme === 'purple' ? 'custom' : (localStorage.theme || 'dark');
             root.dataset.navStyle = localStorage.navStyle === 'floating' ? 'floating' : 'default';
             root.dataset.navItems = localStorage.navItems === 'flat' ? 'flat' : '3d';
+            root.style.setProperty('--sidebar-w', localStorage.getItem('sidebarCollapsed') === 'true' ? 'var(--sidebar-collapsed-w, 4rem)' : '14rem');
             localStorage.theme = theme;
             if (localStorage.themeColor) localStorage.themeColor = window.normalizeThemeColor(localStorage.themeColor);
             if (theme === 'custom') {
@@ -362,13 +363,27 @@
             display: none !important;
         }
         svg {
-            max-width: 100%;
-            max-height: 100%;
             box-sizing: border-box;
         }
-        .menu-item-icon, .card-icon-button svg, .empty-state svg, .loading-indicator {
+        /* Spinners and loading indicators must NEVER blow up */
+        svg.animate-spin,
+        .animate-spin,
+        .loading-indicator,
+        [wire\:loading] svg,
+        .table-sort-header svg.animate-spin {
+            width: 1rem !important;
+            height: 1rem !important;
+            max-width: 1.25rem !important;
+            max-height: 1.25rem !important;
+            display: inline-block !important;
+            flex-shrink: 0 !important;
+            vertical-align: middle !important;
+        }
+        .menu-item-icon, .card-icon-button svg, .empty-state svg {
             flex-shrink: 0 !important;
             display: inline-block !important;
+            max-width: 1.5rem !important;
+            max-height: 1.5rem !important;
         }
         .empty-state-well svg {
             width: 1.5rem !important;

@@ -170,6 +170,9 @@ Route::post('/auth/link', [Controller::class, 'acceptLink'])->middleware('thrott
 
 Route::get('/auth/{provider}/redirect', [OauthController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->name('auth.callback');
+// Public Native Storefront (Port 8000)
+Route::get('/store', \App\Livewire\Storefront\Index::class)->name('store.index');
+Route::get('/pricing', \App\Livewire\Storefront\Index::class)->name('store.pricing');
 Route::get('/status', PublicStatus::class)->name('status.public');
 
 // Local/testing previews for HTTP error pages and the Laravel debug renderer (never in production).
@@ -283,7 +286,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/deploy', [DeployController::class, 'deploy'])->middleware(['api.ability:deploy']);
         Route::get('/deployments/{uuid}', [DeployController::class, 'deployment_by_uuid'])->middleware(['api.ability:read']);
     });
+    // Administration Console & Commerce Studio
     Route::get('/admin', AdminIndex::class)->name('admin.index');
+    Route::get('/admin/commerce/products', \App\Livewire\Admin\Commerce\ProductCatalogStudio::class)->name('admin.commerce.products');
     Route::get('/admin/billing/proofs', ProofReviewQueue::class)->name('admin.billing.proofs');
     Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
     Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');

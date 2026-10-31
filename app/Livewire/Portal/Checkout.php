@@ -59,7 +59,24 @@ class Checkout extends Component
             }
         }
 
-        $planIdParam = request()->query('planId') ?? request()->query('plan');
+        if (request()->query('currency')) {
+            $this->currency = request()->query('currency') === 'LKR' ? 'LKR' : 'USD';
+        }
+
+        if (request()->query('billing')) {
+            $this->billingType = request()->query('billing');
+        }
+
+        if (request()->query('tier')) {
+            $tier = \App\Models\Commerce\PricingTier::where('uuid', request()->query('tier'))
+                ->orWhere('id', request()->query('tier'))
+                ->first();
+            if ($tier) {
+                $this->billingType = $tier->billing_type;
+            }
+        }
+
+        $planIdParam = request()->query('planId') ?? request()->query('plan') ?? request()->query('variant');
         $planIdsParam = request()->query('planIds');
 
         if ($planIdsParam) {
@@ -68,11 +85,12 @@ class Checkout extends Component
             $this->cartPlanIds = [$planIdParam];
         }
 
-        // Default or find first variant
+        // Default or find first variant (supports UUID, ID, or Slug)
         if (! empty($this->cartPlanIds)) {
             $first = $this->cartPlanIds[0];
             $this->selectedVariant = ProductVariant::with(['product', 'pricingTiers'])
-                ->where('id', $first)
+                ->where('uuid', $first)
+                ->orWhere('id', $first)
                 ->orWhere('slug', $first)
                 ->first();
         }

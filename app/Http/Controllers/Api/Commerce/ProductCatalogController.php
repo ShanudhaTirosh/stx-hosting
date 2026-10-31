@@ -76,9 +76,9 @@ class ProductCatalogController extends Controller
 
         foreach ($product->variants as $variant) {
             foreach ($variant->pricingTiers as $tier) {
-                $price = $currency === 'LKR' && $tier->price_lkr > 0
-                    ? (float) $tier->price_lkr
-                    : (float) $tier->price_usd;
+                $price = $currency === 'LKR' && ($tier->price_lkr_cents ?? 0) > 0
+                    ? (float) ($tier->price_lkr_cents / 100)
+                    : (float) (($tier->price_cents ?? 0) / 100);
 
                 $plans[] = [
                     'id' => $tier->uuid,
@@ -87,10 +87,10 @@ class ProductCatalogController extends Controller
                     'name' => $variant->name,
                     'price' => $price,
                     'currency' => $currency,
-                    'billingType' => $tier->billing_period,
-                    'isPopular' => (bool) $variant->is_featured,
-                    'badge' => $variant->badge_text ?: $product->badge_text,
-                    'specsJson' => $variant->specs ?: $product->metadata,
+                    'billingType' => $tier->billing_type,
+                    'isPopular' => (bool) ($variant->is_popular ?? $product->is_popular),
+                    'badge' => $product->badge,
+                    'specsJson' => $variant->specs_json,
                     'isActive' => (bool) $tier->is_active,
                 ];
             }
@@ -103,8 +103,8 @@ class ProductCatalogController extends Controller
             'slug' => $product->slug,
             'description' => $product->description,
             'iconUrl' => $product->icon_url,
-            'isPopular' => (bool) $product->is_featured,
-            'badge' => $product->badge_text,
+            'isPopular' => (bool) $product->is_popular,
+            'badge' => $product->badge,
             'isActive' => (bool) $product->is_active,
             'plans' => $plans,
         ];

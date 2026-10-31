@@ -33,7 +33,7 @@
                 localStorage.setItem('sidebarCollapsed', this.collapsed);
             }
         }" @open-global-search.window="open = false" @page-width-changed.window="pageWidth = $event.detail"
-            :style="{ '--sidebar-w': collapsed ? 'var(--sidebar-collapsed-w)' : '14rem' }" x-cloak
+            :style="{ '--sidebar-w': collapsed ? 'var(--sidebar-collapsed-w)' : '14rem' }"
             @class(['app-shell dark:text-inherit text-black', 'app-shell-canvas flex h-dvh flex-col' => $fullBleed ?? false])>
             {{-- ============ DESKTOP TOP BAR ============ --}}
             <header

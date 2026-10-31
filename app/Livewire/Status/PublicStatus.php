@@ -41,6 +41,6 @@ class PublicStatus extends Component
         });
 
         return view('livewire.status.public-status', $data)
-            ->layout('layouts.base', ['title' => 'System Status & Infrastructure Health — STX Enterprises']);
+            ->layout('layouts.simple', ['title' => 'System Status & Infrastructure Health — STX Enterprises']);
     }
 }

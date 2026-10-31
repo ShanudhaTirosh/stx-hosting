@@ -142,6 +142,7 @@
                 $navSections = collect([
                     'Administration' => [
                         ['label' => 'Admin Console', 'icon' => 'admin', 'href' => route('admin.index'), 'active' => request()->is('admin'), 'visible' => $isPlatformAdmin],
+                        ['label' => 'Products & Plans', 'icon' => 'layers', 'href' => route('admin.commerce.products'), 'active' => request()->is('admin/commerce/products*'), 'visible' => $isPlatformAdmin],
                         ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('admin.operations.approvals'), 'active' => request()->is('admin/operations/approvals*'), 'visible' => $isPlatformAdmin],
                         ['label' => 'VPS Inventory', 'icon' => 'servers', 'href' => route('admin.inventory.vps'), 'active' => request()->is('admin/inventory/vps*'), 'visible' => $isPlatformAdmin],
                         ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('admin.operations.provisioning'), 'active' => request()->is('admin/operations/provisioning*'), 'visible' => $isPlatformAdmin],
@@ -149,6 +150,7 @@
                     ],
                     'Customer Portal' => [
                         ['label' => 'My Services', 'icon' => 'layers', 'href' => route('portal.index'), 'active' => request()->is('portal', 'portal/services*')],
+                        ['label' => 'Store Catalog', 'icon' => 'globe', 'href' => route('store.index'), 'active' => request()->is('store*', 'pricing*')],
                         ['label' => 'Applications', 'icon' => 'code', 'href' => route('portal.apps'), 'active' => request()->is('portal/apps*')],
                         ['label' => 'Databases', 'icon' => 'database', 'href' => route('portal.databases'), 'active' => request()->is('portal/databases*')],
                         ['label' => 'Billing & Invoices', 'icon' => 'subscription', 'href' => route('portal.billing'), 'active' => request()->is('portal/billing*')],

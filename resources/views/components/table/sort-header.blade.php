@@ -49,7 +49,7 @@
             wire:loading.remove wire:target="{{ $call }}">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 15l6-6 6 6" />
         </svg>
-        <svg class="size-3 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"
+        <svg class="size-3 shrink-0 animate-spin" width="12" height="12" style="max-width: 0.75rem; max-height: 0.75rem;" viewBox="0 0 24 24" fill="none" aria-hidden="true"
             wire:loading wire:target="{{ $call }}">
             <circle class="opacity-20" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" />
             <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
