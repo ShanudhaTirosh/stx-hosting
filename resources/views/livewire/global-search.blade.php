@@ -406,12 +406,12 @@
                 <!-- Search input -->
                 <div class="command-palette-header">
                     <span class="command-palette-header-icon" :class="showLoadingSpinner && 'is-loading'">
-                        <svg x-show="!showLoadingSpinner" class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <svg x-show="!showLoadingSpinner" class="size-4" width="16" height="16" style="max-width: 1rem; max-height: 1rem;" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path fill-rule="evenodd" clip-rule="evenodd"
                                 d="M16.489 17.5497C14.8753 18.922 12.7843 19.75 10.5 19.75C5.39137 19.75 1.25 15.6086 1.25 10.5C1.25 5.39137 5.39137 1.25 10.5 1.25C15.6086 1.25 19.75 5.39137 19.75 10.5C19.75 12.7843 18.922 14.8753 17.5497 16.489L22.5303 21.4697C22.8232 21.7626 22.8232 22.2374 22.5303 22.5303C22.2374 22.8232 21.7626 22.8232 21.4697 22.5303L16.489 17.5497ZM2.75 10.5C2.75 6.21979 6.21979 2.75 10.5 2.75C14.7802 2.75 18.25 6.21979 18.25 10.5C18.25 12.589 17.4235 14.485 16.0796 15.8788C16.0408 15.905 16.004 15.9353 15.9697 15.9697C15.9353 16.004 15.905 16.0408 15.8788 16.0796C14.485 17.4235 12.589 18.25 10.5 18.25C6.21979 18.25 2.75 14.7802 2.75 10.5Z"
                                 fill="currentColor" />
                         </svg>
-                        <svg x-show="showLoadingSpinner" x-cloak class="size-4 animate-spin" viewBox="0 0 24 24" fill="none"
+                        <svg x-show="showLoadingSpinner" x-cloak class="size-4 animate-spin" width="16" height="16" style="max-width: 1rem; max-height: 1rem;" viewBox="0 0 24 24" fill="none"
                             aria-hidden="true">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
                             <path class="opacity-75" fill="currentColor"
@@ -481,7 +481,7 @@
                                     </div>
                                     @if ($loadingServers)
                                         <div class="command-palette-status">
-                                            <svg class="size-3.5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none"
+                                            <svg class="size-3.5 animate-spin shrink-0" width="14" height="14" style="max-width: 0.875rem; max-height: 0.875rem;" viewBox="0 0 24 24" fill="none"
                                                 aria-hidden="true">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                                     stroke-width="3"></circle>
@@ -528,7 +528,7 @@
                                     </div>
                                     @if ($loadingDestinations)
                                         <div class="command-palette-status">
-                                            <svg class="size-3.5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none"
+                                            <svg class="size-3.5 animate-spin shrink-0" width="14" height="14" style="max-width: 0.875rem; max-height: 0.875rem;" viewBox="0 0 24 24" fill="none"
                                                 aria-hidden="true">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                                     stroke-width="3"></circle>
@@ -576,7 +576,7 @@
                                     </div>
                                     @if ($loadingProjects)
                                         <div class="command-palette-status">
-                                            <svg class="size-3.5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none"
+                                            <svg class="size-3.5 animate-spin shrink-0" width="14" height="14" style="max-width: 0.875rem; max-height: 0.875rem;" viewBox="0 0 24 24" fill="none"
                                                 aria-hidden="true">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                                     stroke-width="3"></circle>
@@ -624,7 +624,7 @@
                                     </div>
                                     @if ($loadingEnvironments)
                                         <div class="command-palette-status">
-                                            <svg class="size-3.5 animate-spin shrink-0" viewBox="0 0 24 24" fill="none"
+                                            <svg class="size-3.5 animate-spin shrink-0" width="14" height="14" style="max-width: 0.875rem; max-height: 0.875rem;" viewBox="0 0 24 24" fill="none"
                                                 aria-hidden="true">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                                     stroke-width="3"></circle>

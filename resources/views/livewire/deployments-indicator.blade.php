@@ -31,7 +31,7 @@
                             class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-coollabs dark:border-coolgray-300 dark:bg-raised dark:text-brand-light">
                             @if ($deployment->status === 'in_progress')
                                 <svg class="size-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                    viewBox="0 0 24 24" aria-hidden="true">
+                                    viewBox="0 0 24 24" aria-hidden="true" width="14" height="14" style="max-width:100%;max-height:100%;">
                                     <circle class="opacity-25" cx="12" cy="12" r="10"
                                         stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor"
@@ -75,7 +75,7 @@
             :class="expanded && 'bg-neutral-100 dark:bg-white/[0.06]'"
             class="flex h-9 items-center gap-1.5 rounded-md px-2 text-[13px] font-medium text-coollabs transition-colors hover:bg-neutral-100 dark:text-brand-light dark:hover:bg-white/[0.06]">
             <svg class="size-3.5 shrink-0 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                aria-hidden="true">
+                aria-hidden="true" width="14" height="14" style="max-width:100%;max-height:100%;">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">

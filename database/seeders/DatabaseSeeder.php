@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             SentinelSeeder::class,
             CaSslCertSeeder::class,
             PersonalAccessTokenSeeder::class,
+            HostingCatalogSeeder::class,
         ]);
     }
 }

@@ -10,8 +10,9 @@ class StandalonePostgresqlSeeder extends Seeder
 {
     public function run(): void
     {
-        StandalonePostgresql::create([
+        StandalonePostgresql::firstOrCreate([
             'uuid' => 'postgresql',
+        ], [
             'name' => 'Local PostgreSQL',
             'description' => 'Local PostgreSQL for testing',
             'postgres_password' => 'postgres',

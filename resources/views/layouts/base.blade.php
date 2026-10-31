@@ -328,7 +328,11 @@
     @use('App\Models\InstanceSettings')
     @php
 
-        $instanceSettings = instanceSettings();
+        try {
+            $instanceSettings = instanceSettings();
+        } catch (\Throwable $e) {
+            $instanceSettings = null;
+        }
         $name = null;
 
         if ($instanceSettings) {
@@ -356,6 +360,10 @@
     <style>
         [x-cloak] {
             display: none !important;
+        }
+        svg {
+            max-width: 100%;
+            max-height: 100%;
         }
     </style>
     @auth

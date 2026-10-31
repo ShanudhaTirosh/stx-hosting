@@ -96,6 +96,6 @@
 @endphp
 
 <svg {{ $attributes->class(['size-4', 'text-error' => $isDanger]) }} viewBox="0 0 24 24" fill="none"
-    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="1em" height="1em" style="max-width: 100%; max-height: 100%; display: inline-block; vertical-align: middle;">
     {!! $svg !!}
 </svg>

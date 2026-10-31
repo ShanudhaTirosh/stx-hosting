@@ -26,7 +26,13 @@ class CaSslCertSeeder extends Seeder
                 }
                 $commands = SslHelper::caCertificateFileCommands($caCert->ssl_certificate);
 
-                remote_process($commands, $server);
+                if ($server->isFunctional()) {
+                    try {
+                        remote_process($commands, $server);
+                    } catch (\Throwable $e) {
+                        // Ignore SSH failure during seed
+                    }
+                }
             }
         });
     }

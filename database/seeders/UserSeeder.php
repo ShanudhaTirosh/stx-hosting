@@ -9,19 +9,24 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::factory()->create([
-            'id' => 0,
-            'name' => 'Root User',
-            'email' => 'test@example.com',
-        ]);
-        User::factory()->create([
-            'name' => 'Normal User (but in root team)',
-            'email' => 'test2@example.com',
-        ]);
-        User::factory()->create([
-            'name' => 'Normal User (not in root team)',
-            'email' => 'test3@example.com',
-        ]);
-
+        if (! User::where('id', 0)->exists()) {
+            User::factory()->create([
+                'id' => 0,
+                'name' => 'Root User',
+                'email' => 'test@example.com',
+            ]);
+        }
+        if (! User::where('email', 'test2@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Normal User (but in root team)',
+                'email' => 'test2@example.com',
+            ]);
+        }
+        if (! User::where('email', 'test3@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Normal User (not in root team)',
+                'email' => 'test3@example.com',
+            ]);
+        }
     }
 }

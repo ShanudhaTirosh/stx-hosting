@@ -3,7 +3,7 @@
     @if (isset($text))
         <div>{{ $text }}</div>
     @endif
-    <svg class="loading-indicator w-4 h-4 mx-1 ml-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+    <svg class="loading-indicator w-4 h-4 mx-1 ml-3 animate-spin" width="16" height="16" style="max-width: 1rem; max-height: 1rem; display: inline-block; vertical-align: middle;" xmlns="http://www.w3.org/2000/svg" fill="none"
         viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor"

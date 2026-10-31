@@ -12,8 +12,9 @@ class S3StorageSeeder extends Seeder
      */
     public function run(): void
     {
-        S3Storage::create([
+        S3Storage::firstOrCreate([
             'uuid' => 'minio',
+        ], [
             'name' => 'Local MinIO',
             'description' => 'Local MinIO S3 Storage',
             'key' => 'minioadmin',

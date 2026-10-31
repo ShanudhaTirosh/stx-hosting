@@ -13,8 +13,9 @@ class GitlabAppSeeder extends Seeder
      */
     public function run(): void
     {
-        GitlabApp::create([
+        GitlabApp::firstOrCreate([
             'id' => 1,
+        ], [
             'uuid' => 'gitlab-public',
             'name' => 'Public GitLab',
             'api_url' => 'https://gitlab.com/api/v4',

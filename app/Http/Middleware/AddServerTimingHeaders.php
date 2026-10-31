@@ -106,6 +106,10 @@ class AddServerTimingHeaders
      */
     protected function injectHud(Response $response, Request $request, array $metrics): Response
     {
+        if ($response->getStatusCode() !== 200) {
+            return $response;
+        }
+
         $content = $response->getContent();
         if (! is_string($content) || $content === '') {
             return $response;

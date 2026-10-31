@@ -14,7 +14,7 @@
 @if ($href)
     <a href="{{ $href }}" {{ wireNavigate() }} {{ $attributes->class($deployingIndicatorClasses) }}
         title="View the running deployment log">
-        <svg class="size-3 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg class="size-3 animate-spin" width="12" height="12" style="max-width: 0.75rem; max-height: 0.75rem;" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" opacity="0.25" />
             <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
         </svg>
@@ -23,7 +23,7 @@
 @else
     <button type="button" x-on:click="$wire.{{ $action }}()" {{ $attributes->class($deployingIndicatorClasses) }}
         title="View the running deployment log">
-        <svg class="size-3 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg class="size-3 animate-spin" width="12" height="12" style="max-width: 0.75rem; max-height: 0.75rem;" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" opacity="0.25" />
             <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
         </svg>

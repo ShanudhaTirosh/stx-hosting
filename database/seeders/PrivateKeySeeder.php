@@ -12,6 +12,9 @@ class PrivateKeySeeder extends Seeder
      */
     public function run(): void
     {
+        if (PrivateKey::where('uuid', 'ssh')->exists()) {
+            return;
+        }
         PrivateKey::create([
             'uuid' => 'ssh',
             'team_id' => 0,

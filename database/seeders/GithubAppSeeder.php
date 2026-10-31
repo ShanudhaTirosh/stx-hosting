@@ -12,8 +12,9 @@ class GithubAppSeeder extends Seeder
      */
     public function run(): void
     {
-        GithubApp::create([
+        GithubApp::firstOrCreate([
             'id' => 0,
+        ], [
             'uuid' => 'github-public',
             'name' => 'Public GitHub',
             'api_url' => 'https://api.github.com',
@@ -21,9 +22,10 @@ class GithubAppSeeder extends Seeder
             'is_public' => true,
             'team_id' => 0,
         ]);
-        GithubApp::create([
-            'name' => 'coolify-laravel-dev-public',
+        GithubApp::firstOrCreate([
             'uuid' => 'github-app',
+        ], [
+            'name' => 'coolify-laravel-dev-public',
             'organization' => 'coollabsio',
             'api_url' => 'https://api.github.com',
             'html_url' => 'https://github.com',

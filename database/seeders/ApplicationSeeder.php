@@ -19,6 +19,10 @@ class ApplicationSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Application::count() > 0) {
+            return;
+        }
+
         $sslipHost = ServerSettingSeeder::sslipHost();
 
         Application::create([

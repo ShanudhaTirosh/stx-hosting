@@ -15,9 +15,9 @@ class TeamSeeder extends Seeder
         $root_user_personal_team->description = 'The root team';
         $root_user_personal_team->save();
 
-        $normal_user_in_root_team->teams()->attach($root_user_personal_team);
+        $normal_user_in_root_team->teams()->syncWithoutDetaching([$root_user_personal_team->id]);
         $normal_user_not_in_root_team = User::where('email', 'test3@example.com')->firstOrFail();
         $normal_user_in_root_team_personal_team = $normal_user_in_root_team->teams()->where('personal_team', true)->wherePivot('role', 'owner')->firstOrFail();
-        $normal_user_not_in_root_team->teams()->attach($normal_user_in_root_team_personal_team, ['role' => 'admin']);
+        $normal_user_not_in_root_team->teams()->syncWithoutDetaching([$normal_user_in_root_team_personal_team->id => ['role' => 'admin']]);
     }
 }
