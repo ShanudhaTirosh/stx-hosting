@@ -1,10 +1,10 @@
 {
     "name": "stxhosting/platform",
-    "description": "The Coolify project.",
+    "description": "STX Hosting - Enterprise cloud infrastructure and deployment platform.",
     "license": "Apache-2.0",
     "type": "project",
     "keywords": [
-        "coolify",
+        "stx-hosting",
         "deployment",
         "docker",
         "self-hosted",
