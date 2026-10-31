@@ -170,10 +170,30 @@ Route::post('/auth/link', [Controller::class, 'acceptLink'])->middleware('thrott
 
 Route::get('/auth/{provider}/redirect', [OauthController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->name('auth.callback');
-// Public Native Storefront (Port 8000)
+// Public Native Storefront & Status (Port 8000)
 Route::get('/store', \App\Livewire\Storefront\Index::class)->name('store.index');
-Route::get('/pricing', \App\Livewire\Storefront\Index::class)->name('store.pricing');
+Route::get('/vps', \App\Livewire\Storefront\CategoryVps::class)->name('store.vps');
+Route::get('/game-servers', \App\Livewire\Storefront\CategoryGameServers::class)->name('store.games');
+Route::get('/databases', \App\Livewire\Storefront\CategoryDatabases::class)->name('store.databases');
+Route::get('/app-hosting', \App\Livewire\Storefront\CategoryAppHosting::class)->name('store.app-hosting');
+Route::get('/bot-hosting', \App\Livewire\Storefront\CategoryBotHosting::class)->name('store.bot-hosting');
+Route::get('/web-hosting', \App\Livewire\Storefront\CategoryWebHosting::class)->name('store.web-hosting');
+Route::get('/v2ray', \App\Livewire\Storefront\CategoryV2ray::class)->name('store.v2ray');
+Route::get('/pricing', \App\Livewire\Storefront\PricingPage::class)->name('store.pricing');
+Route::get('/contact', \App\Livewire\Storefront\ContactPage::class)->name('store.contact');
+Route::get('/about', \App\Livewire\Storefront\AboutPage::class)->name('store.about');
+Route::get('/reviews', \App\Livewire\Storefront\ReviewsPage::class)->name('store.reviews');
+Route::get('/faqs', \App\Livewire\Storefront\FaqsPage::class)->name('store.faqs');
+Route::get('/terms', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'terms')->name('store.terms');
+Route::get('/privacy', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'privacy')->name('store.privacy');
+Route::get('/refund', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'refund')->name('store.refund');
+Route::get('/cookies', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'cookies')->name('store.cookies');
+Route::get('/discord', fn () => redirect()->away('https://discord.gg/shanutechx'))->name('store.discord');
+
+// Public Telemetry & Status Portal
 Route::get('/status', PublicStatus::class)->name('status.public');
+Route::get('/status/monitor/{uuid}', \App\Livewire\Status\MonitorDetail::class)->name('status.monitor');
+Route::get('/status/incidents', \App\Livewire\Status\IncidentsArchive::class)->name('status.incidents');
 
 // Local/testing previews for HTTP error pages and the Laravel debug renderer (never in production).
 if (app()->environment(['local', 'testing'])) {

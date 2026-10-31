@@ -205,3 +205,4 @@ class StatusCheckService
         // Notifications can be delivered via Discord, Telegram or Email based on commercial settings
     }
 }
+

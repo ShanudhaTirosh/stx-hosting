@@ -51,3 +51,4 @@ class CheckStatusMonitorsCommand extends Command
         return 0;
     }
 }
+

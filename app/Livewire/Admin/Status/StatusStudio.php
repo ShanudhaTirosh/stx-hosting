@@ -332,3 +332,4 @@ class StatusStudio extends Component
         ])->layout('layouts.app', ['title' => 'Status & Telemetry Studio — STX Admin']);
     }
 }
+
