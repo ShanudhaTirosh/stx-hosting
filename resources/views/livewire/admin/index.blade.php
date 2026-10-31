@@ -25,6 +25,45 @@
             </div>
         </section>
 
+        <!-- Admin & Operations Hub Quick Nav -->
+        <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <a href="{{ route('admin.operations.approvals') }}" class="group block rounded-[10px] border border-purple-500/30 bg-purple-500/5 p-4 hover:bg-purple-500/10 transition-colors">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-purple-400 uppercase tracking-wider">Governance</span>
+                    <span class="h-2 w-2 rounded-full bg-purple-400"></span>
+                </div>
+                <div class="mt-2 text-sm font-semibold text-white group-hover:text-purple-300">Deployment Approvals</div>
+                <div class="mt-0.5 text-xs text-neutral-400">Review and authorize admin deployment requests</div>
+            </a>
+
+            <a href="{{ route('admin.billing.proofs') }}" class="group block rounded-[10px] border border-blue-500/30 bg-blue-500/5 p-4 hover:bg-blue-500/10 transition-colors">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Billing</span>
+                    <span class="h-2 w-2 rounded-full bg-blue-400"></span>
+                </div>
+                <div class="mt-2 text-sm font-semibold text-white group-hover:text-blue-300">Proof Review Queue</div>
+                <div class="mt-0.5 text-xs text-neutral-400">Verify manual customer bank payment receipts</div>
+            </a>
+
+            <a href="{{ route('admin.inventory.vps') }}" class="group block rounded-[10px] border border-emerald-500/30 bg-emerald-500/5 p-4 hover:bg-emerald-500/10 transition-colors">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Inventory</span>
+                    <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                </div>
+                <div class="mt-2 text-sm font-semibold text-white group-hover:text-emerald-300">VPS Inventory Studio</div>
+                <div class="mt-0.5 text-xs text-neutral-400">Manage unallocated VPS nodes and IP pools</div>
+            </a>
+
+            <a href="{{ route('admin.operations.provisioning') }}" class="group block rounded-[10px] border border-amber-500/30 bg-amber-500/5 p-4 hover:bg-amber-500/10 transition-colors">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Operations</span>
+                    <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+                </div>
+                <div class="mt-2 text-sm font-semibold text-white group-hover:text-amber-300">VPS Delivery Queue</div>
+                <div class="mt-0.5 text-xs text-neutral-400">Fulfill pending paid server orders</div>
+            </a>
+        </section>
+
         @if (session('impersonating'))
             <x-callout type="warning" title="Impersonation is active">
                 <div class="flex flex-wrap items-center justify-between gap-3">

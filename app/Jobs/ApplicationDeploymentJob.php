@@ -367,6 +367,18 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
             return;
         }
 
+        if ($this->application_deployment_queue->status === ApplicationDeploymentStatus::PENDING_APPROVAL->value) {
+            $this->application_deployment_queue->addLogEntry('Deployment is pending platform Owner approval.');
+
+            return;
+        }
+
+        if ($this->application_deployment_queue->status === ApplicationDeploymentStatus::REJECTED->value) {
+            $this->application_deployment_queue->addLogEntry('Deployment was rejected by platform Owner.');
+
+            return;
+        }
+
         try {
             $this->validateDeploymentEnvironmentVariableKeys();
             $this->ensureRegistryImageForMultipleServers();

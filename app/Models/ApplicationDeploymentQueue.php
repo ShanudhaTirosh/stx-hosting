@@ -134,6 +134,10 @@ class ApplicationDeploymentQueue extends Model
         'horizon_job_id',
         'horizon_job_worker',
         'finished_at',
+        'requested_by_user_id',
+        'reviewed_by_user_id',
+        'reviewed_at',
+        'rejection_reason',
     ];
 
     /**
@@ -153,9 +157,20 @@ class ApplicationDeploymentQueue extends Model
     protected $casts = [
         'pull_request_id' => 'integer',
         'finished_at' => 'datetime',
+        'reviewed_at' => 'datetime',
         'configuration_snapshot' => EncryptedArrayCast::class,
         'configuration_diff' => EncryptedArrayCast::class,
     ];
+
+    public function requester()
+    {
+        return $this->belongsTo(User::class, 'requested_by_user_id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by_user_id');
+    }
 
     public function application()
     {

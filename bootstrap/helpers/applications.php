@@ -87,6 +87,7 @@ function queue_application_deployment(Application $application, string $deployme
             'git_type' => $git_type,
             'only_this_server' => $only_this_server,
             'parent_deployment_uuid' => $parent_deployment_uuid,
+            'requested_by_user_id' => auth()->id(),
         ]);
 
         $requiresApproval = auth()->check()
@@ -97,6 +98,15 @@ function queue_application_deployment(Application $application, string $deployme
         if ($requiresApproval) {
             $deployment->update([
                 'status' => ApplicationDeploymentStatus::PENDING_APPROVAL->value,
+                'requested_by_user_id' => auth()->id(),
+            ]);
+
+            auditLog('deployment.approval_requested', [
+                'team_id' => $application?->team()?->id,
+                'application_uuid' => $application?->uuid,
+                'application_name' => $application?->name,
+                'deployment_uuid' => $deployment_uuid,
+                'requested_by_user_id' => auth()->id(),
             ]);
 
             return ['deployment' => $deployment, 'started' => false, 'pending_approval' => true];

@@ -51,6 +51,16 @@ class ActiveDeployments extends Component
 
             $deployment->update([
                 'status' => ApplicationDeploymentStatus::IN_PROGRESS->value,
+                'reviewed_by_user_id' => auth()->id(),
+                'reviewed_at' => now(),
+            ]);
+
+            auditLog('deployment.approved', [
+                'team_id' => $deployment->application?->team()?->id,
+                'application_uuid' => $deployment->application?->uuid,
+                'application_name' => $deployment->application_name,
+                'deployment_uuid' => $deployment->deployment_uuid,
+                'reviewed_by_user_id' => auth()->id(),
             ]);
 
             ApplicationDeploymentJob::dispatch(
@@ -58,6 +68,40 @@ class ActiveDeployments extends Component
             );
 
             $this->dispatch('success', 'Deployment approved and dispatched.');
+        } catch (\Throwable $e) {
+            handleError($e, $this);
+        }
+    }
+
+    public function rejectDeployment(int $id, ?string $reason = null): void
+    {
+        try {
+            if (! auth()->check() || ! RbacService::isOwner(auth()->user())) {
+                throw new \Exception('Only the platform Owner can reject deployments.');
+            }
+
+            $deployment = ApplicationDeploymentQueue::findOrFail($id);
+            if ($deployment->status !== ApplicationDeploymentStatus::PENDING_APPROVAL->value) {
+                return;
+            }
+
+            $deployment->update([
+                'status' => ApplicationDeploymentStatus::REJECTED->value,
+                'reviewed_by_user_id' => auth()->id(),
+                'reviewed_at' => now(),
+                'rejection_reason' => $reason ?: 'Rejected by platform Owner.',
+            ]);
+
+            auditLog('deployment.rejected', [
+                'team_id' => $deployment->application?->team()?->id,
+                'application_uuid' => $deployment->application?->uuid,
+                'application_name' => $deployment->application_name,
+                'deployment_uuid' => $deployment->deployment_uuid,
+                'reviewed_by_user_id' => auth()->id(),
+                'rejection_reason' => $reason ?: 'Rejected by platform Owner.',
+            ]);
+
+            $this->dispatch('success', 'Deployment request rejected.');
         } catch (\Throwable $e) {
             handleError($e, $this);
         }

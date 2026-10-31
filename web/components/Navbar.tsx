@@ -60,6 +60,13 @@ const PRODUCTS = [
     color: 'text-purple-400',
   },
   {
+    name: 'Game Server Hosting',
+    desc: 'Low-latency 128-tick Minecraft, Rust & CS2 nodes',
+    href: '/game-servers',
+    icon: Zap,
+    color: 'text-amber-400',
+  },
+  {
     name: 'App & Repo Hosting',
     desc: 'Deploy from GitHub, GitLab, or ZIP packages',
     href: '/app-hosting',
@@ -72,6 +79,13 @@ const PRODUCTS = [
     href: '/bot-hosting',
     icon: Bot,
     color: 'text-pink-400',
+  },
+  {
+    name: 'Managed Web Hosting',
+    desc: 'Fast WordPress & static websites with free SSL',
+    href: '/web-hosting',
+    icon: Sparkles,
+    color: 'text-emerald-400',
   },
   {
     name: 'Managed Databases',

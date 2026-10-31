@@ -10,4 +10,5 @@ enum ApplicationDeploymentStatus: string
     case FINISHED = 'finished';
     case FAILED = 'failed';
     case CANCELLED_BY_USER = 'cancelled-by-user';
+    case REJECTED = 'rejected';
 }

@@ -21,7 +21,7 @@ test('[F22-T1-1] TEST_INFRA.md specification document exists and is readable', f
     $infraPath = base_path('TEST_INFRA.md');
     expect(file_exists($infraPath))->toBeTrue();
     $content = file_get_contents($infraPath);
-    expect($content)->toContain('Coolify Commercial Hardening');
+    expect($content)->toMatch('/(Coolify|STX Hosting) Commercial Hardening/');
     expect($content)->toContain('Tier 1: Feature Coverage');
     expect($content)->toContain('Tier 2: Boundary & Corner Cases');
     expect($content)->toContain('Tier 3: Cross-Feature Interaction Matrix');

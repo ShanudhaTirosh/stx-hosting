@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Server;
 use App\Models\User;
+use App\Services\RbacService;
 
 class ServerPolicy
 {
@@ -51,10 +52,15 @@ class ServerPolicy
 
     /**
      * Determine whether the user can delete the model.
+     * Administrators must NOT be able to remove existing server nodes. Only Platform Owners can remove server nodes.
      */
     public function delete(User $user, Server $server): bool
     {
-        return $user->isAdminOfTeam($server->team_id);
+        if (RbacService::isAdmin($user) && ! RbacService::isOwner($user)) {
+            return false;
+        }
+
+        return RbacService::isOwner($user) || $user->roleInTeam($server->team_id) === 'owner';
     }
 
     /**

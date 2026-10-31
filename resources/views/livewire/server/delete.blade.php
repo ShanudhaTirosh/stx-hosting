@@ -33,6 +33,7 @@
                         </p>
                         <p>Type the server name in the confirmation dialog to continue.</p>
                         <x-slot:action>
+                        @can('delete', $server)
                         @php
                             $deleteActions = $server->isTransferredAway()
                                 ? ['This server and the records of its resources will be permanently deleted from this STX Hosting instance. Nothing on the server changes.']
@@ -57,6 +58,11 @@
                             :checkboxes="$checkboxes" confirmationText="{{ $server->name }}"
                             confirmationLabel="Please confirm by entering the Server Name below"
                             shortConfirmationLabel="Server Name" />
+                        @else
+                            <div class="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-300">
+                                <strong>Owner Permission Required:</strong> Server node removal is strictly restricted to platform Owners. Administrators cannot delete server nodes.
+                            </div>
+                        @endcan
                         </x-slot:action>
                     </x-danger-zone>
                 </x-application.settings-section>

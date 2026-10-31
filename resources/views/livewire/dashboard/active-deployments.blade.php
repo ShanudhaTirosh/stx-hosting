@@ -89,6 +89,10 @@
                                             class="button button-highlighted text-xs py-1 px-2.5">
                                             Approve
                                         </button>
+                                        <button type="button" wire:click.prevent="rejectDeployment({{ $deployment->id }})"
+                                            class="button button-danger text-xs py-1 px-2.5">
+                                            Reject
+                                        </button>
                                     @endif
                                 </span>
                                 <p class="hidden truncate text-[12px] text-neutral-500 @2xl:block dark:text-fg-dim">
@@ -101,6 +105,10 @@
                                         <button type="button" wire:click.prevent="approveDeployment({{ $deployment->id }})"
                                             class="button button-highlighted text-xs py-1 px-2.5">
                                             Approve
+                                        </button>
+                                        <button type="button" wire:click.prevent="rejectDeployment({{ $deployment->id }})"
+                                            class="button button-danger text-xs py-1 px-2.5">
+                                            Reject
                                         </button>
                                     @endif
                                     <p class="min-w-0 truncate text-[11px] text-neutral-500 dark:text-fg-faint">
@@ -161,6 +169,10 @@
                                             class="button button-highlighted text-xs py-1 px-2.5">
                                             Approve
                                         </button>
+                                        <button type="button" wire:click.prevent="rejectDeployment({{ $deployment->id }})"
+                                            class="button button-danger text-xs py-1 px-2.5">
+                                            Reject
+                                        </button>
                                     @endif
                                 </span>
                                 <p class="hidden truncate text-[12px] text-neutral-500 @2xl:block dark:text-fg-dim">
@@ -173,6 +185,10 @@
                                         <button type="button" wire:click.prevent="approveDeployment({{ $deployment->id }})"
                                             class="button button-highlighted text-xs py-1 px-2.5">
                                             Approve
+                                        </button>
+                                        <button type="button" wire:click.prevent="rejectDeployment({{ $deployment->id }})"
+                                            class="button button-danger text-xs py-1 px-2.5">
+                                            Reject
                                         </button>
                                     @endif
                                     <p class="min-w-0 truncate text-[11px] text-neutral-500 dark:text-fg-faint">
