@@ -25,3 +25,10 @@ Broadcast::channel('team.{teamId}', function (User $user, int $teamId) {
 Broadcast::channel('user.{userId}', function (User $user, int $userId) {
     return (int) $user->id === $userId;
 });
+
+// A support conversation: its team's members and support staff only.
+Broadcast::channel('chat.thread.{uuid}', function (User $user, string $uuid) {
+    $thread = \App\Models\ChatThread::where('uuid', $uuid)->first();
+
+    return $thread !== null && $user->can('view', $thread);
+});

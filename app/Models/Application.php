@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\EnforcesHostingEntitlements;
+use App\Models\Concerns\ValidatesPlatformDomains;
 use App\Enums\ApplicationDeploymentStatus;
 use App\Enums\BuildPackTypes;
 use App\Enums\HttpBasicAuthHashAlgorithm;
@@ -137,6 +139,8 @@ use Symfony\Component\Yaml\Yaml;
 
 class Application extends BaseModel
 {
+    use EnforcesHostingEntitlements;
+    use ValidatesPlatformDomains;
     /** @use HasFactory<ApplicationFactory> */
     use Auditable, ClearsGlobalSearchCache, HasComposeVolumeWarnings, HasConfiguration, HasFactory, HasMaintenancePage, HasMetrics, HasNoindexDomains, HasSafeStringAttribute, HasSecretManager, ReleasesManagedDnsRecords, SoftDeletes;
 

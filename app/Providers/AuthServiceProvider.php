@@ -150,6 +150,7 @@ class AuthServiceProvider extends ServiceProvider
         Tag::class => TagPolicy::class,
 
         // Commerce & Hosting Policies
+        \App\Models\ChatThread::class => \App\Policies\ChatThreadPolicy::class,
         Order::class => OrderPolicy::class,
         Invoice::class => InvoicePolicy::class,
         ServiceInstance::class => ServiceInstancePolicy::class,
@@ -165,6 +166,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('createAnyResource', [ResourceCreatePolicy::class, 'createAny']);
 
         // Register gate for terminal and file browser access
+        // Register gate for terminal and file browser access.
+        // Resource-level terminals (a client's own app/database container) stay available to signed-in users;
+        // the node-level terminal pages are restricted to the platform Owner by route middleware.
         Gate::define('canAccessTerminal', function ($user) {
             return $user !== null;
         });

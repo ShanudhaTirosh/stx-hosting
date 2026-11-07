@@ -4,11 +4,14 @@ namespace App\Livewire\Admin\Inventory;
 
 use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\VpsInventory;
+use App\Livewire\Concerns\RequiresPlatformStaff;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class VpsInventoryStudio extends Component
 {
+    use RequiresPlatformStaff;
+
     use WithPagination;
 
     public string $search = '';
@@ -39,20 +42,6 @@ class VpsInventoryStudio extends Component
     public string $provider = 'hetzner';
 
     public string $admin_notes = '';
-
-    public function mount(): void
-    {
-        $user = auth()->user();
-        abort_unless(
-            $user && (
-                $user->isInstanceAdmin() ||
-                $user->isAdmin() ||
-                (($teamId = currentTeam()?->id) && $user->isAdminOfTeam($teamId)) ||
-                $user->teams()->wherePivotIn('role', ['admin', 'owner'])->exists()
-            ),
-            403
-        );
-    }
 
     public function openCreateModal(): void
     {

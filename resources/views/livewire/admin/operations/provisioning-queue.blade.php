@@ -39,7 +39,16 @@
                     </div>
 
                     <div class="mt-2 text-[11px] text-neutral-500">
-                        Paid {{ $order->created_at->diffForHumans() }}
+                        @php($dueAt = \App\Services\Commerce\VpsFulfillmentService::dueAt($order))
+                        @php($remaining = \App\Services\Commerce\VpsFulfillmentService::unitsOrdered($order) - \App\Services\Commerce\VpsFulfillmentService::unitsDelivered($order))
+                        Paid {{ \App\Services\Commerce\VpsFulfillmentService::paidAt($order)->diffForHumans() }}
+                        &middot; {{ $remaining }} server{{ $remaining === 1 ? '' : 's' }} to deliver
+                        &middot;
+                        @if ($dueAt->isPast())
+                            <span class="text-rose-400 font-semibold">overdue by {{ $dueAt->diffForHumans(null, true) }}</span>
+                        @else
+                            <span class="{{ \App\Services\Commerce\VpsFulfillmentService::alertLevel($order) >= 48 ? 'text-amber-300' : 'text-neutral-400' }}">due in {{ $dueAt->diffForHumans(null, true) }}</span>
+                        @endif
                     </div>
                 </div>
             @empty

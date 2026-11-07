@@ -8,6 +8,10 @@
             <p class="text-xs text-neutral-400 font-mono">Service UUID: {{ $service->uuid }}</p>
         </div>
 
+        @if ($service->service_type === 'vps' && $service->status === 'active')
+            <a href="{{ route('portal.vps', ['uuid' => $service->uuid]) }}" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-lg">Terminal, files &amp; usage</a>
+        @endif
+
         <span class="px-3 py-1 text-xs font-bold uppercase rounded-full {{ 
             $service->status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
         }}">

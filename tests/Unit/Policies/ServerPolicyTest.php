@@ -41,17 +41,18 @@ it('denies non-member to view another team server', function () {
     expect($policy->view($user, $server))->toBeFalse();
 });
 
-it('allows admin to create a server', function () {
+it('allows platform staff to create a server', function () {
     $user = Mockery::mock(User::class)->makePartial();
-    $user->shouldReceive('isAdmin')->andReturn(true);
+    $user->shouldReceive('isInstanceAdmin')->andReturn(true);
 
     $policy = new ServerPolicy;
     expect($policy->create($user))->toBeTrue();
 });
 
-it('denies member to create a server', function () {
+it('denies non-staff (including a client who owns their own team) to create a server', function () {
     $user = Mockery::mock(User::class)->makePartial();
-    $user->shouldReceive('isAdmin')->andReturn(false);
+    $user->shouldReceive('isInstanceAdmin')->andReturn(false);
+    $user->shouldReceive('isAdmin')->andReturn(true); // team owner: must NOT be enough
 
     $policy = new ServerPolicy;
     expect($policy->create($user))->toBeFalse();
@@ -79,27 +80,7 @@ it('denies team member to update their own team server', function () {
     expect($policy->update($user, $server))->toBeFalse();
 });
 
-it('allows team admin to delete their own team server', function () {
-    $user = Mockery::mock(User::class)->makePartial();
-    $user->shouldReceive('isAdminOfTeam')->with(1)->andReturn(true);
-
-    $server = Mockery::mock(Server::class)->makePartial();
-    $server->team_id = 1;
-
-    $policy = new ServerPolicy;
-    expect($policy->delete($user, $server))->toBeTrue();
-});
-
-it('denies team member to delete their own team server', function () {
-    $user = Mockery::mock(User::class)->makePartial();
-    $user->shouldReceive('isAdminOfTeam')->with(1)->andReturn(false);
-
-    $server = Mockery::mock(Server::class)->makePartial();
-    $server->team_id = 1;
-
-    $policy = new ServerPolicy;
-    expect($policy->delete($user, $server))->toBeFalse();
-});
+// Server delete is owner-only; covered with real roles in Feature/Hosting/Phase0SecurityTest.
 
 it('denies restore for any user', function () {
     $user = Mockery::mock(User::class)->makePartial();

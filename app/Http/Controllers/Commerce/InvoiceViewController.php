@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Commerce;
 
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\Invoice;
-use Illuminate\Http\Request;
 
 class InvoiceViewController extends Controller
 {
@@ -14,17 +13,12 @@ class InvoiceViewController extends Controller
             ->where('uuid', $uuid)
             ->firstOrFail();
 
-        // Multi-tenant check
-        $user = auth()->user();
-        if ($user && ! $user->isAdmin()) {
-            if (! $user->teams->contains('id', $invoice->team_id)) {
-                abort(403, 'Unauthorized access to this invoice.');
-            }
-        }
+        // Staff (root team) or a member of the invoice's own team. Never use
+        // User::isAdmin() here: it is true for every client in their own team.
+        $this->authorize('view', $invoice);
 
         return view('invoices.show', [
             'invoice' => $invoice,
         ]);
     }
 }
-

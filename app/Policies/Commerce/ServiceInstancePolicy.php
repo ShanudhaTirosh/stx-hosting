@@ -4,6 +4,7 @@ namespace App\Policies\Commerce;
 
 use App\Models\Commerce\ServiceInstance;
 use App\Models\User;
+use App\Services\RbacService;
 
 class ServiceInstancePolicy
 {
@@ -14,7 +15,7 @@ class ServiceInstancePolicy
 
     public function view(User $user, ServiceInstance $service): bool
     {
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -23,7 +24,7 @@ class ServiceInstancePolicy
 
     public function viewCredentials(User $user, ServiceInstance $service): bool
     {
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -33,7 +34,7 @@ class ServiceInstancePolicy
 
     public function update(User $user, ServiceInstance $service): bool
     {
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -42,7 +43,7 @@ class ServiceInstancePolicy
 
     public function decommission(User $user, ServiceInstance $service): bool
     {
-        return $user->isAdmin();
+        return RbacService::isStaff($user);
     }
 }
 

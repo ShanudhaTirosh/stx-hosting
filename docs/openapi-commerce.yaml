@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: STX Hosting customer API
+  version: 1.0.0
+  description: |
+    The customer-facing endpoints: the plan catalog, public status, placing an order and uploading a payment
+    proof. Everything under /api/v1. Orders and proofs need a signed-in customer's API token.
+    A test checks that this file and the real routes agree.
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Error:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error: { type: string }
+        errors: { type: object, additionalProperties: true }
+paths:
+  /products:
+    get:
+      summary: List sellable plans
+      parameters:
+        - { name: category, in: query, required: false, schema: { type: string } }
+        - { name: currency, in: query, required: false, schema: { type: string, enum: [USD, LKR] } }
+      responses:
+        '200': { description: Plans grouped as products with variants and prices }
+  /products/{slug}:
+    get:
+      summary: One product with its variants and prices
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: The product }
+        '404': { description: No such product }
+  /status:
+    get:
+      summary: Public service status
+      responses:
+        '200': { description: Monitors, uptime and open incidents }
+  /status/public:
+    get:
+      summary: Public service status (alias of /status)
+      responses:
+        '200': { description: Monitors, uptime and open incidents }
+  /status/subscribe:
+    post:
+      summary: Subscribe to status alerts (not available yet)
+      responses:
+        '501':
+          description: Not built yet. The endpoint says so instead of pretending to subscribe.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /orders:
+    post:
+      summary: Place an order and get its invoice
+      description: Prices come from the catalog; nothing in the request can change them.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [pricing_tier_id]
+                    properties:
+                      pricing_tier_id: { type: string, description: Pricing tier uuid or id }
+                      quantity: { type: integer, minimum: 1, maximum: 10 }
+                      hostname: { type: string, maxLength: 255 }
+                      public_ssh_key: { type: string, maxLength: 4096 }
+                      datacenter: { type: string, maxLength: 64 }
+                currency: { type: string, enum: [USD, LKR] }
+                customer_notes: { type: string, maxLength: 1000 }
+      responses:
+        '201': { description: Order and invoice created }
+        '401': { description: Not signed in }
+        '422': { description: Invalid items }
+        '429': { description: Too many requests }
+  /invoices/{uuid}/proof:
+    post:
+      summary: Upload a payment proof for one of your invoices
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: uuid, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [proof_file, payment_method]
+              properties:
+                proof_file: { type: string, format: binary, description: PNG, JPEG, WEBP or PDF up to 5 MB }
+                payment_method: { type: string, enum: [bank_transfer, crypto, wallet, other, helapay_manual] }
+                transaction_reference: { type: string, maxLength: 255 }
+      responses:
+        '201': { description: Proof received and waiting for review }
+        '401': { description: Not signed in }
+        '404': { description: No such invoice, or not yours }
+        '422': { description: The file or the invoice state is not acceptable }
+        '429': { description: Too many requests }
+  /payment-proofs/{uuid}/view:
+    get:
+      summary: View a proof file (signed, short-lived link for staff)
+      parameters:
+        - { name: uuid, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: The file }
+        '403': { description: Link missing, invalid or expired }

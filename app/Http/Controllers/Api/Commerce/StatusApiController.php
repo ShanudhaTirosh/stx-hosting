@@ -84,14 +84,11 @@ class StatusApiController extends Controller
 
     public function subscribe(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'type' => 'required|string|in:email,webhook',
-            'target' => 'required|string|max:255',
-        ]);
-
+        // Nothing stores or sends status subscriptions yet. Saying "subscribed" would be a lie,
+        // so say so plainly until it is built.
         return response()->json([
-            'success' => true,
-            'message' => 'Subscribed to status alerts successfully.',
-        ]);
+            'success' => false,
+            'message' => 'Status alert subscriptions are not available yet.',
+        ], 501);
     }
 }

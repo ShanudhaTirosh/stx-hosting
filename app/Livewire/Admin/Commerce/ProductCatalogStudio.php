@@ -8,10 +8,15 @@ use App\Models\Commerce\ProductVariant;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
+use App\Livewire\Concerns\RequiresPlatformStaff;
+use App\Models\Commerce\CommerceAuditLog;
+use App\Services\RbacService;
 use Livewire\Component;
 
 class ProductCatalogStudio extends Component
 {
+    use RequiresPlatformStaff;
+
     public string $selectedCategory = 'all';
 
     public string $search = '';
@@ -135,6 +140,7 @@ class ProductCatalogStudio extends Component
             Product::create($data);
         }
 
+        CommerceAuditLog::record('catalog.product_saved', null, null, ['name' => $this->name, 'category' => $this->category, 'editing' => $this->editingProductId]);
         $this->clearCommerceCache();
         $this->showProductModal = false;
         $this->resetProductForm();
@@ -143,7 +149,9 @@ class ProductCatalogStudio extends Component
 
     public function deleteProduct(int $id): void
     {
-        Product::findOrFail($id)->delete();
+        $product = Product::findOrFail($id);
+        CommerceAuditLog::record('catalog.product_deleted', Product::class, $product->id, ['name' => $product->name]);
+        $product->delete();
         $this->clearCommerceCache();
         $this->dispatch('success', 'Product deleted successfully.');
     }
@@ -218,6 +226,7 @@ class ProductCatalogStudio extends Component
             ProductVariant::create($data);
         }
 
+        CommerceAuditLog::record('catalog.variant_saved', null, null, ['name' => $this->variant_name, 'product_id' => $this->editingProductId, 'editing' => $this->editingVariantId]);
         $this->clearCommerceCache();
         $this->showVariantModal = false;
         $this->resetVariantForm();
@@ -226,13 +235,16 @@ class ProductCatalogStudio extends Component
 
     public function deleteVariant(int $id): void
     {
-        ProductVariant::findOrFail($id)->delete();
+        $variant = ProductVariant::findOrFail($id);
+        CommerceAuditLog::record('catalog.variant_deleted', ProductVariant::class, $variant->id, ['name' => $variant->name]);
+        $variant->delete();
         $this->clearCommerceCache();
         $this->dispatch('success', 'Plan variant deleted successfully.');
     }
 
     public function openCreatePricingModal(int $variantId): void
     {
+        $this->authorizePricing();
         $this->editingVariantId = $variantId;
         $this->resetPricingForm();
         $this->showPricingModal = true;
@@ -240,6 +252,7 @@ class ProductCatalogStudio extends Component
 
     public function editPricingTier(int $id): void
     {
+        $this->authorizePricing();
         $tier = PricingTier::findOrFail($id);
         $this->editingTierId = $tier->id;
         $this->editingVariantId = $tier->product_variant_id;
@@ -254,6 +267,7 @@ class ProductCatalogStudio extends Component
 
     public function savePricingTier(): void
     {
+        $this->authorizePricing();
         $this->validate([
             'billing_type' => 'required|string|max:32',
             'price_usd' => 'required|numeric|min:0',
@@ -268,6 +282,8 @@ class ProductCatalogStudio extends Component
             'is_active' => $this->tier_active,
         ];
 
+        $old = $this->editingTierId ? PricingTier::find($this->editingTierId) : null;
+
         if ($this->editingTierId) {
             PricingTier::where('id', $this->editingTierId)->update($data);
         } else {
@@ -275,6 +291,14 @@ class ProductCatalogStudio extends Component
             PricingTier::create($data);
         }
 
+        CommerceAuditLog::record('catalog.price_saved', PricingTier::class, $this->editingTierId, [
+            'variant_id' => $this->editingVariantId,
+            'billing_type' => $this->billing_type,
+            'old_price_cents' => $old?->price_cents,
+            'new_price_cents' => $data['price_cents'],
+            'old_price_lkr_cents' => $old?->price_lkr_cents,
+            'new_price_lkr_cents' => $data['price_lkr_cents'],
+        ]);
         $this->clearCommerceCache();
         $this->showPricingModal = false;
         $this->resetPricingForm();
@@ -283,7 +307,10 @@ class ProductCatalogStudio extends Component
 
     public function deletePricingTier(int $id): void
     {
-        PricingTier::findOrFail($id)->delete();
+        $this->authorizePricing();
+        $tier = PricingTier::findOrFail($id);
+        CommerceAuditLog::record('catalog.price_deleted', PricingTier::class, $tier->id, ['billing_type' => $tier->billing_type, 'price_cents' => $tier->price_cents]);
+        $tier->delete();
         $this->clearCommerceCache();
         $this->dispatch('success', 'Pricing tier deleted successfully.');
     }
@@ -293,6 +320,7 @@ class ProductCatalogStudio extends Component
         $p = Product::findOrFail($id);
         $p->is_active = ! $p->is_active;
         $p->save();
+        CommerceAuditLog::record('catalog.product_toggled', Product::class, $p->id, ['active' => $p->is_active]);
         $this->clearCommerceCache();
     }
 
@@ -357,6 +385,11 @@ class ProductCatalogStudio extends Component
         }
     }
 
+    private function authorizePricing(): void
+    {
+        abort_unless(RbacService::can(auth()->user(), 'pricing.manage'), 403, 'Only the owner can change prices.');
+    }
+
     public function render()
     {
         $query = Product::with(['variants.pricingTiers'])->orderBy('id', 'desc');
@@ -386,6 +419,7 @@ class ProductCatalogStudio extends Component
         ];
 
         return view('livewire.admin.commerce.product-catalog-studio', [
+            'canPricing' => RbacService::can(auth()->user(), 'pricing.manage'),
             'products' => $products,
             'categories' => $categories,
             'totalProducts' => Product::count(),

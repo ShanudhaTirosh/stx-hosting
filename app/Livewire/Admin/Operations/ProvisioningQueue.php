@@ -9,12 +9,16 @@ use App\Models\Commerce\ServiceInstance;
 use App\Models\Commerce\VpsInventory;
 use App\Notifications\Commerce\ServiceDeliveredNotification;
 use App\Services\Commerce\StatusTelemetryBridge;
+use App\Services\Commerce\VpsFulfillmentService;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\RequiresPlatformStaff;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class ProvisioningQueue extends Component
 {
+    use RequiresPlatformStaff;
+
     use WithPagination;
 
     public ?int $selectedOrderId = null;
@@ -39,20 +43,6 @@ class ProvisioningQueue extends Component
     public string $temporaryRootPassword = '';
 
     public string $osImage = 'debian-12';
-
-    public function mount(): void
-    {
-        $user = auth()->user();
-        abort_unless(
-            $user && (
-                $user->isInstanceAdmin() ||
-                $user->isAdmin() ||
-                (($teamId = currentTeam()?->id) && $user->isAdminOfTeam($teamId)) ||
-                $user->teams()->wherePivotIn('role', ['admin', 'owner'])->exists()
-            ),
-            403
-        );
-    }
 
     public function updatedSelectedNodeId($value): void
     {
@@ -100,9 +90,14 @@ class ProvisioningQueue extends Component
 
         try {
             DB::transaction(function () use ($orderId) {
-                $order = Order::with(['items.productVariant', 'user', 'team'])->findOrFail($orderId);
-                $firstItem = $order->items->first();
+                $order = Order::with(['items.productVariant.product', 'user', 'team'])->lockForUpdate()->findOrFail($orderId);
+                // Deliver one server at a time, for the first VPS item on the order.
+                $firstItem = $order->items->first(fn ($i) => $i->productVariant?->product?->category === 'vps') ?? $order->items->first();
                 $variant = $firstItem ? $firstItem->productVariant : null;
+
+                if (VpsFulfillmentService::unitsDelivered($order) >= VpsFulfillmentService::unitsOrdered($order)) {
+                    throw new \Exception('Every server on this order has already been delivered.');
+                }
 
                 $allocatedIpv4 = '';
                 $allocatedIpv6 = null;
@@ -180,6 +175,8 @@ class ProvisioningQueue extends Component
                 // 4. Register with Status telemetry platform
                 StatusTelemetryBridge::registerVpsProbe($service);
 
+                \App\Jobs\BootstrapVpsPanelAccessJob::dispatch($service)->afterCommit()->delay(now()->addMinute());
+
                 // 4b. Notify customer of active VPS delivery
                 if ($order->user) {
                     try {
@@ -218,12 +215,9 @@ class ProvisioningQueue extends Component
 
     public function render()
     {
-        $pendingOrders = Order::with(['items.productVariant', 'user', 'invoice'])
-            ->whereIn('status', ['completed', 'processing'])
-            ->whereDoesntHave('services', function ($q) {
-                $q->where('status', 'active');
-            })
-            ->latest()
+        $pendingOrders = VpsFulfillmentService::pendingQuery()
+            ->with(['items.productVariant.product', 'user', 'invoice'])
+            ->oldest('updated_at')
             ->paginate(10);
 
         $selectedOrder = null;

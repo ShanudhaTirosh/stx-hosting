@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\EnforcesHostingEntitlements;
 use App\Traits\Auditable;
 use App\Traits\ClearsGlobalSearchCache;
 use App\Traits\HasDatabaseHealthCheck;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StandaloneMongodb extends BaseModel
 {
+    use EnforcesHostingEntitlements;
     use Auditable, ClearsGlobalSearchCache, HasDatabaseHealthCheck, HasFactory, HasLogRedactionSetting, HasMetrics, HasSafeStringAttribute, HasSecretManager, SoftDeletes;
 
     protected $fillable = [

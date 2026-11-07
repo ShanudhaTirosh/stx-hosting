@@ -47,6 +47,78 @@ class RbacService
     }
 
     /**
+     * Staff powers need two-factor sign-in (config/security.php). A staff member who has not turned it on is
+     * treated as an ordinary customer until they do, so a stolen staff password alone gets an attacker nothing.
+     */
+    public static function twoFactorSatisfied(User $user): bool
+    {
+        return ! config('security.require_staff_2fa', true) || $user->two_factor_confirmed_at !== null;
+    }
+
+    /** A real staff member who is being held back only because two-factor is not on yet. */
+    public static function staffNeedsTwoFactor(?User $user): bool
+    {
+        return $user !== null && $user->isInstanceAdmin() && ! self::twoFactorSatisfied($user);
+    }
+
+    /**
+     * Platform staff (Owner or Admin): member of the root team (id=0) with an
+     * 'admin' or 'owner' pivot role.
+     *
+     * Use this - never User::isAdmin() - whenever the question is "is this a
+     * member of OUR staff?". User::isAdmin() only means "admin/owner of the
+     * CURRENT team", which is true for every client in their own team.
+     */
+    public static function isStaff(?User $user): bool
+    {
+        return $user !== null && $user->isInstanceAdmin() && self::twoFactorSatisfied($user);
+    }
+
+    /**
+     * Platform Owner only (root team pivot role 'owner').
+     */
+    public static function isPlatformOwner(?User $user): bool
+    {
+        return $user !== null && self::isOwner($user) && self::twoFactorSatisfied($user);
+    }
+
+    /**
+     * 'owner' | 'admin' | 'client' | 'guest'.
+     */
+    public static function platformRole(?User $user): string
+    {
+        if ($user === null) {
+            return 'guest';
+        }
+
+        // Staff powers need two-factor: until it is on, they are treated as a customer.
+        if (! self::twoFactorSatisfied($user)) {
+            return 'client';
+        }
+
+        if (self::isOwner($user)) {
+            return 'owner';
+        }
+
+        return $user->isInstanceAdmin() ? 'admin' : 'client';
+    }
+
+    /**
+     * Capability check against config/stx-permissions.php.
+     * Unknown capabilities are denied.
+     */
+    public static function can(?User $user, string $capability): bool
+    {
+        $roles = config("stx-permissions.capabilities.{$capability}");
+
+        if (! is_array($roles)) {
+            return false;
+        }
+
+        return in_array(self::platformRole($user), $roles, true);
+    }
+
+    /**
      * Platform Client: authenticated user who is NOT a platform Owner or Admin.
      * They are scoped to their own personal/organization team only.
      */
@@ -61,7 +133,7 @@ class RbacService
      */
     public static function shouldBypassLimits(User $user): bool
     {
-        return $user->isInstanceAdmin();
+        return $user->isInstanceAdmin() && self::twoFactorSatisfied($user);
     }
 
     /**

@@ -48,10 +48,22 @@ class AppProvisioningService
             }
         }
 
-        // Check CNAME records
+        // CNAME: only accept it if the target actually resolves to our ingress.
+        // (Previously ANY CNAME record passed, so a domain pointing elsewhere was accepted.)
         $cnameRecords = @dns_get_record($domain, DNS_CNAME);
         if ($cnameRecords && is_array($cnameRecords)) {
-            return true;
+            foreach ($cnameRecords as $cname) {
+                $target = rtrim((string) ($cname['target'] ?? ''), '.');
+                if ($target === '' || ! filter_var($target, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+                    continue;
+                }
+                $targetRecords = @dns_get_record($target, DNS_A);
+                foreach ((array) $targetRecords as $record) {
+                    if (($record['ip'] ?? null) === $expectedIp) {
+                        return true;
+                    }
+                }
+            }
         }
 
         return false;

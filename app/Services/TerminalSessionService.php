@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Helpers\SshMultiplexingHelper;
+use App\Models\Commerce\ServiceInstance;
+use App\Models\PrivateKey;
 use App\Models\Server;
 use App\Models\User;
 use App\Support\ValidationPatterns;
@@ -36,6 +38,10 @@ class TerminalSessionService
     {
         $payload = Cache::lock($this->cacheKey($token).':lock', 5)
             ->get(fn () => Cache::pull($this->cacheKey($token)));
+
+        if (is_array($payload) && isset($payload['vps_service_uuid'])) {
+            return $this->redeemVps($user, $payload);
+        }
 
         if (! is_array($payload)
             || data_get($payload, 'user_id') !== $user->id
@@ -75,6 +81,72 @@ class TerminalSessionService
             $command,
             commandTimeout: (int) config('constants.terminal.command_timeout')
         );
+    }
+
+    /**
+     * Token for a shell on a customer's own VPS. Same rules as server tokens: 60 seconds, one use, bound to the
+     * signed-in user and their current team.
+     */
+    public function issueForVps(User $user, ServiceInstance $service): string
+    {
+        $token = Str::random(64);
+
+        Cache::put($this->cacheKey($token), [
+            'user_id' => $user->id,
+            'team_id' => $user->currentTeam()->id,
+            'vps_service_uuid' => $service->uuid,
+        ], now()->addSeconds(self::TOKEN_TTL_SECONDS));
+
+        return $token;
+    }
+
+    /**
+     * The terminal server only runs key based ssh with a fixed option set against hosts we list for the
+     * user, so the command has exactly the shape it already accepts for team servers. The login uses the
+     * panel key, never the customer's password, and nothing secret goes to the browser.
+     */
+    private function redeemVps(User $user, array $payload): string
+    {
+        $teamId = $user->currentTeam()->id;
+
+        if (data_get($payload, 'user_id') !== $user->id || data_get($payload, 'team_id') !== $teamId) {
+            throw new AccessDeniedHttpException('Invalid or expired terminal token.');
+        }
+
+        $service = ServiceInstance::where('uuid', data_get($payload, 'vps_service_uuid'))
+            ->where('team_id', $teamId)
+            ->where('service_type', 'vps')
+            ->where('status', 'active')
+            ->first();
+
+        $key = $service?->panel_private_key_id ? PrivateKey::find($service->panel_private_key_id) : null;
+
+        if (! $service || ! $key || blank($service->ip_address)) {
+            throw new AccessDeniedHttpException('Terminal target is not authorized.');
+        }
+
+        $key->storeInFileSystem();
+
+        $port = (int) ($service->credentials()->value('ssh_port') ?: 22);
+        $timeout = (int) config('constants.terminal.command_timeout');
+
+        $options = '-i '.escapeshellarg($key->getKeyLocation()).' '
+            .'-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null '
+            .'-o PasswordAuthentication=no '
+            .'-o ConnectTimeout=10 '
+            .'-o ServerAliveInterval=20 '
+            .'-o RequestTTY=no '
+            .'-o LogLevel=ERROR '
+            .'-p '.escapeshellarg((string) $port).' ';
+
+        $delimiter = base64_encode(\Illuminate\Support\Facades\Hash::make('vps-'.$service->uuid.Str::random(8)));
+        $remote = 'sh -c "if command -v bash >/dev/null 2>&1; then exec bash -se; else exec sh -se; fi"';
+
+        return ($timeout > 0 ? "timeout {$timeout} ssh " : 'ssh ').$options
+            .escapeshellarg('root').'@'.escapeshellarg((string) $service->ip_address)
+            ." '{$remote}' << \\{$delimiter}".PHP_EOL
+            .$this->shellCommand().PHP_EOL
+            .$delimiter;
     }
 
     /**

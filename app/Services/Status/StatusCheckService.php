@@ -96,6 +96,16 @@ class StatusCheckService
         ]);
 
         if ($previousStatus !== $status) {
+            $healthy = in_array($status, ['operational', 'up'], true);
+            \App\Services\Notifications\StaffEvents::notify(
+                \App\Services\Notifications\StaffEvents::NODE_ISSUE,
+                $healthy ? "Recovered: {$monitor->name}" : "Problem: {$monitor->name}",
+                $healthy ? 'The monitor is back to normal.' : 'The monitor reports a problem.',
+                ['Status' => (string) $status, 'Before' => (string) $previousStatus, 'Detail' => (string) ($errorMessage ?? '')],
+                $healthy ? 'success' : 'error',
+                "monitor:{$monitor->id}:{$status}"
+            );
+
             $this->dispatchStatusChangeAlert($monitor, $previousStatus, $status, $errorMessage);
         }
 

@@ -4,6 +4,7 @@ namespace App\Policies\Commerce;
 
 use App\Models\Commerce\Order;
 use App\Models\User;
+use App\Services\RbacService;
 
 class OrderPolicy
 {
@@ -14,7 +15,7 @@ class OrderPolicy
 
     public function view(User $user, Order $order): bool
     {
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -28,7 +29,7 @@ class OrderPolicy
 
     public function update(User $user, Order $order): bool
     {
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -37,11 +38,11 @@ class OrderPolicy
 
     public function cancel(User $user, Order $order): bool
     {
-        if (!in_array($order->status, ['payment_pending', 'payment_submitted'])) {
+        if (!in_array($order->status, ['pending', 'payment_pending', 'payment_submitted'])) {
             return false;
         }
 
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -50,7 +51,7 @@ class OrderPolicy
 
     public function delete(User $user, Order $order): bool
     {
-        return $user->isAdmin();
+        return RbacService::isStaff($user);
     }
 }
 

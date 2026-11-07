@@ -10,10 +10,13 @@ use App\Models\Commerce\SystemIncident;
 use App\Services\RbacService;
 use App\Services\Status\StatusCheckService;
 use Illuminate\Support\Str;
+use App\Livewire\Concerns\RequiresPlatformStaff;
 use Livewire\Component;
 
 class StatusStudio extends Component
 {
+    use RequiresPlatformStaff;
+
     public string $activeTab = 'monitors'; // monitors, incidents, notifications, telemetry
 
     // Monitor Form State

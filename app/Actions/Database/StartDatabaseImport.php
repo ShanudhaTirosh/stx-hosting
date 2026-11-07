@@ -59,7 +59,11 @@ class StartDatabaseImport
         return "database-import:{$resourceUuid}";
     }
 
-    public function handle(Model $resource, DatabaseImportSource $source, int $teamId): Activity
+    /**
+     * @param  int|null  $storageTeamId  team that owns the S3 storage when it is not the team doing the import
+     *                                   (client backups live in the platform's storage)
+     */
+    public function handle(Model $resource, DatabaseImportSource $source, int $teamId, ?int $storageTeamId = null): Activity
     {
         if (! $this->commands->supports($resource)) {
             throw new DatabaseImportException('Database imports are not supported for this database type.');
@@ -94,14 +98,14 @@ class StartDatabaseImport
                 throw new DatabaseImportException(ResourceStartActivity::DATABASE_OPERATION_IN_PROGRESS_MESSAGE, 409);
             }
 
-            return $this->startImport($resource, $source, $teamId, $server, $container, $network, $sqliteDatabase);
+            return $this->startImport($resource, $source, $teamId, $server, $container, $network, $sqliteDatabase, $storageTeamId);
         } finally {
             DatabaseOperationReservation::release($resource->uuid, $reservation);
             $lock->release();
         }
     }
 
-    private function startImport(Model $resource, DatabaseImportSource $source, int $teamId, Server $server, string $container, string $network, ?string $sqliteDatabase): Activity
+    private function startImport(Model $resource, DatabaseImportSource $source, int $teamId, Server $server, string $container, string $network, ?string $sqliteDatabase, ?int $storageTeamId = null): Activity
     {
         $active = ResourceStartActivity::active($resource->uuid, ResourceStartActivity::DATABASE_IMPORT_OPERATION, $teamId);
         if (ResourceStartActivity::failStale($active)->isNotEmpty()) {
@@ -146,7 +150,7 @@ class StartDatabaseImport
             $magic = (string) instant_remote_process(['head -c 6 -- '.escapeshellarg($source->path).' | od -An -tx1'], $server);
             $commandList = [...$commandList, ...$this->copyIntoContainer($source->path, $magic, $server, $operation, $container, $containerPath, $cleanup)];
         } else {
-            $storage = S3Storage::ownedByCurrentTeamAPI($teamId)
+            $storage = S3Storage::ownedByCurrentTeamAPI($storageTeamId ?? $teamId)
                 ->where(fn ($query) => $query->whereUuid($source->s3StorageUuid)->orWhere('id', ctype_digit((string) $source->s3StorageUuid) ? (int) $source->s3StorageUuid : -1))
                 ->where('is_usable', true)->first();
             if (! $storage || ! ValidationPatterns::isValidS3BucketName($storage->bucket)) {

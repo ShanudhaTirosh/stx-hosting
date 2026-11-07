@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\EnforcesHostingEntitlements;
 use App\Traits\Auditable;
 use App\Traits\ClearsGlobalSearchCache;
 use App\Traits\HasDatabaseHealthCheck;
@@ -16,6 +17,7 @@ use Throwable;
 
 class StandaloneClickhouse extends BaseModel
 {
+    use EnforcesHostingEntitlements;
     use Auditable, ClearsGlobalSearchCache, HasDatabaseHealthCheck, HasFactory, HasLogRedactionSetting, HasMetrics, HasSafeStringAttribute, HasSecretManager, SoftDeletes;
 
     protected array $auditExclude = ['last_online_at'];

@@ -23,6 +23,10 @@
     <env name="SESSION_DRIVER" value="array" force="true"/>
     <!-- Disable broadcasting for host-side Pest browser runs. -->
     <env name="BROADCAST_DRIVER" value="null" force="true"/>
+    <!-- Upstream tests build resources without paid plans; Phase 4 tests turn enforcement on explicitly. -->
+    <env name="HOSTING_ENFORCE_ENTITLEMENTS" value="false" force="true"/>
+    <!-- Older tests sign in as staff without two-factor; the Phase 8 tests turn this on explicitly. -->
+    <env name="STX_REQUIRE_STAFF_2FA" value="false" force="true"/>
   </php>
   <source>
     <include>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\EnforcesHostingEntitlements;
 use App\Services\ContainerStatusAggregator;
 use App\Services\DockerImageParser;
 use App\Support\DomainPortOverrides;
@@ -46,6 +47,7 @@ use OpenApi\Attributes as OA;
 )]
 class Service extends BaseModel
 {
+    use EnforcesHostingEntitlements;
     use Auditable, ClearsGlobalSearchCache, HasComposeVolumeWarnings, HasFactory, HasMaintenancePage, HasSafeStringAttribute, HasSecretManager, SoftDeletes;
 
     private static $parserVersion = '5';

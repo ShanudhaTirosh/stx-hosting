@@ -51,6 +51,11 @@
                     <a href="{{ route('portal.service.detail', ['uuid' => $service->uuid]) }}" class="w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs rounded text-center transition-all">
                         Manage & Credentials &rarr;
                     </a>
+                    @if ($service->service_type === 'vps' && $service->status === 'active')
+                        <a href="{{ route('portal.vps', ['uuid' => $service->uuid]) }}" class="w-full ml-2 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded text-center transition-all">
+                            Terminal, files &amp; usage &rarr;
+                        </a>
+                    @endif
                 </div>
             </div>
         @empty

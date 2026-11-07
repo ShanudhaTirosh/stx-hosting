@@ -125,7 +125,7 @@ class Navbar extends Component
     public function rebootVps()
     {
         try {
-            $this->authorize('update', $this->server);
+            $this->authorize('power', $this->server);
             RebootServer::run($this->server);
             auditLog('ui.server.rebooted', [
                 'team_id' => $this->server->team_id,

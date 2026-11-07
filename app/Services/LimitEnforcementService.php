@@ -22,6 +22,18 @@ class LimitEnforcementService
      */
     public static function getEffectiveLimits(Team $team): array
     {
+        $limits = self::resolveBaseLimits($team);
+
+        // Explicit overrides win. Otherwise what the team actually bought sets its CPU, memory and storage caps.
+        if (! HostingLimit::where('team_id', $team->id)->exists()) {
+            $limits = self::applyPurchasedSpecs($team, $limits);
+        }
+
+        return $limits;
+    }
+
+    private static function resolveBaseLimits(Team $team): array
+    {
         // 1. Team override
         $override = HostingLimit::where('team_id', $team->id)->first();
         if ($override) {
@@ -68,6 +80,38 @@ class LimitEnforcementService
     }
 
     /**
+     * Add up the specs of every active, paid entitlement (set when a payment is approved) and use them
+     * as the team's CPU, memory, storage and bandwidth caps.
+     */
+    private static function applyPurchasedSpecs(Team $team, array $limits): array
+    {
+        $total = ['vcpu' => 0.0, 'ram_mb' => 0, 'disk_gb' => 0, 'bandwidth_gb' => 0];
+        $found = false;
+
+        foreach (EntitlementService::getActiveEntitlements($team) as $entitlement) {
+            $specs = $entitlement->metadata['specs'] ?? null;
+            if (! is_array($specs)) {
+                continue;
+            }
+            $found = true;
+            foreach ($total as $key => $_) {
+                $total[$key] += (float) ($specs[$key] ?? 0);
+            }
+        }
+
+        if (! $found) {
+            return $limits;
+        }
+
+        return array_merge($limits, array_filter([
+            'max_cpu' => $total['vcpu'] > 0 ? $total['vcpu'] : null,
+            'max_ram_mb' => $total['ram_mb'] > 0 ? (int) $total['ram_mb'] : null,
+            'max_storage_gb' => $total['disk_gb'] > 0 ? (int) $total['disk_gb'] : null,
+            'max_bandwidth_gb' => $total['bandwidth_gb'] > 0 ? (int) $total['bandwidth_gb'] : null,
+        ], fn ($v) => $v !== null));
+    }
+
+    /**
      * Aggregate current usage metrics across all dimensions for a team.
      */
     public static function getCurrentUsage(Team $team): array
@@ -83,9 +127,14 @@ class LimitEnforcementService
         $runningContainers = $apps->where('status', 'running')->count();
 
         // Databases
-        $dbCount = StandalonePostgresql::where('team_id', $team->id)
-            ->orWhereHas('environment.project', fn ($q) => $q->where('team_id', $team->id))
-            ->count();
+        $dbCount = 0;
+        foreach ([
+            \App\Models\StandalonePostgresql::class, \App\Models\StandaloneMysql::class, \App\Models\StandaloneMariadb::class,
+            \App\Models\StandaloneMongodb::class, \App\Models\StandaloneRedis::class, \App\Models\StandaloneKeydb::class,
+            \App\Models\StandaloneDragonfly::class, \App\Models\StandaloneClickhouse::class,
+        ] as $databaseModel) {
+            $dbCount += $databaseModel::whereHas('environment.project', fn ($q) => $q->where('team_id', $team->id))->count();
+        }
 
         $serverCount = Server::where('team_id', $team->id)->count();
 

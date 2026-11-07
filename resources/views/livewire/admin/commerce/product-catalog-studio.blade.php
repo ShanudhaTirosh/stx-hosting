@@ -173,9 +173,11 @@
                                     <div class="pt-3 border-t border-neutral-200/60 dark:border-white/5">
                                         <div class="flex items-center justify-between mb-2">
                                             <span class="text-[11px] font-medium text-neutral-500">Pricing Tiers:</span>
+                                            @if ($canPricing)
                                             <button wire:click="openCreatePricingModal({{ $variant->id }})" class="text-[11px] text-amber-500 hover:underline font-semibold">
                                                 + Add Tier
                                             </button>
+                                            @endif
                                         </div>
 
                                         <div class="space-y-1.5">
@@ -191,12 +193,16 @@
                                                         @endif
                                                     </div>
                                                     <div class="flex items-center gap-2">
+                                                        @if ($canPricing)
                                                         <button wire:click="editPricingTier({{ $tier->id }})" class="text-neutral-400 hover:text-black dark:hover:text-white">
                                                             <x-reicon name="edit" class="size-3" />
                                                         </button>
+                                                        @endif
+                                                        @if ($canPricing)
                                                         <button wire:click="deletePricingTier({{ $tier->id }})" wire:confirm="Delete this pricing tier?" class="text-neutral-400 hover:text-rose-500">
                                                             <x-reicon name="trash" class="size-3" />
                                                         </button>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @empty

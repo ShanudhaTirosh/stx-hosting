@@ -81,8 +81,10 @@ test('customer can upload valid payment receipt transitioning invoice to payment
 
 test('administrator can approve payment proof in review queue marking invoice as paid', function () {
     $admin = User::factory()->create();
+    // Staff means a member of the root team (id 0), not an admin of a customer team.
+    $rootTeam = Team::find(0) ?: Team::forceCreate(['id' => 0, 'name' => 'Root Team', 'personal_team' => false]);
+    $rootTeam->members()->attach($admin->id, ['role' => 'admin']);
     $team = Team::factory()->create();
-    $team->members()->attach($admin->id, ['role' => 'admin']);
     $customer = User::factory()->create();
 
     $order = Order::create([
@@ -131,7 +133,7 @@ test('administrator can approve payment proof in review queue marking invoice as
     $proof->refresh();
 
     expect($invoice->status)->toBe('paid');
-    expect($order->status)->toBe('completed');
+    expect($order->status)->toBe('paid');
     expect($proof->status)->toBe('approved');
     expect($proof->reviewed_by_user_id)->toBe($admin->id);
     expect($invoice->transactions()->count())->toBe(1);

@@ -33,8 +33,6 @@ class OrderCheckoutController extends Controller
             'items.*.datacenter' => 'nullable|string|max:64',
             'currency' => 'nullable|string|in:USD,LKR',
             'customer_notes' => 'nullable|string|max:1000',
-            'customer_email' => 'nullable|email', // For guest or unauthenticated checkout
-            'customer_name' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -45,25 +43,15 @@ class OrderCheckoutController extends Controller
         }
 
         $currency = strtoupper($request->input('currency', 'USD'));
-        $user = auth()->user();
+        $user = $request->user();
 
-        // If no authenticated user, resolve or create customer user
+        // Orders require an authenticated account. Guest checkout used to create
+        // accounts for arbitrary email addresses; that path is closed.
         if (! $user) {
-            $email = $request->input('customer_email');
-            if (! $email) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Authentication required or customer_email must be provided for guest checkout.',
-                ], 401);
-            }
-
-            $user = User::firstOrCreate(
-                ['email' => $email],
-                [
-                    'name' => $request->input('customer_name', 'Hosting Customer'),
-                    'password' => bcrypt(Str::random(24)),
-                ]
-            );
+            return response()->json([
+                'success' => false,
+                'error' => 'Authentication required.',
+            ], 401);
         }
 
         // Resolve customer team

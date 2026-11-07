@@ -313,10 +313,17 @@
         <div class="block">
           <div class="h">Pay to</div>
           <div class="l">
-            <strong>STX Enterprises</strong> (Shanudha Tirosh)<br>
-            Bank: Commercial Bank / Sampath Bank<br>
-            Acc No: 8012 3456 7890<br>
-            eZCash / Dialog: +94 7X XXX XXXX
+            @php($methods = \App\Models\Commerce\PaymentMethod::forCurrency($invoice->currency)->get())
+            @forelse ($methods as $method)
+              <strong>{{ $method->label }}</strong><br>
+              @foreach ($method->details ?? [] as $row)
+                {{ $row['label'] ?? '' }}: {{ $row['value'] ?? '' }}<br>
+              @endforeach
+              @if ($method->instructions){{ $method->instructions }}<br>@endif
+              <br>
+            @empty
+              Payment details have not been published yet. Please contact support.
+            @endforelse
           </div>
         </div>
       </div>

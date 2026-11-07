@@ -29,7 +29,8 @@ class ServerPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isInstanceAdmin();
+        // Only platform staff (Owner/Admin) may add nodes. Clients can never add or import servers.
+        return RbacService::isStaff($user);
     }
 
     /**
@@ -52,15 +53,12 @@ class ServerPolicy
 
     /**
      * Determine whether the user can delete the model.
-     * Administrators must NOT be able to remove existing server nodes. Only Platform Owners can remove server nodes.
+     * Only the platform Owner can remove server nodes.
      */
     public function delete(User $user, Server $server): bool
     {
-        if (RbacService::isAdmin($user) && ! RbacService::isOwner($user)) {
-            return false;
-        }
-
-        return RbacService::isOwner($user) || $user->roleInTeam($server->team_id) === 'owner';
+        // Only the platform Owner may remove nodes. Admins and clients never can.
+        return RbacService::isPlatformOwner($user);
     }
 
     /**
@@ -69,6 +67,14 @@ class ServerPolicy
     public function restore(User $user, Server $server): bool
     {
         return false;
+    }
+
+    /**
+     * Reboot or power-control a node: platform Owner only.
+     */
+    public function power(User $user, Server $server): bool
+    {
+        return RbacService::can($user, 'nodes.power');
     }
 
     /**

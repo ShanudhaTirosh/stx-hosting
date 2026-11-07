@@ -3,6 +3,11 @@
 namespace App\Http;
 
 use App\Http\Middleware\AddServerTimingHeaders;
+use App\Http\Middleware\PlatformOwner;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\StorefrontCsp;
+use App\Http\Middleware\StorefrontCurrency;
+use App\Http\Middleware\PlatformStaff;
 use App\Http\Middleware\ApiAbility;
 use App\Http\Middleware\ApiIpAllowed;
 use App\Http\Middleware\ApiSensitiveData;
@@ -82,7 +87,7 @@ class Kernel extends HttpKernel
             CheckForcePasswordReset::class,
             DecideWhatToDoWithUser::class,
             RequireTeamTwoFactor::class,
-
+            SecurityHeaders::class,
         ],
 
         'api' => [
@@ -118,6 +123,10 @@ class Kernel extends HttpKernel
         'can.create.resources' => CanCreateResources::class,
         'can.update.resource' => CanUpdateResource::class,
         'can.access.terminal' => CanAccessTerminal::class,
+        'platform.staff' => PlatformStaff::class,
+        'platform.owner' => PlatformOwner::class,
+        'storefront.currency' => StorefrontCurrency::class,
+        'storefront.csp' => StorefrontCsp::class,
         'mcp.enabled' => EnsureMcpEnabled::class,
         'api.ip.allowed' => ApiIpAllowed::class,
         'mcp.team.enabled' => EnsureTeamMcpEnabled::class,

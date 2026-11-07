@@ -9,10 +9,13 @@ use App\Services\RbacService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use App\Livewire\Concerns\RequiresPlatformStaff;
 use Livewire\Component;
 
 class DeploymentApprovals extends Component
 {
+    use RequiresPlatformStaff;
+
     use AuthorizesRequests;
 
     public string $filterStatus = 'pending_approval';

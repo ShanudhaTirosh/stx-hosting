@@ -480,11 +480,12 @@ Route::group([
     Route::get('/status', [StatusApiController::class, 'index']);
     Route::get('/status/public', [StatusApiController::class, 'index']);
     Route::post('/status/subscribe', [StatusApiController::class, 'subscribe']);
-    Route::post('/orders', [OrderCheckoutController::class, 'store'])->middleware('throttle:commerce-orders');
-    Route::post('/invoices/{uuid}/proof', [PaymentProofController::class, 'store'])->middleware('throttle:commerce-proofs');
+    // Authenticated only: guests can no longer create orders or attach proofs.
+    Route::post('/orders', [OrderCheckoutController::class, 'store'])->middleware(['auth:sanctum', 'throttle:commerce-orders']);
+    Route::post('/invoices/{uuid}/proof', [PaymentProofController::class, 'store'])->middleware(['auth:sanctum', 'throttle:commerce-proofs']);
     Route::get('/payment-proofs/{uuid}/view', [PaymentProofController::class, 'viewFile'])->name('api.commercial.proof.view');
 });
 
 Route::any('/{any}', function () {
-    return response()->json(['message' => 'Not found.', 'docs' => 'https://docs.stxhosting.com'], 404);
+    return response()->json(['message' => 'Not found.', 'docs' => config('app.url').'/docs'], 404);
 })->where('any', '.*');

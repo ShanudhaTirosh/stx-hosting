@@ -628,4 +628,12 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
     {
         return $this->hasPassword() && ! $this->hasSsoIdentity();
     }
+
+    /**
+     * 'owner' | 'admin' | 'client' (see config/stx-permissions.php).
+     */
+    public function platformRole(): string
+    {
+        return \App\Services\RbacService::platformRole($this);
+    }
 }

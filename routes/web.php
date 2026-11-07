@@ -170,25 +170,44 @@ Route::post('/auth/link', [Controller::class, 'acceptLink'])->middleware('thrott
 
 Route::get('/auth/{provider}/redirect', [OauthController::class, 'redirect'])->name('auth.redirect');
 Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->name('auth.callback');
-// Public Native Storefront & Status (Port 8000)
-Route::get('/', \App\Livewire\Storefront\Index::class)->name('home');
-Route::get('/store', \App\Livewire\Storefront\Index::class)->name('store.index');
-Route::get('/vps', \App\Livewire\Storefront\CategoryVps::class)->name('store.vps');
-Route::get('/game-servers', \App\Livewire\Storefront\CategoryGameServers::class)->name('store.games');
-Route::get('/databases', \App\Livewire\Storefront\CategoryDatabases::class)->name('store.databases');
-Route::get('/app-hosting', \App\Livewire\Storefront\CategoryAppHosting::class)->name('store.app-hosting');
-Route::get('/bot-hosting', \App\Livewire\Storefront\CategoryBotHosting::class)->name('store.bot-hosting');
-Route::get('/web-hosting', \App\Livewire\Storefront\CategoryWebHosting::class)->name('store.web-hosting');
-Route::get('/v2ray', \App\Livewire\Storefront\CategoryV2ray::class)->name('store.v2ray');
-Route::get('/pricing', \App\Livewire\Storefront\PricingPage::class)->name('store.pricing');
-Route::get('/contact', \App\Livewire\Storefront\ContactPage::class)->name('store.contact');
-Route::get('/about', \App\Livewire\Storefront\AboutPage::class)->name('store.about');
-Route::get('/reviews', \App\Livewire\Storefront\ReviewsPage::class)->name('store.reviews');
-Route::get('/faqs', \App\Livewire\Storefront\FaqsPage::class)->name('store.faqs');
-Route::get('/terms', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'terms')->name('store.terms');
-Route::get('/privacy', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'privacy')->name('store.privacy');
-Route::get('/refund', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'refund')->name('store.refund');
-Route::get('/cookies', \App\Livewire\Storefront\LegalPage::class)->defaults('type', 'cookies')->name('store.cookies');
+// Public storefront: plain server-rendered pages (no Livewire, no JavaScript needed)
+Route::middleware(['storefront.currency', 'storefront.csp'])->group(function () {
+    $store = \App\Http\Controllers\Storefront\StorefrontController::class;
+    $cart = \App\Http\Controllers\Storefront\CartController::class;
+
+    Route::get('/', [$store, 'home'])->name('home');
+    Route::get('/store', [$store, 'home'])->name('store.index');
+    Route::get('/pricing', [$store, 'catalog'])->name('store.pricing');
+    Route::get('/vps', [$store, 'catalog'])->defaults('category', 'vps')->name('store.vps');
+    Route::get('/app-hosting', [$store, 'catalog'])->defaults('category', 'app-hosting')->name('store.app-hosting');
+    Route::get('/web-hosting', [$store, 'catalog'])->defaults('category', 'web-hosting')->name('store.web-hosting');
+    Route::get('/bot-hosting', [$store, 'catalog'])->defaults('category', 'bot-hosting')->name('store.bot-hosting');
+    Route::get('/databases', [$store, 'catalog'])->defaults('category', 'databases')->name('store.databases');
+    Route::get('/game-servers', [$store, 'catalog'])->defaults('category', 'game-servers')->name('store.games');
+    Route::get('/v2ray', [$store, 'catalog'])->defaults('category', 'v2ray')->name('store.v2ray');
+
+    Route::get('/cart', [$cart, 'show'])->name('cart.show');
+    Route::post('/cart/add', [$cart, 'add'])->middleware('throttle:60,1')->name('cart.add');
+    Route::patch('/cart/{line}', [$cart, 'update'])->name('cart.update');
+    Route::delete('/cart/{line}', [$cart, 'remove'])->name('cart.remove');
+    Route::post('/cart/checkout', [$cart, 'checkout'])->middleware('throttle:20,1')->name('cart.checkout');
+
+    $docs = \App\Http\Controllers\Storefront\DocsController::class;
+    Route::get('/docs', [$docs, 'index'])->name('docs.index');
+    Route::get('/docs/{slug}', [$docs, 'show'])->where('slug', '[a-z0-9-]+')->name('docs.show');
+
+    Route::get('/about', [$store, 'about'])->name('store.about');
+    Route::get('/faqs', [$store, 'faqs'])->name('store.faqs');
+    Route::get('/contact', [$store, 'contact'])->name('store.contact');
+    Route::post('/contact', [$store, 'contactSend'])->middleware('throttle:5,1')->name('store.contact.send');
+    Route::get('/terms', [$store, 'legal'])->defaults('type', 'terms')->name('store.terms');
+    Route::get('/privacy', [$store, 'legal'])->defaults('type', 'privacy')->name('store.privacy');
+    Route::get('/refund', [$store, 'legal'])->defaults('type', 'refund')->name('store.refund');
+    Route::get('/cookies', [$store, 'legal'])->defaults('type', 'cookies')->name('store.cookies');
+});
+
+// There are no verified customer reviews yet, so the old page of invented ones is gone.
+Route::redirect('/reviews', '/', 301)->name('store.reviews');
 Route::get('/discord', fn () => redirect()->away('https://discord.gg/shanutechx'))->name('store.discord');
 
 // Public Telemetry & Status Portal
@@ -307,14 +326,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/deploy', [DeployController::class, 'deploy'])->middleware(['api.ability:deploy']);
         Route::get('/deployments/{uuid}', [DeployController::class, 'deployment_by_uuid'])->middleware(['api.ability:read']);
     });
-    // Administration Console & Commerce Studio
-    Route::get('/admin', AdminIndex::class)->name('admin.index');
-    Route::get('/admin/commerce/products', \App\Livewire\Admin\Commerce\ProductCatalogStudio::class)->name('admin.commerce.products');
-    Route::get('/admin/billing/proofs', ProofReviewQueue::class)->name('admin.billing.proofs');
-    Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
-    Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
-    Route::get('/admin/operations/approvals', \App\Livewire\Admin\Operations\DeploymentApprovals::class)->name('admin.operations.approvals');
-    Route::get('/admin/status', \App\Livewire\Admin\Status\StatusStudio::class)->name('admin.status.index');
+    // Administration Console & Commerce Studio (platform staff only; each component also re-checks per request)
+    Route::middleware(['platform.staff'])->group(function () {
+        Route::get('/admin', AdminIndex::class)->name('admin.index');
+        Route::get('/admin/commerce/products', \App\Livewire\Admin\Commerce\ProductCatalogStudio::class)->name('admin.commerce.products');
+        Route::get('/admin/billing/proofs', ProofReviewQueue::class)->name('admin.billing.proofs');
+        Route::get('/admin/billing/methods', \App\Livewire\Admin\Billing\PaymentMethods::class)->name('admin.billing.methods')->middleware('platform.owner');
+        Route::get('/admin/notifications', \App\Livewire\Admin\Notifications\DiscordRoutes::class)->name('admin.notifications')->middleware('platform.owner');
+        Route::get('/admin/emails', \App\Livewire\Admin\Notifications\EmailTemplatesPage::class)->name('admin.emails')->middleware('platform.owner');
+        Route::get('/admin/docs', [\App\Http\Controllers\Storefront\DocsController::class, 'index'])->defaults('audience', 'admin')->name('admin.docs.index');
+        Route::get('/admin/docs/{slug}', [\App\Http\Controllers\Storefront\DocsController::class, 'show'])->where('slug', '[a-z0-9-]+')->defaults('audience', 'admin')->name('admin.docs.show');
+        Route::get('/admin/audit', \App\Livewire\Admin\AuditLog::class)->name('admin.audit');
+        Route::get('/admin/backups', \App\Livewire\Admin\Backups::class)->name('admin.backups');
+        Route::get('/admin/support', \App\Livewire\Support\StaffInbox::class)->name('admin.support');
+        Route::get('/admin/support/{uuid}', \App\Livewire\Support\ThreadView::class)->name('admin.support.thread');
+        Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
+        Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
+        Route::get('/admin/operations/approvals', \App\Livewire\Admin\Operations\DeploymentApprovals::class)->name('admin.operations.approvals');
+        Route::get('/admin/status', \App\Livewire\Admin\Status\StatusStudio::class)->name('admin.status.index');
+    });
 
     // Customer Self-Service Portal
     Route::get('/portal', ServicesList::class)->name('portal.index');
@@ -324,8 +354,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal/apps/{uuid}', AppDetail::class)->name('portal.apps.detail');
     Route::get('/portal/databases', DatabaseList::class)->name('portal.databases');
     Route::get('/portal/billing', BillingOverview::class)->name('portal.billing');
+    Route::get('/portal/domains', \App\Livewire\Portal\Domains::class)->name('portal.domains');
+    Route::get('/portal/backups', \App\Livewire\Portal\Backups::class)->name('portal.backups');
+    Route::get('/portal/support', \App\Livewire\Support\ClientIndex::class)->name('portal.support');
+    Route::get('/portal/support/{uuid}', \App\Livewire\Support\ThreadView::class)->name('portal.support.thread');
+    Route::get('/support/attachments/{uuid}', [\App\Http\Controllers\Support\AttachmentController::class, 'show'])->middleware('throttle:60,1')->name('support.attachment');
+    Route::get('/portal/vps/{uuid}', \App\Livewire\Portal\VpsPanel::class)->name('portal.vps');
     Route::get('/portal/invoices/{uuid}', [InvoiceViewController::class, 'show'])->name('portal.invoices.show');
-    Route::get('/invoices/{uuid}', [InvoiceViewController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{uuid}', [InvoiceViewController::class, 'show'])->middleware('throttle:60,1')->name('invoices.show');
+    Route::get('/invoices/{uuid}/pdf', [\App\Http\Controllers\Commerce\InvoicePdfController::class, 'show'])->middleware('throttle:30,1')->name('invoices.pdf');
     Route::get('/portal/checkout', Checkout::class)->name('portal.checkout');
     Route::get('/orders', Checkout::class)->name('orders.checkout');
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');
@@ -394,14 +431,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/danger', TeamDangerZone::class)->name('team.danger-zone');
     });
 
-    Route::get('/terminal', TerminalIndex::class)->name('terminal')->middleware('can.access.terminal');
+    Route::get('/terminal', TerminalIndex::class)->name('terminal')->middleware(['platform.owner', 'can.access.terminal']);
     Route::post('/terminal/auth', function () {
         if (auth()->check()) {
             return response()->json(['authenticated' => true], 200);
         }
 
         return response()->json(['authenticated' => false], 401);
-    })->name('terminal.auth')->middleware('can.access.terminal');
+    })->name('terminal.auth')->middleware(['can.access.terminal', 'throttle:120,1']);
 
     Route::post('/terminal/auth/ips', function () {
         if (auth()->check()) {
@@ -409,6 +446,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $ipAddresses = $team->servers
                 ->where('settings.is_terminal_enabled', true)
                 ->pluck('ip')
+                // Customer VPS the panel can sign in to (it has installed its key).
+                ->merge(\App\Models\Commerce\ServiceInstance::where('team_id', $team->id)
+                    ->where('service_type', 'vps')
+                    ->where('status', 'active')
+                    ->whereNotNull('panel_private_key_id')
+                    ->pluck('ip_address'))
                 ->filter()
                 ->values();
 
@@ -427,7 +470,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
 
         return response()->json(['ipAddresses' => []], 401);
-    })->name('terminal.auth.ips')->middleware('can.access.terminal');
+    })->name('terminal.auth.ips')->middleware(['can.access.terminal', 'throttle:120,1']);
 
     Route::post('/terminal/session', function (Request $request, TerminalSessionService $terminalSessionService) {
         $request->validate(['token' => ['required', 'string', 'size:64']]);
@@ -435,7 +478,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json([
             'command' => $terminalSessionService->redeem($request->user(), $request->string('token')->toString()),
         ]);
-    })->name('terminal.session')->middleware('can.access.terminal');
+    })->name('terminal.session')->middleware(['can.access.terminal', 'throttle:60,1']);
 
     Route::prefix('invitations')->group(function () {
         Route::get('/{uuid}', [Controller::class, 'showInvitation'])->name('team.invitation.show');
@@ -584,7 +627,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/proxy/certificates', ProxyCertificatesShow::class)->name('server.proxy.certificates');
         Route::get('/proxy/dynamic', ProxyDynamicConfigurations::class)->name('server.proxy.dynamic-confs');
         Route::get('/proxy/logs', ProxyLogs::class)->name('server.proxy.logs');
-        Route::get('/terminal', ExecuteContainerCommand::class)->name('server.command')->middleware('can.access.terminal');
+        Route::get('/terminal', ExecuteContainerCommand::class)->name('server.command')->middleware(['platform.owner', 'can.access.terminal']);
         Route::get('/docker-cleanup', DockerCleanup::class)->name('server.docker-cleanup');
         Route::get('/images', DockerImages::class)->name('server.docker-images');
         Route::get('/github-runners', GithubRunners::class)->name('server.github-runners');

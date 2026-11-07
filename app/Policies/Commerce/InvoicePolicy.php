@@ -4,6 +4,7 @@ namespace App\Policies\Commerce;
 
 use App\Models\Commerce\Invoice;
 use App\Models\User;
+use App\Services\RbacService;
 
 class InvoicePolicy
 {
@@ -14,7 +15,7 @@ class InvoicePolicy
 
     public function view(User $user, Invoice $invoice): bool
     {
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -27,7 +28,7 @@ class InvoicePolicy
             return false;
         }
 
-        if ($user->isAdmin()) {
+        if (RbacService::isStaff($user)) {
             return true;
         }
 
@@ -36,12 +37,12 @@ class InvoicePolicy
 
     public function approve(User $user, Invoice $invoice): bool
     {
-        return $user->isAdmin();
+        return RbacService::isStaff($user);
     }
 
     public function reject(User $user, Invoice $invoice): bool
     {
-        return $user->isAdmin();
+        return RbacService::isStaff($user);
     }
 }
 

@@ -48,6 +48,9 @@ class Kernel extends ConsoleKernel
             $this->instanceTimezone = config('app.timezone');
         }
 
+        $this->scheduleInstance->command('vps:check-delivery-sla')->hourly()->onOneServer();
+        $this->scheduleInstance->command('vps:collect-stats')->everyMinute()->onOneServer()->withoutOverlapping(5);
+
         $this->scheduleInstance->call(fn () => app(CleanupStaleMultiplexedConnections::class)->handle())
             ->name('cleanup:ssh-mux')
             ->hourly()

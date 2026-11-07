@@ -152,6 +152,16 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
 
                 return;
             }
+            // Client teams have a backup space limit; going over it skips the run and tells staff.
+            if ($quotaMessage = \App\Services\Backups\BackupQuota::blockReason($this->team)) {
+                $this->recordSkippedBackup($quotaMessage);
+                $this->logSkippedRun('backup_quota_exceeded');
+                \App\Services\Notifications\StaffEvents::notify(\App\Services\Notifications\StaffEvents::BACKUP_FAILED, 'Backup skipped: space full', $quotaMessage, [
+                    'Team' => (string) $this->team?->name,
+                ], 'warning', 'quota:'.$this->team?->id.':'.now()->format('Y-m-d'));
+
+                return;
+            }
             if ($this->databaseOperationInProgress()) {
                 $this->recordSkippedBackup('Skipped: a start, restart or import of this database was in progress. A backup taken now could contain a partly restored database.');
                 $this->logSkippedRun('database_operation_in_progress');
@@ -476,6 +486,10 @@ class DatabaseBackupJob implements ShouldBeEncrypted, ShouldQueue
                             'finished_at' => Carbon::now()->toImmutable(),
                         ]);
                     }
+                    \App\Services\Notifications\StaffEvents::notify(\App\Services\Notifications\StaffEvents::BACKUP_FAILED, 'Backup failed', (string) $failureMessage, [
+                        'Team' => (string) $this->team?->name,
+                        'Database' => (string) $database,
+                    ], 'error', 'backup:'.$this->backup->id.':'.$this->backup_log_uuid);
                     try {
                         $this->team?->notify(new BackupFailed($this->backup, $this->database, $failureMessage, $database));
                     } catch (Throwable $notifyException) {

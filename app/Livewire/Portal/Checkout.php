@@ -3,34 +3,51 @@
 namespace App\Livewire\Portal;
 
 use App\Models\Commerce\Invoice;
-use App\Models\Commerce\InvoiceItem;
-use App\Models\Commerce\Order;
-use App\Models\Commerce\OrderItem;
-use App\Models\Commerce\PaymentProof;
+use App\Models\Commerce\PaymentMethod;
+use App\Models\Commerce\PricingTier;
 use App\Models\Commerce\ProductVariant;
-use App\Notifications\Commerce\OrderPlacedNotification;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use App\Services\Commerce\OrderService;
+use App\Services\Commerce\ProofStorageService;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
+/**
+ * Two stages on one page:
+ *   1. Pick a plan, place the order. The order and invoice are created with prices
+ *      read from the catalog on the server.
+ *   2. (?invoice=uuid) See the payment instructions the owner configured and upload
+ *      the payment proof for review.
+ */
 class Checkout extends Component
 {
     use WithFileUploads;
 
+    // Everything that decides what the customer pays is locked: the browser cannot change it.
+    #[Locked]
     public array $cartPlanIds = [];
 
+    #[Locked]
     public ?ProductVariant $selectedVariant = null;
+
+    #[Locked]
+    public int $totalAmountCents = 0;
+
+    #[Locked]
+    public ?string $invoiceUuid = null;
+
+    #[Locked]
+    public ?Invoice $existingInvoice = null;
 
     public string $billingType = '30-day';
 
     public string $currency = 'USD';
 
-    public int $totalAmountCents = 0;
-
-    // Payment proof upload
+    // Stage 2: payment proof
     public $proofFile;
+
+    public string $paymentMethodUuid = '';
 
     public string $bankReference = '';
 
@@ -38,25 +55,24 @@ class Checkout extends Component
 
     public string $notes = '';
 
-    public ?string $invoiceUuid = null;
-
-    public ?Invoice $existingInvoice = null;
-
     public function mount(): void
     {
         $this->invoiceUuid = request()->query('invoice');
-        if ($this->invoiceUuid) {
-            $this->existingInvoice = Invoice::with(['order.items.productVariant', 'items'])->where('uuid', $this->invoiceUuid)->first();
-            if ($this->existingInvoice) {
-                $item = $this->existingInvoice->order?->items?->first();
-                if ($item?->productVariant) {
-                    $this->selectedVariant = $item->productVariant;
-                }
-                $this->currency = $this->existingInvoice->currency;
-                $this->totalAmountCents = $this->existingInvoice->total_cents;
 
-                return;
-            }
+        if ($this->invoiceUuid) {
+            $invoice = Invoice::with(['order.items.productVariant', 'items'])
+                ->where('uuid', $this->invoiceUuid)
+                ->first();
+
+            // Same answer for "does not exist" and "not yours".
+            abort_unless($invoice && auth()->user()->can('view', $invoice), 404);
+
+            $this->existingInvoice = $invoice;
+            $this->selectedVariant = $invoice->order?->items?->first()?->productVariant;
+            $this->currency = $invoice->currency;
+            $this->totalAmountCents = $invoice->total_cents;
+
+            return;
         }
 
         if (request()->query('currency')) {
@@ -64,39 +80,34 @@ class Checkout extends Component
         }
 
         if (request()->query('billing')) {
-            $this->billingType = request()->query('billing');
+            $this->billingType = (string) request()->query('billing');
         }
 
-        if (request()->query('tier')) {
-            $tier = \App\Models\Commerce\PricingTier::where('uuid', request()->query('tier'))
-                ->orWhere('id', request()->query('tier'))
-                ->first();
+        if ($tierParam = request()->query('tier')) {
+            $tier = PricingTier::where('uuid', $tierParam)->orWhere('id', is_numeric($tierParam) ? (int) $tierParam : 0)->first();
             if ($tier) {
                 $this->billingType = $tier->billing_type;
             }
         }
 
-        $planIdParam = request()->query('planId') ?? request()->query('plan') ?? request()->query('variant');
-        $planIdsParam = request()->query('planIds');
+        $planParam = request()->query('planId') ?? request()->query('plan') ?? request()->query('variant');
+        $this->cartPlanIds = $planParam ? [(string) $planParam] : [];
 
-        if ($planIdsParam) {
-            $this->cartPlanIds = explode(',', $planIdsParam);
-        } elseif ($planIdParam) {
-            $this->cartPlanIds = [$planIdParam];
-        }
-
-        // Default or find first variant (supports UUID, ID, or Slug)
-        if (! empty($this->cartPlanIds)) {
+        if ($this->cartPlanIds) {
             $first = $this->cartPlanIds[0];
             $this->selectedVariant = ProductVariant::with(['product', 'pricingTiers'])
                 ->where('uuid', $first)
-                ->orWhere('id', $first)
+                ->orWhere('id', is_numeric($first) ? (int) $first : 0)
                 ->orWhere('slug', $first)
                 ->first();
         }
 
+        // No plan chosen (or an unknown one): send the customer to pick one. Never guess a plan.
         if (! $this->selectedVariant) {
-            $this->selectedVariant = ProductVariant::with(['product', 'pricingTiers'])->first();
+            session()->flash('error', 'Please choose a plan first.');
+            $this->redirectRoute('store.index', navigate: true);
+
+            return;
         }
 
         $this->recalculate();
@@ -110,177 +121,103 @@ class Checkout extends Component
 
     public function selectCurrency(string $curr): void
     {
-        $this->currency = $curr;
+        $this->currency = $curr === 'LKR' ? 'LKR' : 'USD';
         $this->recalculate();
     }
 
+    /** Display only. The real price is recomputed on the server when the order is placed. */
     private function recalculate(): void
     {
-        if (! $this->selectedVariant) {
-            $this->totalAmountCents = 0;
+        $tiers = $this->selectedVariant?->pricingTiers?->where('is_active', true);
+        $tier = $tiers?->firstWhere('billing_type', $this->billingType) ?? $tiers?->first();
 
-            return;
-        }
-
-        $tier = $this->selectedVariant->pricingTiers
-            ->where('billing_type', $this->billingType)
-            ->where('is_active', true)
-            ->first() ?? $this->selectedVariant->pricingTiers->first();
-
-        if ($tier) {
-            $this->totalAmountCents = ($this->currency === 'LKR')
-                ? $tier->price_lkr_cents
-                : $tier->price_cents;
-        } else {
-            $this->totalAmountCents = 1500; // default fallback $15.00
-        }
+        $this->totalAmountCents = $tier
+            ? (int) ($this->currency === 'LKR' ? ($tier->price_lkr_cents ?: 0) : $tier->price_cents)
+            : 0;
     }
 
-    public function placeOrder()
+    public function placeOrder(OrderService $orders)
     {
-        $this->validate([
-            'proofFile' => 'required|file|mimes:jpeg,png,jpg,pdf|max:10240',
-            'bankReference' => 'nullable|string|max:100',
-            'depositorName' => 'nullable|string|max:100',
-        ]);
+        $this->validate(['notes' => 'nullable|string|max:1000']);
 
-        $user = auth()->user();
         $team = currentTeam();
-
         if (! $team) {
             session()->flash('error', 'No active team found for this user account.');
 
             return;
         }
 
-        return DB::transaction(function () use ($user, $team) {
-            if ($this->existingInvoice) {
-                $invoice = $this->existingInvoice;
-                $order = $invoice->order;
-                $invoice->update(['status' => 'payment_pending']);
-                if ($order) {
-                    $order->update(['status' => 'payment_submitted']);
-                }
-                $invoiceNumber = $invoice->invoice_number;
-            } else {
-                // 1. Create Order
-                $order = Order::create([
-                    'uuid' => (string) Str::uuid(),
-                    'user_id' => $user->id,
-                    'team_id' => $team->id,
-                    'status' => 'payment_submitted',
-                    'currency' => $this->currency,
-                    'subtotal_cents' => $this->totalAmountCents,
-                    'tax_cents' => 0,
-                    'discount_cents' => 0,
-                    'total_cents' => $this->totalAmountCents,
-                    'customer_notes' => $this->notes ?: 'Order placed via self-service portal checkout.',
-                ]);
+        if (! $this->selectedVariant) {
+            session()->flash('error', 'Please choose a plan first.');
 
-                // 2. Create Order Item
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_variant_id' => $this->selectedVariant ? $this->selectedVariant->id : null,
-                    'item_type' => 'vps',
-                    'description' => ($this->selectedVariant ? $this->selectedVariant->name : 'Cloud VPS Node')." ({$this->billingType} term)",
-                    'quantity' => 1,
-                    'unit_price_cents' => $this->totalAmountCents,
-                    'total_price_cents' => $this->totalAmountCents,
-                ]);
+            return;
+        }
 
-                // 3. Create Invoice
-                $invoiceNumber = 'INV-'.strtoupper(Str::random(8));
-                $invoice = Invoice::create([
-                    'uuid' => (string) Str::uuid(),
-                    'order_id' => $order->id,
-                    'user_id' => $user->id,
-                    'team_id' => $team->id,
-                    'invoice_number' => $invoiceNumber,
-                    'status' => 'payment_pending',
-                    'currency' => $this->currency,
-                    'subtotal_cents' => $this->totalAmountCents,
-                    'tax_cents' => 0,
-                    'total_cents' => $this->totalAmountCents,
-                    'due_at' => now()->addDays(2),
-                ]);
+        try {
+            [, $invoice] = $orders->place(
+                auth()->user(),
+                $team,
+                [['variant' => $this->selectedVariant, 'billing_type' => $this->billingType, 'quantity' => 1]],
+                $this->currency,
+                $this->notes ?: null,
+            );
+        } catch (\InvalidArgumentException $e) {
+            session()->flash('error', $e->getMessage());
 
-                InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
-                    'description' => ($this->selectedVariant ? $this->selectedVariant->name : 'Cloud VPS Node')." ({$this->billingType} term)",
-                    'quantity' => 1,
-                    'unit_price_cents' => $this->totalAmountCents,
-                    'total_price_cents' => $this->totalAmountCents,
-                ]);
-            }
+            return;
+        }
 
-            // 4. Store Payment Proof
-            $tempPath = $this->proofFile->getRealPath();
-            $sha256 = hash_file('sha256', $tempPath);
-            $mimeType = $this->proofFile->getMimeType();
-            $storedName = 'proof_'.Str::random(24).'.'.$this->proofFile->getClientOriginalExtension();
-            $storagePath = "payment_proofs/{$storedName}";
+        session()->flash('success', "Order placed. Invoice {$invoice->invoice_number} is ready: pay using the details below, then upload your proof.");
 
-            // Pure-pixel re-encoding for raster images to scrub polyglots
-            if (in_array($mimeType, ['image/jpeg', 'image/png'])) {
-                if ($mimeType === 'image/jpeg' && function_exists('imagecreatefromjpeg')) {
-                    $img = @imagecreatefromjpeg($tempPath);
-                    if ($img) {
-                        ob_start();
-                        imagejpeg($img, null, 90);
-                        $cleanData = ob_get_clean();
-                        imagedestroy($img);
-                        Storage::disk('local')->put($storagePath, $cleanData);
-                    } else {
-                        Storage::disk('local')->putFileAs('payment_proofs', $this->proofFile, $storedName);
-                    }
-                } elseif ($mimeType === 'image/png' && function_exists('imagecreatefrompng')) {
-                    $img = @imagecreatefrompng($tempPath);
-                    if ($img) {
-                        ob_start();
-                        imagepng($img, 8);
-                        $cleanData = ob_get_clean();
-                        imagedestroy($img);
-                        Storage::disk('local')->put($storagePath, $cleanData);
-                    } else {
-                        Storage::disk('local')->putFileAs('payment_proofs', $this->proofFile, $storedName);
-                    }
-                } else {
-                    Storage::disk('local')->putFileAs('payment_proofs', $this->proofFile, $storedName);
-                }
-            } else {
-                Storage::disk('local')->putFileAs('payment_proofs', $this->proofFile, $storedName);
-            }
+        return redirect()->route('portal.checkout', ['invoice' => $invoice->uuid]);
+    }
 
-            PaymentProof::create([
-                'uuid' => (string) Str::uuid(),
-                'invoice_id' => $invoice->id,
-                'user_id' => $user->id,
-                'payment_method' => 'bank_transfer',
-                'transaction_reference' => $this->bankReference ?: null,
-                'file_path' => $storagePath,
-                'file_mime' => $mimeType,
-                'file_size_bytes' => $this->proofFile->getSize(),
-                'sha256_hash' => $sha256,
-                'status' => 'pending_review',
-                'admin_notes' => $this->depositorName ? "Depositor: {$this->depositorName}".($this->notes ? " | Notes: {$this->notes}" : '') : ($this->notes ? "Notes: {$this->notes}" : null),
-            ]);
+    public function submitProof(ProofStorageService $proofs)
+    {
+        abort_unless($this->existingInvoice, 404);
+        $this->authorize('uploadProof', $this->existingInvoice);
 
-            try {
-                if ($order) {
-                    $user->notify(new OrderPlacedNotification($order, $invoice));
-                }
-            } catch (\Throwable $e) {
-                logger()->warning("Could not send OrderPlacedNotification: {$e->getMessage()}");
-            }
+        $this->validate([
+            'proofFile' => 'required|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
+            'paymentMethodUuid' => 'nullable|string|max:64',
+            'bankReference' => 'nullable|string|max:100',
+            'depositorName' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
 
-            session()->flash('success', "Order placed successfully! Invoice {$invoiceNumber} has been submitted with your payment proof. Our operations team will verify the payment and provision your server within our 24-72 hour SLA.");
+        $method = $this->paymentMethodUuid
+            ? PaymentMethod::active()->where('uuid', $this->paymentMethodUuid)->first()
+            : null;
 
-            return redirect()->route('portal.billing');
-        });
+        $note = collect([
+            $this->depositorName ? "Depositor: {$this->depositorName}" : null,
+            $this->notes ? "Notes: {$this->notes}" : null,
+        ])->filter()->implode(' | ');
+
+        try {
+            $proofs->store(
+                $this->proofFile,
+                $this->existingInvoice,
+                auth()->user(),
+                $method?->type ?? 'bank_transfer',
+                $this->bankReference ?: null,
+                $note ?: null,
+            );
+        } catch (ValidationException $e) {
+            $this->addError('proofFile', collect($e->errors())->flatten()->first());
+
+            return;
+        }
+
+        session()->flash('success', 'Payment proof received. Our team will verify it and email you. Servers are delivered within 24 to 72 hours after approval.');
+
+        return redirect()->route('portal.billing');
     }
 
     public function render()
     {
-        return view('livewire.portal.checkout');
+        return view('livewire.portal.checkout', [
+            'paymentMethods' => PaymentMethod::forCurrency($this->currency)->get(),
+        ]);
     }
 }

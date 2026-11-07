@@ -11,6 +11,7 @@
         "server"
     ],
     "require": {
+        "dompdf/dompdf": "^3.0",
         "php": "^8.4",
         "danharrin/livewire-rate-limiting": "^2.3.0",
         "doctrine/dbal": "^4.5.0",

@@ -86,8 +86,15 @@ test('member cannot invoke server validation write steps', function (string $met
 
 // --- Server Policy: delete ---
 
-test('admin can delete server', function () {
-    expect($this->admin->can('delete', $this->server))->toBeTrue();
+test('platform admin cannot delete a node (owner only)', function () {
+    expect($this->admin->can('delete', $this->server))->toBeFalse();
+});
+
+test('platform owner can delete a node', function () {
+    $owner = User::factory()->create();
+    Team::find(0)->members()->attach($owner->id, ['role' => 'owner']);
+
+    expect($owner->fresh()->can('delete', $this->server))->toBeTrue();
 });
 
 test('member cannot delete server', function () {

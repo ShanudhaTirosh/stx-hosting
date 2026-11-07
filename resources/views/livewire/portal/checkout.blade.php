@@ -2,14 +2,20 @@
     <div class="flex items-center justify-between pb-4 border-b border-neutral-800">
         <div>
             <h1 class="text-2xl font-bold text-white tracking-tight">Order Checkout & Payment</h1>
-            <p class="text-xs text-neutral-400">Review your server specifications, view our bank deposit details, and upload your payment slip.</p>
+            <p class="text-xs text-neutral-400">Place your order, pay using the details we show, then upload your payment proof.</p>
         </div>
         <a href="{{ route('portal.services') }}" class="text-xs text-purple-400 hover:text-purple-300 font-semibold">&larr; Back to Portal</a>
     </div>
 
     @if (session('error'))
-        <div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold">
+        <div class="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-semibold" role="alert">
             {{ session('error') }}
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl text-xs font-semibold" role="status">
+            {{ session('success') }}
         </div>
     @endif
 
@@ -60,6 +66,7 @@
                     </div>
                 @endif
 
+                @unless ($existingInvoice)
                 <!-- Term and Currency Switchers -->
                 <div class="grid grid-cols-2 gap-4 pt-3 border-t border-neutral-800">
                     <div>
@@ -102,123 +109,145 @@
                         </div>
                     </div>
                 </div>
+                @endunless
             </div>
 
-            <!-- Payment Receipt Upload Form -->
-            <form wire:submit.prevent="placeOrder" class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4 shadow-lg">
-                <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-200">Submit Payment Proof</h3>
-                    <span class="text-[11px] text-amber-400 font-mono">Manual Verification Queue</span>
+            @if (! $existingInvoice)
+                <!-- Stage 1: place the order -->
+                <form wire:submit.prevent="placeOrder" class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4 shadow-lg">
+                    <div class="pb-3 border-b border-neutral-800">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-200">Place your order</h3>
+                        <p class="text-[11px] text-neutral-400 mt-1">We create your invoice first. You pay after that and upload the proof on the next screen.</p>
+                    </div>
+
+                    <div>
+                        <label for="order-notes" class="block text-xs font-bold text-neutral-300 mb-1">Order notes (optional)</label>
+                        <textarea id="order-notes" wire:model="notes" rows="2" placeholder="Preferred Linux distro, extra requirements..." class="textarea textarea-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono"></textarea>
+                        @error('notes') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="pt-4 border-t border-neutral-800 flex justify-end">
+                        <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-bold rounded-lg shadow-lg shadow-purple-600/30 transition-all text-xs">
+                            <span wire:loading.remove wire:target="placeOrder">Place order and get invoice</span>
+                            <span wire:loading wire:target="placeOrder">Placing order...</span>
+                        </button>
+                    </div>
+                </form>
+            @else
+                <!-- Stage 2: invoice and payment proof -->
+                <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                    <div>
+                        <span class="text-[10px] text-neutral-500 block uppercase">Invoice</span>
+                        <span class="text-white font-bold">{{ $existingInvoice->invoice_number }}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-neutral-500 block uppercase">Status</span>
+                        <span class="text-amber-300 font-bold">{{ str_replace('_', ' ', $existingInvoice->status) }}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('invoices.show', $existingInvoice->uuid) }}" class="text-purple-400 hover:text-purple-300 font-semibold">View invoice</a>
+                        <a href="{{ route('invoices.pdf', $existingInvoice->uuid) }}" class="text-purple-400 hover:text-purple-300 font-semibold">PDF</a>
+                    </div>
                 </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-neutral-300 mb-1">Upload Bank Transfer Slip / Receipt *</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-neutral-700 rounded-xl hover:border-purple-500/50 transition-all bg-neutral-950">
-                            <div class="space-y-2 text-center">
-                                <svg class="mx-auto h-8 w-8 text-neutral-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="flex text-xs text-neutral-400 justify-center">
-                                    <label class="relative cursor-pointer rounded-md font-bold text-purple-400 hover:text-purple-300 focus-within:outline-none">
-                                        <span>Choose receipt file</span>
-                                        <input type="file" wire:model="proofFile" class="sr-only" accept="image/png,image/jpeg,application/pdf">
-                                    </label>
-                                    <p class="pl-1">or drag and drop</p>
-                                </div>
-                                <p class="text-[10px] text-neutral-500 font-mono">JPG, PNG, PDF up to 10MB (Scrubbed & Encrypted)</p>
-                            </div>
+                @can('uploadProof', $existingInvoice)
+                    <form wire:submit.prevent="submitProof" class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4 shadow-lg">
+                        <div class="flex items-center justify-between pb-3 border-b border-neutral-800">
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-200">Submit payment proof</h3>
+                            <span class="text-[11px] text-amber-400 font-mono">Manual verification</span>
                         </div>
-                        @if ($proofFile)
-                            <div class="mt-2 p-2 bg-emerald-950/40 border border-emerald-500/30 rounded flex items-center justify-between text-xs text-emerald-300 font-mono">
-                                <span>Selected: {{ $proofFile->getClientOriginalName() }} ({{ round($proofFile->getSize() / 1024) }} KB)</span>
-                                <span class="text-[10px] uppercase font-bold text-emerald-400">Ready</span>
+
+                        @if ($paymentMethods->count() > 1)
+                            <div>
+                                <label for="payment-method" class="block text-xs font-bold text-neutral-300 mb-1">Which payment method did you use?</label>
+                                <select id="payment-method" wire:model="paymentMethodUuid" class="select select-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs">
+                                    <option value="">Select a method</option>
+                                    @foreach ($paymentMethods as $method)
+                                        <option value="{{ $method->uuid }}">{{ $method->label }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         @endif
-                        @error('proofFile') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-neutral-300 mb-1">Depositor / Sender Name</label>
-                            <input 
-                                type="text" 
-                                wire:model="depositorName" 
-                                placeholder="Name as shown on transfer" 
-                                class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono"
-                            />
-                            @error('depositorName') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
-                        </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-neutral-300 mb-1">Bank Reference / Txn ID</label>
-                            <input 
-                                type="text" 
-                                wire:model="bankReference" 
-                                placeholder="e.g. TXN9872145" 
-                                class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono"
-                            />
-                            @error('bankReference') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                            <label for="proof-file" class="block text-xs font-bold text-neutral-300 mb-1">Receipt or screenshot *</label>
+                            <input id="proof-file" type="file" wire:model="proofFile" accept="image/png,image/jpeg,image/webp,application/pdf" class="file-input file-input-sm w-full bg-neutral-950 border-neutral-700 text-xs">
+                            <p class="text-[10px] text-neutral-500 font-mono mt-1">JPG, PNG, WEBP or PDF, up to 5 MB. Stored privately.</p>
+                            @if ($proofFile)
+                                <div class="mt-2 p-2 bg-emerald-950/40 border border-emerald-500/30 rounded text-xs text-emerald-300 font-mono">
+                                    Selected: {{ $proofFile->getClientOriginalName() }} ({{ round($proofFile->getSize() / 1024) }} KB)
+                                </div>
+                            @endif
+                            @error('proofFile') <span class="text-rose-400 text-xs block mt-1" role="alert">{{ $message }}</span> @enderror
                         </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-neutral-300 mb-1">Order Notes (Optional)</label>
-                        <textarea 
-                            wire:model="notes" 
-                            rows="2" 
-                            placeholder="Preferred Linux distro, extra requirements..." 
-                            class="textarea textarea-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono"
-                        ></textarea>
-                    </div>
-                </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="depositor" class="block text-xs font-bold text-neutral-300 mb-1">Sender name</label>
+                                <input id="depositor" type="text" wire:model="depositorName" placeholder="Name shown on the transfer" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                                @error('depositorName') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label for="bank-ref" class="block text-xs font-bold text-neutral-300 mb-1">Reference / transaction ID</label>
+                                <input id="bank-ref" type="text" wire:model="bankReference" placeholder="e.g. TXN9872145" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                                @error('bankReference') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
 
-                <div class="pt-4 border-t border-neutral-800 flex justify-end">
-                    <button 
-                        type="submit" 
-                        class="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow-lg shadow-purple-600/30 transition-all flex items-center gap-2 text-xs"
-                    >
-                        <svg wire:loading.remove wire:target="placeOrder" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        <span wire:loading wire:target="placeOrder" class="loading loading-spinner loading-xs"></span>
-                        Submit Order & Upload Receipt
-                    </button>
-                </div>
-            </form>
+                        <div class="pt-4 border-t border-neutral-800 flex justify-end">
+                            <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-bold rounded-lg shadow-lg shadow-purple-600/30 transition-all text-xs">
+                                <span wire:loading.remove wire:target="submitProof">Upload proof</span>
+                                <span wire:loading wire:target="submitProof">Uploading...</span>
+                            </button>
+                        </div>
+                    </form>
+                @else
+                    <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-xs text-neutral-300">
+                        @if ($existingInvoice->status === 'paid')
+                            This invoice is paid. Thank you.
+                        @else
+                            This invoice is not open for a new proof right now.
+                        @endif
+                    </div>
+                @endcan
+            @endif
         </div>
 
         <!-- Right 1 Col: Bank Account Transfer Instructions & SLA Card -->
         <div class="space-y-6">
-            <!-- Bank Details -->
+            <!-- Payment methods configured by the owner -->
             <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-4 shadow-lg">
-                <div class="flex items-center gap-2 pb-2 border-b border-neutral-800">
-                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-300">Bank Transfer Details</h3>
-                </div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-300 pb-2 border-b border-neutral-800">How to pay</h3>
 
-                <div class="space-y-3 font-mono text-xs">
-                    <div class="bg-neutral-950 p-3 rounded border border-neutral-800 space-y-2">
-                        <div>
-                            <span class="text-[10px] text-neutral-500 block uppercase">Bank Name</span>
-                            <span class="text-white font-bold">Commercial Bank of Ceylon / Sampath Bank</span>
+                @forelse ($paymentMethods as $method)
+                    <div class="space-y-2 font-mono text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-white font-bold">{{ $method->label }}</span>
+                            <span class="text-[10px] uppercase text-neutral-500">{{ $method->typeLabel() }}</span>
                         </div>
-                        <div>
-                            <span class="text-[10px] text-neutral-500 block uppercase">Account Name</span>
-                            <span class="text-white font-bold">STX HOSTING (PVT) LTD</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-neutral-500 block uppercase">Account Number</span>
-                            <span class="text-emerald-400 font-bold select-all tracking-wider">8012 3456 7890</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-neutral-500 block uppercase">Branch</span>
-                            <span class="text-white">Colombo Main Branch</span>
-                        </div>
+                        @if (! empty($method->details))
+                            <dl class="bg-neutral-950 p-3 rounded border border-neutral-800 space-y-2">
+                                @foreach ($method->details as $row)
+                                    <div>
+                                        <dt class="text-[10px] text-neutral-500 uppercase">{{ $row['label'] ?? '' }}</dt>
+                                        <dd class="text-emerald-400 font-bold select-all break-all">{{ $row['value'] ?? '' }}</dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        @endif
+                        @if ($method->instructions)
+                            <p class="text-[11px] text-neutral-400 font-sans leading-relaxed whitespace-pre-line">{{ $method->instructions }}</p>
+                        @endif
                     </div>
-
-                    <p class="text-[11px] text-neutral-400 font-sans leading-relaxed">
-                        Transfer the exact invoice total. Once transferred, save the receipt/screenshot and upload it using the form on the left.
+                @empty
+                    <p class="text-xs text-neutral-400 leading-relaxed">
+                        Payment details for {{ $currency }} have not been published yet. Please contact support and we will send them to you.
                     </p>
-                </div>
+                @endforelse
+
+                <p class="text-[11px] text-neutral-400 font-sans leading-relaxed pt-2 border-t border-neutral-800">
+                    Transfer the exact invoice total, keep the receipt, then upload it here.
+                </p>
             </div>
 
             <!-- Fulfillment SLA Card -->

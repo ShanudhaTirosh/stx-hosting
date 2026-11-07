@@ -1,0 +1,39 @@
+name: Security audit
+
+# Checks the dependencies for known vulnerabilities. Runs on every pull request that touches them,
+# and every Monday so a newly published advisory is noticed even when nobody changes code.
+on:
+  pull_request:
+    paths:
+      - composer.json
+      - composer.lock
+      - package.json
+      - package-lock.json
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  composer-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+      - name: Audit PHP dependencies
+        run: composer audit --locked --no-interaction
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit JavaScript dependencies (production only)
+        run: npm audit --omit=dev --audit-level=high

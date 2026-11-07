@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Services\RbacService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -20,9 +21,6 @@ class Index extends Component
 
     public function mount()
     {
-        if (! isCloud() && ! isDev()) {
-            abort(403);
-        }
         $this->authorizeAdminAccess();
         $this->getSubscribers();
     }
@@ -54,9 +52,7 @@ class Index extends Component
 
     public function getSubscribers()
     {
-        if (Auth::id() !== 0 && session('impersonator_id') !== 0) {
-            return redirect()->route('dashboard');
-        }
+        $this->authorizeAdminAccess();
         $this->inactiveSubscribers = Team::whereRelation('subscription', 'stripe_invoice_paid', false)->count();
         $this->activeSubscribers = Team::whereRelation('subscription', 'stripe_invoice_paid', true)->count();
     }
@@ -86,14 +82,16 @@ class Index extends Component
 
     private function authorizeAdminAccess(): void
     {
-        if (! Auth::check() || (Auth::id() !== 0 && session('impersonator_id') !== 0)) {
+        // Platform staff (Owner/Admin), or the root user while impersonating a client.
+        if (! Auth::check() || (! RbacService::isStaff(Auth::user()) && session('impersonator_id') !== 0)) {
             abort(403);
         }
     }
 
     private function authorizeRootOnly(): void
     {
-        if (! Auth::check() || Auth::id() !== 0) {
+        // Impersonation is Owner-only (root user or root-team owner).
+        if (! Auth::check() || (Auth::id() !== 0 && ! RbacService::isPlatformOwner(Auth::user()))) {
             abort(403);
         }
     }

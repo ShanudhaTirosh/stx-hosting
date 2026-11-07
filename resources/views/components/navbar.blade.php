@@ -138,16 +138,26 @@
         @if (isSubscribed() || !isCloud())
             @php
                 // An entry with children opens a submenu in place of the main menu (back button + its pages).
-                $isPlatformAdmin = isInstanceAdmin() || \App\Services\RbacService::isOwner(auth()->user());
+                // One permission map drives every menu item (config/stx-permissions.php).
+                $navUser = auth()->user();
+                $can = fn (string $capability): bool => \App\Services\RbacService::can($navUser, $capability);
+                $isPlatformAdmin = $can('admin.console');
                 $navSections = collect([
                     'Administration' => [
-                        ['label' => 'Admin Console', 'icon' => 'admin', 'href' => route('admin.index'), 'active' => request()->is('admin'), 'visible' => $isPlatformAdmin],
-                        ['label' => 'Products & Plans', 'icon' => 'layers', 'href' => route('admin.commerce.products'), 'active' => request()->is('admin/commerce/products*'), 'visible' => $isPlatformAdmin],
-                        ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('admin.operations.approvals'), 'active' => request()->is('admin/operations/approvals*'), 'visible' => $isPlatformAdmin],
-                        ['label' => 'VPS Inventory', 'icon' => 'servers', 'href' => route('admin.inventory.vps'), 'active' => request()->is('admin/inventory/vps*'), 'visible' => $isPlatformAdmin],
-                        ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('admin.operations.provisioning'), 'active' => request()->is('admin/operations/provisioning*'), 'visible' => $isPlatformAdmin],
-                        ['label' => 'Proof Reviews', 'icon' => 'subscription', 'href' => route('admin.billing.proofs'), 'active' => request()->is('admin/billing/proofs*'), 'visible' => $isPlatformAdmin],
-                        ['label' => 'Status & Telemetry', 'icon' => 'analytics', 'href' => route('admin.status.index'), 'active' => request()->is('admin/status*'), 'visible' => $isPlatformAdmin],
+                        ['label' => 'Admin Console', 'icon' => 'admin', 'href' => route('admin.index'), 'active' => request()->is('admin'), 'visible' => $can('admin.console')],
+                        ['label' => 'Products & Plans', 'icon' => 'layers', 'href' => route('admin.commerce.products'), 'active' => request()->is('admin/commerce/products*'), 'visible' => $can('catalog.manage')],
+                        ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('admin.operations.approvals'), 'active' => request()->is('admin/operations/approvals*'), 'visible' => $can('deployments.approve')],
+                        ['label' => 'VPS Inventory', 'icon' => 'servers', 'href' => route('admin.inventory.vps'), 'active' => request()->is('admin/inventory/vps*'), 'visible' => $can('vps.inventory')],
+                        ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('admin.operations.provisioning'), 'active' => request()->is('admin/operations/provisioning*'), 'visible' => $can('vps.provision')],
+                        ['label' => 'Proof Reviews', 'icon' => 'subscription', 'href' => route('admin.billing.proofs'), 'active' => request()->is('admin/billing/proofs*'), 'visible' => $can('payments.verify')],
+                        ['label' => 'Payment Methods', 'icon' => 'subscription', 'href' => route('admin.billing.methods'), 'active' => request()->is('admin/billing/methods*'), 'visible' => $can('payment_methods.manage')],
+                        ['label' => 'Support Inbox'.(($u = $can('chat.reply') ? app(\App\Services\Chat\ChatService::class)->unreadForStaff() : 0) > 0 ? " ({$u})" : ''), 'icon' => 'subscription', 'href' => route('admin.support'), 'active' => request()->is('admin/support*'), 'visible' => $can('chat.reply')],
+                        ['label' => 'Alert Channels', 'icon' => 'subscription', 'href' => route('admin.notifications'), 'active' => request()->is('admin/notifications*'), 'visible' => $can('notifications.manage')],
+                        ['label' => 'Backups', 'icon' => 'storages', 'href' => route('admin.backups'), 'active' => request()->is('admin/backups*'), 'visible' => $can('backups.manage')],
+                        ['label' => 'Audit Log', 'icon' => 'subscription', 'href' => route('admin.audit'), 'active' => request()->is('admin/audit*'), 'visible' => $can('admin.console')],
+                        ['label' => 'Staff Handbook', 'icon' => 'layers', 'href' => route('admin.docs.index'), 'active' => request()->is('admin/docs*'), 'visible' => $can('admin.console')],
+                        ['label' => 'Emails', 'icon' => 'subscription', 'href' => route('admin.emails'), 'active' => request()->is('admin/emails*'), 'visible' => $can('email_templates.manage')],
+                        ['label' => 'Status & Telemetry', 'icon' => 'analytics', 'href' => route('admin.status.index'), 'active' => request()->is('admin/status*'), 'visible' => $can('status.manage')],
                     ],
                     'Customer Portal' => [
                         ['label' => 'My Services', 'icon' => 'layers', 'href' => route('portal.index'), 'active' => request()->is('portal', 'portal/services*')],
@@ -155,23 +165,27 @@
                         ['label' => 'System Status', 'icon' => 'analytics', 'href' => route('status.public'), 'active' => request()->is('status*')],
                         ['label' => 'Applications', 'icon' => 'code', 'href' => route('portal.apps'), 'active' => request()->is('portal/apps*')],
                         ['label' => 'Databases', 'icon' => 'database', 'href' => route('portal.databases'), 'active' => request()->is('portal/databases*')],
+                        ['label' => 'Domains', 'icon' => 'globe', 'href' => route('portal.domains'), 'active' => request()->is('portal/domains*')],
+                        ['label' => 'Backups', 'icon' => 'storages', 'href' => route('portal.backups'), 'active' => request()->is('portal/backups*')],
+                        ['label' => 'Help Center', 'icon' => 'layers', 'href' => route('docs.index'), 'active' => request()->is('docs*')],
+                        ['label' => 'Support'.(($c = $navUser ? app(\App\Services\Chat\ChatService::class)->unreadForCustomer($navUser) : 0) > 0 ? " ({$c})" : ''), 'icon' => 'layers', 'href' => route('portal.support'), 'active' => request()->is('portal/support*')],
                         ['label' => 'Billing & Invoices', 'icon' => 'subscription', 'href' => route('portal.billing'), 'active' => request()->is('portal/billing*')],
                         ['label' => 'Order New Service', 'icon' => 'plus', 'href' => route('portal.checkout'), 'active' => request()->is('portal/checkout*')],
                     ],
                     'Infrastructure' => [
                         ['label' => 'Fleet Dashboard', 'icon' => 'dashboard', 'href' => '/', 'active' => request()->is('/', 'dashboard/*', 'canvas')],
                         ['label' => 'Projects', 'icon' => 'projects', 'href' => route('project.index'), 'active' => request()->is('projects', 'projects/*', 'project/*')],
-                        ['label' => 'Terminal', 'icon' => 'browser-terminal', 'href' => route('terminal'), 'active' => request()->is('terminal*'), 'navigate' => false, 'visible' => auth()->user()?->can('canAccessTerminal')],
+                        ['label' => 'Terminal', 'icon' => 'browser-terminal', 'href' => route('terminal'), 'active' => request()->is('terminal*'), 'navigate' => false, 'visible' => $can('nodes.terminal')],
                         ['label' => 'Monitoring', 'icon' => 'graph', 'children' => [
                             ['label' => 'Analytics', 'icon' => 'analytics', 'href' => route('analytics'), 'active' => request()->is('analytics')],
                             ['label' => 'Metrics', 'icon' => 'graph', 'href' => route('metrics'), 'active' => request()->is('metrics')],
                         ]],
-                        ['label' => 'Servers', 'icon' => 'servers', 'href' => '/servers', 'active' => request()->is('server/*', 'servers', 'servers/*')],
+                        ['label' => 'Servers', 'icon' => 'servers', 'href' => '/servers', 'active' => request()->is('server/*', 'servers', 'servers/*'), 'visible' => $can('nodes.view')],
                         ['label' => 'Integrations', 'icon' => 'link', 'children' => [
                             ['label' => 'Sources', 'icon' => 'sources', 'href' => route('source.all'), 'active' => request()->is('sources', 'source/*')],
                             ['label' => 'Destinations', 'icon' => 'destinations', 'href' => route('destination.index'), 'active' => request()->is('destinations', 'destination/*')],
-                            ['label' => 'Registries', 'icon' => 'layers', 'href' => route('registries.index'), 'active' => request()->is('registries'), 'visible' => auth()->user()?->isAdmin()],
-                            ['label' => 'S3 Storage', 'icon' => 'storages', 'href' => route('storage.index'), 'active' => request()->is('storages', 'storages/*')],
+                            ['label' => 'Registries', 'icon' => 'layers', 'href' => route('registries.index'), 'active' => request()->is('registries'), 'visible' => $can('integrations.manage')],
+                            ['label' => 'S3 Storage', 'icon' => 'storages', 'href' => route('storage.index'), 'active' => request()->is('storages', 'storages/*'), 'visible' => $can('platform.settings')],
                         ]],
                         ['label' => 'Shared Variables', 'icon' => 'variables', 'children' => [
                             ['label' => 'Overview', 'icon' => 'dashboard', 'href' => route('shared-variables.index'), 'active' => request()->is('shared-variables')],
@@ -199,14 +213,14 @@
                         ]],
                         ['label' => 'Keys & Tokens', 'icon' => 'keys', 'children' => [
                             ['label' => 'Private Keys', 'icon' => 'keys', 'href' => route('security.private-key.index'), 'active' => request()->is('security/private-key*')],
-                            ['label' => 'Cloud Tokens', 'icon' => 'cloud', 'href' => route('security.cloud-tokens'), 'active' => request()->is('security/cloud-tokens*'), 'visible' => auth()->user()?->can('viewAny', App\Models\CloudProviderToken::class)],
-                            ['label' => 'Integration Tokens', 'icon' => 'network', 'href' => route('security.integration-tokens'), 'active' => request()->is('security/integration-tokens'), 'visible' => auth()->user()?->can('viewAny', App\Models\IntegrationToken::class)],
-                            ['label' => 'Cloud-Init Scripts', 'icon' => 'file-content', 'href' => route('security.cloud-init-scripts'), 'active' => request()->is('security/cloud-init-scripts*'), 'visible' => auth()->user()?->can('viewAny', App\Models\CloudInitScript::class)],
+                            ['label' => 'Cloud Tokens', 'icon' => 'cloud', 'href' => route('security.cloud-tokens'), 'active' => request()->is('security/cloud-tokens*'), 'visible' => $can('nodes.add') && auth()->user()?->can('viewAny', App\Models\CloudProviderToken::class)],
+                            ['label' => 'Integration Tokens', 'icon' => 'network', 'href' => route('security.integration-tokens'), 'active' => request()->is('security/integration-tokens'), 'visible' => $can('nodes.add') && auth()->user()?->can('viewAny', App\Models\IntegrationToken::class)],
+                            ['label' => 'Cloud-Init Scripts', 'icon' => 'file-content', 'href' => route('security.cloud-init-scripts'), 'active' => request()->is('security/cloud-init-scripts*'), 'visible' => $can('nodes.add') && auth()->user()?->can('viewAny', App\Models\CloudInitScript::class)],
                             ['label' => 'API Tokens', 'icon' => 'code', 'href' => route('security.api-tokens'), 'active' => request()->is('security/api-tokens')],
                         ]],
                         ['label' => 'Subscription', 'icon' => 'subscription', 'href' => isCloud() ? route('subscription.show') : '', 'active' => request()->is('subscription*'), 'visible' => isCloud() && auth()->user()->isAdmin()],
                         ['label' => 'Tags', 'icon' => 'tags', 'href' => route('tags.show'), 'active' => request()->is('tags*', 'canvas/tags')],
-                        ['label' => 'Settings', 'icon' => 'settings', 'visible' => isInstanceAdmin(), 'children' => [
+                        ['label' => 'Settings', 'icon' => 'settings', 'visible' => $can('platform.settings'), 'children' => [
                             ['label' => 'General', 'icon' => 'settings', 'href' => route('settings.index'), 'active' => request()->is('settings')],
                             ['label' => 'Advanced', 'icon' => 'grid', 'href' => route('settings.advanced'), 'active' => request()->is('settings/advanced')],
                             ['label' => 'Updates', 'icon' => 'refresh3', 'href' => route('settings.updates'), 'active' => request()->is('settings/updates')],
