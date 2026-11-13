@@ -206,6 +206,32 @@ class HostingCatalogSeederService
                 'is_globally_enabled' => true,
                 'is_allowed' => true,
             ],
+            [
+                'template_name' => 'orbit',
+                'display_name' => 'Orbit Team Workspace',
+                'category' => 'collaboration',
+                'icon_url' => '/images/logos/orbit.svg',
+                'short_description' => 'Self-hosted team workspace with tasks, docs, real-time chat, and MCP server.',
+                'default_port' => 3000,
+                'min_ram_mb' => 1024,
+                'min_vcpu' => 1.0,
+                'is_featured' => false,
+                'is_globally_enabled' => false, // Curated: Admin enables in /admin/templates
+                'is_allowed' => false,
+            ],
+            [
+                'template_name' => 'hi-events',
+                'display_name' => 'Hi.Events Platform',
+                'category' => 'events',
+                'icon_url' => '/images/logos/hi-events.svg',
+                'short_description' => 'Open-source event management and ticket selling platform.',
+                'default_port' => 8080,
+                'min_ram_mb' => 1024,
+                'min_vcpu' => 1.0,
+                'is_featured' => false,
+                'is_globally_enabled' => false, // Curated: Admin enables in /admin/templates
+                'is_allowed' => false,
+            ],
         ];
 
         foreach ($templates as $tmpl) {

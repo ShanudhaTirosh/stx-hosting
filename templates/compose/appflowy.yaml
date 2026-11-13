@@ -225,6 +225,8 @@ services:
       - GOTRUE_DISABLE_SIGNUP=false
       - GOTRUE_SITE_URL=appflowy-flutter://
       - GOTRUE_URI_ALLOW_LIST=**
+      # AppFlowy Web sends Redirect_to cross-origin, which GoTrue's CORS preflight rejects by default
+      - GOTRUE_CORS_ALLOWED_HEADERS=redirect_to
       - GOTRUE_JWT_SECRET=${SERVICE_PASSWORD_JWT}
       - GOTRUE_JWT_EXP=${GOTRUE_JWT_EXP:-7200}
       - GOTRUE_DB_DRIVER=postgres
@@ -327,7 +329,7 @@ services:
       timeout: 20s
       retries: 3
     volumes:
-      # STX Hosting will manage this named volume for persistent object storage.
+      # Coolify will manage this named volume for persistent object storage.
       - minio_data:/data
 
   postgres:
@@ -338,7 +340,7 @@ services:
       - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
       - POSTGRES_HOST=postgres
     volumes:
-      # STX Hosting will manage this named volume for persistent database storage.
+      # Coolify will manage this named volume for persistent database storage.
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "${SERVICE_USER_POSTGRES}", "-d", "${POSTGRES_DB:-appflowy}" ]

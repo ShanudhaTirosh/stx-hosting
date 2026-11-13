@@ -9,24 +9,40 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Get cached versions data from versions.json.
+ * Get the versions of the channel this instance follows: its STX Hosting version and the helper, Sentinel and Traefik versions released with it.
  *
  * This function provides a centralized, cached access point for all
- * version data in the application. Data is cached in Redis for 1 hour
- * and shared across all servers in the cluster.
+ * version data in the application. It reads the copy of versions.json of the CDN
+ * that refresh_versions_file() keeps on this node, or the upstream.json of the image until then.
+ * Data is cached in Redis for 1 hour and shared across all servers in the cluster.
  *
- * @return array|null The versions data array, or null if file doesn't exist
+ * @return array{coolify: array{version: string}, stx?: array{version: string}, helper?: array{version: string}, sentinel?: array{version: string}, traefik?: array<string, string>}
  */
-function get_versions_data(): ?array
+function get_versions_data(): array
 {
-    return Cache::remember('stx:versions:all', 3600, function () {
-        $versionsPath = base_path('versions.json');
-
+    return Cache::remember('stx:versions', 3600, function () {
+        $versionsPath = storage_path('app/versions.json');
+        $currentAppVersion = config('constants.stx.version', config('constants.coolify.version'));
         if (! File::exists($versionsPath)) {
-            return null;
+            $fallback = File::exists(base_path('upstream.json')) ? json_decode(File::get(base_path('upstream.json')), true) : [];
+
+            return [
+                'stx' => ['version' => $currentAppVersion],
+                'coolify' => ['version' => $currentAppVersion],
+            ] + $fallback;
+        }
+        $channels = json_decode(File::get($versionsPath), true);
+        $channel = newest_update_channel($channels);
+        $channelData = $channels[$channel] ?? [];
+        $versions = $channelData + ['upgrade_script_url' => upgrade_script_url($channel)];
+
+        $cdnVersion = data_get($versions, 'stx.version', data_get($versions, 'coolify.version', $currentAppVersion));
+        if (version_compare($currentAppVersion, $cdnVersion, '>')) {
+            data_set($versions, 'stx.version', $currentAppVersion);
+            data_set($versions, 'coolify.version', $currentAppVersion);
         }
 
-        return json_decode(File::get($versionsPath), true);
+        return $versions;
     });
 }
 
@@ -54,12 +70,14 @@ function get_traefik_versions(): ?array
  */
 function invalidate_versions_cache(): void
 {
+    Cache::forget('stx:versions');
+    Cache::forget('coolify:versions');
     Cache::forget('stx:versions:all');
     Cache::forget('coolify:versions:all');
 }
 
 /**
- * HTTP client for the Coolify CDN. It retries only transient failures (connection errors, 429, 5xx)
+ * HTTP client for the CDN. It retries only transient failures (connection errors, 429, 5xx)
  * and does not throw for a failed response.
  */
 function cdn_http(int $tries = 3): PendingRequest
@@ -90,62 +108,112 @@ function cdn_retry_delay_ms(int $attempt, Throwable $exception): int
 }
 
 /**
- * Fetch versions.json from the CDN and write it to the local file of this node.
- * The Coolify version never goes below the cached or the running version.
- * When the CDN fails, the local file stays as it is.
+ * Fetch versions.json from the CDN and take the block of the newest version this instance takes.
+ * Only the stable, preview and nightly keys are read.
  *
- * @return array|null The written versions data, or null if the CDN fetch failed
+ * @return array{channels: array, versions: array{coolify: array{version: string}}, upgrade_script_url: string}|null
+ */
+function fetch_latest_versions(int $tries = 3): ?array
+{
+    $versionsUrl = config('constants.stx.versions_url', config('constants.coolify.versions_url'));
+    $response = cdn_http($tries)->get($versionsUrl);
+    $channels = $response->json();
+    if ($response->failed() || ! is_array($channels)) {
+        return null;
+    }
+    $channel = newest_update_channel($channels);
+
+    return [
+        'channels' => $channels,
+        'versions' => $channels[$channel] ?? [],
+        'upgrade_script_url' => upgrade_script_url($channel),
+    ];
+}
+
+/**
+ * The upgrade script of an update channel on the CDN.
+ */
+function upgrade_script_url(string $channel): string
+{
+    $defaultUpgradeScript = config('constants.stx.upgrade_script_url', config('constants.coolify.upgrade_script_url'));
+    $versionsUrl = config('constants.stx.versions_url', config('constants.coolify.versions_url'));
+
+    return $channel === 'stable' ? $defaultUpgradeScript : dirname($versionsUrl)."/{$channel}/upgrade.sh";
+}
+
+/**
+ * The channel of the newest version this instance takes: its update channel and the more stable ones.
+ *
+ * @param  array<string, mixed>  $versions  The versions.json of the CDN
+ */
+function newest_update_channel(array $versions): string
+{
+    $settings = instanceSettings();
+    $channels = ['stable', 'preview', 'nightly'];
+    $follows = (int) array_search($settings->update_channel ?? 'stable', $channels, true);
+    $followsUntilRelease = $settings->previous_update_channel ? (int) array_search($settings->previous_update_channel, $channels, true) : -1;
+    $currentAppVersion = config('constants.stx.version', config('constants.coolify.version'));
+    $release = preg_replace('/^(\d+\.\d+\.\d+).*/', '$1', $currentAppVersion);
+    $newest = 'stable';
+    foreach ($channels as $rank => $channel) {
+        $version = data_get($versions, "{$channel}.stx.version", data_get($versions, "{$channel}.coolify.version"));
+        $newestVersion = (string) data_get($versions, "{$newest}.stx.version", data_get($versions, "{$newest}.coolify.version"));
+        if (! is_string($version) || version_compare($version, $newestVersion, '<=')) {
+            continue;
+        }
+        if ($rank <= $follows || ($rank <= $followsUntilRelease && version_compare($version, $release, '<'))) {
+            $newest = $channel;
+        }
+    }
+
+    return $newest;
+}
+
+/**
+ * Fetch versions.json from the CDN and replace the copy of it on this node in one step.
+ *
+ * @return array|null The versions of the channel of this instance, or null if the CDN fetch failed
  */
 function refresh_versions_file(int $tries = 3): ?array
 {
-    Cache::forget('stx:versions:all');
-    Cache::forget('stx:versions:all');
-    Cache::forget('coolify:versions:all');
-
-    $response = cdn_http($tries)->get(config('constants.stx.versions_url', config('constants.coolify.versions_url')));
-    $versions = $response->json();
-    if ($response->failed() || ! is_array($versions)) {
-        Log::warning('Could not fetch versions.json from the CDN, using the local file', ['status' => $response->status()]);
+    $versionsPath = storage_path('app/versions.json');
+    $latest = fetch_latest_versions($tries);
+    if ($latest === null) {
+        Log::warning('Could not fetch versions.json from the CDN, using the local file');
 
         return null;
     }
 
-    $latestVersion = data_get($versions, 'stx.v4.version', data_get($versions, 'coolify.v4.version'));
+    $latestVersion = data_get($latest, 'versions.stx.version', data_get($latest, 'versions.coolify.version'));
     $currentVersion = config('constants.stx.version', config('constants.coolify.version'));
 
-    $existingStxVersion = null;
-    if (File::exists(base_path('versions.json'))) {
-        $existingVersions = json_decode(File::get(base_path('versions.json')), true);
-        $existingStxVersion = data_get($existingVersions, 'stx.v4.version', data_get($existingVersions, 'coolify.v4.version'));
+    $existingAppVersion = null;
+    if (File::exists($versionsPath)) {
+        $existingChannels = json_decode(File::get($versionsPath), true);
+        $activeChannel = newest_update_channel($existingChannels);
+        $existingAppVersion = data_get($existingChannels, "{$activeChannel}.stx.version", data_get($existingChannels, "{$activeChannel}.coolify.version"));
     }
 
-    $bestVersion = $latestVersion;
-
-    if ($existingStxVersion && version_compare($existingStxVersion, $bestVersion, '>')) {
-        Log::warning('CDN served older STX Hosting version than cache', [
+    if ($existingAppVersion && $latestVersion && version_compare($existingAppVersion, $latestVersion, '>')) {
+        Log::warning('CDN served older version than cache', [
             'cdn_version' => $latestVersion,
-            'cached_version' => $existingStxVersion,
+            'cached_version' => $existingAppVersion,
             'current_version' => $currentVersion,
         ]);
-        $bestVersion = $existingStxVersion;
+
+        return get_versions_data();
     }
 
-    if (version_compare($bestVersion, $currentVersion, '<')) {
+    if ($latestVersion && version_compare($latestVersion, $currentVersion, '<')) {
         Log::warning('Version downgrade prevented in CheckForUpdatesJob', [
             'cdn_version' => $latestVersion,
-            'cached_version' => $existingStxVersion,
             'current_version' => $currentVersion,
-            'attempted_best' => $bestVersion,
-            'using' => $currentVersion,
         ]);
-        $bestVersion = $currentVersion;
     }
 
-    data_set($versions, 'stx.v4.version', $bestVersion);
-    data_set($versions, 'coolify.v4.version', $bestVersion);
-
-    File::put(base_path('versions.json'), json_encode($versions, JSON_PRETTY_PRINT));
+    File::replace($versionsPath, json_encode($latest['channels'], JSON_PRETTY_PRINT));
     invalidate_versions_cache();
+    $versions = get_versions_data();
     update_helper_version($versions);
 
     return $versions;
@@ -156,7 +224,7 @@ function refresh_versions_file(int $tries = 3): ?array
  */
 function update_helper_version(?array $versions): void
 {
-    $latestVersion = data_get($versions, 'stx.helper.version', data_get($versions, 'coolify.helper.version'));
+    $latestVersion = data_get($versions, 'stx.helper.version', data_get($versions, 'helper.version'));
     $settings = instanceSettings();
     if ($latestVersion && version_compare($latestVersion, (string) $settings->helper_version, '>')) {
         $settings->update(['helper_version' => $latestVersion]);

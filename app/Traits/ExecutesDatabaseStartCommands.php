@@ -2,7 +2,9 @@
 
 namespace App\Traits;
 
+use App\Jobs\ScanResourceImagesJob;
 use App\Services\DatabaseStartCommandExecutor;
+use App\Services\ImageScan\ImageStartPin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\Models\Activity;
@@ -12,10 +14,29 @@ trait ExecutesDatabaseStartCommands
     private function executeDatabaseStartCommands(array $commands, Model $database, ?Activity $activity = null): Activity
     {
         if ($activity) {
-            return app(DatabaseStartCommandExecutor::class)->execute($commands, $database, $activity);
+            $activity = app(DatabaseStartCommandExecutor::class)->execute($commands, $database, $activity);
+        } else {
+            $activity = remote_process($commands, $database->destination->server, callEventOnFinish: 'DatabaseStatusChanged', queue: deployment_queue());
         }
+        ScanResourceImagesJob::dispatchAfterStart($database);
 
-        return remote_process($commands, $database->destination->server, callEventOnFinish: 'DatabaseStatusChanged', queue: deployment_queue());
+        return $activity;
+    }
+
+    /**
+     * The image pull of the start: the scanned build of a "Pull latest" security update when one waits for this
+     * database (the compose file keeps the tag), else a pull of the configured image.
+     *
+     * @return list<string>
+     */
+    private function pullImageCommands(string $composeFile): array
+    {
+        $prefix = serverDockerConfigPrefix($this->database->destination->server);
+        $pins = ImageStartPin::for(ImageStartPin::take($this->database), [(string) $this->database->image]);
+
+        return $pins === []
+            ? [$prefix."docker compose -f {$composeFile} pull"]
+            : ImageStartPin::commands($pins, $prefix);
     }
 
     /**
@@ -34,27 +55,7 @@ trait ExecutesDatabaseStartCommands
      *
      * @param  Collection<int, string>  $environmentVariables
      */
-    private function addStxEnvironmentVariables(Collection $environmentVariables): void
-    {
-        $definedKeys = $environmentVariables->map(fn ($variable) => str($variable)->before('=')->value());
-        $stxVariables = collect([
-            'STX_RESOURCE_UUID' => $this->database->uuid,
-            'STX_CONTAINER_NAME' => $this->database->uuid,
-            'COOLIFY_RESOURCE_UUID' => $this->database->uuid,
-            'COOLIFY_CONTAINER_NAME' => $this->database->uuid,
-        ])->except($definedKeys->all())->merge(stxDefaultEnvironmentVariables($this->database, $definedKeys));
-
-        foreach ($stxVariables as $key => $value) {
-            $environmentVariables->push($key.'='.escapeDollarSign($value));
-        }
-    }
-
     private function addCoolifyEnvironmentVariables(Collection $environmentVariables): void
-    {
-        $this->addStxEnvironmentVariables($environmentVariables);
-    }
-
-    private function _legacy_addCoolifyEnvironmentVariables(Collection $environmentVariables): void
     {
         $definedKeys = $environmentVariables->map(fn ($variable) => str($variable)->before('=')->value());
         $coolifyVariables = collect([

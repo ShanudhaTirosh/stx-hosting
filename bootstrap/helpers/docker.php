@@ -74,12 +74,12 @@ function containerOwnerUuid(Collection|array|string $labels, string $type): ?str
 {
     $labels = is_string($labels) ? format_docker_labels_to_json($labels) : collect($labels);
 
-    $uuid = $labels->get("stx.{$type}Uuid") ?? $labels->get("coolify.{$type}Uuid");
+    $uuid = $labels->get("coolify.{$type}Uuid");
     if (filled($uuid)) {
         return (string) $uuid;
     }
 
-    if (! $labels->has("stx.{$type}Id") && ! $labels->has("coolify.{$type}Id")) {
+    if (! $labels->has("coolify.{$type}Id")) {
         return null;
     }
 
@@ -495,7 +495,7 @@ function dockerStopCommand(int $timeout, string $containers, Server|string|null 
 function dockerRemoveCommandWithTimeout(string $container, int $timeout = 60, int $killAfter = 10): string
 {
     $container = escapeShellValue($container);
-    $script = "if command -v timeout >/dev/null 2>&1; then output=\$(timeout -k {$killAfter}s {$timeout}s docker rm -f {$container} 2>&1); exit_code=\$?; else output=''; exit_code=124; fi; if [ \"\$exit_code\" -eq 124 ]; then echo '__STX_CONTAINER_REMOVE_TIMEOUT__'; elif [ \"\$exit_code\" -ne 0 ] && printf '%s' \"\$output\" | grep -q 'No such container:'; then exit 0; elif [ \"\$exit_code\" -ne 0 ]; then printf '%s\\n' \"\$output\" >&2; else printf '%s\\n' \"\$output\"; fi; exit \$exit_code";
+    $script = "if command -v timeout >/dev/null 2>&1; then output=\$(timeout -k {$killAfter}s {$timeout}s docker rm -f {$container} 2>&1); exit_code=\$?; else output=''; exit_code=124; fi; if [ \"\$exit_code\" -eq 124 ]; then echo '__COOLIFY_CONTAINER_REMOVE_TIMEOUT__'; elif [ \"\$exit_code\" -ne 0 ] && printf '%s' \"\$output\" | grep -q 'No such container:'; then exit 0; elif [ \"\$exit_code\" -ne 0 ]; then printf '%s\\n' \"\$output\" >&2; else printf '%s\\n' \"\$output\"; fi; exit \$exit_code";
 
     return 'bash -c '.escapeShellValue($script);
 }
@@ -505,6 +505,89 @@ function dockerRemoveCommand(string $container): string
     $command = 'docker rm -f '.escapeShellValue($container);
 
     return dockerCommandIgnoringError($command, 'No such container:');
+}
+
+/**
+ * Lists the containers of a Compose project, one JSON object per line, for composeContainersWithRemovedVolumes().
+ */
+function composeProjectMountsCommand(string $projectName): string
+{
+    $format = '{"name":{{json .Name}},"service":{{json (index .Config.Labels "com.docker.compose.service")}},"imageVolumes":{{json .Config.Volumes}},"mounts":{{json .Mounts}}}';
+
+    return 'docker ps -aq --filter '.escapeshellarg("label=com.docker.compose.project={$projectName}")
+        .' | xargs -r docker inspect --format '.escapeshellarg($format).' 2>/dev/null || true';
+}
+
+/**
+ * `docker compose up` gives a recreated container the mount of the old container at each path
+ * that the image declares with VOLUME. This also keeps a volume that the user deleted in Coolify,
+ * so its old data comes back (#6875). Returns the containers to remove before `up`.
+ *
+ * Only a volume that Coolify made (its name starts with "{uuid}_") and that has no storage row
+ * anymore counts. A volume that is only removed from the Compose file still has its row, and an
+ * external volume or a bind mount is not Coolify's, so Compose keeps using them as before.
+ *
+ * @param  string  $projectMounts  output of composeProjectMountsCommand()
+ * @param  array<string, mixed>  $composeServices  the services of the Compose file that `up` starts
+ * @param  list<string>  $storageNames  names of the storage rows that the resource still has
+ * @return array<string, string> container name => volume that the user deleted
+ */
+function composeContainersWithRemovedVolumes(string $projectMounts, array $composeServices, string $uuid, array $storageNames): array
+{
+    $normalize = fn (string $path): string => rtrim($path, '/') ?: '/';
+    $containers = [];
+    foreach (preg_split('/\R/', trim($projectMounts)) as $line) {
+        $container = json_decode($line, true);
+        $service = data_get($container, 'service');
+        if (! is_array($container) || ! is_string($service) || ! is_array(data_get($composeServices, $service))) {
+            continue;
+        }
+        $targets = composeServiceVolumeTargets(data_get($composeServices, "{$service}.volumes", []));
+        if ($targets === null) {
+            continue;
+        }
+        $imageVolumes = array_map($normalize, array_keys(data_get($container, 'imageVolumes') ?? []));
+        foreach (data_get($container, 'mounts') ?? [] as $mount) {
+            $name = (string) data_get($mount, 'Name');
+            $path = $normalize((string) data_get($mount, 'Destination'));
+            if (data_get($mount, 'Type') !== 'volume' || ! str_starts_with($name, "{$uuid}_") || in_array($name, $storageNames, true)
+                || ! in_array($path, $imageVolumes, true) || in_array($path, $targets, true)) {
+                continue;
+            }
+            $containers[ltrim((string) data_get($container, 'name'), '/')] = $name;
+        }
+    }
+
+    return $containers;
+}
+
+/**
+ * The container paths of the volumes of a Compose service, or null when a path is not literal
+ * (for example `${DATA_PATH}`).
+ *
+ * @return list<string>|null
+ */
+function composeServiceVolumeTargets(mixed $volumes): ?array
+{
+    $targets = [];
+    foreach (is_array($volumes) ? $volumes : [] as $volume) {
+        if (is_array($volume)) {
+            $target = data_get($volume, 'target');
+        } else {
+            // source:target:mode, where the source can contain colons, for example ${DATA:-/data}.
+            $parts = explode(':', (string) $volume);
+            if (count($parts) > 1 && preg_match('/^[a-zA-Z,]+$/', end($parts))) {
+                array_pop($parts);
+            }
+            $target = end($parts);
+        }
+        if (! is_string($target) || ! str_starts_with($target, '/')) {
+            return null;
+        }
+        $targets[] = rtrim($target, '/') ?: '/';
+    }
+
+    return $targets;
 }
 
 function dockerNetworkRemoveCommand(string $network): string
@@ -636,21 +719,13 @@ function get_port_from_dockerfile($dockerfile): ?int
 function defaultDatabaseLabels($database)
 {
     $labels = collect([]);
-    $labels->push('stx.managed=true');
     $labels->push('coolify.managed=true');
-    $labels->push('stx.type=database');
     $labels->push('coolify.type=database');
-    $labels->push('stx.databaseUuid='.$database->uuid);
     $labels->push('coolify.databaseUuid='.$database->uuid);
-    $labels->push('stx.resourceName='.Str::slug($database->name));
     $labels->push('coolify.resourceName='.Str::slug($database->name));
-    $labels->push('stx.serviceName='.Str::slug($database->name));
     $labels->push('coolify.serviceName='.Str::slug($database->name));
-    $labels->push('stx.projectName='.Str::slug($database->project()->name));
     $labels->push('coolify.projectName='.Str::slug($database->project()->name));
-    $labels->push('stx.environmentName='.Str::slug($database->environment->name));
     $labels->push('coolify.environmentName='.Str::slug($database->environment->name));
-    $labels->push('stx.database.subType='.$database->type());
     $labels->push('coolify.database.subType='.$database->type());
 
     return $labels;
@@ -659,34 +734,20 @@ function defaultDatabaseLabels($database)
 function defaultLabels(string $uuid, $name, string $projectName, string $resourceName, string $environment, $pull_request_id = 0, string $type = 'application', $subType = null, ?string $subUuid = null, $subName = null)
 {
     $labels = collect([]);
-    $version = config('constants.stx.version', config('constants.coolify.version'));
-    $labels->push('stx.managed=true');
     $labels->push('coolify.managed=true');
-    $labels->push('stx.version='.$version);
-    $labels->push('coolify.version='.$version);
-    $labels->push('stx.'.$type.'Uuid='.$uuid);
+    $labels->push('coolify.version='.config('constants.coolify.version'));
     $labels->push('coolify.'.$type.'Uuid='.$uuid);
-    $labels->push("stx.type=$type");
     $labels->push("coolify.type=$type");
-    $labels->push('stx.name='.Str::slug($name));
     $labels->push('coolify.name='.Str::slug($name));
-    $labels->push('stx.resourceName='.Str::slug($resourceName));
     $labels->push('coolify.resourceName='.Str::slug($resourceName));
-    $labels->push('stx.projectName='.Str::slug($projectName));
     $labels->push('coolify.projectName='.Str::slug($projectName));
-    $labels->push('stx.serviceName='.Str::slug($subName ?? $resourceName));
     $labels->push('coolify.serviceName='.Str::slug($subName ?? $resourceName));
-    $labels->push('stx.environmentName='.Str::slug($environment));
     $labels->push('coolify.environmentName='.Str::slug($environment));
 
-    $labels->push('stx.pullRequestId='.$pull_request_id);
     $labels->push('coolify.pullRequestId='.$pull_request_id);
     if ($type === 'service') {
-        $subUuid && $labels->push('stx.service.subUuid='.$subUuid);
         $subUuid && $labels->push('coolify.service.subUuid='.$subUuid);
-        $subType && $labels->push('stx.service.subType='.$subType);
         $subType && $labels->push('coolify.service.subType='.$subType);
-        $subName && $labels->push('stx.service.subName='.Str::slug($subName));
         $subName && $labels->push('coolify.service.subName='.Str::slug($subName));
     }
 
@@ -876,6 +937,7 @@ function fqdnLabelsForCaddy(string $network, string $uuid, Collection $domains, 
         } else {
             $labels->push("caddy_{$loop}.{$handle}.{$loop}_reverse_proxy={{upstreams}}");
         }
+        $labels->push("caddy_{$loop}.{$handle}.{$loop}_reverse_proxy.stream_close_delay=".CADDY_STREAM_CLOSE_DELAY);
         $labels->push("caddy_{$loop}.{$handle}={$path}*");
         if ($is_gzip_enabled) {
             $labels->push("caddy_{$loop}.encode=zstd gzip");
@@ -1924,7 +1986,7 @@ function generateCustomDockerRunOptionsForDatabases($docker_run_options, $docker
  * @param  array  $yamlCompose  Parsed Docker Compose array
  * @return array Cleaned Docker Compose array with custom fields removed
  */
-function stripStxCustomFields(array $yamlCompose): array
+function stripCoolifyCustomFields(array $yamlCompose): array
 {
     foreach ($yamlCompose['services'] ?? [] as $serviceName => $service) {
         // Remove service-level custom fields
@@ -2146,7 +2208,7 @@ function generateDockerBuildArgs($variables): Collection
 /**
  * Generate Docker environment flags from environment variables collection
  *
- * @param  Collection|array  $variables  Collection of variables with 'key', 'value', and optionally 'is_multiline'
+ * @param  Collection|array  $variables  Collection of variables with 'key' and 'value'
  * @return string Space-separated environment flags
  */
 function generateDockerEnvFlags($variables): string
@@ -2160,11 +2222,6 @@ function generateDockerEnvFlags($variables): string
 
             if (! ValidationPatterns::isValidEnvironmentVariableKey((string) $key)) {
                 throw new InvalidArgumentException('Invalid environment variable key.');
-            }
-
-            $isMultiline = is_array($var) ? data_get($var, 'is_multiline', false) : ($var->is_multiline ?? false);
-            if ($isMultiline) {
-                $value = trim($value, "'");
             }
 
             return '-e '.escapeshellarg("{$key}={$value}");
@@ -2311,9 +2368,4 @@ function railpackBuilderHelperCommand(string $buildxMetadataVolume, string $help
     $script = railpackBuilderLockedScript($command);
 
     return "docker run --rm -v {$buildxMetadataVolume}:/root/.docker/buildx -v /var/run/docker.sock:/var/run/docker.sock {$helperImage} bash -c '{$script}' 2>/dev/null || true";
-}
-
-function stripCoolifyCustomFields(array $yamlCompose): array
-{
-    return stripStxCustomFields($yamlCompose);
 }

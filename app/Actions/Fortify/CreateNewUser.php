@@ -38,7 +38,9 @@ class CreateNewUser implements CreatesNewUsers
 
         if (! User::query()->exists() && ! RootSetupWindow::isOpen()) {
             throw ValidationException::withMessages([
-                'email' => 'The setup window for the root account is closed. Restart STX Hosting on the server (docker restart stx) to open it again.',
+                'email' => RootSetupWindow::isPending()
+                    ? 'STX Hosting has not finished starting. Wait a few seconds, then try again.'
+                    : 'The setup window for the root account is closed. Restart STX Hosting on the server (docker restart stx) to open it again.',
             ]);
         }
 
