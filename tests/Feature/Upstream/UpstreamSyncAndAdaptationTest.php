@@ -189,3 +189,4 @@ class UpstreamSyncAndAdaptationTest extends TestCase
         $this->assertDatabaseHas('stars', ['user_id' => $user->id, 'resource_id' => 0]);
     }
 }
+
