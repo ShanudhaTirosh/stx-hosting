@@ -29,7 +29,17 @@ use InvalidArgumentException;
 class OrderService
 {
     /**
-     * @param  array<int, array{variant: ProductVariant, billing_type: string, quantity?: int}>  $lines
+     * @param  array<int, array{
+     *     variant?: ProductVariant,
+     *     billing_type?: string,
+     *     tier?: PricingTier,
+     *     pricing_tier_id?: string|int,
+     *     quantity?: int,
+     *     hostname?: string|null,
+     *     public_ssh_key?: string|null,
+     *     datacenter?: string|null,
+     *     config_options?: array|null
+     * }>  $lines
      * @return array{0: Order, 1: Invoice}
      */
     public function place(User $user, Team $team, array $lines, string $currency, ?string $notes = null): array
@@ -45,16 +55,48 @@ class OrderService
             $subtotal = 0;
 
             foreach ($lines as $line) {
-                $variant = $line['variant'];
-                if (! $variant->is_active || ! $variant->product?->is_active) {
-                    throw new InvalidArgumentException("'{$variant->name}' is no longer available.");
-                }
-                $quantity = max(1, min(10, (int) ($line['quantity'] ?? 1)));
-                $tier = $this->resolveTier($variant, $line['billing_type']);
-                $unit = $this->unitPrice($tier, $currency);
+                $tier = null;
+                $variant = null;
 
-                $priced[] = compact('variant', 'tier', 'quantity', 'unit');
-                $subtotal += $unit * $quantity;
+                if (isset($line['tier']) && $line['tier'] instanceof PricingTier) {
+                    $tier = $line['tier'];
+                    $variant = $tier->productVariant;
+                } elseif (! empty($line['pricing_tier_id'])) {
+                    $tierId = (string) $line['pricing_tier_id'];
+                    $tier = PricingTier::with('productVariant.product')
+                        ->where('uuid', $tierId)
+                        ->orWhere('id', is_numeric($tierId) ? (int) $tierId : 0)
+                        ->first();
+                    if (! $tier) {
+                        throw new InvalidArgumentException("Pricing tier '{$tierId}' was not found.");
+                    }
+                    $variant = $tier->productVariant;
+                } elseif (isset($line['variant']) && $line['variant'] instanceof ProductVariant) {
+                    $variant = $line['variant'];
+                    $tier = $this->resolveTier($variant, (string) ($line['billing_type'] ?? ''));
+                } else {
+                    throw new InvalidArgumentException('Invalid line item: missing pricing tier or product variant.');
+                }
+
+                if (! $tier->is_active) {
+                    throw new InvalidArgumentException("Pricing tier '{$tier->uuid}' is no longer active.");
+                }
+
+                if (! $variant || ! $variant->is_active || ! $variant->product?->is_active) {
+                    throw new InvalidArgumentException("'".($variant?->name ?? 'Selected plan')."' is no longer available.");
+                }
+
+                $quantity = max(1, min(10, (int) ($line['quantity'] ?? 1)));
+                $unit = $this->unitPrice($tier, $currency);
+                $total = $unit * $quantity;
+
+                $hostname = ! empty($line['hostname']) ? (string) $line['hostname'] : null;
+                $publicSshKey = ! empty($line['public_ssh_key']) ? (string) $line['public_ssh_key'] : null;
+                $datacenter = ! empty($line['datacenter']) ? (string) $line['datacenter'] : 'fsn1';
+                $configOptions = isset($line['config_options']) && is_array($line['config_options']) ? $line['config_options'] : null;
+
+                $priced[] = compact('variant', 'tier', 'quantity', 'unit', 'total', 'hostname', 'publicSshKey', 'datacenter', 'configOptions');
+                $subtotal += $total;
             }
 
             $order = Order::create([
@@ -89,7 +131,11 @@ class OrderService
                     'pricing_tier_id' => $row['tier']->id,
                     'quantity' => $row['quantity'],
                     'unit_price_cents' => $row['unit'],
-                    'total_price_cents' => $row['unit'] * $row['quantity'],
+                    'total_price_cents' => $row['total'],
+                    'hostname' => $row['hostname'],
+                    'public_ssh_key' => $row['publicSshKey'],
+                    'datacenter' => $row['datacenter'],
+                    'config_options' => $row['configOptions'],
                 ]);
 
                 InvoiceItem::create([
@@ -98,7 +144,7 @@ class OrderService
                     'description' => trim(($row['variant']->product?->name ?? '').' - '.$row['variant']->name.' ('.$row['tier']->billing_type.')', ' -'),
                     'quantity' => $row['quantity'],
                     'unit_price_cents' => $row['unit'],
-                    'total_price_cents' => $row['unit'] * $row['quantity'],
+                    'total_price_cents' => $row['total'],
                 ]);
             }
 

@@ -88,6 +88,8 @@ class PaymentReviewService
                 $this->grantEntitlement($item, $invoice, $reviewer);
             }
 
+            \App\Actions\Commerce\ReactivateServiceAction::run($invoice, $reviewer);
+
             $this->audit($reviewer, $invoice, 'payment_proof.approved', $proof, [
                 'invoice_number' => $invoice->invoice_number,
                 'amount_cents' => $invoice->total_cents,

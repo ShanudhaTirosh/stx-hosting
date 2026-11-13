@@ -3,7 +3,10 @@
 namespace App\Livewire\Status;
 
 use App\Models\Commerce\Monitor;
+use App\Models\Commerce\StatusSubscription;
 use App\Models\Commerce\SystemIncident;
+use App\Notifications\Status\VerifyStatusSubscriptionNotification;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class PublicStatus extends Component
@@ -11,9 +14,63 @@ class PublicStatus extends Component
     public string $historyWindow = '60m'; // 60m, 24h, 30d, 90d
     public string $searchQuery = '';
 
+    public bool $showSubscribeModal = false;
+    public string $subscribeEmail = '';
+    public ?string $subscribeMessage = null;
+
     public function setHistoryWindow(string $window): void
     {
         $this->historyWindow = in_array($window, ['60m', '24h', '30d', '90d']) ? $window : '60m';
+    }
+
+    public function openSubscribe(): void
+    {
+        $this->showSubscribeModal = true;
+        $this->subscribeMessage = null;
+    }
+
+    public function closeSubscribe(): void
+    {
+        $this->showSubscribeModal = false;
+        $this->subscribeEmail = '';
+        $this->subscribeMessage = null;
+    }
+
+    public function subscribe(): void
+    {
+        $this->validate([
+            'subscribeEmail' => 'required|email|max:255',
+        ]);
+
+        $email = strtolower(trim($this->subscribeEmail));
+        $subscription = StatusSubscription::where('email', $email)->first();
+
+        if ($subscription && $subscription->isVerified()) {
+            $this->subscribeMessage = 'You are already subscribed to STX Status alerts!';
+            return;
+        }
+
+        if (! $subscription) {
+            $subscription = StatusSubscription::create([
+                'email' => $email,
+                'verification_token' => Str::random(40),
+                'unsubscribe_token' => Str::random(40),
+                'is_active' => true,
+            ]);
+        } else {
+            $subscription->update([
+                'verification_token' => Str::random(40),
+                'is_active' => true,
+            ]);
+        }
+
+        try {
+            $subscription->notify(new VerifyStatusSubscriptionNotification($subscription));
+            $this->subscribeMessage = 'Confirmation email sent! Please check your inbox and click the link to activate alerts.';
+            $this->subscribeEmail = '';
+        } catch (\Throwable $e) {
+            $this->addError('subscribeEmail', 'Could not send verification email: ' . $e->getMessage());
+        }
     }
 
     public function render()

@@ -50,6 +50,8 @@ class Kernel extends ConsoleKernel
 
         $this->scheduleInstance->command('vps:check-delivery-sla')->hourly()->onOneServer();
         $this->scheduleInstance->command('vps:collect-stats')->everyMinute()->onOneServer()->withoutOverlapping(5);
+        $this->scheduleInstance->command('commerce:generate-renewals')->dailyAt('02:30')->onOneServer();
+        $this->scheduleInstance->command('commerce:process-suspensions')->hourly()->onOneServer();
 
         $this->scheduleInstance->call(fn () => app(CleanupStaleMultiplexedConnections::class)->handle())
             ->name('cleanup:ssh-mux')

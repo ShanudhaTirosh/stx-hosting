@@ -5,13 +5,13 @@
             <p class="text-sm text-neutral-400">Deploy containerized web apps and bots directly from Git repositories or 1-click curated templates.</p>
         </div>
 
-        <button 
-            wire:click="openDeployModal"
+        <a 
+            href="{{ route('portal.deploy') }}"
             class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded shadow flex items-center gap-1.5 transition-all"
         >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Deploy App or Bot
-        </button>
+        </a>
     </div>
 
     <!-- Apps Grid -->

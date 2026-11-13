@@ -56,11 +56,24 @@ class CreateNewUser implements CreatesNewUsers
             'password' => ['required', Password::defaults(), 'confirmed'],
         ])->validate();
 
+        $supabaseId = null;
+        $supabaseAuth = app(\App\Services\Supabase\SupabaseAuthService::class);
+        if ($supabaseAuth->isAuthEnabled()) {
+            $supabaseResult = $supabaseAuth->signUp($input['email'], $input['password'], ['name' => $input['name']]);
+            if (! $supabaseResult || ! isset($supabaseResult['user']['id'])) {
+                throw ValidationException::withMessages([
+                    'email' => 'Failed to create user account with Supabase Auth.',
+                ]);
+            }
+            $supabaseId = $supabaseResult['user']['id'];
+        }
+
         if (User::count() == 0) {
             // If this is the first user, make them the root user
             // Team is already created in the database/seeders/ProductionSeeder.php
             $user = (new User)->forceFill([
                 'id' => 0,
+                'supabase_id' => $supabaseId,
                 'name' => $input['name'],
                 'email' => $input['email'],
                 'password' => Hash::make($input['password']),
@@ -77,6 +90,7 @@ class CreateNewUser implements CreatesNewUsers
             $settings->save();
         } else {
             $user = User::create([
+                'supabase_id' => $supabaseId,
                 'name' => $input['name'],
                 'email' => $input['email'],
                 'password' => Hash::make($input['password']),

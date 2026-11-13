@@ -24,4 +24,8 @@ Press **Download** next to a finished backup. The link works for ten minutes.
 3. Then the restore starts and **replaces the current data** with the backup. The database may be unavailable for a few minutes.
 4. If the result is not what you wanted, restore the safety backup taken just before.
 
-The database must be running for a restore. Backups of app volumes are not on this page.
+The database must be running for a restore. When restoring, you can replace the original database in-place or choose an alternate database of the same engine in your team.
+
+## Application volume backups
+
+Switch to the **Application Volume Backups** tab on the same page to schedule backups or take manual snapshots of your applications' persistent volumes. Volume archives can be downloaded or restored at any time.

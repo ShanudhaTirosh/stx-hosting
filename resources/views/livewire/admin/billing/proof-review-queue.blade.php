@@ -170,6 +170,53 @@
                         @enderror
                     </div>
                 @endif
+
+                <!-- Refund Form (if invoice is paid or partially refunded) -->
+                @if ($selectedProof->status === 'approved' && in_array($selectedProof->invoice->status, ['paid', 'partially_refunded']))
+                    <div class="border-t border-neutral-800 pt-4 space-y-3 bg-neutral-950/70 p-4 rounded-lg border border-neutral-800/80">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-amber-400">Process Administrative Refund</label>
+                            <span class="text-xs text-neutral-400">Status: <span class="text-emerald-400 font-semibold">{{ ucfirst($selectedProof->invoice->status) }}</span></span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] text-neutral-400 block mb-1">Reason for Refund (required):</label>
+                                <input 
+                                    type="text" 
+                                    wire:model="refundReason" 
+                                    placeholder="e.g. Customer cancelled service within 30-day window" 
+                                    class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white text-xs rounded"
+                                />
+                                @error('refundReason') <span class="text-xs text-rose-400 block mt-1">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-neutral-400 block mb-1">Refund Amount in {{ $selectedProof->invoice->currency }} (blank for full {{ number_format($selectedProof->invoice->total_cents / 100, 2) }}):</label>
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    wire:model="refundAmount" 
+                                    placeholder="{{ number_format($selectedProof->invoice->total_cents / 100, 2) }}" 
+                                    class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white text-xs rounded"
+                                />
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+                            <label class="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer">
+                                <input type="checkbox" wire:model="refundRevokeEntitlements" class="checkbox checkbox-xs checkbox-primary" />
+                                <span>Revoke active entitlements & stop running workloads</span>
+                            </label>
+                            <button 
+                                wire:click="refundInvoice({{ $selectedProof->invoice->id }})" 
+                                wire:confirm="Are you sure you want to process this refund? Financial records will be adjusted and customer notified."
+                                wire:loading.attr="disabled"
+                                class="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 rounded shadow transition-all"
+                            >
+                                <span wire:loading.remove wire:target="refundInvoice">Issue Refund</span>
+                                <span wire:loading wire:target="refundInvoice">Processing...</span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
             </div>
         @endif
     </div>

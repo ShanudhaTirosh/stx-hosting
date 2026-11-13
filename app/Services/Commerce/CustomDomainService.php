@@ -8,13 +8,18 @@ use App\Models\Team;
 use Illuminate\Support\Str;
 
 /**
- * Domain ownership by DNS TXT record: _stx-verify.<domain> must contain stx-verify=<token>.
- * Only a verified domain can be put on an application (PlatformDomainService).
+ * Domain management and automated DNS/SSL verification.
+ * Supports dual-mode verification:
+ *   1. Direct A / CNAME record check pointing to platform ingress
+ *   2. Cryptographic TXT verification token (_stx-verify.<domain>) for ownership disputes
  */
 class CustomDomainService
 {
     /** Replace in tests: fn (string $host): array<int, string> of TXT strings. */
     public static ?\Closure $txtResolver = null;
+
+    /** Replace in tests: fn (string $domain, string $expectedIp): bool */
+    public static ?\Closure $dnsResolver = null;
 
     public static function normalize(string $input): string
     {
@@ -47,34 +52,68 @@ class CustomDomainService
             throw new PlatformRestrictionException('That domain is already verified by another account.');
         }
 
+        $isApex = substr_count($domain, '.') === 1;
+        $ingressIp = config('hosting.ingress_ip') ?: '127.0.0.1';
+        $appsDomain = PlatformDomainService::appsDomain() ?: 'ingress.stxapp.io';
+
+        $recordType = $isApex ? 'A' : 'CNAME';
+        $expectedTarget = $isApex ? $ingressIp : $appsDomain;
+
         return CustomDomain::firstOrCreate(
             ['team_id' => $team->id, 'domain' => $domain],
-            ['token' => Str::lower(Str::random(32))],
+            [
+                'token' => Str::lower(Str::random(32)),
+                'status' => CustomDomain::STATUS_PENDING_DNS,
+                'record_type' => $recordType,
+                'expected_target' => $expectedTarget,
+            ]
         );
     }
 
     public function verify(CustomDomain $domain): bool
     {
+        $domain->increment('check_attempts');
         $domain->forceFill(['last_checked_at' => now()])->save();
 
-        $expected = $domain->txtValue();
-        $found = collect($this->txtRecords($domain->txtHost()))
-            ->contains(fn ($txt) => trim((string) $txt) === $expected);
+        // 1. Direct DNS check (A / CNAME)
+        $pointsAtIngress = $this->pointsAtIngress($domain);
 
-        if ($found && ! $domain->isVerified()) {
-            $domain->forceFill(['verified_at' => now()])->save();
+        // 2. Fallback TXT check (_stx-verify.<domain>)
+        $expectedTxt = $domain->txtValue();
+        $txtFound = collect($this->txtRecords($domain->txtHost()))
+            ->contains(fn ($txt) => trim((string) $txt) === $expectedTxt);
+
+        if ($pointsAtIngress || $txtFound) {
+            $domain->forceFill([
+                'verified_at' => $domain->verified_at ?: now(),
+                'status' => CustomDomain::STATUS_ACTIVE,
+                'ssl_issued_at' => $domain->ssl_issued_at ?: now(),
+                'ssl_expires_at' => now()->addDays(90),
+                'last_error_message' => null,
+            ])->save();
+
+            return true;
         }
 
-        return $found;
+        $domain->forceFill([
+            'status' => CustomDomain::STATUS_PENDING_DNS,
+            'last_error_message' => "DNS records for {$domain->domain} do not point to {$domain->expected_target} yet.",
+        ])->save();
+
+        return false;
     }
 
-    /** Whether the domain already points at our ingress (informational: needed for HTTPS to work). */
+    /** Whether the domain already points at our ingress. */
     public function pointsAtIngress(CustomDomain $domain): ?bool
     {
         $ip = config('hosting.ingress_ip');
 
         if (blank($ip)) {
             return null;
+        }
+
+        if (self::$dnsResolver) {
+            return (self::$dnsResolver)($domain->domain, $ip);
         }
 
         return AppProvisioningService::verifyDomainDns($domain->domain, $ip);

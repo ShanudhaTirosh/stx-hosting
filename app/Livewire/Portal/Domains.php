@@ -27,7 +27,8 @@ class Domains extends Component
         $this->validate(['newDomain' => 'required|string|max:253']);
 
         try {
-            $domains->request($this->team(), $this->newDomain);
+            $domain = $domains->request($this->team(), $this->newDomain);
+            \App\Jobs\Commerce\PollCustomDomainDnsJob::dispatch($domain);
         } catch (PlatformRestrictionException $e) {
             $this->addError('newDomain', $e->getMessage());
 
@@ -35,7 +36,7 @@ class Domains extends Component
         }
 
         $this->newDomain = '';
-        $this->dispatch('success', 'Domain added. Create the DNS record below, then press Check.');
+        $this->dispatch('success', 'Domain added. Point your DNS records as shown below; we will check automatically in the background.');
     }
 
     public function verify(string $uuid, CustomDomainService $domains): void

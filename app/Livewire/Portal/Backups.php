@@ -3,22 +3,41 @@
 namespace App\Livewire\Portal;
 
 use App\Exceptions\PlatformRestrictionException;
+use App\Jobs\VolumeBackupJob;
+use App\Jobs\VolumeBackupRecoveryJob;
+use App\Models\Application;
 use App\Models\BackupRestore;
+use App\Models\LocalPersistentVolume;
 use App\Models\ScheduledDatabaseBackupExecution;
+use App\Models\ScheduledVolumeBackup;
+use App\Models\ScheduledVolumeBackupExecution;
+use App\Models\Service;
 use App\Services\Backups\BackupPolicyService;
 use App\Services\Backups\BackupQuota;
 use App\Services\Backups\DatabaseCatalog;
 use App\Services\Backups\PlatformBackupStorage;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
-/** A customer's database backups: schedule, back up now, download, restore. Everything goes to our R2 storage. */
+/** A customer's database & application volume backups: schedule, back up now, download, restore. Everything goes to our R2 storage. */
 class Backups extends Component
 {
+    public string $tab = 'databases'; // 'databases' or 'volumes'
+
     /** @var array<string, array{preset: string, keep: int}> per database uuid */
     public array $settings = [];
 
+    /** @var array<string, array{preset: string, keep: int}> per volume uuid */
+    public array $volumeSettings = [];
+
+    /** @var array<string, string> target database uuid for restore */
+    public array $targetDatabases = [];
+
     /** @var array<string, string> what was typed to confirm a restore, per execution uuid */
     public array $confirm = [];
+
+    /** @var array<string, string> what was typed to confirm a volume restore, per execution uuid */
+    public array $confirmVolume = [];
 
     public ?string $error = null;
 
@@ -46,6 +65,8 @@ class Backups extends Component
                 $this->dispatch('success', $success);
             }
         } catch (PlatformRestrictionException $e) {
+            $this->error = $e->getMessage();
+        } catch (\Throwable $e) {
             $this->error = $e->getMessage();
         }
     }
@@ -81,9 +102,11 @@ class Backups extends Component
         }
 
         $execution = $this->execution($executionUuid);
+        $targetUuid = $this->targetDatabases[$executionUuid] ?? null;
+        $targetDb = $targetUuid ? DatabaseCatalog::find($this->team(), $targetUuid) : null;
 
-        $this->guarded(function () use ($service, $execution, $executionUuid) {
-            $service->restore($execution, auth()->user());
+        $this->guarded(function () use ($service, $execution, $executionUuid, $targetDb) {
+            $service->restore($execution, auth()->user(), $targetDb);
             $this->confirm[$executionUuid] = '';
         }, 'Restore requested. We take a safety backup first, then restore.');
     }
@@ -99,6 +122,112 @@ class Backups extends Component
 
             return null;
         }
+    }
+
+    /** Volume Backup Controls */
+    public function enableVolume(string $volumeUuid): void
+    {
+        $volume = $this->volume($volumeUuid);
+        $storage = PlatformBackupStorage::storage();
+        if (! $storage) {
+            $this->error = 'Platform storage is not configured yet. Please contact support.';
+
+            return;
+        }
+
+        $chosen = $this->volumeSettings[$volumeUuid] ?? [];
+        $presets = config('backups.presets');
+        $preset = (string) ($chosen['preset'] ?? 'daily');
+        $cron = $presets[$preset]['cron'] ?? '0 2 * * *';
+        $keep = max(1, min(30, (int) ($chosen['keep'] ?? 7)));
+
+        $this->guarded(function () use ($volume, $storage, $cron, $keep) {
+            ScheduledVolumeBackup::updateOrCreate([
+                'backupable_type' => $volume->getMorphClass(),
+                'backupable_id' => $volume->id,
+            ], [
+                'team_id' => $this->team()->id,
+                's3_storage_id' => $storage->id,
+                'frequency' => $cron,
+                'enabled' => true,
+                'save_s3' => true,
+                'disable_local_backup' => true,
+                'retention_amount_s3' => $keep,
+                'retention_amount_locally' => 1,
+            ]);
+        }, 'Volume backup schedule enabled.');
+    }
+
+    public function disableVolume(string $volumeUuid): void
+    {
+        $volume = $this->volume($volumeUuid);
+        $backup = $volume->scheduledBackups()->first();
+
+        $this->guarded(function () use ($backup) {
+            $backup?->update(['enabled' => false]);
+        }, 'Volume backups turned off. Existing archives are kept.');
+    }
+
+    public function runNowVolume(string $volumeUuid): void
+    {
+        $volume = $this->volume($volumeUuid);
+        $backup = $volume->scheduledBackups()->first();
+        if (! $backup) {
+            $this->error = 'Turn volume backups on first.';
+
+            return;
+        }
+
+        if (! Cache::add("volume-backup-now:{$backup->id}", 1, 300)) {
+            $this->error = 'A backup for this volume was recently initiated. Please wait a few minutes.';
+
+            return;
+        }
+
+        $this->guarded(function () use ($backup) {
+            VolumeBackupJob::dispatch($backup);
+        }, 'Volume backup started. It will appear in history once complete.');
+    }
+
+    public function restoreVolume(string $executionUuid): void
+    {
+        if (strtoupper(trim($this->confirmVolume[$executionUuid] ?? '')) !== 'RESTORE') {
+            $this->addError("confirmVolume.{$executionUuid}", 'Type RESTORE to confirm.');
+
+            return;
+        }
+
+        $execution = ScheduledVolumeBackupExecution::where('uuid', $executionUuid)->firstOrFail();
+        abort_unless((int) $execution->scheduledVolumeBackup?->team_id === (int) $this->team()->id, 403);
+
+        $this->guarded(function () use ($execution, $executionUuid) {
+            VolumeBackupRecoveryJob::dispatch($execution);
+            $this->confirmVolume[$executionUuid] = '';
+        }, 'Volume recovery job queued.');
+    }
+
+    public function downloadVolume(string $executionUuid)
+    {
+        $execution = ScheduledVolumeBackupExecution::where('uuid', $executionUuid)->firstOrFail();
+        abort_unless((int) $execution->scheduledVolumeBackup?->team_id === (int) $this->team()->id, 403);
+
+        $storage = PlatformBackupStorage::storage();
+        if (! $storage || ! $execution->s3_uploaded || blank($execution->filename)) {
+            $this->error = 'Volume archive is not available for download.';
+
+            return null;
+        }
+
+        return redirect()->away(PlatformBackupStorage::presign($storage, (string) $execution->filename, basename((string) $execution->filename)));
+    }
+
+    private function volume(string $uuid): LocalPersistentVolume
+    {
+        $volume = LocalPersistentVolume::where('uuid', $uuid)->firstOrFail();
+        $teamId = $volume->resource?->environment?->project?->team_id;
+        abort_unless((int) $teamId === (int) $this->team()->id, 404);
+
+        return $volume;
     }
 
     /** Only executions of this team's databases. */
@@ -121,7 +250,7 @@ class Backups extends Component
             return [
                 'db' => $db,
                 'config' => $config,
-                'executions' => $config ? $config->executions()->limit(10)->get() : collect(),
+                'executions' => $config ? $config->executions()->latest()->limit(10)->get() : collect(),
             ];
         });
 
@@ -134,8 +263,34 @@ class Backups extends Component
             ];
         }
 
+        // Fetch team persistent volumes
+        $volumes = LocalPersistentVolume::whereHasMorph('resource', [Application::class, Service::class], function ($query) use ($team) {
+            $query->whereHas('environment.project', fn ($q) => $q->where('team_id', $team->id));
+        })->with(['resource', 'scheduledBackups.executions'])->get();
+
+        $volumeRows = $volumes->map(function ($vol) {
+            $config = $vol->scheduledBackups()->first();
+
+            return [
+                'volume' => $vol,
+                'config' => $config,
+                'executions' => $config ? $config->executions()->latest()->limit(10)->get() : collect(),
+            ];
+        });
+
+        foreach ($volumeRows as $vRow) {
+            $uuid = $vRow['volume']->uuid;
+            $cron = $vRow['config']?->frequency;
+            $this->volumeSettings[$uuid] ??= [
+                'preset' => collect(config('backups.presets'))->search(fn ($p) => $p['cron'] === $cron) ?: 'daily',
+                'keep' => (int) ($vRow['config']?->retention_amount_s3 ?: 7),
+            ];
+        }
+
         return view('livewire.portal.backups', [
             'rows' => $rows,
+            'databases' => $databases,
+            'volumeRows' => $volumeRows,
             'available' => PlatformBackupStorage::storage() !== null,
             'usedGb' => BackupQuota::usedGb($team),
             'limitGb' => BackupQuota::limitGb($team),

@@ -40,7 +40,9 @@
                         <td class="p-4">
                             <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full {{ 
                                 $invoice->status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
-                                ($invoice->status === 'payment_pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20') 
+                                ($invoice->status === 'payment_pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 
+                                (in_array($invoice->status, ['refunded', 'partially_refunded']) ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 
+                                'bg-rose-500/10 text-rose-400 border border-rose-500/20')) 
                             }}">
                                 {{ str_replace('_', ' ', $invoice->status) }}
                             </span>

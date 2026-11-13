@@ -27,6 +27,7 @@ The email tells you why, for example the amount did not match. The invoice stays
 
 Each invoice has a printable page. When PDF invoices are enabled, the email carries the PDF and you can open it from the invoice page. Invoices are only visible to your team.
 
-## Cards and refunds
+## Renewals and refunds
 
-We do not take card payments. Refunds follow the Refund policy; ask through **Support**.
+- **Renewals**: 7 days before your hosting plan expires, a renewal invoice is generated and emailed to you. Pay the invoice before the due date to ensure continuous operation. If an invoice remains unpaid after a 4-day grace period, running services are suspended until payment is approved.
+- **Refunds**: If eligible under the refund policy, contact support to request an administrative refund. Approved refunds are processed to your original payment method and recorded in your billing ledger.

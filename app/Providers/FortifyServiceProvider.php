@@ -89,11 +89,54 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         Fortify::authenticateUsing(function (Request $request) {
-            $email = strtolower($request->email);
+            $email = strtolower(trim((string) $request->email));
+            $password = (string) $request->password;
+
+            $supabaseAuth = app(\App\Services\Supabase\SupabaseAuthService::class);
+
+            // 1. Supabase Auth Verification (when enabled)
+            if ($supabaseAuth->isAuthEnabled()) {
+                $supabaseResponse = $supabaseAuth->signInWithPassword($email, $password);
+                if ($supabaseResponse && isset($supabaseResponse['user']['id'])) {
+                    $supabaseId = $supabaseResponse['user']['id'];
+                    $user = User::where('supabase_id', $supabaseId)
+                        ->orWhere('email', $email)
+                        ->with('teams')
+                        ->first();
+
+                    if (! $user) {
+                        $name = data_get($supabaseResponse, 'user.user_metadata.name', explode('@', $email)[0]);
+                        $user = User::create([
+                            'supabase_id' => $supabaseId,
+                            'name' => $name,
+                            'email' => $email,
+                            'password' => Hash::make($password),
+                            'email_verified_at' => now(),
+                        ]);
+                    } elseif (! $user->supabase_id) {
+                        $user->forceFill(['supabase_id' => $supabaseId])->save();
+                    }
+
+                    $user->updated_at = now();
+                    $user->save();
+
+                    $team = $user->resolveStoredTeam();
+                    if (! $team && $user->teams->isEmpty()) {
+                        $team = $user->recreate_personal_team();
+                    }
+                    if ($team) {
+                        session(['currentTeam' => $team]);
+                    }
+
+                    return $user;
+                }
+            }
+
+            // 2. Native Auth Fallback
             $user = User::where('email', $email)->with('teams')->first();
             if (
                 $user &&
-                Hash::check($request->password, $user->password)
+                Hash::check($password, $user->password)
             ) {
                 $user->updated_at = now();
                 $user->save();

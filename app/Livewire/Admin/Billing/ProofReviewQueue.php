@@ -20,12 +20,20 @@ class ProofReviewQueue extends Component
 
     public string $rejectionReason = '';
 
+    public string $refundReason = '';
+
+    public ?int $refundAmount = null;
+
+    public bool $refundRevokeEntitlements = true;
+
     public string $filterStatus = 'pending_review';
 
     public function selectProof(int $proofId): void
     {
         $this->selectedProofId = $proofId;
         $this->rejectionReason = '';
+        $this->refundReason = '';
+        $this->refundAmount = null;
     }
 
     public function approve(int $proofId, PaymentReviewService $reviews): void
@@ -58,6 +66,36 @@ class ProofReviewQueue extends Component
             $this->dispatch('error', 'Rejection failed: '.collect($e->errors())->flatten()->first());
         } catch (\Throwable $e) {
             $this->dispatch('error', 'Rejection failed: '.$e->getMessage());
+        }
+    }
+
+    public function refundInvoice(int $invoiceId, \App\Services\Commerce\RefundService $refunds): void
+    {
+        $this->validate([
+            'refundReason' => 'required|string|min:5|max:500',
+        ]);
+
+        try {
+            $invoice = \App\Models\Commerce\Invoice::findOrFail($invoiceId);
+            $amountCents = $this->refundAmount ? (int) ($this->refundAmount * 100) : (int) $invoice->total_cents;
+
+            $refunds->refund(
+                $invoice,
+                $amountCents,
+                $this->refundReason,
+                auth()->user(),
+                'manual',
+                $this->refundRevokeEntitlements
+            );
+
+            $this->dispatch('success', 'Refund processed successfully. Customer notified and records updated.');
+            $this->selectedProofId = null;
+            $this->refundReason = '';
+            $this->refundAmount = null;
+        } catch (ValidationException $e) {
+            $this->dispatch('error', 'Refund failed: '.collect($e->errors())->flatten()->first());
+        } catch (\Throwable $e) {
+            $this->dispatch('error', 'Refund failed: '.$e->getMessage());
         }
     }
 

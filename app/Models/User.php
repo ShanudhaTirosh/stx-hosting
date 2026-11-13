@@ -48,6 +48,7 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
     use DeletesUserSessions, HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     protected $fillable = [
+        'supabase_id',
         'name',
         'email',
         'password',

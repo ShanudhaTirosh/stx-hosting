@@ -23,6 +23,9 @@ On **Backups** pick the backup and press **Restore**. A safety backup is taken f
 
 Backup failures, skipped runs and failed restores go to the **Backup failed** Discord channel.
 
-## Limits
+## Volume backups & multi-target restore
 
-Only database backups have the customer page. App volume backups use the app's own Backups tab. Restore is in place only.
+Customers can manage both **Database Backups** and **Application Volume Backups** directly from their client portal (`/portal/backups`).
+
+- **Volume backups**: Persistent app and service volumes can be scheduled (daily or weekly) or backed up on-demand to platform R2 cloud storage.
+- **Cross-database restore**: When restoring a database backup, customers can choose either an in-place restore or restore directly into an alternate staging/target database of the same engine. A safety backup of the target database is taken first.

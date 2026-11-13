@@ -26,12 +26,13 @@
                     @endif
                 </a>
 
-                {{-- Notification Bell --}}
-                <a href="{{ route('status.incidents') }}" wire:navigate
-                    class="p-2 rounded-lg border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-neutral-400 hover:text-white transition-colors"
-                    title="Notifications">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                </a>
+                {{-- Subscribe Button --}}
+                <button type="button" wire:click="openSubscribe"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors shadow-sm"
+                    title="Subscribe to status alerts">
+                    <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    <span>Subscribe</span>
+                </button>
 
                 {{-- Admin Studio Settings --}}
                 <a href="{{ route('admin.status.index') }}" wire:navigate
@@ -60,6 +61,18 @@
                 </div>
             </div>
         </header>
+
+        @if (session('success'))
+            <div class="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 text-xs font-medium flex items-center justify-between">
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-300 text-xs font-medium flex items-center justify-between">
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
 
         {{-- Active Incidents & Maintenance Alert Banner --}}
         @if ($activeIncidents->isNotEmpty())
@@ -277,5 +290,64 @@
         <footer class="text-center text-xs text-neutral-500 py-10">
             Operated by <a href="https://info.shanutechx.com" target="_blank" class="font-bold text-neutral-400 hover:text-white transition-colors underline underline-offset-4">STX</a>
         </footer>
+
+        {{-- Subscribe to Updates Modal --}}
+        @if ($showSubscribeModal)
+            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                <div class="w-full max-w-md bg-[#121318] border border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-zinc-800">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            </span>
+                            <h3 class="text-base font-bold text-white tracking-tight">Subscribe to Status Alerts</h3>
+                        </div>
+                        <button type="button" wire:click="closeSubscribe" class="text-neutral-400 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <p class="text-xs text-neutral-400 leading-relaxed">
+                        Get automated email notifications whenever an incident is reported, updated, or resolved on STX cloud infrastructure.
+                    </p>
+
+                    @if ($subscribeMessage)
+                        <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 font-medium">
+                            {{ $subscribeMessage }}
+                        </div>
+                    @else
+                        <form wire:submit.prevent="subscribe" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-neutral-300 mb-1.5">Email Address</label>
+                                <input 
+                                    type="email" 
+                                    wire:model="subscribeEmail" 
+                                    placeholder="you@company.com" 
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-emerald-500 transition-colors"
+                                    required 
+                                />
+                                @error('subscribeEmail')
+                                    <span class="text-xs text-rose-400 block mt-1">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="flex items-center justify-end gap-2 pt-2">
+                                <button type="button" wire:click="closeSubscribe" class="px-3.5 py-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    wire:loading.attr="disabled"
+                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-lg transition-all"
+                                >
+                                    <span wire:loading.remove wire:target="subscribe">Subscribe via Email</span>
+                                    <span wire:loading wire:target="subscribe">Subscribing...</span>
+                                </button>
+                            </div>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @endif
     </main>
 </div>

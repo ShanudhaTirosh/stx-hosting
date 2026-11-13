@@ -34,10 +34,11 @@ class RestoreDatabaseBackupJob implements ShouldQueue
     {
         $execution = ScheduledDatabaseBackupExecution::with('scheduledDatabaseBackup.database')->find($this->restore->execution_id);
         $backup = $execution?->scheduledDatabaseBackup;
-        $database = $backup?->database;
+        $sourceDatabase = $backup?->database;
+        $targetDatabase = $this->restore->targetDatabase ?? $sourceDatabase;
         $storage = PlatformBackupStorage::storage();
 
-        if (! $execution || ! $backup || ! $database || ! $storage) {
+        if (! $execution || ! $backup || ! $sourceDatabase || ! $targetDatabase || ! $storage) {
             $this->fail2('The backup or the database no longer exists.');
 
             return;
@@ -45,8 +46,13 @@ class RestoreDatabaseBackupJob implements ShouldQueue
 
         $this->restore->update(['status' => 'snapshotting', 'message' => 'Taking a safety backup of the current data first.']);
 
+        // Use target database's backup configuration if available, otherwise fallback to source backup config
+        $targetBackupConfig = \App\Models\ScheduledDatabaseBackup::where('database_id', $targetDatabase->id)
+            ->where('database_type', $targetDatabase->getMorphClass())
+            ->first() ?? $backup;
+
         try {
-            $safety = $runner->run($backup);
+            $safety = $runner->run($targetBackupConfig);
         } catch (\Throwable $e) {
             logger()->warning('Safety backup before restore failed: '.$e->getMessage());
             $safety = null;
@@ -61,7 +67,7 @@ class RestoreDatabaseBackupJob implements ShouldQueue
         $this->restore->update(['status' => 'restoring', 'safety_execution_id' => $safety->id, 'message' => 'Restoring. The database may be unavailable for a few minutes.']);
 
         try {
-            $restorer->start($database, $execution, $storage, (int) $this->restore->team_id);
+            $restorer->start($targetDatabase, $execution, $storage, (int) $this->restore->team_id);
         } catch (DatabaseImportException $e) {
             $this->fail2($e->getMessage().' The safety backup is kept.');
 

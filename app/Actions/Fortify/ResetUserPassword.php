@@ -24,6 +24,10 @@ class ResetUserPassword implements ResetsUserPasswords
         $user->fill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        if ($user->supabase_id) {
+            app(\App\Services\Supabase\SupabaseAuthService::class)->updateUserPassword($user->supabase_id, $input['password']);
+        }
         $user->deleteAllSessions();
     }
 }

@@ -116,13 +116,21 @@ class BackupPolicyService
     }
 
     /** @throws PlatformRestrictionException */
-    public function restore(ScheduledDatabaseBackupExecution $execution, User $by): BackupRestore
+    public function restore(ScheduledDatabaseBackupExecution $execution, User $by, ?Model $targetDatabase = null): BackupRestore
     {
         $backup = $execution->scheduledDatabaseBackup;
-        $database = $backup?->database;
+        $sourceDatabase = $backup?->database;
 
-        abort_unless($backup && $database, 404);
-        $this->authorize($database, $by);
+        abort_unless($backup && $sourceDatabase, 404);
+        $this->authorize($sourceDatabase, $by);
+
+        $target = $targetDatabase ?? $sourceDatabase;
+        if ($targetDatabase) {
+            $this->authorize($targetDatabase, $by);
+            if ($targetDatabase->getMorphClass() !== $sourceDatabase->getMorphClass()) {
+                throw new PlatformRestrictionException('Target database must be of the same engine type ('.class_basename($sourceDatabase).').');
+            }
+        }
 
         $storage = PlatformBackupStorage::storage();
 
@@ -130,23 +138,28 @@ class BackupPolicyService
             throw new PlatformRestrictionException('That backup cannot be restored. Pick a finished backup that was saved to our storage.');
         }
 
-        if (! DatabaseCatalog::isRunning($database)) {
-            throw new PlatformRestrictionException('Start the database first. A restore needs it running.');
+        if (! DatabaseCatalog::isRunning($target)) {
+            throw new PlatformRestrictionException('Start the target database first. A restore needs it running.');
         }
 
-        if (! Cache::add("backup-restore:{$database->id}", 1, config('backups.restore_cooldown_minutes', 10) * 60)) {
+        if (! Cache::add("backup-restore:{$target->id}", 1, config('backups.restore_cooldown_minutes', 10) * 60)) {
             throw new PlatformRestrictionException('A restore for this database was just requested. Wait for it to finish.');
         }
 
         $restore = BackupRestore::create([
-            'team_id' => DatabaseCatalog::teamIdOf($database),
+            'team_id' => DatabaseCatalog::teamIdOf($target),
             'user_id' => $by->id,
             'execution_id' => $execution->id,
+            'target_database_id' => $target->id,
+            'target_database_type' => $target->getMorphClass(),
             'status' => 'queued',
             'message' => 'Waiting to start.',
         ]);
 
-        CommerceAuditLog::record('backup.restore_requested', BackupRestore::class, $restore->id, ['execution_uuid' => $execution->uuid]);
+        CommerceAuditLog::record('backup.restore_requested', BackupRestore::class, $restore->id, [
+            'execution_uuid' => $execution->uuid,
+            'target_database_uuid' => $target->uuid,
+        ]);
 
         RestoreDatabaseBackupJob::dispatch($restore);
 

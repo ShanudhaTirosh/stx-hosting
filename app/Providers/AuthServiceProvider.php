@@ -162,6 +162,13 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Auth::extend('supabase', function ($app, $name, array $config) {
+            return new \App\Auth\Guards\SupabaseTokenGuard(
+                $app->make(\App\Services\Supabase\SupabaseAuthService::class),
+                $app->make('request')
+            );
+        });
+
         // Register gates for resource creation policy
         Gate::define('createAnyResource', [ResourceCreatePolicy::class, 'createAny']);
 

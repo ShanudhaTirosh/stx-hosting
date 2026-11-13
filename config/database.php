@@ -32,10 +32,10 @@ $pgsql = [
     'charset' => 'utf8',
     'prefix' => '',
     'prefix_indexes' => true,
-    'search_path' => 'public',
+    'search_path' => env('DB_SEARCH_PATH', 'public'),
     // Laravel writes dates without an offset, so timestampTz columns need a UTC session.
     'timezone' => 'UTC',
-    'sslmode' => 'prefer',
+    'sslmode' => env('DB_SSLMODE', 'prefer'),
     'options' => [
         (defined('Pdo\Pgsql::ATTR_DISABLE_PREPARES') ? Pgsql::ATTR_DISABLE_PREPARES : PDO::PGSQL_ATTR_DISABLE_PREPARES) => env('DB_DISABLE_PREPARES', false),
     ],

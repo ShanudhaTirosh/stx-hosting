@@ -146,6 +146,7 @@
                     'Administration' => [
                         ['label' => 'Admin Console', 'icon' => 'admin', 'href' => route('admin.index'), 'active' => request()->is('admin'), 'visible' => $can('admin.console')],
                         ['label' => 'Products & Plans', 'icon' => 'layers', 'href' => route('admin.commerce.products'), 'active' => request()->is('admin/commerce/products*'), 'visible' => $can('catalog.manage')],
+                        ['label' => 'Template Catalog', 'icon' => 'layers', 'href' => route('admin.templates'), 'active' => request()->is('admin/templates*'), 'visible' => $can('catalog.manage')],
                         ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('admin.operations.approvals'), 'active' => request()->is('admin/operations/approvals*'), 'visible' => $can('deployments.approve')],
                         ['label' => 'VPS Inventory', 'icon' => 'servers', 'href' => route('admin.inventory.vps'), 'active' => request()->is('admin/inventory/vps*'), 'visible' => $can('vps.inventory')],
                         ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('admin.operations.provisioning'), 'active' => request()->is('admin/operations/provisioning*'), 'visible' => $can('vps.provision')],
@@ -161,6 +162,7 @@
                     ],
                     'Customer Portal' => [
                         ['label' => 'My Services', 'icon' => 'layers', 'href' => route('portal.index'), 'active' => request()->is('portal', 'portal/services*')],
+                        ['label' => 'Deploy Application', 'icon' => 'plus', 'href' => route('portal.deploy'), 'active' => request()->is('portal/deploy*')],
                         ['label' => 'Store Catalog', 'icon' => 'globe', 'href' => route('store.index'), 'active' => request()->is('store*', 'pricing*')],
                         ['label' => 'System Status', 'icon' => 'analytics', 'href' => route('status.public'), 'active' => request()->is('status*')],
                         ['label' => 'Applications', 'icon' => 'code', 'href' => route('portal.apps'), 'active' => request()->is('portal/apps*')],

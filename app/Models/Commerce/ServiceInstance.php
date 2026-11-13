@@ -17,7 +17,18 @@ class ServiceInstance extends BaseModel
         'activated_at' => 'datetime',
         'renews_at' => 'datetime',
         'suspended_at' => 'datetime',
+        'last_health_check_at' => 'datetime',
     ];
+
+    public function isHealthy(): bool
+    {
+        return ($this->health_status ?? 'healthy') === 'healthy';
+    }
+
+    public function isDegraded(): bool
+    {
+        return ($this->health_status ?? '') === 'degraded';
+    }
 
     public function getNetworkConfigAttribute($value): ?array
     {

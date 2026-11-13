@@ -52,13 +52,7 @@ class AppList extends Component
 
     public function openDeployModal(): void
     {
-        $this->reset(['appName', 'gitRepo', 'gitAuthToken', 'selectedTemplate']);
-        $this->deployType = 'git';
-        $this->gitBranch = 'main';
-        $this->buildPack = 'nixpacks';
-        $firstVariant = ProductVariant::whereHas('product', fn ($q) => $q->where('category', 'web_hosting'))->first();
-        $this->selectedVariantId = $firstVariant ? $firstVariant->id : null;
-        $this->showDeployModal = true;
+        $this->redirectRoute('portal.deploy');
     }
 
     public function selectTemplate(string $key): void
@@ -116,7 +110,7 @@ class AppList extends Component
         if ($team) {
             $apps = ServiceInstance::with('productVariant')
                 ->where('team_id', $team->id)
-                ->where('service_type', 'app')
+                ->whereIn('service_type', ['app', 'web_app', 'git_app', 'template_app'])
                 ->latest()
                 ->get();
         }

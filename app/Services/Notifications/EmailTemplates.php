@@ -105,6 +105,50 @@ class EmailTemplates
                     'cta_path' => '/admin/billing/proofs',
                 ],
             ],
+            'upcoming_renewal' => [
+                'label' => 'Upcoming renewal invoice',
+                'variables' => ['name' => 'Customer name', 'invoice_number' => 'INV-202611-ABC123', 'amount' => '$19.99', 'due_date' => '10 Nov 2026', 'product_name' => 'Web App Hosting'],
+                'defaults' => [
+                    'subject' => 'Upcoming renewal for {product_name}: invoice {invoice_number}',
+                    'heading' => 'Your service renews soon',
+                    'body' => "Hi {name},\n\nYour subscription for **{product_name}** is due for renewal. Renewal invoice **{invoice_number}** for **{amount}** is ready and due on **{due_date}**.\n\nPlease pay and upload your receipt before the due date to ensure continuous operation without service interruption.",
+                    'cta_text' => 'View renewal invoice',
+                    'cta_path' => '/portal/billing',
+                ],
+            ],
+            'service_suspended' => [
+                'label' => 'Service suspended for non-payment',
+                'variables' => ['name' => 'Customer name', 'service_name' => 'App / Server name', 'reason' => 'Reason for suspension'],
+                'defaults' => [
+                    'subject' => 'Urgent: Service {service_name} has been suspended',
+                    'heading' => 'Service Suspended',
+                    'body' => "Hi {name},\n\nYour service **{service_name}** has been suspended due to an overdue payment.\n\nRunning containers or virtual machine instances have been halted. To restore your service immediately, please settle your outstanding renewal invoice.",
+                    'cta_text' => 'Pay overdue invoice',
+                    'cta_path' => '/portal/billing',
+                ],
+            ],
+            'service_reactivated' => [
+                'label' => 'Service reactivated',
+                'variables' => ['name' => 'Customer name', 'service_name' => 'App / Server name'],
+                'defaults' => [
+                    'subject' => 'Service {service_name} has been reactivated',
+                    'heading' => 'Service Reactivated',
+                    'body' => "Hi {name},\n\nYour payment has been received and verified. Your service **{service_name}** has been reactivated and running workloads have been resumed.",
+                    'cta_text' => 'Open client portal',
+                    'cta_path' => '/portal/services',
+                ],
+            ],
+            'payment_refunded' => [
+                'label' => 'Payment refunded',
+                'variables' => ['name' => 'Customer name', 'invoice_number' => 'INV-202611-ABC123', 'amount' => '$19.99', 'reason' => 'Reason for refund'],
+                'defaults' => [
+                    'subject' => 'Refund processed for invoice {invoice_number}',
+                    'heading' => 'Refund Processed',
+                    'body' => "Hi {name},\n\nA refund of **{amount}** has been processed for invoice **{invoice_number}**.\n\n**Reason:** {reason}\n\nDepending on your original payment method, the funds should reflect in your account according to standard banking timelines.",
+                    'cta_text' => 'View invoices',
+                    'cta_path' => '/portal/billing',
+                ],
+            ],
         ];
     }
 

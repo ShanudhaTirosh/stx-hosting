@@ -27,6 +27,10 @@ class UpdateUserPassword implements UpdatesUserPasswords
         $user->fill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        if ($user->supabase_id) {
+            app(\App\Services\Supabase\SupabaseAuthService::class)->updateUserPassword($user->supabase_id, $input['password']);
+        }
         auditLog('ui.user.password_changed', [
             'team_id' => $user->currentTeam()?->id,
             'resource' => 'user',

@@ -1,22 +1,32 @@
 ---
 title: Domains and HTTPS
-summary: Your free address, and how to use your own domain with a certificate.
+summary: Your free instant address, and how to attach your own custom domain with automated SSL.
 order: 5
 ---
-## Your free address
+Every application deployed on STX Hosting is exposed securely over HTTPS without requiring complex manual proxy configuration.
 
-Every app gets an address like `your-app-name.<our-apps-domain>` with HTTPS, with nothing to set up. Some names are reserved (for example `admin`, `api`, `mail`), and each address can belong to one app.
+## Free Instant Address
 
-## Using your own domain
+Every app automatically receives an instant address like `https://your-app-name.apps.<our-domain>` upon deployment:
+- **Zero DNS Setup**: Uses wildcard DNS and wildcard SSL certificates.
+- **Immediate Live Access**: Ready the exact second your container starts.
+- **Collision Protection**: If a name is already taken, a short unique suffix is assigned automatically.
 
-1. Open **Domains** and add your domain, for example `example.com`.
-2. **Prove you own it.** At your DNS provider add the TXT record shown there, then press **Check now**. DNS changes can take a few minutes.
-3. **Point it at us.** Add an A record for the domain to the IP address shown on the Domains page.
-4. Set the domain on your app. We issue the HTTPS certificate automatically the first time someone visits.
+## Using Your Own Custom Domain
 
-## Rules
+You can brand your application with any domain you own (e.g. `mybrand.com` or `blog.mybrand.com`):
 
-- Only a domain you have proven you own can be used. A domain already verified by another account cannot be claimed.
-- A verified domain covers its subdomains, such as `www.example.com`.
-- You cannot remove a domain while an app still uses it.
-- If your DNS is behind a proxy such as Cloudflare's orange cloud, certificates may fail to issue. Set the record to **DNS only**.
+1. Open **Domains** in the portal (`/portal/domains`).
+2. Enter your domain name and click **Add Domain**.
+3. The platform displays an exact, copyable DNS instruction card:
+   - **For Subdomains** (`blog.mybrand.com`): Create a `CNAME` record pointing to our Ingress host.
+   - **For Root / Apex Domains** (`mybrand.com`): Create an `A` record pointing to our Ingress IP.
+4. **Automated Verification**: Our background system automatically polls your DNS records every 30 seconds.
+5. As soon as your records point to STX Hosting, the status changes to **HTTPS Secured** and an automated SSL certificate is issued and auto-renewed.
+6. Open your application in the portal and add your verified domain under **Custom Domains**.
+
+## Security & Ownership Protection
+
+- **Takeover Prevention**: Once a domain is verified by your account, no other team or user can claim it without cryptographic DNS proof (`stx-verify` TXT record).
+- **Auto-Renewal**: Certificates automatically renew 30 days before expiration.
+- **Cloudflare / Proxies**: If your domain uses Cloudflare, set your DNS record to **DNS only** (grey cloud) during initial SSL issuance.

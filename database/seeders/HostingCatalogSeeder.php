@@ -570,5 +570,7 @@ class HostingCatalogSeeder extends Seeder
                 ['price_cents' => $planData['price_cents'], 'price_lkr_cents' => $planData['price_lkr'], 'setup_fee_cents' => 0, 'is_active' => true]
             );
         }
+
+        \App\Services\Commerce\HostingCatalogSeederService::seedAll();
     }
 }

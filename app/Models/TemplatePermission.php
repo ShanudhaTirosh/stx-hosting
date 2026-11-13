@@ -22,6 +22,14 @@ class TemplatePermission extends Model
 
     protected $fillable = [
         'template_name',
+        'display_name',
+        'icon_url',
+        'short_description',
+        'default_port',
+        'env_schema',
+        'min_ram_mb',
+        'min_vcpu',
+        'is_featured',
         'hosting_plan_id',
         'team_id',
         'is_globally_enabled',
@@ -35,6 +43,11 @@ class TemplatePermission extends Model
         'team_id' => 'integer',
         'is_globally_enabled' => 'boolean',
         'is_allowed' => 'boolean',
+        'is_featured' => 'boolean',
+        'default_port' => 'integer',
+        'min_ram_mb' => 'integer',
+        'min_vcpu' => 'float',
+        'env_schema' => 'array',
         'metadata' => 'array',
     ];
 

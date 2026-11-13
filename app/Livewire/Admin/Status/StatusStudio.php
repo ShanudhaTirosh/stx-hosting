@@ -275,6 +275,12 @@ class StatusStudio extends Component
             'created_at' => now(),
         ]);
 
+        try {
+            app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentOpened($incident);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not dispatch status alert: {$e->getMessage()}");
+        }
+
         $this->showIncidentModal = false;
         $this->dispatch('success', 'Incident published to public status dashboard.');
     }
@@ -296,7 +302,7 @@ class StatusStudio extends Component
 
         $incident = SystemIncident::findOrFail($this->targetIncidentId);
 
-        IncidentUpdate::create([
+        $update = IncidentUpdate::create([
             'system_incident_id' => $incident->id,
             'status' => $this->updateStatus,
             'message' => $this->updateMessage,
@@ -308,6 +314,16 @@ class StatusStudio extends Component
             'status' => $this->updateStatus,
             'resolved_at' => $this->updateStatus === 'resolved' ? now() : $incident->resolved_at,
         ]);
+
+        try {
+            if ($this->updateStatus === 'resolved') {
+                app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentResolved($incident, $this->updateMessage);
+            } else {
+                app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentUpdated($incident, $update);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not dispatch status alert update: {$e->getMessage()}");
+        }
 
         $this->showUpdateModal = false;
         $this->dispatch('success', 'Incident timeline updated successfully.');
@@ -328,6 +344,12 @@ class StatusStudio extends Component
             'created_by' => auth()->id(),
             'created_at' => now(),
         ]);
+
+        try {
+            app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentResolved($incident);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not dispatch status alert resolution: {$e->getMessage()}");
+        }
 
         $this->dispatch('success', 'Incident marked as Resolved.');
     }

@@ -214,6 +214,8 @@ Route::get('/discord', fn () => redirect()->away('https://discord.gg/shanutechx'
 Route::get('/status', PublicStatus::class)->name('status.public');
 Route::get('/status/monitor/{uuid}', \App\Livewire\Status\MonitorDetail::class)->name('status.monitor');
 Route::get('/status/incidents', \App\Livewire\Status\IncidentsArchive::class)->name('status.incidents');
+Route::get('/status/verify/{token}', [\App\Http\Controllers\Status\StatusSubscriptionController::class, 'verify'])->name('status.verify');
+Route::get('/status/unsubscribe/{token}', [\App\Http\Controllers\Status\StatusSubscriptionController::class, 'unsubscribe'])->name('status.unsubscribe');
 
 // Local/testing previews for HTTP error pages and the Laravel debug renderer (never in production).
 if (app()->environment(['local', 'testing'])) {
@@ -330,6 +332,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['platform.staff'])->group(function () {
         Route::get('/admin', AdminIndex::class)->name('admin.index');
         Route::get('/admin/commerce/products', \App\Livewire\Admin\Commerce\ProductCatalogStudio::class)->name('admin.commerce.products');
+        Route::get('/admin/templates', \App\Livewire\Admin\Commerce\TemplateCatalogStudio::class)->name('admin.templates');
         Route::get('/admin/billing/proofs', ProofReviewQueue::class)->name('admin.billing.proofs');
         Route::get('/admin/billing/methods', \App\Livewire\Admin\Billing\PaymentMethods::class)->name('admin.billing.methods')->middleware('platform.owner');
         Route::get('/admin/notifications', \App\Livewire\Admin\Notifications\DiscordRoutes::class)->name('admin.notifications')->middleware('platform.owner');
@@ -348,6 +351,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Customer Self-Service Portal
     Route::get('/portal', ServicesList::class)->name('portal.index');
+    Route::get('/portal/deploy', \App\Livewire\Portal\DeployWizard::class)->name('portal.deploy');
     Route::get('/portal/services', ServicesList::class)->name('portal.services');
     Route::get('/portal/services/{uuid}', ServiceDetail::class)->name('portal.service.detail');
     Route::get('/portal/apps', AppList::class)->name('portal.apps');

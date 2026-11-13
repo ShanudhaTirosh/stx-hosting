@@ -23,4 +23,11 @@ Always give a clear reason; the customer receives it in an email. The invoice re
 
 ## Refunds and renewals
 
-There is no refund or renewal flow in the platform. Refunds are handled by you outside it. When a customer's period ends, new deployments stop; they order the plan again. Running containers are not stopped automatically.
+### Renewals
+Renewal invoices are generated automatically **7 days before plan expiration** (`D-7`) via the daily scheduler (`commerce:generate-renewals`). Customers receive an email reminder with a direct link to their renewal invoice.
+
+### Overdue suspensions
+If an invoice is unpaid past its due date, customers enter a **4-day grace period**. At **D+4**, `commerce:process-suspensions` automatically halts running application, database, and service containers, or marks VPS instances suspended. When the customer pays and staff approves the renewal invoice, services are automatically reactivated (`ReactivateServiceAction`).
+
+### Refunds
+Platform staff can issue administrative refunds directly from **Proof Reviews** on paid invoices. A refund adjusts financial ledgers, records reverse payment transactions, notifies the customer via email, and optionally revokes active entitlements while cleanly stopping associated workloads.

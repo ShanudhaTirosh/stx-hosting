@@ -18,4 +18,9 @@ class BackupRestore extends BaseModel
     {
         return $this->belongsTo(Team::class);
     }
+
+    public function targetDatabase()
+    {
+        return $this->morphTo('target_database');
+    }
 }
