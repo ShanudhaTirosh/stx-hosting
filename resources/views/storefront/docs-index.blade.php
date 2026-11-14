@@ -1,6 +1,18 @@
-@php($base = $audience === 'admin' ? 'admin.docs' : 'docs')
-<x-storefront.layout :title="$audience === 'admin' ? 'Staff handbook' : 'Help center'">
-    <div class="wrap">
+@php
+    $base = $audience === 'admin' ? 'admin.docs' : 'docs';
+    $breadcrumbs = [
+        ['name' => 'Home', 'url' => url('/')],
+        ['name' => $audience === 'admin' ? 'Staff Handbook' : 'Help Center', 'url' => route($base.'.index')],
+    ];
+@endphp
+<x-storefront.layout 
+    :title="$audience === 'admin' ? 'Staff Handbook' : 'Help Center & Documentation'"
+    :breadcrumbs="$breadcrumbs"
+>
+    <div class="wrap" style="padding-top:2.5rem;padding-bottom:4rem">
+        <nav aria-label="Breadcrumb" style="margin-bottom:1.5rem;font-size:0.875rem;color:var(--muted)">
+            <a href="{{ url('/') }}">Home</a> &rarr; <span>{{ $audience === 'admin' ? 'Handbook' : 'Docs' }}</span>
+        </nav>
         <div class="pagehead">
             <div>
                 <h1>{{ $audience === 'admin' ? 'Staff handbook' : 'Help center' }}</h1>

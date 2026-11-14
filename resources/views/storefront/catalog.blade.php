@@ -1,9 +1,41 @@
-<x-storefront.layout :title="$single ? $single['label'] : 'Plans and pricing'" :description="$single['blurb'] ?? null">
+@php
+    $productSchemas = [];
+    foreach ($groups as $g) {
+        foreach ($g['rows'] as $r) {
+            $firstTerm = $r['terms']->first();
+            $productSchemas[] = [
+                'name' => $r['variant']->name . ' (' . $r['product']->name . ')',
+                'description' => $r['variant']->vcpu . ' vCPU, ' . $r['ram'] . ' RAM, ' . $r['disk'] . ' storage, ' . $r['traffic'] . ' traffic. ' . ($g['slug'] === 'vps' ? 'Manual provisioning SLA 24 to 72 hours.' : 'Instant container start on payment approval.'),
+                'price' => $firstTerm ? (string) ($firstTerm['cents'] / 100) : '0',
+                'currency' => $currency,
+            ];
+        }
+    }
+    $breadcrumbs = [
+        ['name' => 'Home', 'url' => url('/')],
+        ['name' => $single ? $single['label'] : 'Plans & Pricing', 'url' => url()->current()],
+    ];
+@endphp
+
+<x-storefront.layout 
+    :title="$single ? $single['label'] . ' Plans & Pricing' : 'Plans & Pricing Ledger'" 
+    :description="$single['blurb'] ?? 'Complete pricing matrix for Cloud VPS, Docker app hosting, managed databases, and bots. Priced in ' . $currency . ' with bank transfer payment.'"
+    :breadcrumbs="$breadcrumbs"
+    :plans="$productSchemas"
+>
     <div class="wrap">
+        <nav aria-label="Breadcrumb" style="padding-top:1.5rem;font-size:0.875rem;color:var(--muted)">
+            <a href="{{ url('/') }}">Home</a> &rarr; <span>{{ $single ? $single['label'] : 'Pricing' }}</span>
+        </nav>
+
         <div class="pagehead">
             <div>
                 <h1>{{ $single ? $single['label'] : 'Plans and pricing' }}</h1>
                 <p>{{ $single['blurb'] ?? 'Every plan with its specs and price. Prices are shown in '.$currency.'; switch currency at the top of the page.' }}</p>
+                
+                <div style="margin-top:1rem;display:inline-flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:var(--muted);background:var(--card);padding:0.35rem 0.75rem;border-radius:var(--radius);border:1px solid var(--line)">
+                    <span>💳 No credit card needed &bull; Pay with local bank transfer in {{ $currency }} &bull; VPS delivered in 24–72 hours</span>
+                </div>
             </div>
         </div>
 
@@ -55,7 +87,9 @@
                                             &bull; {{ $row['location'] }}
                                         @endif
                                         @if ($g['slug'] === 'vps')
-                                            &bull; <span style="color:#a78bfa">24–72h delivery</span>
+                                            &bull; <span style="color:#7c3aed;font-weight:600">24–72h manual delivery</span>
+                                        @else
+                                            &bull; <span style="color:var(--ok-ink);font-weight:600">Immediate container start</span>
                                         @endif
                                     </small>
                                 </td>
@@ -99,20 +133,5 @@
         @empty
             <p class="empty">No plans are listed here yet. <a href="{{ route('store.contact') }}">Tell us what you need</a> and we will let you know.</p>
         @endforelse
-
-        @if (! $single)
-            <section class="band ink" style="margin-top:3rem;border-radius:14px;padding:2rem">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem">
-                    <div>
-                        <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#a391ff">New Product</span>
-                        <h2 style="font-size:1.4rem;font-weight:700;margin:0.25rem 0 0.5rem 0">Email Hosting with Custom Domains</h2>
-                        <p style="margin:0;font-size:0.9rem;color:#ccc;max-width:38rem">Bring your own domain, get dedicated mailboxes, pure Webmail UI, IMAP/SMTP access, and pooled storage (Starter 500MB, Basic 1GB, Pro 3GB, Business 5GB) with no daily send limits.</p>
-                    </div>
-                    <div>
-                        <a class="btn" href="{{ route('store.email-hosting') }}">View Email Hosting Plans</a>
-                    </div>
-                </div>
-            </section>
-        @endif
     </div>
 </x-storefront.layout>

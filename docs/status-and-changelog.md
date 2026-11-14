@@ -63,27 +63,44 @@
 | **Dashboards** | Customer Portal | **DONE** | `/portal` (Deploy wizard, apps, mail, domains, backups, billing). |
 | **Dashboards** | Operations & Admin Studio | **DONE** | `/admin` (Provisioning queue, proof review, catalog studio). |
 | **Dashboards** | Public Status Page | **DONE** | `/status` with 90-day heatmap, masked nodes, and alerts. |
-| **Cloud Automation** | Automated VPS API Delivery | **IN PROGRESS** | Provider API clients exist; commercial flow currently uses manual review queue while quotas are hardened. |
-| **Payment Gateways** | Direct Card / Stripe Webhooks | **IN PROGRESS** | Stripe webhook function exists; bank deposit slips remain primary active checkout flow. |
-| **Architecture** | Upstream Coolify v5 Split | **PLANNED** | ADRs in `docs/v5/` exploring flux connection broker and coold agent boundaries. |
+| **Cloud Automation** | Automated VPS API Delivery | **PLANNED (FUTURE)** | Provider API clients exist (Hetzner, DigitalOcean, Vultr, Hostinger); commercial flow remains manual review and fulfillment (24 to 72 hours) until user growth triggers automated quotas. |
+| **Payment Gateways** | Direct Card / Stripe Webhooks | **PLANNED (FUTURE)** | Stripe webhook function exists (`supabase/functions/stripe-webhook`); bank transfer with PayVerify AI slip verification remains the live payment method. |
+| **Architecture** | Upstream Coolify v5 Split | **PLANNED (FUTURE)** | Architectural design and ADRs isolated in `docs/v5/` so it does not affect the active v4 production release. |
 
 ---
 
-## 3. Product Roadmap
+## 3. Product Roadmap & Future Features
 
-### Immediate Roadmap (Next Sprint)
-- [ ] Implement automated cloud VPS provisioning via Hetzner and DigitalOcean APIs directly into isolated customer virtual machines.
-- [ ] Add direct credit card processing via Stripe Checkout for international customers alongside bank transfer verification.
-- [ ] Deploy native push notifications in the Customer Portal via Reverb WebSockets and service workers.
+The roadmap has been re-prioritized to freeze expansion and harden existing subsystems while overhauling the public storefront for high-converting crawlability, technical SEO, and AI search visibility (GEO/AEO).
 
-### Medium-Term Roadmap (Q1 2027)
-- [ ] Native iOS message interceptor app for PayVerify matching the Android client's hardware-backed keypair authentication.
-- [ ] Expand PayVerify statement parsers to support additional Sri Lankan banks (Sampath Bank, Hatton National Bank, Bank of Ceylon).
-- [ ] Multi-region cluster federation allowing customer applications to be deployed across geographically distributed server nodes.
+### 3.1 Active Hardening Program (6 Sequential Phases)
+1. **Phase 1: Security & Data Foundation**: Fortify sessions, Supabase Row Level Security (RLS) across all tables, RBAC isolation, data masking, input validation, rate limiting, and automated backups.
+2. **Phase 2: Core Hosting**: Validation of 31 curated compose templates, multi-node SSH placement, DNS verification, Traefik/Caddy auto-SSL, deploy logs, and cgroups resource limits.
+3. **Phase 3: Money Flow**: Cart checkout, PayVerify AI slip verification (Gemini 1.5 Flash + Ollama), manual review queue with pessimistic locking, anti-double activation, 24–72 hour VPS fulfillment queue, and mail hosting plans.
+4. **Phase 4: Mail & Communication**: WildDuck mail stack, mailbox and alias management, SPF/DKIM/DMARC deliverability, STX Webmail UI, and automated transactional emails.
+5. **Phase 5: Dashboards & Status**: Customer portal (`/portal`), Admin operations console (`/admin`), and public status page (`/status`) with real-time health telemetry.
+6. **Phase 6: Related Apps**: PayVerify Android SMS relay app (hardware ECDSA P-256) and WhatsApp Banking bot state machine stability.
 
-### Long-Term Roadmap (Q2 2027+)
-- [ ] Transition control plane to Coolify v5 architecture (Flux connection broker and Coold host agent boundary).
-- [ ] Automated edge Anycast routing integration for global load balancing.
+### 3.2 Future Features Catalog (Deferred to Scale Triggers)
+These items remain preserved in the codebase as groundwork, but are strictly gated/disabled from customer checkout:
+
+- **Automated Cloud VPS API Provisioning** (`PLANNED (FUTURE)`):
+  - *What It Is*: Programmatic VM creation via Hetzner, DigitalOcean, Vultr, and Hostinger APIs.
+  - *Why Deferred*: Upstream provider quota ceilings, runaway cloud billing risks, and IP fraud prevention on young accounts.
+  - *Start Trigger*: Reaching **100 active VPS subscriptions** or **>$2,500 monthly recurring revenue (MRR)**.
+  - *What Exists*: Provider client classes in `app/Services/` and controllers in `app/Http/Controllers/Api/`.
+  - *Live Alternative*: Manual review queue and inventory allocation with an SLA of **24 to 72 hours**.
+- **Direct Payment Gateways (Stripe & Credit Cards)** (`PLANNED (FUTURE)`):
+  - *What It Is*: Direct card checkout with automated webhooks.
+  - *Why Deferred*: Merchant underwriting holdbacks, rolling reserves (10–20% held for 180 days), and chargeback risks.
+  - *Start Trigger*: Reaching **500+ successful monthly orders** or international volume exceeding 40% of total revenue.
+  - *What Exists*: Stripe webhook handler in `supabase/functions/stripe-webhook`.
+  - *Live Alternative*: Bank transfer in LKR and USD verified by **PayVerify AI** and staff review in `/admin/billing/proofs`.
+- **Platform Version 5 Split** (`PLANNED (FUTURE)`):
+  - *What It Is*: Separation into Flux connection broker and Coold host agent.
+  - *Why Deferred*: The current monolithic Laravel 12 architecture is proven and stable.
+  - *Start Trigger*: Management of >25 remote hypervisors or multi-region cluster federation.
+  - *What Exists*: Architectural specifications and ADRs isolated in `docs/v5/`.
 
 ---
 

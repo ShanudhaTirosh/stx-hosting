@@ -66,6 +66,8 @@ For detailed subsystem architecture and diagrams, consult:
 - **Templates Archive (`templates/not-used/`)**: Contains 357 archived compose templates. Do not move or restore uncurated templates into `templates/compose/`.
 - **Upstream Sync & Core Engine**: Never alter core Coolify sync primitives without verifying regression passes in `tests/Feature/UpstreamSyncAndAdaptationTest.php`.
 - **Proxy Configuration**: Never add a `TRUSTED_PROXIES` setting or modify `TrustProxies`. Fix IP rate limits at call sites.
+- **Future Features Policy & Expansion Freeze**: Provider API clients (`HetznerService`, `DigitalOceanService`, `VultrService`, `HostingerService`), Stripe payment gateways, and v5 architecture are preserved as groundwork but must remain strictly disabled/gated from customer checkout. The commercial fulfillment flow is strictly manual VPS review and delivery (24 to 72 hours) and bank transfer with PayVerify AI slip verification. Never promise deferred features in the UI, pricing pages, or documentation as available today.
+- **Storefront & SEO Integrity Rules**: Never introduce hidden text, fake customer reviews, or keyword stuffing. Public storefront pages must be server-rendered Blade templates (crawlable without client JavaScript execution). Structured data (Schema.org JSON-LD) must accurately mirror visible on-page content.
 
 ---
 

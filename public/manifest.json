@@ -1,0 +1,17 @@
+{
+  "name": "STX Hosting — Enterprise Cloud & VPS",
+  "short_name": "STX Hosting",
+  "description": "High-performance Cloud VPS, Docker app hosting, managed databases, and enterprise email hosting with bank transfer payment.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b2239",
+  "theme_color": "#0b2239",
+  "icons": [
+    {
+      "src": "/STKcdr.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

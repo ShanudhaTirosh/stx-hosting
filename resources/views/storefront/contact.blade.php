@@ -1,6 +1,20 @@
-<x-storefront.layout title="Contact" description="Talk to the team about plans, billing or a technical problem.">
-    <div class="wrap">
-        <div class="pagehead"><div><h1>Contact us</h1><p>Tell us what you need. We answer by email.</p></div></div>
+@php
+    $breadcrumbs = [
+        ['name' => 'Home', 'url' => url('/')],
+        ['name' => 'Contact', 'url' => route('store.contact')],
+    ];
+@endphp
+
+<x-storefront.layout 
+    title="Contact Sales & Technical Support" 
+    description="Get in touch with the STX Hosting team for cloud server quotes, custom plan inquiries, invoice assistance, or technical support."
+    :breadcrumbs="$breadcrumbs"
+>
+    <div class="wrap" style="padding-top:2.5rem;padding-bottom:4rem">
+        <nav aria-label="Breadcrumb" style="margin-bottom:1.5rem;font-size:0.875rem;color:var(--muted)">
+            <a href="{{ url('/') }}">Home</a> &rarr; <span>Contact</span>
+        </nav>
+        <div class="pagehead"><div><h1>Contact us</h1><p>Tell us what you need. We answer by email and Discord.</p></div></div>
         <div class="prose" style="max-width:none">
             <div class="checkout" style="margin-top:0">
                 <form method="post" action="{{ route('store.contact.send') }}" class="formgrid" novalidate>

@@ -1,0 +1,51 @@
+# STX Enterprises Cloud Platform (STX Hosting)
+
+> STX Enterprises (STX Hosting) is an enterprise-grade cloud PaaS, managed database, email hosting, and high-performance NVMe Cloud VPS infrastructure provider based in Sri Lanka, operating in LKR and USD.
+
+## Key Facts
+- **Parent Brand**: STX Enterprises (Pvt) Ltd / ShanuTechX Digital Empire Studio.
+- **Headquarters**: Sri Lanka.
+- **Currencies**: Sri Lankan Rupees (LKR) and US Dollars (USD).
+- **Core Value Proposition**: Enterprise-grade cloud hosting and VPS servers you can pay for using standard local or international bank transfers, eliminating credit card dependencies and rolling reserves.
+- **Payment Verification**: Dual-layer verification with PayVerify AI (multimodal receipt slip parsing) and human finance staff review. 100% chargeback immune.
+- **VPS Fulfillment SLA**: Cloud VPS instances are manually allocated, hardened, and delivered within 24 to 72 hours of payment approval.
+- **Infrastructure Stack**: High-performance NVMe storage, Docker container virtualization, Traefik auto-SSL reverse proxy, WildDuck enterprise email suite, PostgreSQL 15/16, and self-hosted Supabase BaaS.
+
+## Product Offerings
+1. **Cloud VPS (Virtual Private Servers)**:
+   - Dedicated vCPU, ECC DDR4/DDR5 RAM, and high-speed NVMe storage.
+   - Root SSH access, dedicated public IPv4 address, and isolated Linux guest environment.
+   - Manual provisioning with AES-256-GCM encrypted credentials delivered in 24–72 hours.
+   - Plans: CX22 (2 vCPU, 4GB RAM, 40GB NVMe), CX32 (4 vCPU, 8GB RAM, 80GB NVMe), CX42 (8 vCPU, 16GB RAM, 160GB NVMe), CX52 (16 vCPU, 32GB RAM, 320GB NVMe).
+2. **App & Website Hosting (Cloud PaaS)**:
+   - 1-click deployments from Git (GitHub, GitLab, Gitea) or 31 curated Docker Compose templates (Next.js, Laravel, WordPress, Ghost, Directus, n8n, Supabase).
+   - Automated HTTPS certificates via Let's Encrypt / Traefik.
+   - Resource quota enforcement via Linux cgroups.
+   - Custom apex and subdomain mapping with automatic DNS verification.
+3. **Business Email Hosting**:
+   - Private self-hosted mail server powered by WildDuck, Haraka SMTP, Zone-MTA, and Dovecot IMAP.
+   - Custom domain email with pooled storage plans (Starter 500MB, Basic 1GB, Pro 3GB, Business 5GB) and custom per-mailbox limits.
+   - Modern browser-based STX Webmail UI with multi-account switching.
+   - Full deliverability protection: automated SPF, DKIM (2048-bit), and DMARC record generation.
+4. **Managed Databases**:
+   - PostgreSQL, MySQL, MariaDB, MongoDB, Redis, and ClickHouse.
+   - Automated snapshot backups stored in Cloudflare R2 / AWS S3 with one-click point-in-time restore.
+
+## How Customers Order and Pay
+1. **Select Plan**: Visitor selects a server, app tier, or email plan from the storefront catalog (`https://shanutechx.com/pricing`).
+2. **Checkout**: System atomically generates an official invoice (`INV-YYYYMM-XXXX`) in LKR or USD.
+3. **Bank Transfer**: Customer executes an instant bank transfer or wire using the details on the invoice.
+4. **Upload Receipt**: Customer uploads the bank transfer slip / PDF receipt in the client portal.
+5. **Verification & Activation**: PayVerify AI extracts transaction parameters and finance staff approves the invoice under database pessimistic locking. Apps start immediately; VPS nodes are hand-delivered within 24 to 72 hours.
+
+## Official Links & Resources
+- Website: https://shanutechx.com
+- Pricing: https://shanutechx.com/pricing
+- Features: https://shanutechx.com/features
+- How It Works: https://shanutechx.com/how-it-works
+- Cloud VPS Plans: https://shanutechx.com/vps
+- Email Hosting: https://shanutechx.com/email-hosting
+- Help Center & Documentation: https://shanutechx.com/docs
+- Public Status & Telemetry: https://shanutechx.com/status
+- Contact & Support: https://shanutechx.com/contact
+- Community Discord: https://discord.gg/shanutechx

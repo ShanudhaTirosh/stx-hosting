@@ -174,10 +174,14 @@ Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->n
 Route::middleware(['storefront.currency', 'storefront.csp'])->group(function () {
     $store = \App\Http\Controllers\Storefront\StorefrontController::class;
     $cart = \App\Http\Controllers\Storefront\CartController::class;
+    $blog = \App\Http\Controllers\Storefront\BlogController::class;
 
     Route::get('/', [$store, 'home'])->name('home');
     Route::get('/store', [$store, 'home'])->name('store.index');
     Route::get('/pricing', [$store, 'catalog'])->name('store.pricing');
+    Route::get('/features', [$store, 'features'])->name('store.features');
+    Route::get('/how-it-works', [$store, 'howItWorks'])->name('store.how-it-works');
+    Route::get('/templates', [$store, 'templates'])->name('store.templates');
     Route::get('/vps', [$store, 'catalog'])->defaults('category', 'vps')->name('store.vps');
     Route::get('/app-hosting', [$store, 'catalog'])->defaults('category', 'app-hosting')->name('store.app-hosting');
     Route::get('/web-hosting', [$store, 'catalog'])->defaults('category', 'web-hosting')->name('store.web-hosting');
@@ -186,6 +190,11 @@ Route::middleware(['storefront.currency', 'storefront.csp'])->group(function () 
     Route::get('/databases', [$store, 'catalog'])->defaults('category', 'databases')->name('store.databases');
     Route::get('/game-servers', [$store, 'catalog'])->defaults('category', 'game-servers')->name('store.games');
     Route::get('/v2ray', [$store, 'catalog'])->defaults('category', 'v2ray')->name('store.v2ray');
+
+    Route::get('/blog', [$blog, 'index'])->name('blog.index');
+    Route::get('/blog/{slug}', [$blog, 'show'])->where('slug', '[a-z0-9-]+')->name('blog.show');
+    Route::get('/sitemap.xml', [$store, 'sitemap'])->name('store.sitemap');
+    Route::get('/llms.txt', [$store, 'llms'])->name('store.llms');
 
     Route::get('/cart', [$cart, 'show'])->name('cart.show');
     Route::post('/cart/add', [$cart, 'add'])->middleware('throttle:60,1')->name('cart.add');

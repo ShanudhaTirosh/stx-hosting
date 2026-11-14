@@ -95,6 +95,96 @@ class StorefrontController extends Controller
         return view('storefront.about', ['claims' => config('storefront.claims')]);
     }
 
+    public function features()
+    {
+        return view('storefront.features');
+    }
+
+    public function howItWorks()
+    {
+        return view('storefront.how-it-works');
+    }
+
+    public function templates()
+    {
+        $templates = Cache::remember('storefront_active_templates_v2', 3600, function () {
+            $dir = base_path('templates/compose');
+            if (! is_dir($dir)) {
+                return [];
+            }
+            $files = glob($dir.'/*.yaml') ?: [];
+
+            return collect($files)->map(function ($path) {
+                $slug = basename($path, '.yaml');
+                $name = ucwords(str_replace('-', ' ', $slug));
+
+                return [
+                    'slug' => $slug,
+                    'name' => $name,
+                ];
+            })->values()->all();
+        });
+
+        return view('storefront.templates', compact('templates'));
+    }
+
+    public function sitemap()
+    {
+        $base = url('/');
+        $blog = app(\App\Services\Blog\BlogRepository::class)->articles();
+        $docs = app(\App\Services\Docs\DocsRepository::class)->articles('client');
+
+        $urls = [
+            ['loc' => $base, 'priority' => '1.0', 'changefreq' => 'daily'],
+            ['loc' => route('store.pricing'), 'priority' => '0.9', 'changefreq' => 'daily'],
+            ['loc' => route('store.features'), 'priority' => '0.8', 'changefreq' => 'weekly'],
+            ['loc' => route('store.how-it-works'), 'priority' => '0.8', 'changefreq' => 'weekly'],
+            ['loc' => route('store.vps'), 'priority' => '0.9', 'changefreq' => 'daily'],
+            ['loc' => route('store.app-hosting'), 'priority' => '0.8', 'changefreq' => 'weekly'],
+            ['loc' => route('store.email-hosting'), 'priority' => '0.8', 'changefreq' => 'weekly'],
+            ['loc' => route('store.templates'), 'priority' => '0.7', 'changefreq' => 'weekly'],
+            ['loc' => route('blog.index'), 'priority' => '0.8', 'changefreq' => 'weekly'],
+            ['loc' => route('docs.index'), 'priority' => '0.7', 'changefreq' => 'weekly'],
+            ['loc' => route('store.about'), 'priority' => '0.6', 'changefreq' => 'monthly'],
+            ['loc' => route('store.contact'), 'priority' => '0.6', 'changefreq' => 'monthly'],
+            ['loc' => route('store.faqs'), 'priority' => '0.6', 'changefreq' => 'weekly'],
+            ['loc' => route('status.public'), 'priority' => '0.7', 'changefreq' => 'always'],
+            ['loc' => route('store.terms'), 'priority' => '0.3', 'changefreq' => 'monthly'],
+            ['loc' => route('store.privacy'), 'priority' => '0.3', 'changefreq' => 'monthly'],
+            ['loc' => route('store.refund'), 'priority' => '0.3', 'changefreq' => 'monthly'],
+        ];
+
+        foreach ($blog as $post) {
+            $urls[] = [
+                'loc' => route('blog.show', ['slug' => $post['slug']]),
+                'priority' => '0.8',
+                'changefreq' => 'monthly',
+                'lastmod' => $post['date'] ?? null,
+            ];
+        }
+
+        foreach ($docs as $doc) {
+            $urls[] = [
+                'loc' => route('docs.show', ['slug' => $doc['slug']]),
+                'priority' => '0.7',
+                'changefreq' => 'monthly',
+            ];
+        }
+
+        return response()->view('storefront.sitemap', compact('urls'))
+            ->header('Content-Type', 'text/xml');
+    }
+
+    public function llms()
+    {
+        $path = public_path('llms.txt');
+        if (file_exists($path)) {
+            return response(file_get_contents($path), 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
+        return response('STX Enterprises Cloud Hosting - https://shanutechx.com', 200, ['Content-Type' => 'text/plain']);
+    }
+
     public function faqs()
     {
         return view('storefront.faqs', ['sections' => $this->faqData()]);

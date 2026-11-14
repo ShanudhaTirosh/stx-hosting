@@ -1,6 +1,20 @@
-<x-storefront.layout title="About" description="Who runs {{ config('storefront.name') }} and how ordering works.">
-    <div class="wrap">
-        <div class="pagehead"><div><h1>About {{ config('storefront.name') }}</h1><p>Hosting from {{ config('storefront.parent_brand') }}, built for people who pay by bank transfer.</p></div></div>
+@php
+    $breadcrumbs = [
+        ['name' => 'Home', 'url' => url('/')],
+        ['name' => 'About', 'url' => route('store.about')],
+    ];
+@endphp
+
+<x-storefront.layout 
+    title="About STX Enterprises & Cloud Platform" 
+    description="Who runs STX Hosting, our infrastructure principles, Sri Lanka corporate identity, and our transparent 24 to 72 hour manual delivery model."
+    :breadcrumbs="$breadcrumbs"
+>
+    <div class="wrap" style="padding-top:2.5rem;padding-bottom:4rem">
+        <nav aria-label="Breadcrumb" style="margin-bottom:1.5rem;font-size:0.875rem;color:var(--muted)">
+            <a href="{{ url('/') }}">Home</a> &rarr; <span>About</span>
+        </nav>
+        <div class="pagehead"><div><h1>About {{ config('storefront.name') }}</h1><p>Enterprise cloud hosting from {{ config('storefront.parent_brand') }}, built for businesses and developers who pay by bank transfer.</p></div></div>
         <div class="prose">
             <p>We sell cloud servers, app and website hosting, bot hosting and databases. Plans are priced in LKR and USD, and you can pay with a bank transfer or one of the other methods we list on your invoice.</p>
 

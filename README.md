@@ -27,6 +27,7 @@
 - [Project Directory Structure](#project-directory-structure)
 - [Quick Start & Local Setup](#quick-start--local-setup)
 - [Self-Hosted Production Stack](#self-hosted-production-stack)
+- [Product Roadmap & Future Features](#product-roadmap--future-features)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [Documentation Index](#documentation-index)
 - [License & Support](#license--support)
@@ -72,9 +73,9 @@ Every capability listed below is verified against the active codebase and config
 | **Dashboards** | Customer Portal | **DONE** | Unified portal at `/portal` (Deploy wizard, app list, mail dashboard, custom domains, database restores, volume backups, billing). |
 | **Dashboards** | Operations & Admin Studio | **DONE** | Administrative operations at `/admin` (Provisioning queue, proof review, template studio, mail plan studio, status studio). |
 | **Dashboards** | Public Status Page | **DONE** | Public status at `/status` with 90-day uptime heatmap, masked host node telemetry, and subscriber email incident notifications. |
-| **Cloud Automation** | Automated VPS API Provisioning | **IN PROGRESS** | Provider API clients exist (Hetzner, DigitalOcean, Vultr, Hostinger); commercial flow currently uses manual review while automated cloud quotas are hardened. |
-| **Payment Gateways** | Direct Card / Stripe Webhooks | **IN PROGRESS** | Stripe webhook function exists (`supabase/functions/stripe-webhook`); manual bank transfer verification remains primary active flow. |
-| **Architecture** | Upstream Coolify v5 Split | **PLANNED** | Architectural design and ADRs in `docs/v5/` exploring flux connection broker and coold agent boundaries. |
+| **Cloud Automation** | Automated VPS API Provisioning | **PLANNED (FUTURE)** | Provider API clients exist (Hetzner, DigitalOcean, Vultr, Hostinger); commercial flow remains manual review and fulfillment (24 to 72 hours) until user growth triggers automated quotas. |
+| **Payment Gateways** | Direct Card / Stripe Webhooks | **PLANNED (FUTURE)** | Stripe webhook function exists (`supabase/functions/stripe-webhook`); bank transfer with PayVerify AI slip verification remains the live payment method. |
+| **Architecture** | Upstream Coolify v5 Split | **PLANNED (FUTURE)** | Architectural design and ADRs isolated in `docs/v5/` so it does not affect the active v4 production release. |
 
 ---
 
@@ -301,6 +302,41 @@ nano .env
 # 3. Launch the master unified stack
 docker compose -f docker-compose.selfhosted.yml up -d
 ```
+
+---
+
+## Product Roadmap & Future Features
+
+The platform prioritizes **stability, security, and commercial readiness** over rapid feature expansion. Development is structured around systematic hardening of existing capabilities, delivering a crawlable and trustworthy storefront with full SEO/AI SEO, and deferring high-risk automations until user volume triggers demand.
+
+### 1. Hardening-First Execution (Active Phases)
+1. **Phase 1: Security & Data Foundation**: Fortify sessions, Supabase Row Level Security (RLS) across all tables, RBAC isolation, data masking, input validation, rate limiting, and automated backups.
+2. **Phase 2: Core Hosting**: Validation of 31 curated compose templates, multi-node SSH placement, DNS verification, Traefik/Caddy auto-SSL, deploy logs, and cgroups resource limits.
+3. **Phase 3: Money Flow**: Cart checkout, PayVerify AI slip verification (Gemini 1.5 Flash + Ollama), manual review queue with pessimistic locking, anti-double activation, 24–72 hour VPS fulfillment queue, and mail hosting plans.
+4. **Phase 4: Mail & Communication**: WildDuck mail stack, mailbox and alias management, SPF/DKIM/DMARC deliverability, STX Webmail UI, and automated transactional emails.
+5. **Phase 5: Dashboards & Status**: Customer portal (`/portal`), Admin operations console (`/admin`), and public status page (`/status`) with real-time health telemetry.
+6. **Phase 6: Related Apps**: PayVerify Android SMS relay app (hardware ECDSA P-256) and WhatsApp Banking bot state machine stability.
+
+### 2. Future Features (Deferred to Scale Triggers)
+These items are preserved as groundwork in the repository but disabled from commercial checkout:
+
+- **Automated Cloud VPS API Provisioning** (`PLANNED (FUTURE)`):
+  - *What It Is*: Automated VM spinning via cloud provider APIs (Hetzner, DigitalOcean, Vultr, Hostinger).
+  - *Why Deferred*: Uncapped quota risks, runaway billing, and IP fraud risks on young accounts.
+  - *Start Trigger*: 100+ active VPS subscriptions or >$2,500 MRR.
+  - *What Exists*: Provider client classes in `app/Services/` and controllers in `app/Http/Controllers/Api/`.
+  - *Live Alternative*: Manual review queue and inventory allocation with an SLA of **24 to 72 hours**.
+- **Direct Payment Gateways (Stripe & Credit Cards)** (`PLANNED (FUTURE)`):
+  - *What It Is*: Direct card checkout with automated webhooks.
+  - *Why Deferred*: Underwriting holdbacks, rolling reserves (10–20%), and chargeback exposure.
+  - *Start Trigger*: 500+ monthly orders or international volume >40%.
+  - *What Exists*: Stripe webhook handler in `supabase/functions/stripe-webhook`.
+  - *Live Alternative*: Bank transfer in LKR and USD verified by **PayVerify AI** and staff review.
+- **Platform Version 5 Split** (`PLANNED (FUTURE)`):
+  - *What It Is*: Separation into Flux connection broker and Coold host agent.
+  - *Why Deferred*: The current monolithic Laravel 12 architecture is proven and stable.
+  - *Start Trigger*: Management of >25 remote hypervisors or multi-region cluster federation.
+  - *What Exists*: Architectural specifications and ADRs isolated in `docs/v5/`.
 
 ---
 

@@ -277,18 +277,19 @@ Rather than waiting weeks for third-party merchant processor underwriting (e.g. 
 
 ---
 
-## 6. Post-Launch Horizon (Days 15–30: Scale & Automation)
+## 6. Post-Launch Horizon & Feature Freeze Policy
 
-Immediately following the Day 14 commercial launch, the platform transitions into Phase 2 automation:
-- **Days 15–20**: Implement automated Hetzner Cloud API integration (`HetznerService.php`) with dynamic cloud-init templates for zero-touch VPS delivery.
-- **Days 21–25**: Integrate automated payment gateways (Stripe Checkout & Cryptomus Webhooks) for instant, automated activations.
-- **Days 26–30**: Roll out STX Hosting PaaS containerized Web Application Hosting and Managed Databases with automated cgroups quota enforcement.
+To ensure maximum system stability, security, and customer trust, the platform enforces a **Hardening-First Execution Mandate**. Non-essential expansions and automated cloud API provisioning are deferred until active customer volume justifies the operational and financial overhead.
+
+The commercial fulfillment flow remains strictly:
+1. **Manual VPS Allocation**: 24 to 72 hours SLA handled by operators through the administrative provisioning queue.
+2. **Bank Transfer / Deposit Slip Verification**: Settled in LKR or USD, verified by PayVerify AI and human review.
 
 ---
 
-## 7. Summary & Sign-Off
+## 7. Summary & Operational Sign-Off
 
-This 14-Day Prioritized Roadmap provides an aggressive, realistic, and highly disciplined plan to launch the ShanuTechX Cloud Hosting Platform. By focusing on manual payment verification and pre-provisioned inventory in Sprint Blocks 1–3, the business eliminates external dependencies and guarantees revenue generation on Day 14.
+The platform prioritizes rock-solid operational execution over feature sprawl. By hardening the existing foundation across security, multi-node placement, billing integrity, email deliverability, and dashboards, STX Enterprises delivers a dependable, high-trust hosting service.
 
 ---
 
@@ -300,7 +301,7 @@ The commercial roadmap and scale milestones have been fully accomplished and ver
    - Full 14-table commerce schema, models, catalog seeders, and manual payment verification queue deployed.
    - VPS inventory management, SLA monitoring, and customer credentials vault active.
    - Customer portal with printable PDF invoices and real-time live chat with file attachments launched.
-2. **Scale & Post-Launch Automation (Days 15–30 & Beyond)**:
+2. **Scale & Post-Launch Automation**:
    - **Automated Renewals & Suspensions**: `GenerateRenewalInvoicesJob` and `ProcessOverdueSuspensionsJob` automated with customer notifications.
    - **Automated Refunds**: `RefundService` with ledger audit logging and entitlement revocation.
    - **Storefront & Telemetry Port 8000 Unification**: Marketing storefront and status telemetry migrated natively into Laravel 12 on port `8000`.
@@ -308,3 +309,34 @@ The commercial roadmap and scale milestones have been fully accomplished and ver
    - **WildDuck Email Hosting & STX Webmail**: Enterprise mail hosting with pooled plans, Haraka SMTP, Zone-MTA, Dovecot IMAP, and containerized `webmail-ui`.
    - **Curated Application Templates**: 31 high-demand production templates verified with cgroups memory/CPU limits and automated SSL reverse proxying.
    - **Upstream Coolify Sync**: Successfully synchronized post-Oct-29 Coolify upstream changes (v4.6.0 through v4.7.5) with full regression test coverage.
+
+---
+
+## 9. Future Features Catalog (Deferred Scale Horizon)
+
+These capabilities are deferred until customer growth and order volume reach defined operational thresholds. Existing client code and architectures remain preserved as groundwork but stay strictly gated/disabled from customer checkout.
+
+### 9.1 Automated VPS Cloud API Provisioning
+- **Status**: `PLANNED (FUTURE)` (Moved from `IN PROGRESS`).
+- **What It Is**: Real-time programmatic spinning up of virtual machines via upstream cloud APIs (Hetzner Cloud, DigitalOcean Droplets, Vultr, Hostinger VPS) immediately upon invoice payment approval.
+- **Why Deferred**: Runaway upstream billing risks, unapproved provider quota ceilings on young accounts, IP reputation risks from fraudulent automated orders, and unpredictable provider API failures.
+- **Trigger for Starting**: Reaching **100 active VPS subscriptions** or **>$2,500 monthly recurring revenue (MRR)**.
+- **What Already Exists**: Fully written API service clients and controller wrappers in `app/Services/` and `app/Http/Controllers/Api/` (`HetznerService.php`, `DigitalOceanService.php`, `VultrService.php`, `HostingerService.php`).
+- **Current Operational Flow**: 100% manual review and provisioning queue (`/admin/operations/provisioning`) with a verified delivery timeline of **24 to 72 hours**.
+
+### 9.2 Direct Payment Gateways (Stripe Checkout & Credit Card Processing)
+- **Status**: `PLANNED (FUTURE)` (Moved from `IN PROGRESS`).
+- **What It Is**: Direct credit card and debit card checkout processing via Stripe, PayPal, or regional card aggregators with instant webhook-based order fulfillment.
+- **Why Deferred**: High merchant underwriting rejection rates for new hosting startups, steep rolling reserves (10–20% held for 180 days), chargeback fraud vulnerability, and international processing transaction fees.
+- **Trigger for Starting**: Reaching **500+ successful monthly orders** or international non-LKR customer volume exceeding 40% of total revenue.
+- **What Already Exists**: Stripe webhook handler function scaffolded in `supabase/functions/stripe-webhook` and `composer.json` dependency (`stripe/stripe-php`).
+- **Current Operational Flow**: Bank wire / instant bank transfer in LKR and USD verified by **PayVerify AI** and human review in `/admin/billing/proofs`. 100% chargeback immune.
+
+### 9.3 Platform Version 5 Architecture Split
+- **Status**: `PLANNED (FUTURE)`.
+- **What It Is**: Complete architectural separation of the monolith into a lightweight distributed control plane powered by the **Flux connection broker** and the **Coold host agent** running on managed nodes.
+- **Why Deferred**: The existing unified Laravel 12 / PostgreSQL / Redis control plane is thoroughly tested, reliable, and more than capable of managing thousands of containers across dozens of hypervisor nodes without distributed system overhead.
+- **Trigger for Starting**: Managing **>25 remote hypervisors** or requiring multi-region edge node federation across continents.
+- **What Already Exists**: Architecture designs, ADRs, database migration plans, and mock agent specifications isolated in `docs/v5/`.
+- **Current Operational Flow**: Isolated in `docs/v5/`; does not touch or alter the active v4 production code.
+

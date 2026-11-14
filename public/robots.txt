@@ -1,2 +1,74 @@
 User-agent: *
-Disallow: /
+Allow: /
+Allow: /pricing
+Allow: /vps
+Allow: /app-hosting
+Allow: /web-hosting
+Allow: /email-hosting
+Allow: /bot-hosting
+Allow: /databases
+Allow: /game-servers
+Allow: /v2ray
+Allow: /templates
+Allow: /features
+Allow: /how-it-works
+Allow: /docs
+Allow: /docs/
+Allow: /blog
+Allow: /blog/
+Allow: /about
+Allow: /contact
+Allow: /faqs
+Allow: /status
+Allow: /terms
+Allow: /privacy
+Allow: /refund
+Allow: /cookies
+Allow: /cart
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /livewire/
+Disallow: /cart/checkout
+Disallow: /forgot-password
+Disallow: /verify
+Disallow: /install-node.sh
+
+# Reputable AI Crawlers (AEO / GEO visibility)
+User-agent: GPTBot
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /auth/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /auth/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /auth/
+
+User-agent: Anthropic-AI
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /auth/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /auth/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /auth/
+
+Sitemap: https://shanutechx.com/sitemap.xml
