@@ -1,0 +1,29 @@
+---
+description: Upstream Coolify Documentation & Reference Rules
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Upstream Coolify Documentation & Reference Rule
+
+When developing, refactoring, configuring, or troubleshooting any Coolify features in this repository, you **MUST** use the local official documentation in `coolify-docs-main/`.
+
+## Authoritative Documentation Resources
+
+- **REST API Contract & Schema**: `coolify-docs-main/config/openapi.json` is the ground truth for `/api/v1/` endpoints, parameters, request bodies, and responses.
+- **REST API Guides**: `coolify-docs-main/content/docs/api/` (authorization, error handling, rate limiting).
+- **Application Deployment & Build Engines**: `coolify-docs-main/content/docs/applications/` (Dockerfile, Docker Compose, Railpack, Static, env vars, health checks, storage). Note: Nixpacks is deprecated in this project; use Dockerfile or Railpack.
+- **Infrastructure & Networking**: `coolify-docs-main/content/docs/core/` (Traefik, Caddy, Cloudflare, Docker network architecture, server provisioning, automated cleanup, image scanning).
+- **Database Engines & Operations**: `coolify-docs-main/content/docs/databases/` (PostgreSQL, MySQL, Redis, ClickHouse, automated backups, restore procedures).
+- **Curated Services**: `coolify-docs-main/content/docs/services/` (340+ compose service guides) and `coolify-docs-main/src/generated/services.json`.
+- **CLI Reference**: `coolify-docs-main/content/docs/cli/`.
+- **Troubleshooting Runbooks**: `coolify-docs-main/content/docs/troubleshoot/` (502 Bad Gateway, 504 Timeout, SSL/Let's Encrypt, SSH validation).
+
+## Rules for AI Agents
+
+1. **Verify Before Coding**: Before altering or implementing application deployment jobs, server sync logic, proxy configurations, or database actions, check the corresponding MDX guide or OpenAPI schema in `coolify-docs-main/`.
+2. **Never Break Platform Invariants**:
+   - Sentinel rows (`id = 0`) must never be migrated, deleted, or resequenced (`Team(0)`, `Server(0)`, `InstanceSettings(0)`, `StandalonePostgresql(0)`).
+   - Maintain the explicit Laravel 10 directory structure (middleware in `app/Http/Middleware/`, kernels in `app/Http/Kernel.php` & `app/Console/Kernel.php`).
+   - Pure-pixel image re-encoding in `ProofStorageService` for uploaded deposit slips.
+   - Row-level pessimistic locking (`lockForUpdate()`) for all financial state changes.

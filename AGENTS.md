@@ -22,6 +22,7 @@ For detailed subsystem architecture and diagrams, consult:
 - [Database Schema & RLS Policies](docs/database-schema-and-rls.md)
 - [Payments & PayVerify AI Verification](docs/payments-flow.md)
 - [Mail System & STX Webmail](docs/mail-system.md)
+- [Upstream Coolify Official Documentation](coolify-docs-main/) (Local upstream MDX documentation & OpenAPI 3.0 spec)
 
 ---
 
@@ -39,6 +40,7 @@ For detailed subsystem architecture and diagrams, consult:
 │   └── Services/            # Business logic (Commerce/, Supabase/, Backups/, RbacService)
 ├── bootstrap/helpers/       # Global helper functions (shared.php, services.php, socialite.php)
 ├── config/                  # Configuration files (commerce.php, supabase.php, hosting.php)
+├── coolify-docs-main/       # Upstream Coolify official documentation (MDX docs & openapi.json)
 ├── database/migrations/     # PostgreSQL schema migrations
 ├── docker/                  # Self-hosted services (caddy/, mail/, supabase/, webmail/)
 ├── docs/                    # Technical documentation and operational runbooks
@@ -64,7 +66,7 @@ For detailed subsystem architecture and diagrams, consult:
 - **Instance Sentinel Rows (`id = 0`)**: `Team::find(0)` (Root Team), `Server::find(0)` (Localhost), `InstanceSettings::find(0)`, `StandalonePostgresql::find(0)` (`stx-db`). **Never migrate, delete, resequence, or convert these to positive IDs.**
 - **Existing Migration Files**: Never modify committed migrations. Always generate new migrations with `php artisan make:migration`.
 - **Templates Archive (`templates/not-used/`)**: Contains 357 archived compose templates. Do not move or restore uncurated templates into `templates/compose/`.
-- **Upstream Sync & Core Engine**: Never alter core Coolify sync primitives without verifying regression passes in `tests/Feature/UpstreamSyncAndAdaptationTest.php`.
+- **Upstream Sync & Core Engine**: Never alter core Coolify sync primitives without verifying regression passes in `tests/Feature/Upstream/UpstreamSyncAndAdaptationTest.php`. For any upstream feature contracts, schema models, API payloads, compose configurations, or proxy behaviors, **always consult `coolify-docs-main/` as the authoritative source of truth**.
 - **Proxy Configuration**: Never add a `TRUSTED_PROXIES` setting or modify `TrustProxies`. Fix IP rate limits at call sites.
 - **Future Features Policy & Expansion Freeze**: Provider API clients (`HetznerService`, `DigitalOceanService`, `VultrService`, `HostingerService`), Stripe payment gateways, and v5 architecture are preserved as groundwork but must remain strictly disabled/gated from customer checkout. The commercial fulfillment flow is strictly manual VPS review and delivery (24 to 72 hours) and bank transfer with PayVerify AI slip verification. Never promise deferred features in the UI, pricing pages, or documentation as available today.
 - **Storefront & SEO Integrity Rules**: Never introduce hidden text, fake customer reviews, or keyword stuffing. Public storefront pages must be server-rendered Blade templates (crawlable without client JavaScript execution). Structured data (Schema.org JSON-LD) must accurately mirror visible on-page content.
@@ -162,3 +164,21 @@ Before marking any task, feature, or bug fix complete:
    - Code formatted with Pint: `vendor/bin/pint --dirty --format agent`.
 5. **Documentation Alignment**:
    - If architecture, schemas, environment variables, or workflows changed, the corresponding files in `docs/` and `README.md` are updated.
+
+---
+
+## 9. Upstream Coolify Documentation & Reference Rules
+
+The `coolify-docs-main/` directory contains the complete official Coolify documentation and OpenAPI specification. AI agents and software engineers must adhere to the following rules:
+
+1. **Authoritative API Spec**:
+   - `coolify-docs-main/config/openapi.json` is the ground truth contract for all `/api/v1/` endpoints. When creating or modifying REST controllers in `app/Http/Controllers/Api/v1/` or routes in `routes/api.php`, verify parameter names, request bodies, query filters, and response models against `openapi.json`.
+2. **Build Packs & Deployment Engines**:
+   - Consult `coolify-docs-main/content/docs/applications/` when modifying build pipelines (Dockerfile, Docker Compose, Railpack, Static). *Note: Nixpacks is deprecated in STX Platform; use Dockerfile or Railpack.*
+3. **Database & Infrastructure Operations**:
+   - Refer to `coolify-docs-main/content/docs/databases/` for backup/restore patterns, SSL configuration, and `coolify-docs-main/content/docs/core/` for Traefik/Caddy proxy configurations, SSH command execution, Sentinel metrics, and Docker cleanup routines.
+4. **Curated Service Definitions**:
+   - Refer to `coolify-docs-main/content/docs/services/` (340+ service guides) and `coolify-docs-main/src/generated/services.json` before modifying, adding, or troubleshooting compose templates in `templates/compose/`.
+5. **Troubleshooting & Error Signatures**:
+   - Use the diagnostic runbooks in `coolify-docs-main/content/docs/troubleshoot/` for resolving 502 Bad Gateway, 504 Timeout, SSL/Let's Encrypt issues, Docker daemon errors, and SSH timeouts.
+

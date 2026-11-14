@@ -160,3 +160,7 @@
 
 ## Measure database reads end to end
 - On PostgreSQL 15, `EXPLAIN (ANALYZE, BUFFERS)` does not detoast or send the selected columns, so a wide `jsonb`/`json`/`text` column does not show in it. Time the full fetch (`psql \timing` with `-o /dev/null`, or PDO `fetchAll`) as well before you blame or rule out an index.
+
+## Upstream Coolify specification and documentation
+- The local directory `coolify-docs-main/` contains the official upstream Coolify documentation and OpenAPI schema (`config/openapi.json`). Before implementing or refactoring features that interface with or synchronize with upstream Coolify (API v1 endpoints, buildpacks, Docker compose templates, Traefik/Caddy reverse proxy labels, database backup/restore), consult `coolify-docs-main/` to maintain contract alignment.
+
