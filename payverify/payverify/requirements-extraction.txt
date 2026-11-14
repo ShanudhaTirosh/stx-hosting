@@ -1,3 +1,0 @@
-pillow
-pymupdf
-# optional OCR: paddleocr or pytesseract
