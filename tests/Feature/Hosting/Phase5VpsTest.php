@@ -84,6 +84,11 @@ class P5FakeShell implements RemoteShell
         $this->uploads[$path] = $contents;
     }
 
+    public function rename(string $oldPath, string $newPath): void
+    {
+        $this->commands[] = "rename {$oldPath} -> {$newPath}";
+    }
+
     public function delete(string $path): void
     {
         $this->deleted[] = $path;
