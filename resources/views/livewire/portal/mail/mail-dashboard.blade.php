@@ -579,6 +579,13 @@
                             >
                                 Manual IMAP / SMTP
                             </button>
+                            <button 
+                                type="button"
+                                wire:click="setClientPlatform('code')" 
+                                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 {{ $selectedClientPlatform === 'code' ? 'bg-purple-600 text-white shadow' : 'text-neutral-400 hover:text-white' }}"
+                            >
+                                Code Snippets (Laravel / Python / Node)
+                            </button>
                         </div>
                     </div>
 
@@ -639,7 +646,50 @@
                         </div>
                     @endif
 
-                    <!-- Manual Server Connection Parameters (Exposed Details) -->
+                    @if ($selectedClientPlatform === 'code')
+                        <!-- Developer Code Snippets -->
+                        <div class="bg-neutral-950 border border-purple-500/30 rounded-xl p-5 space-y-3 font-mono text-xs">
+                            <div class="flex items-center justify-between border-b border-neutral-800 pb-2">
+                                <span class="text-xs font-bold text-white uppercase font-sans">Developer Code Snippets</span>
+                                <span class="text-[10px] text-purple-400 font-sans">SMTP Authenticated</span>
+                            </div>
+
+                            <div class="space-y-2 text-[11px]">
+                                <div class="text-neutral-400 font-sans font-bold">1. Laravel / PHP (.env):</div>
+                                <div class="p-3 bg-neutral-900 rounded-lg text-neutral-300 border border-neutral-800 select-all">
+MAIL_MAILER=smtp
+MAIL_HOST={{ $mailHost }}
+MAIL_PORT=587
+MAIL_USERNAME={{ $selectedMailboxAddress }}
+MAIL_PASSWORD=your-mailbox-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS={{ $selectedMailboxAddress }}
+MAIL_FROM_NAME="My Company"
+                                </div>
+
+                                <div class="text-neutral-400 font-sans font-bold pt-2">2. Python (smtplib):</div>
+                                <div class="p-3 bg-neutral-900 rounded-lg text-neutral-300 border border-neutral-800 select-all">
+import smtplib
+server = smtplib.SMTP('{{ $mailHost }}', 587)
+server.starttls()
+server.login('{{ $selectedMailboxAddress }}', 'your-mailbox-password')
+server.sendmail('{{ $selectedMailboxAddress }}', 'to@example.com', 'Subject: Hi\n\nTest message')
+server.quit()
+                                </div>
+
+                                <div class="text-neutral-400 font-sans font-bold pt-2">3. Node.js (nodemailer):</div>
+                                <div class="p-3 bg-neutral-900 rounded-lg text-neutral-300 border border-neutral-800 select-all">
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    host: '{{ $mailHost }}',
+    port: 587,
+    secure: false,
+    auth: { user: '{{ $selectedMailboxAddress }}', pass: 'your-mailbox-password' }
+});
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     <div class="bg-neutral-950 border border-neutral-800 rounded-xl p-4 space-y-3 font-mono text-xs">
                         <div class="flex items-center justify-between border-b border-neutral-800/80 pb-2">
                             <span class="text-[11px] font-sans font-bold uppercase tracking-wider text-neutral-400">Connection Endpoints</span>

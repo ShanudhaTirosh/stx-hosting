@@ -24,9 +24,16 @@ class InvoicePdfService
 
         $invoice->loadMissing(['items', 'order', 'user', 'team']);
 
+        $logoPath = public_path('STKcdr.png');
+        $logoBase64 = null;
+        if (file_exists($logoPath)) {
+            $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+        }
+
         $html = view('invoices.pdf', [
             'invoice' => $invoice,
             'business' => config('commerce.business'),
+            'logoBase64' => $logoBase64,
         ])->render();
 
         $options = new \Dompdf\Options;

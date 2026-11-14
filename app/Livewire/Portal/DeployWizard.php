@@ -5,6 +5,7 @@ namespace App\Livewire\Portal;
 use App\Exceptions\PlatformRestrictionException;
 use App\Models\Commerce\Product;
 use App\Models\Commerce\ProductVariant;
+use App\Models\GithubApp;
 use App\Models\Server;
 use App\Models\TemplatePermission;
 use App\Services\Commerce\AppProvisioningService;
@@ -12,6 +13,8 @@ use App\Services\Commerce\HostingCatalogSeederService;
 use App\Services\Commerce\PlatformDomainService;
 use App\Services\TemplateAccessService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class DeployWizard extends Component
@@ -25,6 +28,16 @@ class DeployWizard extends Component
 
     // Git Deploy Fields
     public ?int $selectedPlanId = null;
+    public string $gitSourceType = 'manual'; // 'github_app' or 'manual'
+    public ?int $selectedGithubAppId = null;
+    public array $githubAppsList = [];
+    public array $githubRepositories = [];
+    public array $githubBranches = [];
+    public ?string $selectedGithubRepo = null;
+    public bool $isPrivateRepo = false;
+    public bool $isLoadingRepos = false;
+    public bool $isLoadingBranches = false;
+
     public string $gitRepo = '';
     public string $gitBranch = 'main';
     public string $buildPack = 'nixpacks';
@@ -94,6 +107,120 @@ class DeployWizard extends Component
             ?: ProductVariant::whereHas('product', fn ($q) => $q->where('slug', 'git-app-hosting'))->first();
         if ($standardPlan) {
             $this->selectedPlanId = $standardPlan->id;
+        }
+
+        $this->loadGithubApps();
+    }
+
+    public function loadGithubApps(): void
+    {
+        $team = currentTeam();
+        if (! $team) {
+            return;
+        }
+
+        $this->githubAppsList = GithubApp::where(function ($q) use ($team) {
+            $q->where('team_id', $team->id)->orWhere('is_system_wide', true);
+        })->get()->map(fn ($app) => [
+            'id' => $app->id,
+            'name' => $app->name,
+            'organization' => $app->organization,
+            'installation_id' => $app->installation_id,
+        ])->toArray();
+
+        if (! empty($this->githubAppsList)) {
+            $this->gitSourceType = 'github_app';
+            $this->selectGithubApp($this->githubAppsList[0]['id']);
+        }
+    }
+
+    public function selectGithubApp(?int $appId): void
+    {
+        $this->selectedGithubAppId = $appId;
+        $this->githubRepositories = [];
+        $this->githubBranches = [];
+        $this->selectedGithubRepo = null;
+
+        if (! $appId) {
+            return;
+        }
+
+        $team = currentTeam();
+        $app = GithubApp::where('id', $appId)
+            ->where(function ($q) use ($team) {
+                $q->where('team_id', $team->id)->orWhere('is_system_wide', true);
+            })->first();
+
+        if (! $app || ! $app->installation_id) {
+            return;
+        }
+
+        $this->isLoadingRepos = true;
+
+        try {
+            $token = generateGithubInstallationToken($app);
+            $response = Http::GitHub($app->api_url, $token)
+                ->timeout(15)
+                ->get('/installation/repositories', ['per_page' => 100]);
+
+            if ($response->successful()) {
+                $this->githubRepositories = collect(data_get($response->json(), 'repositories', []))
+                    ->map(fn ($r) => [
+                        'id' => $r['id'],
+                        'name' => $r['name'],
+                        'full_name' => $r['full_name'],
+                        'private' => (bool) $r['private'],
+                        'default_branch' => $r['default_branch'] ?? 'main',
+                        'html_url' => $r['html_url'],
+                        'clone_url' => $r['clone_url'],
+                    ])->toArray();
+            }
+        } catch (\Throwable $e) {
+            logger()->warning("Could not load GitHub repositories: {$e->getMessage()}");
+        } finally {
+            $this->isLoadingRepos = false;
+        }
+    }
+
+    public function selectGithubRepo(string $repoFullName): void
+    {
+        $this->selectedGithubRepo = $repoFullName;
+        $repo = collect($this->githubRepositories)->firstWhere('full_name', $repoFullName);
+
+        if (! $repo) {
+            return;
+        }
+
+        $this->gitRepo = $repo['clone_url'];
+        $this->isPrivateRepo = (bool) $repo['private'];
+        $defaultBranch = $repo['default_branch'] ?: 'main';
+        $this->gitBranch = $defaultBranch;
+
+        if (blank($this->appName)) {
+            $this->appName = Str::slug($repo['name']);
+        }
+        if (blank($this->customSubdomain)) {
+            $this->customSubdomain = Str::slug($repo['name']);
+        }
+
+        // Fetch repository branches
+        $this->isLoadingBranches = true;
+        try {
+            $app = GithubApp::find($this->selectedGithubAppId);
+            if ($app) {
+                $token = generateGithubInstallationToken($app);
+                $response = Http::GitHub($app->api_url, $token)
+                    ->timeout(10)
+                    ->get("/repos/{$repoFullName}/branches", ['per_page' => 100]);
+
+                if ($response->successful()) {
+                    $this->githubBranches = collect($response->json())->pluck('name')->toArray();
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->githubBranches = [$defaultBranch];
+        } finally {
+            $this->isLoadingBranches = false;
         }
     }
 
@@ -215,7 +342,9 @@ class DeployWizard extends Component
                 $this->buildPack,
                 $this->envVars,
                 $this->customSubdomain ?: null,
-                $this->selectedServerId
+                $this->selectedServerId,
+                $this->selectedGithubAppId,
+                $this->isPrivateRepo
             );
 
             $this->dispatch('success', "Git application {$service->name} created and bound to {$variant->name}!");

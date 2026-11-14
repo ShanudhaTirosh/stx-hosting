@@ -3,15 +3,22 @@
 namespace App\Livewire\Admin\Notifications;
 
 use App\Models\Commerce\CommerceAuditLog;
+use App\Models\EmailDeliveryLog;
 use App\Models\EmailTemplate;
 use App\Notifications\Commerce\EmailTemplatePreviewNotification;
 use App\Services\Notifications\EmailTemplates;
 use App\Services\RbacService;
 use Livewire\Component;
 
-/** Owner edits the wording of every customer email. Preview and test send use sample values. */
+/** Owner edits the wording of every customer email, reviews delivery logs, and inspects SMTP health. */
 class EmailTemplatesPage extends Component
 {
+    public string $tab = 'templates'; // 'templates', 'logs', 'health'
+
+    public string $logFilter = 'all'; // 'all', 'delivered', 'sent', 'failed'
+
+    public string $logSearch = '';
+
     public string $key = 'order_placed';
 
     public string $subject = '';
@@ -101,6 +108,41 @@ class EmailTemplatesPage extends Component
         }
     }
 
+    public function setTab(string $tab): void
+    {
+        $this->tab = in_array($tab, ['templates', 'logs', 'health'], true) ? $tab : 'templates';
+    }
+
+    public function setLogFilter(string $filter): void
+    {
+        $this->logFilter = in_array($filter, ['all', 'delivered', 'sent', 'failed'], true) ? $filter : 'all';
+    }
+
+    public function retryLog(int $logId): void
+    {
+        $log = EmailDeliveryLog::find($logId);
+        if (! $log) {
+            $this->dispatch('error', 'Log entry not found.');
+
+            return;
+        }
+
+        try {
+            if ($log->template_key) {
+                EmailTemplates::send($log->template_key, $log->recipient, $log->meta['vars'] ?? []);
+            } else {
+                \Illuminate\Support\Facades\Mail::raw("Retry of {$log->subject}", function ($msg) use ($log) {
+                    $msg->to($log->recipient)->subject($log->subject);
+                });
+            }
+            $log->update(['status' => 'delivered', 'error_message' => null]);
+            $this->dispatch('success', "Email resent successfully to {$log->recipient}!");
+        } catch (\Throwable $e) {
+            $log->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+            $this->dispatch('error', 'Retry failed: '.$e->getMessage());
+        }
+    }
+
     public function render()
     {
         // Preview uses what is typed now, with sample values.
@@ -109,11 +151,63 @@ class EmailTemplatesPage extends Component
             'cta_text' => $this->ctaText, 'cta_path' => $this->ctaPath,
         ], EmailTemplates::sampleVars($this->key));
 
+        $logs = null;
+        $healthStats = null;
+
+        if ($this->tab === 'logs') {
+            try {
+                $query = EmailDeliveryLog::latest();
+                if ($this->logFilter !== 'all') {
+                    $query->where('status', $this->logFilter);
+                }
+                if ($this->logSearch) {
+                    $term = '%'.strtolower(trim($this->logSearch)).'%';
+                    $query->where(function ($q) use ($term) {
+                        $q->whereRaw('LOWER(recipient) LIKE ?', [$term])
+                          ->orWhereRaw('LOWER(subject) LIKE ?', [$term])
+                          ->orWhereRaw('LOWER(COALESCE(template_key, \'\')) LIKE ?', [$term]);
+                    });
+                }
+                $logs = $query->take(50)->get();
+            } catch (\Throwable) {
+                $logs = collect();
+            }
+        } elseif ($this->tab === 'health') {
+            try {
+                $totalSent24h = EmailDeliveryLog::where('created_at', '>=', now()->subHours(24))->count();
+                $delivered24h = EmailDeliveryLog::where('created_at', '>=', now()->subHours(24))->whereIn('status', ['sent', 'delivered'])->count();
+                $failed24h = EmailDeliveryLog::where('created_at', '>=', now()->subHours(24))->where('status', 'failed')->count();
+                $successRate = $totalSent24h > 0 ? round(($delivered24h / $totalSent24h) * 100, 1) : 100.0;
+            } catch (\Throwable) {
+                $totalSent24h = 0;
+                $delivered24h = 0;
+                $failed24h = 0;
+                $successRate = 100.0;
+            }
+
+            $healthStats = [
+                'total_sent_24h' => $totalSent24h,
+                'delivered_24h' => $delivered24h,
+                'failed_24h' => $failed24h,
+                'success_rate' => $successRate,
+                'default_mailer' => config('mail.default'),
+                'smtp_host' => config('mail.mailers.smtp.host', 'mail.stxenterprises.com'),
+                'smtp_port' => config('mail.mailers.smtp.port', 587),
+                'smtp_encryption' => config('mail.mailers.smtp.encryption', 'tls'),
+                'relay_host' => config('mail.mailers.relay.host') ?: 'Standby (Failover pool ready)',
+                'from_address' => config('mail.from.address'),
+                'from_name' => config('mail.from.name'),
+            ];
+        }
+
         return view('livewire.admin.notifications.email-templates', [
+            'tab' => $this->tab,
             'catalog' => EmailTemplates::catalog(),
             'overridden' => EmailTemplate::pluck('key')->all(),
             'variables' => EmailTemplates::catalog()[$this->key]['variables'],
             'preview' => $preview,
+            'logs' => $logs,
+            'healthStats' => $healthStats,
         ]);
     }
 }

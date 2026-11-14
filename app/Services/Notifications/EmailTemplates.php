@@ -149,6 +149,94 @@ class EmailTemplates
                     'cta_path' => '/portal/billing',
                 ],
             ],
+            'welcome_verify' => [
+                'label' => 'Welcome and email verification',
+                'variables' => ['name' => 'Customer name', 'verify_url' => '/verify', 'expires_in' => '24 hours'],
+                'defaults' => [
+                    'subject' => 'Confirm your STX Enterprises account',
+                    'heading' => 'Welcome to STX Enterprises',
+                    'body' => "Hi {name},\n\nThank you for signing up with STX Enterprises. To activate your account and start deploying your cloud services, please verify your email address.\n\nThis confirmation link expires in {expires_in}.",
+                    'cta_text' => 'Verify My Email',
+                    'cta_path' => '{verify_url}',
+                ],
+            ],
+            'login_code' => [
+                'label' => 'Login verification code (2FA)',
+                'variables' => ['name' => 'Customer name', 'code' => '482910', 'ip_address' => '203.0.113.1', 'device' => 'Chrome on Windows'],
+                'defaults' => [
+                    'subject' => 'Your STX Enterprises verification code: {code}',
+                    'heading' => 'Sign-in Verification Code',
+                    'body' => "Hi {name},\n\nYour one-time sign-in code is:\n\n# **{code}**\n\nThis code is valid for 10 minutes. If you did not initiate this login from **{device}** (IP: `{ip_address}`), please secure your account immediately.",
+                    'cta_text' => 'Open STX Hosting',
+                    'cta_path' => '/login',
+                ],
+            ],
+            'password_reset' => [
+                'label' => 'Password reset request',
+                'variables' => ['name' => 'Customer name', 'reset_url' => '/reset-password', 'ip_address' => '203.0.113.1'],
+                'defaults' => [
+                    'subject' => 'Reset your STX Enterprises password',
+                    'heading' => 'Password Reset Request',
+                    'body' => "Hi {name},\n\nWe received a request to reset the password for your STX Enterprises account from `{ip_address}`.\n\nClick the button below to choose a new password. This link expires in 15 minutes and can only be used once.",
+                    'cta_text' => 'Reset My Password',
+                    'cta_path' => '{reset_url}',
+                ],
+            ],
+            'password_changed' => [
+                'label' => 'Password changed security notification',
+                'variables' => ['name' => 'Customer name', 'time' => '10 Nov 2026, 14:30 UTC', 'ip_address' => '203.0.113.1', 'support_url' => '/portal/support'],
+                'defaults' => [
+                    'subject' => 'Security Alert: Your password was changed',
+                    'heading' => 'Password Changed',
+                    'body' => "Hi {name},\n\nYour STX Enterprises account password was successfully changed on **{time}** from `{ip_address}`.\n\nAll other active sessions have been signed out. If you did not make this change, please contact our support team immediately to secure your account.",
+                    'cta_text' => 'Contact Support',
+                    'cta_path' => '{support_url}',
+                ],
+            ],
+            'deploy_success' => [
+                'label' => 'Deployment succeeded',
+                'variables' => ['name' => 'Customer name', 'app_name' => 'API Service', 'commit_sha' => 'c891a2f', 'app_url' => '/portal/apps'],
+                'defaults' => [
+                    'subject' => 'Deployment succeeded: {app_name}',
+                    'heading' => 'Deployment Live',
+                    'body' => "Hi {name},\n\nGood news: your application **{app_name}** deployed successfully from commit `{commit_sha}`.\n\nYour application containers are running healthy and routing traffic.",
+                    'cta_text' => 'Open Application',
+                    'cta_path' => '{app_url}',
+                ],
+            ],
+            'deploy_failed' => [
+                'label' => 'Deployment failed',
+                'variables' => ['name' => 'Customer name', 'app_name' => 'API Service', 'commit_sha' => 'c891a2f', 'logs_url' => '/portal/apps'],
+                'defaults' => [
+                    'subject' => 'Build failed: {app_name}',
+                    'heading' => 'Deployment Failed',
+                    'body' => "Hi {name},\n\nThe deployment for **{app_name}** on commit `{commit_sha}` encountered a build or startup error.\n\nYour previous stable version (if running) remains active. Please review the build logs to diagnose the issue.",
+                    'cta_text' => 'View Build Logs',
+                    'cta_path' => '{logs_url}',
+                ],
+            ],
+            'domain_ssl_warning' => [
+                'label' => 'Domain and SSL warning',
+                'variables' => ['name' => 'Customer name', 'domain' => 'app.example.com', 'issue' => 'DNS check failed or SSL certificate renewal is pending', 'action_url' => '/portal/domains'],
+                'defaults' => [
+                    'subject' => 'Action required: Domain & SSL warning for {domain}',
+                    'heading' => 'Domain / SSL Alert',
+                    'body' => "Hi {name},\n\nWe detected an issue with your custom domain **{domain}**:\n\n> {issue}\n\nPlease check your DNS records and SSL configuration in your customer dashboard to avoid downtime.",
+                    'cta_text' => 'Manage Domain',
+                    'cta_path' => '{action_url}',
+                ],
+            ],
+            'system_incident' => [
+                'label' => 'System incident or maintenance notice',
+                'variables' => ['name' => 'Customer name', 'title' => 'Scheduled maintenance', 'status' => 'investigating', 'impact' => 'Minor', 'status_url' => '/status'],
+                'defaults' => [
+                    'subject' => 'STX Status Alert: {title}',
+                    'heading' => 'System Status Notice',
+                    'body' => "Hi {name},\n\nOur automated monitoring systems detected an incident:\n\n- **Incident:** {title}\n- **Current Status:** {status}\n- **Impact:** {impact}\n\nOur engineering team is actively monitoring the situation. Real-time updates are published on our public status page.",
+                    'cta_text' => 'View Status Page',
+                    'cta_path' => '{status_url}',
+                ],
+            ],
         ];
     }
 
@@ -229,10 +317,19 @@ class EmailTemplates
     public static function message(string $key, array $vars): MailMessage
     {
         $rendered = self::render($key, $vars);
+        $sender = \App\Models\Commerce\MailSystemMapping::resolveSender($key);
 
-        return (new MailMessage)
+        $msg = (new MailMessage)
+            ->from($sender['from_address'], $sender['from_name'])
             ->subject($rendered['subject'])
-            ->view('emails.templated', $rendered);
+            ->view('emails.templated', $rendered)
+            ->text('emails.templated-text', $rendered);
+
+        if (! empty($sender['reply_to'])) {
+            $msg->replyTo($sender['reply_to']);
+        }
+
+        return $msg;
     }
 
     /** Sample values for previews and test sends. */

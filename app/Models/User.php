@@ -61,6 +61,9 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
         'avatar_path',
         'avatar_storage_type',
         'avatar_s3_storage_id',
+        'login_2fa_policy',
+        'email_notifications_preferences',
+        'unsubscribe_token',
     ];
 
     protected $hidden = [
@@ -78,6 +81,7 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
         'force_password_reset' => 'boolean',
         'show_boarding' => 'boolean',
         'email_change_code_expires_at' => 'datetime',
+        'email_notifications_preferences' => 'array',
     ];
 
     /**
@@ -291,6 +295,37 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
     public function teams()
     {
         return $this->belongsToMany(Team::class)->withPivot('role');
+    }
+
+    public function loginVerificationCodes(): HasMany
+    {
+        return $this->hasMany(LoginVerificationCode::class);
+    }
+
+    /**
+     * Check if the user has opted in to a specific notification category.
+     * Essential transactional messages (invoices, password resets, 2FA) are always allowed.
+     */
+    public function allowsNotification(string $category): bool
+    {
+        $essential = [
+            'login_code',
+            'password_reset',
+            'password_changed',
+            'welcome_verify',
+            'order_placed',
+            'payment_approved',
+            'payment_rejected',
+            'service_suspended',
+        ];
+
+        if (in_array($category, $essential, true)) {
+            return true;
+        }
+
+        $prefs = $this->email_notifications_preferences ?? [];
+
+        return (bool) ($prefs[$category] ?? true);
     }
 
     public function changelogReads()

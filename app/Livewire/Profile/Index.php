@@ -4,8 +4,11 @@ namespace App\Livewire\Profile;
 
 use App\Actions\User\DeleteUserAccount;
 use App\Services\AvatarStorageService;
+use App\Services\Notifications\EmailTemplates;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Validate;
@@ -42,6 +45,10 @@ class Index extends Component
     public ?string $sso_provider_label = null;
 
     public $avatar;
+
+    public string $login_2fa_policy = 'new_device';
+
+    public array $notification_preferences = [];
 
     public function uploadAvatar(AvatarStorageService $avatarStorage): bool
     {
@@ -84,10 +91,59 @@ class Index extends Component
         $this->uses_sso = $oauthIdentity !== null;
         $this->sso_provider_label = $oauthIdentity ? $this->providerLabel($oauthIdentity->provider) : null;
 
+        $user = Auth::user();
+        $this->login_2fa_policy = $user->login_2fa_policy ?: 'new_device';
+        $this->notification_preferences = array_merge([
+            'upcoming_renewal' => true,
+            'deploy_success' => true,
+            'deploy_failed' => true,
+            'domain_ssl_warning' => true,
+            'system_incident' => true,
+        ], $user->email_notifications_preferences ?? []);
+
         // Check if there's a pending email change
         if (! $this->uses_sso && Auth::user()->hasEmailChangeRequest()) {
             $this->new_email = Auth::user()->pending_email;
             $this->show_verification = true;
+        }
+    }
+
+    public function updateLogin2faPolicy(string $policy): void
+    {
+        if (! in_array($policy, ['always', 'new_device', 'sensitive_only'], true)) {
+            return;
+        }
+
+        $this->login_2fa_policy = $policy;
+        Auth::user()->update(['login_2fa_policy' => $policy]);
+        auditLog('ui.user.2fa_policy_updated', $this->auditContext(['policy' => $policy]));
+        $this->dispatch('success', 'Sign-in verification code policy updated.');
+    }
+
+    public function toggleNotificationPreference(string $key): void
+    {
+        $current = (bool) ($this->notification_preferences[$key] ?? true);
+        $this->notification_preferences[$key] = ! $current;
+
+        Auth::user()->update([
+            'email_notifications_preferences' => $this->notification_preferences,
+        ]);
+
+        $this->dispatch('success', 'Notification preferences saved.');
+    }
+
+    public function revokeOtherSessions(): void
+    {
+        try {
+            DB::table('sessions')
+                ->where('user_id', Auth::id())
+                ->where('id', '!=', session()->getId())
+                ->delete();
+
+            auditLog('ui.user.other_sessions_revoked', $this->auditContext());
+            $this->dispatch('success', 'All other active sessions have been revoked.');
+        } catch (\Throwable $e) {
+            handleError($e, $this);
         }
     }
 
@@ -338,6 +394,21 @@ class Index extends Component
                 'password' => Hash::make($this->new_password),
             ]);
             auditLog('ui.user.password_changed', $this->auditContext());
+
+            // Send security alert email
+            try {
+                $user = auth()->user();
+                $mail = EmailTemplates::message('password_changed', [
+                    'name' => $user->name ?: 'Customer',
+                    'time' => now()->format('d M Y, H:i T'),
+                    'ip_address' => request()->ip() ?: 'Unknown IP',
+                    'support_url' => url('/portal/support'),
+                ]);
+                Mail::to($user->email)->send($mail);
+            } catch (\Throwable $e) {
+                logger()->warning("Could not dispatch password_changed security alert: {$e->getMessage()}");
+            }
+
             $this->dispatch('success', 'Password updated.');
             $this->current_password = '';
             $this->new_password = '';
@@ -394,9 +465,24 @@ class Index extends Component
     {
         $deleteUserAccount = app(DeleteUserAccount::class);
 
+        $activeSessions = DB::table('sessions')
+            ->where('user_id', Auth::id())
+            ->orderByDesc('last_activity')
+            ->get()
+            ->map(function ($s) {
+                return (object) [
+                    'id' => $s->id,
+                    'ip_address' => $s->ip_address,
+                    'user_agent' => $s->user_agent,
+                    'last_activity' => \Carbon\Carbon::createFromTimestamp($s->last_activity),
+                    'is_current' => $s->id === session()->getId(),
+                ];
+            });
+
         return view('livewire.profile.index', [
             'accountDeletionBlockers' => $deleteUserAccount->blockers(Auth::user(), $deleteUserAccount->removesTeamResources(Auth::user())),
             'accountDeletionActions' => $deleteUserAccount->confirmationActions(Auth::user()),
+            'activeSessions' => $activeSessions,
         ]);
     }
 }

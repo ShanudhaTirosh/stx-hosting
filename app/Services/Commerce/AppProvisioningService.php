@@ -98,7 +98,9 @@ class AppProvisioningService
         string $buildPack = 'nixpacks',
         array $envVars = [],
         ?string $customSubdomain = null,
-        ?int $serverId = null
+        ?int $serverId = null,
+        ?int $githubAppId = null,
+        bool $isPrivate = false
     ): ServiceInstance {
         $limits = self::getPlanLimits($variant);
         $hostname = self::generateHostname($appName, $customSubdomain);
@@ -146,6 +148,8 @@ class AppProvisioningService
                 'git_repo' => $gitRepo,
                 'git_branch' => $gitBranch,
                 'build_pack' => $buildPack,
+                'github_app_id' => $githubAppId,
+                'is_private' => $isPrivate,
                 'env_vars' => $envVars,
                 'cgroup_limits' => $limits,
                 'custom_domains' => [],

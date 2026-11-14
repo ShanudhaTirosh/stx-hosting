@@ -161,6 +161,81 @@ class SupabaseAuthService
     }
 
     /**
+     * Verify email signup or password recovery token / OTP.
+     */
+    public function verifyOtp(string $email, string $token, string $type = 'signup'): ?array
+    {
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->key ?: $this->serviceRoleKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(10)->post("{$this->url}/auth/v1/verify", [
+                'type' => $type,
+                'email' => strtolower(trim($email)),
+                'token' => $token,
+            ]);
+
+            return $response->successful() ? $response->json() : null;
+        } catch (\Throwable $e) {
+            Log::error("Supabase verifyOtp exception: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
+    /**
+     * Revoke active Supabase session / tokens (Log out from Supabase).
+     */
+    public function signOut(string $accessToken): bool
+    {
+        if (! $this->isConfigured()) {
+            return false;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->key ?: $this->serviceRoleKey,
+                'Authorization' => "Bearer {$accessToken}",
+            ])->timeout(5)->post("{$this->url}/auth/v1/logout");
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Update user email using Supabase Admin API.
+     */
+    public function updateUserEmail(string $supabaseId, string $newEmail): bool
+    {
+        if (blank($this->serviceRoleKey) || blank($this->url)) {
+            return false;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->serviceRoleKey,
+                'Authorization' => "Bearer {$this->serviceRoleKey}",
+                'Content-Type' => 'application/json',
+            ])->timeout(10)->put("{$this->url}/auth/v1/admin/users/{$supabaseId}", [
+                'email' => strtolower(trim($newEmail)),
+                'email_confirm' => false, // Requires verification of new address
+            ]);
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("Supabase admin update email exception: {$e->getMessage()}");
+
+            return false;
+        }
+    }
+
+    /**
      * Fetch user profile from Supabase using an active access token.
      */
     public function getUser(string $accessToken): ?array

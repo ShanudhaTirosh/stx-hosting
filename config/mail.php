@@ -44,6 +44,16 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
+        'relay' => [
+            'transport' => 'smtp',
+            'host' => env('OUTBOUND_RELAY_HOST', 'smtp.sendgrid.net'),
+            'port' => env('OUTBOUND_RELAY_PORT', 587),
+            'encryption' => env('OUTBOUND_RELAY_ENCRYPTION', 'tls'),
+            'username' => env('OUTBOUND_RELAY_USER'),
+            'password' => env('OUTBOUND_RELAY_PASS'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
+        ],
         'resend' => [
             'transport' => 'resend',
         ],
@@ -83,6 +93,7 @@ return [
             'transport' => 'failover',
             'mailers' => [
                 'smtp',
+                'relay',
                 'log',
             ],
         ],

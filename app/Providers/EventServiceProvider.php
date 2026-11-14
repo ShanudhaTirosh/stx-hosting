@@ -84,6 +84,35 @@ class EventServiceProvider extends ServiceProvider
         Event::listen(PasskeyDeleted::class, function (PasskeyDeleted $event): void {
             auditLog('auth.user.passkey_deleted', $this->authContext($event->user));
         });
+
+        Event::listen(\Illuminate\Mail\Events\MessageSent::class, function (\Illuminate\Mail\Events\MessageSent $event): void {
+            try {
+                $symfonyMessage = $event->message;
+                $toAddresses = [];
+                if (method_exists($symfonyMessage, 'getTo')) {
+                    foreach ((array) $symfonyMessage->getTo() as $address) {
+                        $toAddresses[] = method_exists($address, 'getAddress') ? $address->getAddress() : (string) $address;
+                    }
+                }
+                $recipient = implode(', ', $toAddresses) ?: 'recipient';
+                $subject = method_exists($symfonyMessage, 'getSubject') ? (string) $symfonyMessage->getSubject() : 'STX Notification';
+                $templateKey = $event->data['template_key'] ?? $event->data['key'] ?? null;
+                $mailer = config('mail.default');
+
+                \App\Models\EmailDeliveryLog::record(
+                    recipient: $recipient,
+                    subject: $subject,
+                    templateKey: $templateKey,
+                    status: 'delivered',
+                    mailer: $mailer,
+                    meta: [
+                        'timestamp' => now()->toIso8601String(),
+                    ]
+                );
+            } catch (\Throwable) {
+                // Silently ignore logging failures to not disrupt mail flow
+            }
+        });
     }
 
     /**

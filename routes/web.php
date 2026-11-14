@@ -345,6 +345,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/billing/verification-settings', \App\Livewire\Admin\Billing\VerificationSettings::class)->name('admin.billing.verification-settings')->middleware('platform.owner');
         Route::get('/admin/notifications', \App\Livewire\Admin\Notifications\DiscordRoutes::class)->name('admin.notifications')->middleware('platform.owner');
         Route::get('/admin/emails', \App\Livewire\Admin\Notifications\EmailTemplatesPage::class)->name('admin.emails')->middleware('platform.owner');
+        Route::get('/admin/mailboxes', \App\Livewire\Admin\Mail\MailboxStudio::class)->name('admin.mailboxes')->middleware('platform.owner');
+        Route::get('/admin/my-mailboxes', \App\Livewire\Admin\Mail\MyMailboxes::class)->name('admin.my-mailboxes');
+        Route::get('/admin/mailboxes/{id}/webmail-sso', [\App\Http\Controllers\Admin\MailboxSsoController::class, 'launch'])->name('admin.mailboxes.webmail-sso');
+        Route::get('/mail/profiles/apple/{mailboxId}', [\App\Http\Controllers\Mail\MailClientProfileController::class, 'appleProfile'])->name('mail.profiles.apple');
+        Route::get('/.well-known/autoconfig/mail/config-v1.1.xml', [\App\Http\Controllers\Mail\MailClientProfileController::class, 'thunderbirdAutoconfig']);
         Route::get('/admin/docs', [\App\Http\Controllers\Storefront\DocsController::class, 'index'])->defaults('audience', 'admin')->name('admin.docs.index');
         Route::get('/admin/docs/{slug}', [\App\Http\Controllers\Storefront\DocsController::class, 'show'])->where('slug', '[a-z0-9-]+')->defaults('audience', 'admin')->name('admin.docs.show');
         Route::get('/admin/audit', \App\Livewire\Admin\AuditLog::class)->name('admin.audit');

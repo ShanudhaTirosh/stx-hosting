@@ -301,6 +301,143 @@
         <section class="application-settings-section">
             <div class="application-settings-section-header">
                 <div>
+                    <h2>Login verification code (2FA)</h2>
+                    <p>Choose when a 6-digit confirmation code is sent to your email during sign-in.</p>
+                </div>
+            </div>
+            <div class="application-settings-section-body space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label class="cursor-pointer flex flex-col p-3 rounded-lg border {{ $login_2fa_policy === 'new_device' ? 'bg-purple-950/30 border-purple-600' : 'bg-neutral-900/40 border-neutral-800' }} transition">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-xs text-white">New Device Only</span>
+                            <input type="radio" wire:click="updateLogin2faPolicy('new_device')" name="login_2fa_policy" value="new_device" {{ $login_2fa_policy === 'new_device' ? 'checked' : '' }} class="radio radio-xs radio-primary">
+                        </div>
+                        <span class="text-[11px] text-neutral-400">Sends code only when signing in from an unrecognized browser or IP.</span>
+                    </label>
+
+                    <label class="cursor-pointer flex flex-col p-3 rounded-lg border {{ $login_2fa_policy === 'always' ? 'bg-purple-950/30 border-purple-600' : 'bg-neutral-900/40 border-neutral-800' }} transition">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-xs text-white">Always (Strict)</span>
+                            <input type="radio" wire:click="updateLogin2faPolicy('always')" name="login_2fa_policy" value="always" {{ $login_2fa_policy === 'always' ? 'checked' : '' }} class="radio radio-xs radio-primary">
+                        </div>
+                        <span class="text-[11px] text-neutral-400">Sends a new code on every sign-in attempt.</span>
+                    </label>
+
+                    <label class="cursor-pointer flex flex-col p-3 rounded-lg border {{ $login_2fa_policy === 'sensitive_only' ? 'bg-purple-950/30 border-purple-600' : 'bg-neutral-900/40 border-neutral-800' }} transition">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-xs text-white">Sensitive Actions Only</span>
+                            <input type="radio" wire:click="updateLogin2faPolicy('sensitive_only')" name="login_2fa_policy" value="sensitive_only" {{ $login_2fa_policy === 'sensitive_only' ? 'checked' : '' }} class="radio radio-xs radio-primary">
+                        </div>
+                        <span class="text-[11px] text-neutral-400">Codes only requested when updating security credentials or billing.</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Sessions Manager -->
+        <section class="application-settings-section">
+            <div class="application-settings-section-header">
+                <div class="flex items-center justify-between w-full">
+                    <div>
+                        <h2>Active browser sessions</h2>
+                        <p>Devices and locations currently signed in to your STX Hosting account.</p>
+                    </div>
+                    @if (count($activeSessions ?? []) > 1)
+                        <button type="button" wire:click="revokeOtherSessions" class="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold transition">
+                            Log out other devices
+                        </button>
+                    @endif
+                </div>
+            </div>
+            <div class="application-settings-section-body">
+                <div class="divide-y divide-neutral-800 border border-neutral-800 rounded-lg overflow-hidden bg-neutral-950">
+                    @forelse ($activeSessions as $session)
+                        <div class="p-3 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 rounded bg-neutral-900 text-neutral-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white flex items-center gap-2">
+                                        <span class="truncate max-w-xs">{{ Str::limit($session->user_agent, 45) }}</span>
+                                        @if ($session->is_current)
+                                            <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-semibold">Current Session</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-[11px] text-neutral-400 font-mono">
+                                        IP: {{ $session->ip_address }} &bull; Active {{ $session->last_activity->diffForHumans() }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-4 text-center text-xs text-neutral-500">
+                            No other active sessions detected.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </section>
+
+        <!-- Email Notification Preferences -->
+        <section class="application-settings-section">
+            <div class="application-settings-section-header">
+                <div>
+                    <h2>Email notification preferences</h2>
+                    <p>Customize which automated service alerts you receive from STX Hosting.</p>
+                </div>
+            </div>
+            <div class="application-settings-section-body space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-950 cursor-pointer">
+                        <input type="checkbox" wire:click="toggleNotificationPreference('upcoming_renewal')" {{ ($notification_preferences['upcoming_renewal'] ?? true) ? 'checked' : '' }} class="checkbox checkbox-xs checkbox-primary mt-0.5">
+                        <div class="text-xs">
+                            <span class="font-bold text-white block">Renewal Reminders</span>
+                            <span class="text-neutral-400 text-[11px]">Notice sent 7 days before subscription renewal invoices become due.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-950 cursor-pointer">
+                        <input type="checkbox" wire:click="toggleNotificationPreference('deploy_success')" {{ ($notification_preferences['deploy_success'] ?? true) ? 'checked' : '' }} class="checkbox checkbox-xs checkbox-primary mt-0.5">
+                        <div class="text-xs">
+                            <span class="font-bold text-white block">Deployment Succeeded</span>
+                            <span class="text-neutral-400 text-[11px]">Notice when an application container builds and deploys successfully.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-950 cursor-pointer">
+                        <input type="checkbox" wire:click="toggleNotificationPreference('deploy_failed')" {{ ($notification_preferences['deploy_failed'] ?? true) ? 'checked' : '' }} class="checkbox checkbox-xs checkbox-primary mt-0.5">
+                        <div class="text-xs">
+                            <span class="font-bold text-white block">Deployment Failures</span>
+                            <span class="text-neutral-400 text-[11px]">Urgent alerts when a build fails or an application container crashes.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-950 cursor-pointer">
+                        <input type="checkbox" wire:click="toggleNotificationPreference('domain_ssl_warning')" {{ ($notification_preferences['domain_ssl_warning'] ?? true) ? 'checked' : '' }} class="checkbox checkbox-xs checkbox-primary mt-0.5">
+                        <div class="text-xs">
+                            <span class="font-bold text-white block">Domain &amp; SSL Warnings</span>
+                            <span class="text-neutral-400 text-[11px]">Alerts if your custom domain DNS breaks or SSL certificate renewal fails.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-neutral-800 bg-neutral-950 cursor-pointer sm:col-span-2">
+                        <input type="checkbox" wire:click="toggleNotificationPreference('system_incident')" {{ ($notification_preferences['system_incident'] ?? true) ? 'checked' : '' }} class="checkbox checkbox-xs checkbox-primary mt-0.5">
+                        <div class="text-xs">
+                            <span class="font-bold text-white block">Platform Incidents &amp; Maintenance</span>
+                            <span class="text-neutral-400 text-[11px]">Notifications regarding scheduled network maintenance or cluster incidents.</span>
+                        </div>
+                    </label>
+                </div>
+                <div class="text-[11px] text-neutral-500 pt-1">
+                    Note: Essential security emails (login codes, password resets, payment receipts, and suspension notices) cannot be disabled.
+                </div>
+            </div>
+        </section>
+
+        <section class="application-settings-section">
+            <div class="application-settings-section-header">
+                <div>
                     <h2>Danger zone</h2>
                     <p>Destructive actions for your account cannot be undone.</p>
                 </div>

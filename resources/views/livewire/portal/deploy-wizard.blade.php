@@ -306,14 +306,105 @@
                     </div>
 
                     <div class="md:col-span-2">
-                        <label for="git-repo" class="block text-xs font-semibold text-neutral-300 mb-1">Git Repository URL</label>
-                        <input id="git-repo" type="text" wire:model="gitRepo" placeholder="https://github.com/organization/repository.git" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
-                        @error('gitRepo') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                        <!-- Source Switcher: GitHub App vs Manual URL -->
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-xs font-semibold text-neutral-300">Repository Source</label>
+                            <div class="flex items-center gap-2">
+                                <button type="button" wire:click="$set('gitSourceType', 'github_app')" class="px-2.5 py-1 text-[11px] font-semibold rounded {{ $gitSourceType === 'github_app' ? 'bg-purple-600 text-white' : 'bg-neutral-900 text-neutral-400 hover:text-white' }} transition">
+                                    GitHub App (Private &amp; Public)
+                                </button>
+                                <button type="button" wire:click="$set('gitSourceType', 'manual')" class="px-2.5 py-1 text-[11px] font-semibold rounded {{ $gitSourceType === 'manual' ? 'bg-purple-600 text-white' : 'bg-neutral-900 text-neutral-400 hover:text-white' }} transition">
+                                    Custom Git URL
+                                </button>
+                            </div>
+                        </div>
+
+                        @if ($gitSourceType === 'github_app')
+                            @if (! empty($githubAppsList))
+                                <div class="space-y-3 p-3 bg-neutral-950 rounded-lg border border-neutral-800">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        @if (count($githubAppsList) > 1)
+                                            <div>
+                                                <label class="block text-[11px] font-semibold text-neutral-400 mb-1">GitHub Account / App</label>
+                                                <select wire:change="selectGithubApp($event.target.value)" class="select select-sm w-full bg-neutral-900 border-neutral-700 text-white text-xs rounded">
+                                                    @foreach ($githubAppsList as $ghApp)
+                                                        <option value="{{ $ghApp['id'] }}" {{ $selectedGithubAppId == $ghApp['id'] ? 'selected' : '' }}>
+                                                            {{ $ghApp['name'] }} {{ $ghApp['organization'] ? "({$ghApp['organization']})" : '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        @endif
+
+                                        <div class="{{ count($githubAppsList) <= 1 ? 'sm:col-span-2' : '' }}">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <label class="block text-[11px] font-semibold text-neutral-400">Select Granted Repository</label>
+                                                @if ($isLoadingRepos)
+                                                    <span class="text-[10px] text-purple-400 animate-pulse">Loading repositories...</span>
+                                                @endif
+                                            </div>
+                                            <select wire:change="selectGithubRepo($event.target.value)" class="select select-sm w-full bg-neutral-900 border-neutral-700 text-white text-xs rounded font-mono">
+                                                <option value="">-- Choose a repository --</option>
+                                                @foreach ($githubRepositories as $repo)
+                                                    <option value="{{ $repo['full_name'] }}" {{ $selectedGithubRepo === $repo['full_name'] ? 'selected' : '' }}>
+                                                        {{ $repo['full_name'] }} {{ $repo['private'] ? '🔒 [Private]' : '🌐 [Public]' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    @if ($selectedGithubRepo)
+                                        <div class="flex items-center justify-between text-xs pt-2 border-t border-neutral-900">
+                                            <span class="text-neutral-400">Selected: <strong class="text-white font-mono">{{ $selectedGithubRepo }}</strong></span>
+                                            @if ($isPrivateRepo)
+                                                <span class="px-2 py-0.5 bg-purple-950 text-purple-300 border border-purple-800 text-[10px] rounded font-mono font-semibold flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                    Private Repository (Auto-Tokenized)
+                                                </span>
+                                            @else
+                                                <span class="px-2 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] rounded font-mono font-semibold">
+                                                    Public Repository
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="p-4 rounded-lg bg-neutral-950 border border-neutral-800 flex items-center justify-between">
+                                    <div>
+                                        <div class="text-xs font-bold text-white mb-0.5">Connect your GitHub Account or Organization</div>
+                                        <div class="text-[11px] text-neutral-400">Grant repository access to deploy private repositories securely with automatic push webhooks.</div>
+                                    </div>
+                                    <a href="/source/github/redirect" class="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                                        Connect GitHub
+                                    </a>
+                                </div>
+                            @endif
+                        @else
+                            <label for="git-repo" class="block text-xs font-semibold text-neutral-300 mb-1">Git Repository URL</label>
+                            <input id="git-repo" type="text" wire:model="gitRepo" placeholder="https://github.com/organization/repository.git" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                            @error('gitRepo') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                        @endif
                     </div>
 
                     <div>
-                        <label for="git-branch" class="block text-xs font-semibold text-neutral-300 mb-1">Branch</label>
-                        <input id="git-branch" type="text" wire:model="gitBranch" placeholder="main" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="git-branch" class="block text-xs font-semibold text-neutral-300">Branch</label>
+                            @if ($isLoadingBranches)
+                                <span class="text-[10px] text-purple-400 animate-pulse">Loading branches...</span>
+                            @endif
+                        </div>
+                        @if (! empty($githubBranches))
+                            <select id="git-branch" wire:model="gitBranch" class="select select-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                                @foreach ($githubBranches as $br)
+                                    <option value="{{ $br }}">{{ $br }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input id="git-branch" type="text" wire:model="gitBranch" placeholder="main" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                        @endif
                         @error('gitBranch') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
                     </div>
 
