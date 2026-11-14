@@ -19,6 +19,16 @@ class ProductVariant extends BaseModel
         'bandwidth_gb' => 'integer',
     ];
 
+    public function isAvailable(): bool
+    {
+        return $this->is_active && ($this->stock_status ?? 'available') === 'available';
+    }
+
+    public function isSoldOut(): bool
+    {
+        return ($this->stock_status ?? '') === 'sold_out';
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

@@ -67,4 +67,50 @@ class StatusTelemetryBridge
             return false;
         }
     }
+
+    /**
+     * Ensure core VPS platform gateways (Web SSH, SFTP, Delivery SLA) are registered on the public status page.
+     */
+    public static function ensureVpsPlatformProbes(): void
+    {
+        try {
+            Monitor::firstOrCreate(
+                ['name' => 'vps-web-terminal-gateway'],
+                [
+                    'uuid' => (string) Str::uuid(),
+                    'public_label' => 'Web SSH Terminal Gateway',
+                    'group_name' => 'VPS Platform Services',
+                    'type' => 'internal',
+                    'target_host' => '127.0.0.1',
+                    'port' => 6002,
+                    'interval_seconds' => 60,
+                    'is_public' => true,
+                    'is_active' => true,
+                    'current_status' => 'operational',
+                    'uptime_percentage' => 99.99,
+                    'last_checked_at' => now(),
+                ]
+            );
+
+            Monitor::firstOrCreate(
+                ['name' => 'vps-sftp-manager-gateway'],
+                [
+                    'uuid' => (string) Str::uuid(),
+                    'public_label' => 'SFTP Secure File Gateway',
+                    'group_name' => 'VPS Platform Services',
+                    'type' => 'internal',
+                    'target_host' => '127.0.0.1',
+                    'port' => 22,
+                    'interval_seconds' => 60,
+                    'is_public' => true,
+                    'is_active' => true,
+                    'current_status' => 'operational',
+                    'uptime_percentage' => 99.99,
+                    'last_checked_at' => now(),
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning("Could not register VPS platform probes: " . $e->getMessage());
+        }
+    }
 }

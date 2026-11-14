@@ -18,6 +18,10 @@ class ServiceInstance extends BaseModel
         'renews_at' => 'datetime',
         'suspended_at' => 'datetime',
         'last_health_check_at' => 'datetime',
+        'upstream_cost_cents' => 'integer',
+        'provider_renews_at' => 'datetime',
+        'is_customer_managed_credentials' => 'boolean',
+        'customer_password_rotated_at' => 'datetime',
     ];
 
     public function isHealthy(): bool
@@ -74,8 +78,18 @@ class ServiceInstance extends BaseModel
         return $this->belongsTo(VpsInventory::class);
     }
 
+    public function clusterNode(): BelongsTo
+    {
+        return $this->belongsTo(ClusterNode::class, 'cluster_node_id');
+    }
+
     public function credentials(): HasMany
     {
         return $this->hasMany(ServiceCredential::class);
+    }
+
+    public function authorizedKeys(): HasMany
+    {
+        return $this->hasMany(VpsAuthorizedKey::class);
     }
 }

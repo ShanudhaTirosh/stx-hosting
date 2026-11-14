@@ -15,6 +15,8 @@ interface RemoteShell
 
     public function upload(string $path, string $contents): void;
 
+    public function rename(string $oldPath, string $newPath): void;
+
     public function delete(string $path): void;
 
     /** SHA-256 fingerprint of the server's SSH host key (base64, as ssh prints it). */

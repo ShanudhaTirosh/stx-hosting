@@ -74,6 +74,11 @@ class InstanceSettings extends Model
         'file_download_s3_storage_id',
         'is_dashboard_force_https_enabled',
         'is_passkey_enabled',
+        'base_platform_domain',
+        'apps_domain',
+        'cloudflare_api_token',
+        'cloudflare_zone_id',
+        'platform_domains_initialized_at',
     ];
 
     protected $hidden = [
@@ -90,6 +95,7 @@ class InstanceSettings extends Model
         'resend_from_name',
         'domain_connect_private_key',
         'sentinel_token',
+        'cloudflare_api_token',
     ];
 
     protected $casts = [
@@ -129,6 +135,8 @@ class InstanceSettings extends Model
         'server_validation_rate_limit_seconds' => 'integer',
         'server_validation_max_failures_per_ip' => 'integer',
         'server_validation_max_failures_per_team' => 'integer',
+        'cloudflare_api_token' => 'encrypted',
+        'platform_domains_initialized_at' => 'datetime',
     ];
 
     protected static function booted(): void

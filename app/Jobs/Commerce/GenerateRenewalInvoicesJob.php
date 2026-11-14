@@ -3,7 +3,9 @@
 namespace App\Jobs\Commerce;
 
 use App\Models\Commerce\Invoice;
+use App\Models\Commerce\MailSubscription;
 use App\Models\Commerce\OrderItem;
+use App\Models\Commerce\PricingTier;
 use App\Models\HostingEntitlement;
 use App\Models\User;
 use App\Notifications\Commerce\UpcomingRenewalNotification;
@@ -95,6 +97,72 @@ class GenerateRenewalInvoicesJob implements ShouldQueue
                 $generatedCount++;
             } catch (\Throwable $e) {
                 Log::error("Failed to generate renewal invoice for entitlement #{$entitlement->id}: {$e->getMessage()}");
+            }
+        }
+
+        // Check MailSubscriptions expiring within 7 days
+        $expiringMailSubs = MailSubscription::with(['team', 'plan'])
+            ->where('status', 'active')
+            ->whereNotNull('renews_at')
+            ->where('renews_at', '<=', now()->addDays(7))
+            ->get();
+
+        foreach ($expiringMailSubs as $mailSub) {
+            $team = $mailSub->team;
+            if (! $team) {
+                continue;
+            }
+
+            // Check if an unpaid renewal invoice has already been created for this mail subscription
+            $existingInvoice = Invoice::where('team_id', $team->id)
+                ->whereIn('status', ['unpaid', 'payment_pending'])
+                ->whereHas('order', function ($query) use ($mailSub) {
+                    $query->where('customer_notes', 'LIKE', "%renewal:mail_subscription:{$mailSub->id}%");
+                })
+                ->exists();
+
+            if ($existingInvoice) {
+                continue;
+            }
+
+            // Find active pricing tier matching the mail plan slug
+            $planSlug = $mailSub->plan?->slug;
+            $pricingTier = PricingTier::whereHas('productVariant', function ($q) use ($planSlug) {
+                $q->where('slug', $planSlug);
+            })->where('is_active', true)->first();
+
+            if (! $pricingTier) {
+                continue;
+            }
+
+            $user = $team->members()->first() ?? User::find($mailSub->team_id);
+            if (! $user) {
+                continue;
+            }
+
+            try {
+                $lines = [[
+                    'tier' => $pricingTier,
+                    'quantity' => 1,
+                ]];
+
+                $currency = $pricingTier->currency ?? 'USD';
+                $notes = "Automated renewal for mail subscription #{$mailSub->id} (renewal:mail_subscription:{$mailSub->id})";
+
+                [$order, $invoice] = $orderService->place($user, $team, $lines, $currency, $notes);
+                $invoice->update(['due_at' => $mailSub->renews_at]);
+
+                $productName = $mailSub->plan?->name ?? 'Business Email Hosting';
+
+                try {
+                    $user->notify(new UpcomingRenewalNotification($order, $invoice, $productName));
+                } catch (\Throwable $e) {
+                    Log::warning("Could not send UpcomingRenewalNotification for mail invoice {$invoice->invoice_number}: {$e->getMessage()}");
+                }
+
+                $generatedCount++;
+            } catch (\Throwable $e) {
+                Log::error("Failed to generate renewal invoice for mail subscription #{$mailSub->id}: {$e->getMessage()}");
             }
         }
 

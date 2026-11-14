@@ -6,6 +6,7 @@ use App\Exceptions\PlatformRestrictionException;
 use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\ProductVariant;
 use App\Models\Commerce\ServiceInstance;
+use App\Models\Server;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\TemplateAccessService;
@@ -37,28 +38,12 @@ class AppProvisioningService
     /**
      * Generate an instant, collision-free wildcard hostname for a deployment.
      */
-    public static function generateHostname(string $appName): string
+    public static function generateHostname(string $appName, ?string $customSubdomain = null): string
     {
-        $slug = Str::slug($appName);
-        if (blank($slug)) {
-            $slug = 'app-'.Str::lower(Str::random(6));
-        }
-
         $appsDomain = PlatformDomainService::appsDomain();
-        if ($appsDomain) {
-            $baseDomain = $appsDomain;
-        } else {
-            $baseDomain = config('hosting.default_domain', 'apps.stxapp.io');
-        }
+        $slug = PlatformDomainService::nextAvailableSlug($appName, null, $customSubdomain);
 
-        $candidate = "{$slug}.{$baseDomain}";
-
-        // Ensure uniqueness if a service instance already uses this candidate
-        if (ServiceInstance::where('hostname', $candidate)->exists()) {
-            $candidate = "{$slug}-".Str::lower(Str::random(4)).".{$baseDomain}";
-        }
-
-        return strtolower($candidate);
+        return strtolower("{$slug}.{$appsDomain}");
     }
 
     /**
@@ -111,22 +96,53 @@ class AppProvisioningService
         string $gitRepo,
         string $gitBranch = 'main',
         string $buildPack = 'nixpacks',
-        array $envVars = []
+        array $envVars = [],
+        ?string $customSubdomain = null,
+        ?int $serverId = null
     ): ServiceInstance {
         $limits = self::getPlanLimits($variant);
-        $hostname = self::generateHostname($appName);
+        $hostname = self::generateHostname($appName, $customSubdomain);
+
+        $clusterNode = null;
+        try {
+            $clusterNode = ClusterPlacementService::selectOptimalNode(
+                $team,
+                $appName,
+                null,
+                $variant,
+                $serverId
+            );
+        } catch (\Throwable) {
+            $clusterNode = null;
+        }
+
+        $server = $serverId ? Server::find($serverId) : ($clusterNode?->server ?: null);
+        if (! $server && method_exists(Server::class, 'isUsable')) {
+            try {
+                $server = Server::isUsable()->first();
+            } catch (\Throwable) {
+                $server = null;
+            }
+        }
 
         $service = ServiceInstance::create([
             'team_id' => $team->id,
             'user_id' => $user->id,
             'product_variant_id' => $variant->id,
+            'cluster_node_id' => $clusterNode?->id,
             'service_type' => 'git_app',
             'status' => 'active',
             'health_status' => 'healthy',
             'name' => $appName,
             'hostname' => $hostname,
+            'ip_address' => $clusterNode?->public_ip ?: ($server?->ip ?: config('hosting.ingress_ip')),
             'os_image' => $buildPack,
             'network_config' => [
+                'cluster_node_id' => $clusterNode?->id,
+                'cluster_node_name' => $clusterNode?->name,
+                'server_id' => $server?->id ?: $clusterNode?->server_id,
+                'server_name' => $server?->name ?: $clusterNode?->name,
+                'server_ip' => $server?->ip ?: $clusterNode?->public_ip,
                 'git_repo' => $gitRepo,
                 'git_branch' => $gitBranch,
                 'build_pack' => $buildPack,
@@ -169,7 +185,10 @@ class AppProvisioningService
         string $templateName,
         string $appName,
         array $envVars = [],
-        ?ProductVariant $variant = null
+        ?ProductVariant $variant = null,
+        ?string $customSubdomain = null,
+        array $selectedEndpoints = [],
+        ?int $serverId = null
     ): ServiceInstance {
         if (! TemplateAccessService::canDeployTemplate($team, $templateName)) {
             throw new PlatformRestrictionException("Your team is not authorized to deploy template '{$templateName}'.");
@@ -179,18 +198,47 @@ class AppProvisioningService
         $limits = $variant ? self::getPlanLimits($variant) : self::getPlanLimits($requirements);
         $hostname = self::generateHostname($appName);
 
+        $clusterNode = null;
+        try {
+            $clusterNode = ClusterPlacementService::selectOptimalNode(
+                $team,
+                $appName,
+                $templateName,
+                $variant,
+                $serverId
+            );
+        } catch (\Throwable) {
+            $clusterNode = null;
+        }
+
+        $server = $serverId ? Server::find($serverId) : ($clusterNode?->server ?: null);
+        if (! $server && method_exists(Server::class, 'isUsable')) {
+            try {
+                $server = Server::isUsable()->first();
+            } catch (\Throwable) {
+                $server = null;
+            }
+        }
+
         $service = ServiceInstance::create([
             'team_id' => $team->id,
             'user_id' => $user->id,
             'product_variant_id' => $variant?->id,
+            'cluster_node_id' => $clusterNode?->id,
             'service_type' => 'template_app',
             'template_name' => $templateName,
             'status' => 'active',
             'health_status' => 'healthy',
             'name' => $appName,
             'hostname' => $hostname,
+            'ip_address' => $clusterNode?->public_ip ?: ($server?->ip ?: config('hosting.ingress_ip')),
             'os_image' => $templateName,
             'network_config' => [
+                'cluster_node_id' => $clusterNode?->id,
+                'cluster_node_name' => $clusterNode?->name,
+                'server_id' => $server?->id ?: $clusterNode?->server_id,
+                'server_name' => $server?->name ?: $clusterNode?->name,
+                'server_ip' => $server?->ip ?: $clusterNode?->public_ip,
                 'template_name' => $templateName,
                 'port' => $requirements['default_port'] ?? 80,
                 'env_vars' => $envVars,
@@ -201,6 +249,16 @@ class AppProvisioningService
             'renews_at' => now()->addDays(30),
         ]);
 
+        // Automatically assign subdomains & route bindings for exposable services
+        PlatformDomainService::assignTemplateSubdomains(
+            $service,
+            $templateName,
+            $customSubdomain,
+            $selectedEndpoints
+        );
+
+        $service->refresh();
+
         CommerceAuditLog::create([
             'user_id' => $user->id,
             'team_id' => $team->id,
@@ -210,7 +268,8 @@ class AppProvisioningService
             'payload' => [
                 'template_name' => $templateName,
                 'cgroup_limits' => $limits,
-                'hostname' => $hostname,
+                'hostname' => $service->hostname,
+                'assigned_endpoints' => data_get($service->network_config, 'assigned_endpoints', []),
             ],
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -218,5 +277,81 @@ class AppProvisioningService
         ]);
 
         return $service;
+    }
+
+    /**
+     * Duplicate an existing application instance with pre-populated configurations.
+     */
+    public static function duplicateApp(
+        ServiceInstance $source,
+        string $newName,
+        ?string $newSubdomain = null,
+        array $overrideEnvVars = [],
+        ?int $newVariantId = null,
+        ?string $newGitBranch = null,
+        ?int $newServerId = null
+    ): ServiceInstance {
+        $team = $source->team;
+        $user = auth()->user() ?: $source->user;
+        $variant = $newVariantId ? ProductVariant::findOrFail($newVariantId) : $source->productVariant;
+        $config = $source->network_config ?? [];
+        $targetServerId = $newServerId ?: data_get($config, 'server_id');
+
+        $mergedEnvVars = array_merge(
+            data_get($config, 'env_vars', []),
+            $overrideEnvVars
+        );
+
+        if ($source->service_type === 'template_app' && $source->template_name) {
+            $selectedEndpoints = array_keys(data_get($config, 'assigned_endpoints', []));
+
+            $newService = self::provisionTemplate(
+                $team,
+                $user,
+                $source->template_name,
+                $newName,
+                $mergedEnvVars,
+                $variant,
+                $newSubdomain,
+                $selectedEndpoints,
+                $targetServerId
+            );
+        } else {
+            $gitRepo = data_get($config, 'git_repo', '');
+            $gitBranch = $newGitBranch ?: data_get($config, 'git_branch', 'main');
+            $buildPack = data_get($config, 'build_pack', $source->os_image ?: 'nixpacks');
+
+            $newService = self::provision(
+                $team,
+                $user,
+                $variant ?: ProductVariant::first(),
+                $newName,
+                $gitRepo,
+                $gitBranch,
+                $buildPack,
+                $mergedEnvVars,
+                $newSubdomain,
+                $targetServerId
+            );
+        }
+
+        CommerceAuditLog::create([
+            'user_id' => $user->id,
+            'team_id' => $team->id,
+            'action' => 'app.duplicated',
+            'target_type' => ServiceInstance::class,
+            'target_id' => $newService->id,
+            'payload' => [
+                'source_uuid' => $source->uuid,
+                'source_name' => $source->name,
+                'new_name' => $newName,
+                'hostname' => $newService->hostname,
+            ],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+
+        return $newService;
     }
 }

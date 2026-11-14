@@ -8,12 +8,15 @@ use App\Actions\Service\StopService;
 use App\Enums\EntitlementStatus;
 use App\Models\Application;
 use App\Models\Commerce\CommerceAuditLog;
+use App\Models\Commerce\MailMailbox;
+use App\Models\Commerce\MailSubscription;
 use App\Models\Commerce\ServiceInstance;
 use App\Models\HostingEntitlement;
 use App\Models\Service;
 use App\Models\User;
 use App\Notifications\Commerce\ServiceSuspendedNotification;
 use App\Services\Backups\DatabaseCatalog;
+use App\Services\Commerce\WildDuckProvisioningService;
 use App\Services\EntitlementService;
 use App\Services\Notifications\StaffEvents;
 use Illuminate\Bus\Queueable;
@@ -117,6 +120,24 @@ class ProcessOverdueSuspensionsJob implements ShouldQueue
                     }
                 }
 
+                // 5. Handle Email Hosting instances
+                if (str_contains((string) $productType, 'email') || str_contains((string) $productType, 'mail')) {
+                    $mailSubs = MailSubscription::where('team_id', $team->id)->where('status', 'active')->get();
+                    $wildduck = app(WildDuckProvisioningService::class);
+                    foreach ($mailSubs as $sub) {
+                        $sub->update(['status' => 'suspended']);
+                    }
+                    $boxes = MailMailbox::where('team_id', $team->id)->where('is_active', true)->get();
+                    foreach ($boxes as $box) {
+                        try {
+                            $wildduck->updateMailboxActive($box->wildduck_user_id, false);
+                            $box->update(['is_active' => false]);
+                        } catch (\Throwable $e) {
+                            Log::warning("Failed to suspend mailbox {$box->address}: {$e->getMessage()}");
+                        }
+                    }
+                }
+
                 CommerceAuditLog::create([
                     'team_id' => $team->id,
                     'user_id' => $entitlement->granted_by,
@@ -149,6 +170,68 @@ class ProcessOverdueSuspensionsJob implements ShouldQueue
                 $suspendedCount++;
             } catch (\Throwable $e) {
                 Log::error("Failed to suspend entitlement #{$entitlement->id}: {$e->getMessage()}");
+            }
+        }
+
+        // Process direct overdue MailSubscriptions
+        $overdueMailSubs = MailSubscription::with('team')
+            ->where('status', 'active')
+            ->whereNotNull('renews_at')
+            ->where('renews_at', '<', $cutoff)
+            ->get();
+
+        $wildduck = app(WildDuckProvisioningService::class);
+
+        foreach ($overdueMailSubs as $mailSub) {
+            $team = $mailSub->team;
+            if (! $team) {
+                continue;
+            }
+
+            try {
+                $mailSub->update(['status' => 'suspended']);
+
+                $boxes = MailMailbox::where('team_id', $team->id)->where('is_active', true)->get();
+                foreach ($boxes as $box) {
+                    try {
+                        $wildduck->updateMailboxActive($box->wildduck_user_id, false);
+                        $box->update(['is_active' => false]);
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to disable mailbox {$box->address} during overdue suspension: {$e->getMessage()}");
+                    }
+                }
+
+                CommerceAuditLog::create([
+                    'team_id' => $team->id,
+                    'user_id' => $team->members()->first()?->id,
+                    'action' => 'mail_subscription.suspended',
+                    'target_type' => MailSubscription::class,
+                    'target_id' => $mailSub->id,
+                    'payload' => [
+                        'reason' => 'overdue_grace_period_expired',
+                        'cutoff' => $cutoff->toIso8601String(),
+                        'renews_at' => $mailSub->renews_at?->toIso8601String(),
+                    ],
+                    'ip_address' => '127.0.0.1',
+                    'user_agent' => 'cron/ProcessOverdueSuspensionsJob',
+                    'created_at' => now(),
+                ]);
+
+                $user = $team->members()->first();
+                if ($user) {
+                    try {
+                        $user->notify(new ServiceSuspendedNotification(
+                            'Business Email Hosting',
+                            'Payment is overdue and the 4-day grace period has elapsed. Email accounts have been paused.'
+                        ));
+                    } catch (\Throwable $e) {
+                        Log::warning("Could not send ServiceSuspendedNotification for mail sub to user {$user->id}: {$e->getMessage()}");
+                    }
+                }
+
+                $suspendedCount++;
+            } catch (\Throwable $e) {
+                Log::error("Failed to suspend mail subscription #{$mailSub->id}: {$e->getMessage()}");
             }
         }
 

@@ -51,28 +51,46 @@ class WildDuckProvisioningService
         }
 
         try {
-            $response = $this->http()->post("{$this->apiUrl}/domains", [
+            $response = $this->http()->post("{$this->apiUrl}/dkim", [
                 'domain' => $domain,
-                'dkim' => [
-                    'selector' => 'wildduck',
-                ],
+                'selector' => 'wildduck',
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
 
                 return [
-                    'domain_id' => $data['id'] ?? (string) $data['domain'],
-                    'dkim_selector' => $data['dkim']['selector'] ?? 'wildduck',
-                    'dkim_public_key' => $data['dkim']['publicKey'] ?? '',
+                    'domain_id' => $data['id'] ?? (string) ($data['domain'] ?? md5($domain)),
+                    'dkim_selector' => $data['selector'] ?? 'wildduck',
+                    'dkim_public_key' => $data['publicKey'] ?? '',
                 ];
             }
 
-            Log::error('WildDuck domain registration failed', ['domain' => $domain, 'response' => $response->body()]);
+            Log::error('WildDuck DKIM domain registration failed', ['domain' => $domain, 'response' => $response->body()]);
             throw new PlatformRestrictionException('Could not register domain in mail server: '.($response->json('message') ?? $response->body()));
         } catch (\Throwable $e) {
             Log::error("WildDuck registerDomain exception: {$e->getMessage()}");
             throw new PlatformRestrictionException('Mail server connection error: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Delete a domain's DKIM key from WildDuck.
+     */
+    public function deleteDomain(string $wildduckDomainId): bool
+    {
+        if (! $this->isConfigured()) {
+            return true;
+        }
+
+        try {
+            $response = $this->http()->delete("{$this->apiUrl}/dkim/{$wildduckDomainId}");
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("WildDuck deleteDomain exception: {$e->getMessage()}");
+
+            return false;
         }
     }
 
@@ -188,6 +206,79 @@ class WildDuckProvisioningService
             return $response->successful();
         } catch (\Throwable $e) {
             Log::error("WildDuck createAlias exception: {$e->getMessage()}");
+
+            return false;
+        }
+    }
+
+    /**
+     * Delete an email alias from an existing user mailbox.
+     */
+    public function deleteAlias(string $wildduckUserId, string $aliasAddress): bool
+    {
+        $aliasAddress = strtolower(trim($aliasAddress));
+
+        if (! $this->isConfigured()) {
+            return true;
+        }
+
+        try {
+            $response = $this->http()->delete("{$this->apiUrl}/users/{$wildduckUserId}/addresses/{$aliasAddress}");
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("WildDuck deleteAlias exception: {$e->getMessage()}");
+
+            return false;
+        }
+    }
+
+    /**
+     * Enable or disable Catch-All email routing for a user on a given domain.
+     */
+    public function setCatchAll(string $wildduckUserId, string $domain, bool $enable): bool
+    {
+        $domain = strtolower(trim($domain));
+
+        if (! $this->isConfigured()) {
+            return true;
+        }
+
+        try {
+            if ($enable) {
+                $response = $this->http()->post("{$this->apiUrl}/users/{$wildduckUserId}/addresses", [
+                    'address' => "*@{$domain}",
+                    'allowWildcard' => true,
+                ]);
+            } else {
+                $response = $this->http()->delete("{$this->apiUrl}/users/{$wildduckUserId}/addresses/*@{$domain}");
+            }
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("WildDuck setCatchAll exception: {$e->getMessage()}");
+
+            return false;
+        }
+    }
+
+    /**
+     * Enable or suspend a mailbox account in WildDuck.
+     */
+    public function updateMailboxActive(string $wildduckUserId, bool $active): bool
+    {
+        if (! $this->isConfigured()) {
+            return true;
+        }
+
+        try {
+            $response = $this->http()->put("{$this->apiUrl}/users/{$wildduckUserId}", [
+                'disabled' => ! $active,
+            ]);
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            Log::error("WildDuck updateMailboxActive exception: {$e->getMessage()}");
 
             return false;
         }

@@ -36,6 +36,7 @@ class CartService
     {
         $variant = ProductVariant::where('uuid', $variantUuid)->where('is_active', true)->first();
         abort_unless($variant && $variant->product?->is_active, 404);
+        abort_if($variant->isSoldOut(), 422, 'This plan is currently sold out.');
 
         $tier = $this->tierFor($variant, $billingType);
         abort_unless($tier, 422, 'This plan has no active price.');

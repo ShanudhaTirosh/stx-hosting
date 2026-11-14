@@ -35,6 +35,21 @@ class VpsConnectionFactory
     }
 
     /**
+     * Test whether the given password authenticates successfully on the server.
+     */
+    public function testCredentials(ServiceInstance $service, string $user, string $password): bool
+    {
+        $shell = $this->open($service, $password);
+        try {
+            $shell->exec('echo "auth-test"');
+        } finally {
+            $shell->disconnect();
+        }
+
+        return true;
+    }
+
+    /**
      * Install the panel key. Uses the given password, or the one stored at delivery. The password is not kept.
      */
     public function bootstrap(ServiceInstance $service, ?string $password = null): void

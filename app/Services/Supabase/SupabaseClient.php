@@ -129,6 +129,42 @@ class SupabaseClient
     }
 
     /**
+     * Generate a time-limited signed URL for a private file in Supabase Storage.
+     */
+    public function createSignedUrl(string $bucket, string $path, int $expiresInSeconds = 900): ?string
+    {
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        $endpoint = "{$this->url}/storage/v1/object/sign/{$bucket}/{$path}";
+        $key = $this->serviceRoleKey ?: $this->anonKey;
+
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $key,
+                'Authorization' => "Bearer {$key}",
+                'Content-Type' => 'application/json',
+            ])->timeout(10)->post($endpoint, [
+                'expiresIn' => $expiresInSeconds,
+            ]);
+
+            if ($response->successful()) {
+                $signedPath = $response->json('signedURL');
+                if ($signedPath) {
+                    return str_starts_with($signedPath, 'http') ? $signedPath : "{$this->url}/storage/v1{$signedPath}";
+                }
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            Log::error("Supabase signed URL exception for {$bucket}/{$path}: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
+    /**
      * Broadcast an ephemeral realtime event via Supabase Realtime HTTP endpoint.
      */
     public function broadcastRealtime(string $channel, string $event, array $payload): bool

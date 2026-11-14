@@ -5,10 +5,13 @@ namespace App\Actions\Commerce;
 use App\Enums\EntitlementStatus;
 use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\Invoice;
+use App\Models\Commerce\MailMailbox;
+use App\Models\Commerce\MailSubscription;
 use App\Models\Commerce\ServiceInstance;
 use App\Models\HostingEntitlement;
 use App\Models\User;
 use App\Notifications\Commerce\ServiceReactivatedNotification;
+use App\Services\Commerce\WildDuckProvisioningService;
 use App\Services\Notifications\StaffEvents;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -105,6 +108,80 @@ class ReactivateServiceAction
                 'success',
                 'reactivate:'.$entitlement->id
             );
+        }
+
+        // Check if invoice targets or includes a MailSubscription
+        $matchedMailSubId = null;
+        if (preg_match('/renewal:mail_subscription:(\d+)/', $customerNotes, $mailMatches)) {
+            $matchedMailSubId = (int) $mailMatches[1];
+        }
+
+        $mailSubQuery = MailSubscription::where('team_id', $team->id);
+        if ($matchedMailSubId) {
+            $mailSubQuery->where('id', $matchedMailSubId);
+        } else {
+            $mailSubQuery->where('status', 'suspended');
+        }
+
+        $suspendedMailSubs = $mailSubQuery->get();
+        if ($suspendedMailSubs->isNotEmpty()) {
+            $wildduck = app(WildDuckProvisioningService::class);
+            $orderItem = $invoice->order?->items()->first();
+            $days = 30;
+            if ($orderItem && $orderItem->pricingTier) {
+                $days = match ($orderItem->pricingTier->billing_type) {
+                    'quarterly' => 90,
+                    'semi_annual' => 180,
+                    'annual' => 365,
+                    default => 30,
+                };
+            }
+
+            foreach ($suspendedMailSubs as $mailSub) {
+                $newRenewsAt = ($mailSub->renews_at && $mailSub->renews_at->isFuture())
+                    ? $mailSub->renews_at->addDays($days)
+                    : now()->addDays($days);
+
+                $mailSub->update([
+                    'status' => 'active',
+                    'renews_at' => $newRenewsAt,
+                ]);
+
+                // Re-enable suspended mailboxes
+                $boxes = MailMailbox::where('team_id', $team->id)->get();
+                foreach ($boxes as $box) {
+                    try {
+                        $wildduck->updateMailboxActive($box->wildduck_user_id, true);
+                        $box->update(['is_active' => true]);
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to re-activate mailbox {$box->address}: {$e->getMessage()}");
+                    }
+                }
+
+                CommerceAuditLog::create([
+                    'team_id' => $team->id,
+                    'user_id' => $reviewer->id,
+                    'action' => 'mail_subscription.reactivated',
+                    'target_type' => MailSubscription::class,
+                    'target_id' => $mailSub->id,
+                    'payload' => [
+                        'invoice_uuid' => $invoice->uuid,
+                        'new_renews_at' => $newRenewsAt->toIso8601String(),
+                    ],
+                    'ip_address' => request()->ip() ?? '127.0.0.1',
+                    'user_agent' => request()->userAgent() ?? 'action/ReactivateServiceAction',
+                    'created_at' => now(),
+                ]);
+
+                $customer = $invoice->user ?? $team->members()->first();
+                if ($customer) {
+                    try {
+                        $customer->notify(new ServiceReactivatedNotification('Business Email Hosting'));
+                    } catch (\Throwable $e) {
+                        Log::warning("Could not send ServiceReactivatedNotification: {$e->getMessage()}");
+                    }
+                }
+            }
         }
     }
 }

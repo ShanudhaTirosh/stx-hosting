@@ -136,4 +136,166 @@ class TemplateAccessService
 
         return $perms->filter(fn (TemplatePermission $p) => self::canDeployTemplate($team, $p->template_name))->values();
     }
+
+    /**
+     * Get exposable services for a given template.
+     *
+     * @return array<int, array{
+     *     service_name: string,
+     *     friendly_name: string,
+     *     description: string,
+     *     internal_port: int,
+     *     is_default: bool,
+     *     subdomain_prefix: string,
+     *     access_type: string,
+     *     suggested: bool,
+     *     env_bindings: array<int, string>
+     * }>
+     */
+    public static function getExposableServices(string $templateName): array
+    {
+        $perm = TemplatePermission::where('template_name', $templateName)
+            ->whereNull('team_id')
+            ->first();
+
+        if ($perm) {
+            $services = $perm->getExposableServices();
+            if (! empty($services)) {
+                return $services;
+            }
+        }
+
+        // Built-in curated profiles for top multi-container & web templates
+        $curated = [
+            'supabase' => [
+                [
+                    'service_name' => 'supabase-kong',
+                    'friendly_name' => 'Main API Gateway',
+                    'description' => 'Unified endpoint for REST, GraphQL, Auth, Storage, and Realtime',
+                    'internal_port' => 8000,
+                    'is_default' => true,
+                    'subdomain_prefix' => '',
+                    'access_type' => 'public',
+                    'suggested' => true,
+                    'env_bindings' => [
+                        'SUPABASE_PUBLIC_URL',
+                        'NEXT_PUBLIC_SUPABASE_URL',
+                        'API_EXTERNAL_URL',
+                        'GOTRUE_SITE_URL',
+                    ],
+                ],
+                [
+                    'service_name' => 'supabase-studio',
+                    'friendly_name' => 'Admin Studio Dashboard',
+                    'description' => 'Web console for managing tables, SQL editor, and authentication',
+                    'internal_port' => 3000,
+                    'is_default' => false,
+                    'subdomain_prefix' => 'studio',
+                    'access_type' => 'admin_only',
+                    'suggested' => true,
+                    'env_bindings' => [
+                        'STUDIO_DEFAULT_ORGANIZATION',
+                        'STUDIO_DEFAULT_PROJECT',
+                    ],
+                ],
+            ],
+            'n8n' => [
+                [
+                    'service_name' => 'n8n',
+                    'friendly_name' => 'Workflow Canvas & Webhooks',
+                    'description' => 'Main automation engine, webhooks, and visual workflow builder',
+                    'internal_port' => 5678,
+                    'is_default' => true,
+                    'subdomain_prefix' => '',
+                    'access_type' => 'public',
+                    'suggested' => true,
+                    'env_bindings' => [
+                        'N8N_EDITOR_BASE_URL',
+                        'WEBHOOK_URL',
+                        'N8N_HOST',
+                    ],
+                ],
+            ],
+            'wordpress' => [
+                [
+                    'service_name' => 'wordpress',
+                    'friendly_name' => 'WordPress Website & Admin',
+                    'description' => 'Public website and wp-admin administrative backend',
+                    'internal_port' => 80,
+                    'is_default' => true,
+                    'subdomain_prefix' => '',
+                    'access_type' => 'public',
+                    'suggested' => true,
+                    'env_bindings' => [
+                        'WP_HOME',
+                        'WP_SITEURL',
+                    ],
+                ],
+            ],
+            'minio' => [
+                [
+                    'service_name' => 'minio',
+                    'friendly_name' => 'S3 Object Storage API',
+                    'description' => 'High-performance Amazon S3-compatible REST storage API',
+                    'internal_port' => 9000,
+                    'is_default' => true,
+                    'subdomain_prefix' => 's3',
+                    'access_type' => 'public',
+                    'suggested' => true,
+                    'env_bindings' => [
+                        'MINIO_SERVER_URL',
+                    ],
+                ],
+                [
+                    'service_name' => 'minio',
+                    'friendly_name' => 'MinIO Web Console',
+                    'description' => 'Administrative dashboard for buckets, policies, and access keys',
+                    'internal_port' => 9001,
+                    'is_default' => false,
+                    'subdomain_prefix' => 'console',
+                    'access_type' => 'admin_only',
+                    'suggested' => true,
+                    'env_bindings' => [
+                        'MINIO_BROWSER_REDIRECT_URL',
+                    ],
+                ],
+            ],
+            'appwrite' => [
+                [
+                    'service_name' => 'appwrite',
+                    'friendly_name' => 'Appwrite Gateway & Console',
+                    'description' => 'Unified backend-as-a-service REST/GraphQL API and developer console',
+                    'internal_port' => 80,
+                    'is_default' => true,
+                    'subdomain_prefix' => '',
+                    'access_type' => 'public',
+                    'suggested' => true,
+                    'env_bindings' => [
+                        '_APP_DNS_EXTERNAL',
+                        '_APP_CONSOLE_HOSTNAMES',
+                    ],
+                ],
+            ],
+        ];
+
+        if (isset($curated[$templateName])) {
+            return $curated[$templateName];
+        }
+
+        $defaultPort = $perm?->default_port ?? (self::getTemplateRequirements($templateName)['default_port'] ?? 80);
+
+        return [
+            [
+                'service_name' => $templateName,
+                'friendly_name' => $perm?->display_name ?? ucfirst(str_replace('-', ' ', $templateName)),
+                'description' => $perm?->short_description ?? 'Primary web application service',
+                'internal_port' => $defaultPort,
+                'is_default' => true,
+                'subdomain_prefix' => '',
+                'access_type' => 'public',
+                'suggested' => true,
+                'env_bindings' => [],
+            ],
+        ];
+    }
 }

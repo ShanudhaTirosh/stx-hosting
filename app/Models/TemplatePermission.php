@@ -56,6 +56,26 @@ class TemplatePermission extends Model
         return $this->belongsTo(Team::class);
     }
 
+    /**
+     * Get the declarative exposable services list for this template.
+     *
+     * @return array<int, array{
+     *     service_name: string,
+     *     friendly_name: string,
+     *     description: string,
+     *     internal_port: int,
+     *     is_default: bool,
+     *     subdomain_prefix: string,
+     *     access_type: string,
+     *     suggested: bool,
+     *     env_bindings: array<int, string>
+     * }>
+     */
+    public function getExposableServices(): array
+    {
+        return data_get($this->metadata, 'exposable_services', []);
+    }
+
     public function hostingPlan(): BelongsTo
     {
         return $this->belongsTo(HostingPlan::class, 'hosting_plan_id');

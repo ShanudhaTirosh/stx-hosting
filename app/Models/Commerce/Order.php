@@ -44,5 +44,23 @@ class Order extends BaseModel
     {
         return $this->hasMany(ServiceInstance::class);
     }
+
+    public function dueAt(): \Illuminate\Support\Carbon
+    {
+        return \App\Services\Commerce\VpsFulfillmentService::dueAt($this);
+    }
+
+    public function hasPendingVps(): bool
+    {
+        $ordered = (int) $this->items()
+            ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
+            ->join('products', 'products.id', '=', 'product_variants.product_id')
+            ->where('products.category', 'vps')
+            ->sum('order_items.quantity');
+
+        $delivered = (int) $this->services()->where('service_type', 'vps')->count();
+
+        return in_array($this->status, ['paid', 'provisioning']) && $ordered > $delivered;
+    }
 }
 

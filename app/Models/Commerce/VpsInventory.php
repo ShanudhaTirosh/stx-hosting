@@ -15,6 +15,8 @@ class VpsInventory extends BaseModel
         'vcpu' => 'integer',
         'ram_mb' => 'integer',
         'disk_gb' => 'integer',
+        'upstream_cost_cents' => 'integer',
+        'provider_renews_at' => 'datetime',
     ];
 
     public function serviceInstances(): HasMany

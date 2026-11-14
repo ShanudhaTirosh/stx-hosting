@@ -94,6 +94,13 @@ class PhpseclibRemoteShell implements RemoteShell
         }
     }
 
+    public function rename(string $oldPath, string $newPath): void
+    {
+        if (! $this->sftp()->rename($oldPath, $newPath)) {
+            throw new \RuntimeException('That could not be renamed.');
+        }
+    }
+
     public function delete(string $path): void
     {
         if (! $this->sftp()->delete($path, true)) {
