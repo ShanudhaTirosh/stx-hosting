@@ -44,7 +44,7 @@ scripts/load-test/*
 docker/stx-terminal/node_modules
 docker/coolify-terminal/node_modules
 .DS_Store
-CHANGELOG.md
+# CHANGELOG.md
 /.workspaces
 /.superpowers/
 /docs/superpowers/plans/

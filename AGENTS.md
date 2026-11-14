@@ -1,521 +1,162 @@
-# AGENTS.md
+# AGENTS.md: Developer & AI Agent Operating Manual
 
-This file provides guidance to agentic coding tools when working with code in this repository.
+This document provides definitive guidance for software engineers and AI coding agents working in the **STX Enterprises Cloud Platform** repository.
 
-## Project Overview
+---
 
-STX Hosting is an open-source, self-hostable PaaS (alternative to Heroku/Netlify/Vercel). It manages servers, applications, databases, and services via SSH. Built with Laravel 12 (using Laravel 10 file structure), Livewire 3, and Tailwind CSS v4.
+## 1. Project Overview & Architecture
 
-## Design Reference
+STX Enterprises Cloud Platform is an enterprise cloud PaaS, managed database, email hosting, self-hosted BaaS, and billing control plane built on:
+- **Framework**: Laravel 12 (running within the explicit **Laravel 10 directory structure**; not Laravel 11+ slim structure).
+- **Backend Language**: PHP 8.2+ / 8.4 with strict typing.
+- **Frontend**: Livewire 3, Alpine.js, Tailwind CSS v4, Monaco Editor, XTerm.js.
+- **Data & State**: PostgreSQL 15/16, Redis 7 (Horizon queue broker and cache).
+- **WebSockets**: Laravel Reverb (port 6001), Node.js Terminal WebSocket daemon (port 6002).
+- **Sub-Projects**:
+  - `webmail-ui/`: Lightweight PHP 8.3 / Nginx WildDuck email client.
+  - `payverify/`: Multi-vector AI bank deposit verification suite (FastAPI, Next.js 16, Baileys WhatsApp bot, Android relay).
+  - `docker/`: Unified compose stacks (Supabase BaaS, WildDuck Mail, Caddy TLS).
 
-For UI/UX design specifications, principles, and visual standards, consult the local [`DESIGN.md`](DESIGN.md). It is the source of truth for frontend design work in this repository.
+For detailed subsystem architecture and diagrams, consult:
+- [Platform Architecture Reference](docs/architecture.md)
+- [Database Schema & RLS Policies](docs/database-schema-and-rls.md)
+- [Payments & PayVerify AI Verification](docs/payments-flow.md)
+- [Mail System & STX Webmail](docs/mail-system.md)
 
-## Development Environment
+---
 
-Docker Compose-based dev setup with services: stx (app, which also runs Reverb WebSockets and the terminal server), postgres, redis, vite, testing-host, mailpit, minio.
+## 2. Directory Layout & Module Ownership
 
-```bash
-# One dev instance per git branch (containers, volumes, VMs named after the branch)
-./scripts/dev start [qemu-profile]           # localhost VM: KVM (Linux, /dev/kvm + root/sudo) or Lima (macOS, limactl), else testing-host
-./scripts/dev stop                           # stop containers and VMs; data is kept for the next start
-./scripts/dev run                            # start + follow logs, stop on exit (Jean run script)
-./scripts/dev urls                           # all instances, URLs, ports, and checkouts
-./scripts/dev exec php artisan migrate       # run a command in this branch's STX Hosting container
-./scripts/dev destroy <name>                 # delete containers, volumes, VMs, and the port slot
-./scripts/dev teardown                       # destroy this worktree's instance (Jean teardown before worktree deletion)
-# Compose: docker-compose.dev-multi.yml  Env + slots: <main checkout>/.dev-instances/ (gitignored)
-
-# Legacy fixed-name stack (not used by scripts/dev)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```text
+├── app/
+│   ├── Actions/             # Domain actions (AsAction trait: object, job, or controller)
+│   ├── Enums/               # PHP Enums (Role, EntitlementStatus, ProductType, LimitType)
+│   ├── Http/Controllers/    # Storefront and REST API controllers (/api/v1/)
+│   ├── Jobs/                # Background queue jobs (Horizon Redis queues)
+│   ├── Livewire/            # UI components (Portal/, Admin/, Storefront/, Status/)
+│   ├── Models/              # Eloquent models extending BaseModel (Auto-CUID2 UUIDs)
+│   ├── Rules/               # Custom validation rules (ValidGitRepositoryUrl, etc.)
+│   └── Services/            # Business logic (Commerce/, Supabase/, Backups/, RbacService)
+├── bootstrap/helpers/       # Global helper functions (shared.php, services.php, socialite.php)
+├── config/                  # Configuration files (commerce.php, supabase.php, hosting.php)
+├── database/migrations/     # PostgreSQL schema migrations
+├── docker/                  # Self-hosted services (caddy/, mail/, supabase/, webmail/)
+├── docs/                    # Technical documentation and operational runbooks
+├── payverify/               # PayVerify AI payment verification suite
+├── routes/                  # Route definitions (web.php, api.php, ai.php, channels.php)
+├── templates/compose/       # 31 active curated production templates
+├── tests/                   # Pest 4 and PHPUnit 11 test suites
+└── webmail-ui/              # Lightweight PHP 8.3 / Nginx WildDuck webmail client
 ```
 
-The main checkout serves its branch at `localhost:8000` (Reverb `6001`, terminal `6002`, db `5432`, redis `6379`, vite `5173`). Worktrees get a port block at `20000 + slot*10` (app `+0`, Reverb `+1`, terminal `+2`, db `+3`, redis `+4`, vite `+5`). Each instance has its own libvirt network `stx-dev-<slot>` (`10.221.<slot>.0/24`) and VMs `stx-dev-<branch>--<profile>`; VMs are reused, use `php artisan dev:qemu <profile> --fresh` to rebuild one. On macOS with Lima >= 2.0 (`brew install lima`), the localhost VM is the Lima instance `stx-dev-<slot>-<profile>` (same profiles, users, and SSH key); STX Hosting reaches it through Lima's forwarded SSH port on `host.docker.internal`, and only guest ports 80/443 are forwarded to the Mac. Rebuild it with `limactl delete -f <vm>`. Force it with `STX_DEV_SERVER_BACKEND=lima`. To pass the host NVIDIA GPU through to the KVM localhost VM (`ubuntu-root` only), start with `STX_DEV_GPU=1 ./scripts/dev start` (or `php artisan dev:qemu ubuntu-root --as-localhost --gpu`). This attaches every PCI function of the GPU, gives the VM 4 GiB, stops `nvidia-persistenced` on the host, and installs the NVIDIA driver and container toolkit in the VM. The host cannot use the GPU while the VM runs. Remove it with `--fresh` without `--gpu`. If `APP_URL` in `.env` is a `*.ts.net` host, the browser ports are published with `tailscale serve`. Set `STX_DEV_INSTANCE=<name>` to run another instance from the same checkout.
-
-## Testing the Self-Hosted Upgrade Process
-
-Use the following workflow to test a self-hosted upgrade:
-
-1. Install the source version with the upgrade script:
-
-   ```bash
-   bash scripts/upgrade.sh sha-6492d081362c009519481ac70e50873e39ba1861
-   ```
-
-2. Set the current STX Hosting version and rebuild the cached configuration:
-
-   ```bash
-   docker exec -e STX_VERSION=4.3.0 stx php artisan config:cache
-   ```
-
-3. In the STX Hosting UI, click **Check for Updates**.
-4. Confirm that an upgrade is available, then click **Upgrade** and verify that the upgrade completes successfully.
-
-## Common Commands
-
-```bash
-# Tests (Pest 4)
-php artisan test --compact                          # all tests
-php artisan test --compact --filter=testName         # single test
-php artisan test --compact tests/Feature/SomeTest.php  # specific file
-
-# Code formatting (Pint, Laravel preset)
-vendor/bin/pint --dirty --format agent              # format changed files
-
-# Frontend
-npm run dev                     # vite dev server
-npm run build                   # production build
-```
-
-## Testing the Service Parser
-
-`tests/Feature/ServiceParserReferenceTest.php` is a golden test for both compose parsers (`serviceParser` with `updateCompose`, and `applicationParser`) and the proxy label and magic-variable helpers. It parses `tests/Fixtures/parser/service-reference.yaml` and `application-reference.yaml` (one service per parser feature, with setting variations and error fixtures) and every template in `templates/compose`, then compares the output with `tests/Fixtures/parser/expected/`. Only the reference expected files are committed. Template expected files are gitignored, so CI checks only that each template parses.
-
-```bash
-./scripts/parser-snapshot-diff save       # before a parser change: save the output of all cases (~90 s)
-./scripts/parser-snapshot-diff baseline   # after the change: one line per changed case, full diff in storage/framework/testing/parser-snapshot-diff.diff
-php artisan test --compact tests/Feature/ServiceParserReferenceTest.php    # before you commit
-UPDATE_PARSER_SNAPSHOTS=1 php artisan test --compact tests/Feature/ServiceParserReferenceTest.php   # accept an intended change, then review git diff tests/Fixtures/parser/
-```
-
-- A refactor must give "No differences". For an intended change, check every changed line in the diff file.
-- When you add a parser feature, add a small service that uses it to `service-reference.yaml` or `application-reference.yaml` and regenerate the expected files.
-- `./scripts/parser-snapshot-diff <git-ref>` compares with a commit instead of a saved baseline.
-- It covers only the latest compose parsing version. Older parsing versions are not covered.
-
-## Browser Tests (Pest Browser Plugin)
-
-Uses `pestphp/pest-plugin-browser` (Playwright). Browser tests go in `tests/v4/Browser/`.
-
-```bash
-# Run all browser tests
-php artisan test --compact tests/v4/Browser/
-
-# Run a specific browser test file
-php artisan test --compact tests/v4/Browser/LoginTest.php
-
-# Run a specific test by name
-php artisan test --compact --filter='can login with valid credentials'
-```
-
-### Writing Browser Tests
-
-- Place new tests in `tests/v4/Browser/`.
-- Use `RefreshDatabase` and seed required data (at minimum `InstanceSettings::create(['id' => 0])`) in `beforeEach`.
-- Key API: `visit()`, `fill(field, value)`, `click(text)`, `assertSee()`, `assertDontSee()`, `assertPathIs()`, `screenshot()`.
-- Always call `screenshot()` at the end of each test for debugging.
-- For authenticated tests, create a helper function that logs in via the UI:
-
-```php
-function loginAsRoot(): mixed
-{
-    return visit('/login')
-        ->fill('email', 'test@example.com')
-        ->fill('password', 'password')
-        ->click('Login');
-}
-```
-
-- See `tests/v4/Browser/LoginTest.php`, `tests/v4/Browser/DashboardTest.php`, and `tests/v4/Browser/RegistrationTest.php` for conventions.
-
-### How Browser Tests Actually Run (no Docker, no display needed)
-
-`visit()` does NOT hit the dev app on `localhost:8000`. Instead the Pest Browser Plugin:
-
-1. Starts a local Playwright server (`node node_modules/.bin/playwright run-server`) and launches a **headless Chromium** from `~/.cache/ms-playwright` (install once with `npm install && npx playwright install chromium`).
-2. Boots an **in-process amphp HTTP server** on a random port that serves the Laravel app from the test process itself.
-
-Because the "server" and the test share one PHP process, they share the phpunit env (sqlite `:memory:`, array cache) — so `config()->set(...)`, model writes, and `Cache` calls in the test are visible to browser-issued requests, and `RefreshDatabase` never touches the dev Postgres.
-
-`->screenshot(filename: '...')` writes real PNGs to `tests/Browser/Screenshots/` — read them to visually verify UI state (toasts, modals, stray elements).
-
-### Browser Test Gotchas
-
-- **`Class "Redis" not found` thrown by the HTTP server**: host PHP has no phpredis, and the maintenance-mode store is hard-wired to redis (`config/app.php` → `'maintenance' => ['store' => 'redis']`). Add `config()->set('app.maintenance.store', 'array');` in `beforeEach`.
-- **Every path redirects to onboarding** for a fresh user (`DecideWhatToDoWithUser` + `showBoarding()`). Finish boarding before navigating: `Team::query()->update(['show_boarding' => false]); Cache::flush();` — the `Cache::flush()` is required because `User::currentTeam()` caches the Team for an hour and the in-process server shares that cache.
-- **`->navigate('/path')` races form-submit redirects.** After `->click('Login')`, assert something on the destination page (e.g. `->assertSee('Welcome to STX Hosting')`) before calling `navigate()`.
-- **Failure messages print the *initial* `visit()` URL**, not the current URL. Read the auto-saved screenshot in `tests/Browser/Screenshots/` to see where the browser actually ended up.
-- **Runs hang forever**: stale Playwright servers from a previously killed run. Fix: `pkill -f "playwright run-server"` and rerun. Healthy runs take seconds.
-- **Guest pages miss `DOMPurify`** (`public/js/purify.min.js` loads only `@auth` in `layouts/base.blade.php`), so toast descriptions fail on unauthenticated pages — log in first for toast-related assertions.
-- Layouts that call `@livewireScripts` manually must also call `@livewireStyles`, otherwise Livewire's asset auto-injection is disabled and `[wire\:loading]`/`[x-cloak]` elements render visible.
-- Run browser test files in their own `php artisan test` invocation — combining them with non-browser test paths in one command can hang the runner.
-
-## Architecture
-
-### Backend Structure (app/)
-- **Actions/** — Domain actions organized by area (Application, Database, Docker, Proxy, Server, Service, Shared, Stripe, User, STX HostingTask, Fortify). Uses `lorisleiva/laravel-actions` with `AsAction` trait — actions can be called as objects, dispatched as jobs, or used as controllers.
-- **Livewire/** — All UI components (Livewire 3). Pages organized by domain: Server, Project, Settings, Security, Notifications, Terminal, Subscription, SharedVariables. Plus commercial modules:
-  - `Admin/Billing/ProofReviewQueue.php` — Staff bank transfer & cash deposit slip verification queue.
-  - `Admin/Commerce/TemplateCatalogStudio.php` — Application template curation, toggles, resource bounds.
-  - `Admin/Commerce/MailPlanStudio.php` — Email hosting plan management and quota configurations.
-  - `Admin/Status/StatusStudio.php` — System status node prober and incidents manager.
-  - `Portal/DeployWizard.php` — Customer 1-click deployment wizard (Git, Docker, 31 Curated Templates).
-  - `Portal/Mail/MailDashboard.php` — Customer email hosting management (mailboxes, aliases, Webmail UI deep-link).
-  - `Portal/Backups.php` — Multi-target database restores and customer volume backup schedules.
-  - `Portal/Domains.php` — Custom domains, DNS verification, and automated SSL/HTTPS.
-  - `Status/PublicStatus.php` — Public 90-day status telemetry with privacy-preserving node masking.
-- **Jobs/** — Queue jobs for deployments (`ApplicationDeploymentJob`), backups (`RestoreDatabaseBackupJob`), Docker cleanup, server management, proxy configuration. Commercial automation jobs: `GenerateRenewalInvoicesJob`, `ProcessOverdueSuspensionsJob`, `PollCustomDomainDnsJob`. Uses Redis queue with Horizon for monitoring.
-- **Models/** — Eloquent models extending `BaseModel` which provides auto-CUID2 UUID generation. Key models: `Server`, `Application`, `Service`, `Project`, `Environment`, `Team`, plus standalone database models (`StandalonePostgresql`, `StandaloneMysql`, etc.). Commercial models:
-  - `HostingProduct`, `HostingPlan`, `HostingOrder`, `HostingInvoice`, `HostingEntitlement`, `HostingLimit`.
-  - `Commerce/`: `Order`, `Invoice`, `PaymentProof`, `ServiceInstance`, `ServiceCredential`, `StatusSubscription`, `MailPlan`, `MailSubscription`, `MailDomain`, `MailMailbox`, `MailAlias`, `MailAddon`.
-  - `CustomDomain`, `TemplatePermission`, `BackupRestore`.
-- **Services/** — Business logic services:
-  - `Commerce/`: `OrderService`, `PaymentReviewService`, `ProofStorageService` (pure-pixel sanitization), `RefundService`, `CustomDomainService`, `AppProvisioningService`, `VpsFulfillmentService`, `WildDuckProvisioningService`.
-  - `Supabase/`: `SupabaseClient`, `SupabaseQueryBuilder`, `SupabaseAuthService` (GoTrue bridge).
-  - `Backups/`: `BackupPolicyService`.
-  - `Status/`: `StatusAlertService`.
-  - `Notifications/`: `EmailTemplates`, `StaffEvents`.
-  - `TemplateAccessService`, `LimitEnforcementService`, `RbacService`.
-- **Helpers/** — Global helpers loaded via `bootstrap/includeHelpers.php` from `bootstrap/helpers/` — organized into `shared.php`, `constants.php`, `versions.php`, `subscriptions.php`, `domains.php`, `docker.php`, `services.php` (contains `getServiceLogo()` with `not-used/` fallback), `github.php`, `proxy.php`, `notifications.php`.
-- **Data/** — Spatie Laravel Data DTOs (e.g., `ServerMetadata`).
-- **Enums/** — PHP enums (TitleCase keys). Key enums: `ProcessStatus`, `Role` (MEMBER/ADMIN/OWNER with rank comparison), `BuildPackTypes`, `ProxyTypes`, `ContainerStatusTypes`, `EntitlementStatus`, `ProductType`, `LimitType`.
-- **Rules/** — Custom validation rules (`ValidGitRepositoryUrl`, `ValidServerIp`, `ValidHostname`, `DockerImageFormat`, etc.).
-
-### API Layer
-- REST API at `/api/v1/` with OpenAPI 3.0 attributes (`use OpenApi\Attributes as OA`) for auto-generated docs
-- Authentication via Laravel Sanctum with custom `ApiAbility` middleware for token abilities (read, write, deploy)
-- `ApiSensitiveData` middleware masks sensitive fields (IDs, credentials) in responses
-- API controllers in `app/Http/Controllers/Api/` use inline `Validator` (not Form Request classes)
-- Response serialization via `serializeApiResponse()` helper
-
-### Authorization
-- Policy-based authorization with ~15 model-to-policy mappings in `AuthServiceProvider`
-- Custom gates: `createAnyResource`, `canAccessTerminal`
-- Role hierarchy: `Role::MEMBER` (1) < `Role::ADMIN` (2) < `Role::OWNER` (3) with `lt()`/`gt()` comparison methods
-- Multi-tenancy via Teams — team auto-initializes notification settings on creation
-- Authorize every server-side read and mutation where access can vary by user, role, team, or resource. Use policies, gates, or `$this->authorize(...)`; never rely on hidden Blade/Livewire controls such as `@can` for security.
-- Scope queries to the current team before returning records. Treat route and model identifiers as untrusted, and prevent users from reading or changing resources owned by another team.
-- Use the session team (`currentTeam()`, `Model::ownedByCurrentTeam()`) only to find or open records, for "my team" lists, to create new top-level records, and on team pages. A user can switch teams in another tab while a page stays open, and every user owns a personal team.
-- Once a component, action, or controller works on a loaded resource, use that resource's team for everything after it:
-  - Roles and redaction: use the policy (`$this->authorize('update', $resource)`) or `auth()->user()->isAdminOfTeam($resource->team()->id)`. Never use `isMember()`, `isAdmin()`, or `role()` for resource permissions; they read the role in the session team.
-  - Related records the user can pick (S3 storages, keys, servers, sources, tags, tokens): query with `->where('team_id', $resource->team()->id)` and validate submitted IDs against that team.
-  - New rows that belong to the resource: set `team_id` from the resource's team, not `currentTeam()->id`.
-- Test this with a user who is a member of the resource's team and the owner of another team, with the session switched to the other team after mount.
-- Apply authorization consistently across Livewire actions, API and web controllers, actions, downloads, exports, search, event listeners, and any other path that exposes or changes protected data.
-- Default to denying access when a policy or ownership relationship is missing or ambiguous. Members must not gain access to administrative, credential, security, billing, or instance-wide data merely because they belong to the team.
-- Add authorization regression tests for protected changes. Cover permitted access, member restrictions where applicable, and cross-team access; verify unauthorized reads and writes return `403` or otherwise reveal no protected data.
-- Do not add a `TRUSTED_PROXIES` setting or change `TrustProxies` to use one. This caused problems in supported STX Hosting deployments. Fix IP-based rate limits and allow-lists at their call sites instead of changing proxy trust as a shortcut.
-
-### Security threat model (read before you report or rate a vulnerability)
-
-Before you rate a vulnerability or write an advisory, find the security boundary that the attack crosses. The boundary decides the severity. A finding that crosses no boundary is still a valid finding, but its severity is low. The full scope is in [`SECURITY.md`](SECURITY.md).
-
-- Trusted by design (attacks that need these roles are low severity):
-  - A team admin or owner, and an API token with `write` or `root` ability, already has root on every server of that team (terminal, any Compose file with host mounts, scheduled commands, all team secrets).
-  - An instance admin (admin or owner of the root team) already controls the STX Hosting instance and its host.
-  - Repository, Dockerfile, and Compose content that a team admin deploys is trusted for that deployment.
-- Real boundaries:
-  - No login -> any access.
-  - Team member (read-only) -> write, command execution, or secrets in the own team.
-  - One team -> another team.
-  - Team user -> the STX Hosting container or the STX Hosting host, when the user is not an instance admin.
-  - Token -> more than its abilities allow.
-- Rate with the real role that the attack needs, not the role that the reporter claims. Read the policy or gate that protects the path. Admin needed means `PR:H`. Use `S:C` only when the impact reaches another team, the STX Hosting instance, or a server that the attacker does not manage.
-- If a path is reachable by a member only because of a different missing authorization check, report that check as the main issue, with high severity. Rate each injection behind it by the role it needs when the check works.
-- Always fix low-severity findings (escape shell arguments, validate input, confine paths) when you find them. Do not dismiss them because the attacker is an admin.
-- Do not put exploit details, payloads, or unreleased advisory IDs in commits, PR descriptions, code comments, or this file.
-
-### Event Broadcasting
-- Laravel Reverb WebSocket server for real-time updates (port 6001) and a Node terminal WebSocket server (port 6002), both run inside the `stx` container as s6 services
-- Server-side broadcasts use `PUSHER_BACKEND_HOST`/`PUSHER_BACKEND_PORT` (defaults `127.0.0.1:6001`); `PUSHER_HOST`/`PUSHER_PORT` are browser-facing only
-- Status change events: `ApplicationStatusChanged`, `ServiceStatusChanged`, `DatabaseStatusChanged`, `ProxyStatusChanged`
-- Livewire components subscribe to private team channels via `getListeners()`
-
-### Key Domain Concepts
-- **Server** — A managed host connected via SSH. Has settings, proxy config, and destinations.
-- **Application** — A deployed app (from Git or Docker image) with environment variables, previews, deployment queue.
-- **Service** — A pre-configured service stack from templates (`templates/service-templates-latest.json`).
-- **Standalone Databases** — Individual database instances (Postgres, MySQL, MariaDB, MongoDB, Redis, Clickhouse, KeyDB, Dragonfly, SQLite).
-- **Project/Environment** — Organizational hierarchy: Team → Project → Environment → Resources.
-- **Proxy** — Traefik reverse proxy managed per server; Caddy reverse proxy for automated mail/webmail TLS.
-- **Commercial Products & Entitlements** — `HostingProduct` (VPS, App, Database, Email, Game Server), `HostingPlan`, `HostingOrder`, `HostingInvoice`, `HostingEntitlement`. Controls client access and quotas.
-- **Self-Hosted Supabase** — Containerized backend-as-a-service (`docker/supabase/`) managed via `SupabaseClient` and `SupabaseAuthService`.
-- **WildDuck Mail & Webmail** — Complete mail hosting (`docker/mail/`) with pooled plans (`MailPlan`), mailboxes (`MailMailbox`), domains (`MailDomain`), and `webmail-ui` client.
-- **Curated Templates** — 31 active production templates in `templates/compose/` (Supabase, n8n, WordPress, etc.), with unhosted templates archived in `templates/not-used/`. Resource limits and ports curated in `TemplateCatalogStudio`.
-- **Upstream Sync & Adaptation** — Regulated sync with Coolify upstream (v4.6.0 to v4.7.5) verified by `UpstreamSyncAndAdaptationTest.php`. STX Hosting extensions must remain isolated from upstream breaking changes.
-
-### Server transfer (keep it complete)
-
-A server transfer moves a server and every record that belongs to it to another STX Hosting instance: `ServerTransferExporter` writes the bundle, `ServerTransferImporter` reads it (`app/Services/ServerTransfer/`). `ServerTransferCoverage` records the transfer decision for every model and every column.
-
-- When you add a model, a column, or a relation that belongs to a server or to a resource on a server (application, preview, database, service, volume, environment variable, backup, scheduled task, tag, or setting), decide whether a transfer moves it:
-  - **Moved:** export and import it, and add a round-trip assertion to `tests/Unit/ServerTransfer/ServerTransferExporterImporterTest.php`. For a new model, also add it to `ServerTransferCoverage::TRANSFERRED`.
-  - **Not moved:** add the model to `ServerTransferCoverage::NOT_TRANSFERRED`, or the column to `NOT_EXPORTED_COLUMNS`, with the reason. If the data is lost for the user, also add an export warning.
-- `tests/Unit/ServerTransfer/ServerTransferCoverageTest.php` exports a server with one record of every transferred model. It fails when a model or a column has no decision. When you add a transferred model, add a record of it to the fixture of that test.
-- `docs/server-transfer-full-coverage.md` lists what to set up on a source server for a manual transfer test that covers every transferred model and setting. Add new transferred models and settings to it.
-- `scripts/transfer-test/` has live end-to-end transfer tests between two dev instances (see its README). Run them after a change to the transfer flow. When you add transferred data that the unit tests cannot prove (remote commands, provider calls, queue behavior), add a check to `extras-e2e.sh`.
-- Application, Service, and the standalone databases export their `$fillable` columns, plus hand-written lists for hidden columns. A column that is not fillable is lost unless you add it to those lists.
-- Do not copy a foreign key as a raw ID. IDs are different on the target. Link the record by UUID, or leave the column out with a reason.
-- Team credentials that a moved record needs (integration tokens, S3 storages, git sources, private keys, cloud provider tokens) move with it.
-- When the user must do a step after the transfer (for example, change a webhook URL at GitHub), add an item type to `TransferFinishChecklist`: the "Finish the transfer" list on the server page of the instance that manages the server now. Give it a check where STX Hosting can verify the step, and a fix where it can do the step. Also add it to the `post_transfer_checklist` of the bundle (`{target_url}` stands for the URL of the target), which the source shows as text.
-- On the source, a transferred server (`Server::isTransferredAway()`) is only an archive, because another instance manages the host. Do not run remote commands, cloud provider calls, or DNS provider calls for it, also not when the archive is deleted.
-
-### Instance sentinels (`id = 0`)
-
-STX Hosting seeds **instance-owned** rows at primary key `0`. That value is a sentinel meaning “this is the STX Hosting instance itself”, not a normal autoincrement id. Do not migrate, resequence, or “fix” these to a positive id.
-
-| Record | Model / lookup | Meaning |
-|---|---|---|
-| Root team | `Team::find(0)`, `team_id === 0` | Instance / root team. Cloud billing and many skip-checks exempt `team_id === 0`. |
-| Localhost server | `Server::find(0)` / `findOrFail(0)` | The machine running STX Hosting. Upgrades, instance backups, and docker inspect target this server. |
-| Instance settings | `InstanceSettings` with `id = 0` | Singleton settings row. Tests must seed `InstanceSettings::create(['id' => 0])` (or `forceCreate`). |
-| Instance Postgres | `StandalonePostgresql` `id = 0`, name `stx-db` | STX Hosting’s own database. UI treats `database_id === 0` as the instance DB (e.g. hide delete on backup screens). |
-| Local docker dest | `StandaloneDocker` `id = 0` | Destination on the localhost server (`destination_id = 0`). |
-| Root user / default GitHub App | seeders | First-install defaults. |
-
-**Do not assign `id = 0` to new or non-instance rows.** In particular, `ScheduledDatabaseBackup` and `ScheduledTask` are ordinary schedules. Legacy installs may still have a `stx-db` backup at `id = 0`; resolve that backup via the `stx-db` relation / uuid, not `ScheduledDatabaseBackup::find(0)`.
-
-`0` is a PHP/Eloquent landmine (`empty(0)` is true; keyset pagination `where('id', '>', $cursor)` starting at `0` skips the row). Queries that page by id must include `id = 0` on the first page (no lower bound, or cursor `< 0`). Prefer `chunkById()` over a hand-rolled `id > 0` cursor.
-
-### Frontend
-- Livewire 3 components with Alpine.js for client-side interactivity
-- Blade templates in `resources/views/livewire/`
-- Tailwind CSS v4 with `@tailwindcss/forms` and `@tailwindcss/typography`
-- Vite for asset bundling
-
-### Laravel 10 Structure (NOT Laravel 11+ slim structure)
-- Middleware in `app/Http/Middleware/` — custom middleware includes `CheckForcePasswordReset`, `DecideWhatToDoWithUser`, `ApiAbility`, `ApiSensitiveData`
-- Kernels: `app/Http/Kernel.php`, `app/Console/Kernel.php`
-- Exception handler: `app/Exceptions/Handler.php`
-- Service providers in `app/Providers/`
-
-## Livewire conventions
-
-### Dynamic lists and snapshot errors
-
-When an add, delete, or conversion leaves controls unresponsive and the browser reports `Snapshot missing on Livewire component`, inspect both component keys and refresh events. Stable keys alone may not fix it.
-
-- Give every Livewire component rendered in a loop a stable key based on the record ID, UUID, filename, or another immutable identity. Never include a collection count, `$loop->index`, or a reindexed array position in the key.
-- Pass the same stable identity to edit/delete actions. A keyed row can survive reordering while a `wire:ignore` or teleported Alpine modal keeps its original `submitAction`; an action such as `removeItem($index)` then targets a stale position after the first deletion. Resolve the current row server-side from an ID, UUID, or stable row hash instead.
-- Do not broadcast one refresh event to both a parent list component and children that the parent may insert, remove, or hide during the same operation. This can queue a child update after its snapshot has been removed from the DOM.
-- Split refresh responsibilities into targeted events. Refresh the parent for counts and tab visibility, and refresh an existing child list with a separate event. Use `$this->dispatch('event')->to(Component::class)` instead of a page-wide event when possible.
-- Before targeting a child list, confirm that it existed before the mutation, still exists afterward, and is on the active tab. A newly inserted child loads current data during `mount()` and does not need an immediate refresh. A removed or hidden child must not receive one.
-- A child that deletes itself should finish its own update, then target only the parent to refresh counts. The parent should not send a refresh back to that child when the list became empty.
-- Apply the same pattern to file, directory, conversion, and external reload paths such as Compose edits. One remaining broad event can reproduce the race.
-- Add regression tests that assert the scoped event names, assert the old broad event is not dispatched, and verify that keys do not depend on counts or positions. Manually repeat add/delete operations while watching the browser console.
-
-The persistent-storage implementation is the reference pattern: `Project\Service\Storage` handles `storageCountsChanged`, while `Project\Shared\Storages\All` handles `refreshVolumeList`.
-
-## Key Conventions
-
-- Use `php artisan make:*` commands with `--no-interaction` to create files
-- Use Eloquent relationships, avoid `DB::` facade — prefer `Model::query()`
-- PHP 8.5: constructor property promotion, explicit return types, type hints
-- Validation uses inline `Validator` facade in controllers/Livewire components and custom rules in `app/Rules/` — not Form Request classes
-- Run `vendor/bin/pint --dirty --format agent` before finalizing changes
-- Every change must have tests — write or update tests, then run them. For bug fixes, follow TDD: write a failing test first, then fix the bug (see Test Enforcement below)
-- Check sibling files for conventions before creating new files
-- Nixpacks is deprecated. Never recommend it to users (issue replies, docs, UI copy, workarounds). Recommend the Dockerfile build pack, or Railpack where it fits.
-- When adding remote shell commands, account for servers using non-root SSH users: commands pass through `parseCommandsByLineForSudo()`, so test pipelines, redirects, substitutions, and `sh -c`/`bash -c` scripts with the non-root sudo parser.
-
-## Git Workflow
-
-- Production branch: `main`
-- Development branch: `next`. Do not create `release/v*` branches.
-- Fix PRs should target the current production branch; feature PRs should target `next`
-
-<laravel-boost-guidelines>
-=== foundation rules ===
-
-# Laravel Boost Guidelines
-
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
-
-## Foundational Context
-
-This application is a Laravel application running on PHP 8.5. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
-
-Before relying on a package's API, confirm its installed version:
-- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
-- JS packages: check `package.json` for the installed versions.
-
-## Skills Activation
-
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
-## Conventions
-
-- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
-- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
-- Check for existing components to reuse before writing a new one.
-
-## Verification Scripts
-
-- Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
-
-## Application Structure & Architecture
-
-- Stick to existing directory structure; don't create new base folders without approval.
-- Do not change the application's dependencies without approval.
-
-## Frontend Bundling
-
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
-
-## Documentation Files
-
-- You must only create documentation files if explicitly requested by the user.
-
-## Replies
-
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
-
-=== boost rules ===
-
-# Laravel Boost
-
-## Tools
-
-- Laravel Boost is an MCP server with tools designed specifically for this application. Prefer Boost tools over manual alternatives like shell commands or file reads.
-- Use `database-query` to run read-only queries against the database instead of writing raw SQL in tinker.
-- Use `database-schema` to inspect table structure before writing migrations or models.
-- Use `get-absolute-url` to resolve the correct scheme, domain, and port for project URLs. Always use this before sharing a URL with the user.
-- Use `browser-logs` to read browser logs, errors, and exceptions. Only recent logs are useful, ignore old entries.
-
-## Searching Documentation (IMPORTANT)
-
-- Use `search-docs` before changes that depend on Laravel ecosystem APIs, behavior, configuration, or version-specific syntax. Skip it for copy-only edits and other changes where package documentation is irrelevant. Reuse sufficient results already in context instead of searching again.
-- Pass a `packages` array to scope results when you know which packages are relevant.
-- Use multiple broad, topic-based queries: `['rate limiting', 'routing rate limiting', 'routing']`. Expect the most relevant results first.
-- Do not add package names to queries because package info is already shared. Use `test resource table`, not `filament 4 test resource table`.
-
-### Search Syntax
-
-1. Use words for auto-stemmed AND logic: `rate limit` matches both "rate" AND "limit".
-2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
-3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
-4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
-
-## Project Rules
-
-- This project contains committed, area-grouped rules in `.ai/rules` when that directory exists (settled decisions, non-obvious traps, standing constraints). Framework and package guidelines that only apply to specific paths (testing, frontend, components) also live there, under `.ai/rules/boost` — this is not just recorded decisions, it is load-bearing guidance you have not seen inline. Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule. If `.ai/rules` does not exist, continue without it.
-- Record a rule with `record-rule` only when the user explicitly asks for one. Instructions for the work at hand are not rules, no matter how emphatic: "remove this typo", "use X here" are work to do, not rules to record. Never record a rule on your own initiative, as a byproduct of a change, or to summarize what you just did. When the user does ask, pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Use `record-rule` rather than your native memory or notes tool, because native memory is personal and session-scoped, while only `.ai/rules` is shared with the team and persists in the repo.
-
-## Artisan
-
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
-- Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
-- Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
-
-## Tinker
-
-- Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
-- Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
-
-=== php rules ===
-
-# PHP
-
-- Always use curly braces for control structures, even for single-line bodies.
-- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
-- Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
-- Follow existing application Enum naming conventions.
-- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
-- Use array shape type definitions in PHPDoc blocks.
-
-=== deployments rules ===
-
-# Deployment
-
-- Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
-- Activate the `deploying-to-cloud` skill whenever deploying to Laravel Cloud, configuring Cloud environments or resources, using the Cloud CLI, or troubleshooting Cloud deployments.
-
-=== tests rules ===
-
-# Test Enforcement
-
-- Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
-- Pure copy, styling, and layout-only changes do not require new or updated tests.
-- When test coverage applies, run the affected tests and ensure they pass.
-- Test the changed behavior and its important failure modes, but do not add tests beyond them.
-- Read the `testing-best-practices` skill before writing tests.
-
-=== laravel/core rules ===
-
-# Do Things the Laravel Way
-
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
-- If you're creating a generic PHP class, use `php artisan make:class`.
-- Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
-
-### Model Creation
-
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
-
-## APIs & Eloquent Resources
-
-- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
-
-## URL Generation
-
-- When generating links to other pages, prefer named routes and the `route()` function.
-
-## Testing
-
-- When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
-- Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
-
-## Vite Error
-
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
-
-=== laravel/v12 rules ===
-
-# Laravel 12
-
-- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
-- This project upgraded from Laravel 10 without migrating to the new streamlined Laravel file structure.
-- This is perfectly fine and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the new Laravel structure unless the user explicitly requests it.
-
-## Laravel 10 Structure
-
-- Middleware typically lives in `app/Http/Middleware/` and service providers in `app/Providers/`.
-- There is no `bootstrap/app.php` application configuration in a Laravel 10 structure:
-    - Middleware registration happens in `app/Http/Kernel.php`
-    - Exception handling is in `app/Exceptions/Handler.php`
-    - Console commands and schedule register in `app/Console/Kernel.php`
-    - Rate limits likely exist in `RouteServiceProvider` or `app/Http/Kernel.php`
-
-## Database
-
-- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
-
-- Laravel 12 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
-
-### Models
-
-- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
-
-=== livewire/core rules ===
-
-# Livewire
-
-- Livewire allows you to build dynamic, reactive interfaces in PHP without writing JavaScript.
-- You can use Alpine.js for client-side interactions instead of JavaScript frameworks.
-- Keep state server-side so the UI reflects it. Validate and authorize in actions as you would in HTTP requests.
-
-=== pint/core rules ===
-
-# Laravel Pint Code Formatter
-
-- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
-
-=== pest/core rules ===
-
-# Pest
-
-- This project uses Pest. Create tests with `php artisan make:test --pest {name}`.
-- Do not include the test suite directory in `{name}`. Use `SomeFeatureTest`, not `Feature/SomeFeatureTest`.
-- Read the `testing-best-practices` skill for guidance on coverage, naming, structure, dependency isolation, and review.
-- Do not delete tests or test files without approval. They are part of the application.
-
-## Running Tests
-
-- Run the narrowest set of tests that covers the change. Pass a file path or `--filter=testName` to `php artisan test --compact`.
-- Rerun a test after each change to it.
-- Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
-- After the feature tests pass, ask the user to run the complete suite with `php artisan test --compact`.
-
-</laravel-boost-guidelines>
+---
+
+## 3. Safe Areas vs Protected Areas (Do Not Touch)
+
+### Safe Areas to Modify
+- Application logic in `app/` (Actions, Models, Services, Livewire components, Jobs).
+- Blade templates in `resources/views/`.
+- New database migrations in `database/migrations/`.
+- Automated test suites in `tests/`.
+- Configuration files in `config/` (when adding verified options).
+
+### Protected Areas (Strict Invariants)
+- **Instance Sentinel Rows (`id = 0`)**: `Team::find(0)` (Root Team), `Server::find(0)` (Localhost), `InstanceSettings::find(0)`, `StandalonePostgresql::find(0)` (`stx-db`). **Never migrate, delete, resequence, or convert these to positive IDs.**
+- **Existing Migration Files**: Never modify committed migrations. Always generate new migrations with `php artisan make:migration`.
+- **Templates Archive (`templates/not-used/`)**: Contains 357 archived compose templates. Do not move or restore uncurated templates into `templates/compose/`.
+- **Upstream Sync & Core Engine**: Never alter core Coolify sync primitives without verifying regression passes in `tests/Feature/UpstreamSyncAndAdaptationTest.php`.
+- **Proxy Configuration**: Never add a `TRUSTED_PROXIES` setting or modify `TrustProxies`. Fix IP rate limits at call sites.
+
+---
+
+## 4. Security Rules & Invariants
+
+1. **Zero Secret Leaks**:
+   - Never commit API keys, private keys, passwords, database credentials, or Supabase service-role keys.
+   - Use `.env.example` templates with descriptive placeholders.
+2. **Zero-Leak OTP Policy**:
+   - Banking SMS OTP codes are held strictly in transient server memory with a 60-second TTL.
+   - Never write OTPs to SQLite, PostgreSQL, persistent flash, or application logs.
+3. **Pure-Pixel Proof Sanitization**:
+   - All customer-uploaded deposit slips are decoded and re-encoded (`imagejpeg` / `imagepng`) in `ProofStorageService`, permanently purging malicious polyglot webshell payloads.
+4. **Pessimistic Locking on Financial State**:
+   - Invoices, payment proofs, and entitlements must be updated inside database transactions using row-level pessimistic locks (`lockForUpdate()`) to eliminate race conditions.
+5. **Data Masking**:
+   - The `ApiSensitiveData` middleware masks sensitive keys and internal IDs from responses unless requested by instance owners/admins.
+   - In the UI, banking credentials require account password re-authentication to reveal for 30 seconds.
+
+---
+
+## 5. Multi-Tenant Scoping & Permission Rules
+
+1. **Authorize Server-Side**:
+   - Never rely on UI `@can` directives for security. Always enforce authorization with policies, gates, or `$this->authorize(...)`.
+2. **Session Team vs Resource Team**:
+   - Use the session team (`currentTeam()`, `Model::ownedByCurrentTeam()`) **only** for top-level index listings and creating new resources.
+   - Once an existing resource is loaded, **all authorization and related queries must use that resource's team** (`$resource->team_id`). Users can switch teams in another tab while a page stays open.
+3. **Role Hierarchy**:
+   - `Role::OWNER` (3) > `Role::ADMIN` (2) > `Role::MEMBER` (1).
+   - Use `RbacService::isOwner()`, `RbacService::isAdmin()`, or `RbacService::isClient()`.
+
+---
+
+## 6. Coding Conventions
+
+- **Laravel 10 File Structure**:
+  - Middleware in `app/Http/Middleware/`.
+  - Kernels: `app/Http/Kernel.php` and `app/Console/Kernel.php`.
+  - Exception handler: `app/Exceptions/Handler.php`.
+  - No `bootstrap/app.php` application configuration.
+- **Validation**:
+  - Use inline `Validator::make()` in controllers and Livewire components, or custom rules in `app/Rules/`. Do not use Form Request classes.
+- **Eloquent Models**:
+  - Use Eloquent queries: prefer `Model::query()` over raw `DB::` queries.
+  - Define model attribute casts in a `casts()` method rather than the legacy `$casts` property.
+- **Formatting**:
+  - Run Laravel Pint before finalizing changes: `vendor/bin/pint --dirty --format agent`.
+- **Nixpacks**:
+  - Nixpacks is deprecated. Never recommend Nixpacks to users. Recommend Dockerfile or Railpack instead.
+- **Non-Root Sudo Shell Commands**:
+  - Remote commands execute through `parseCommandsByLineForSudo()`. Test pipelines, redirects, and subshells against non-root users.
+
+---
+
+## 7. Common Pitfalls & Operational Traps
+
+1. **Sentinel ID = 0 Pagination Trap**:
+   - In PHP, `empty(0)` evaluates to `true`. Keyset pagination `where('id', '>', $cursor)` starting at 0 skips `id = 0`. Use `chunkById()` or pagination queries without a strict positive lower bound.
+2. **Browser Test `Class "Redis" not found`**:
+   - The Pest browser in-process amphp server requires array maintenance store if host PHP lacks phpredis:
+     ```php
+     config()->set('app.maintenance.store', 'array');
+     ```
+3. **Browser Test Fresh User Onboarding Loop**:
+   - Fresh users redirect to `/onboarding`. In `beforeEach`, update team boarding and flush cache:
+     ```php
+     Team::query()->update(['show_boarding' => false]);
+     Cache::flush();
+     ```
+4. **Stale Playwright Processes**:
+   - If browser tests hang, kill orphan Playwright server instances:
+     ```powershell
+     Get-Process -Name node | Where-Object { $_.CommandLine -match "playwright" } | Stop-Process -Force
+     ```
+5. **Livewire Component Key Stability**:
+   - In dynamic lists, always give Livewire components stable keys based on record UUIDs or IDs. Never use `$loop->index`.
+   - Never broadcast a single refresh event to both parent and dynamically inserted children.
+
+---
+
+## 8. Definition of Done (DoD)
+
+Before marking any task, feature, or bug fix complete:
+
+1. **Functional Correctness**: The code satisfies all specified behavioral requirements without regressions.
+2. **Security & Boundary Enforcement**: Tenant isolation is strictly preserved; authorization runs server-side; row locks protect state transitions; no secrets are exposed.
+3. **Test Verification**:
+   - Pest feature or unit tests are written or updated covering happy paths, edge cases, and failure modes.
+   - Tests execute and pass cleanly: `php artisan test --compact [test-path]`.
+4. **Code Style & Formatting**:
+   - Code formatted with Pint: `vendor/bin/pint --dirty --format agent`.
+5. **Documentation Alignment**:
+   - If architecture, schemas, environment variables, or workflows changed, the corresponding files in `docs/` and `README.md` are updated.

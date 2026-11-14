@@ -42,6 +42,28 @@
 - **Caddy Reverse Proxy**:
   - Automated ACME TLS certificate provisioning and reverse proxying for email endpoints and webmail
 
+## Payment Verification Infrastructure (PayVerify)
+
+- **PayVerify Core Backend**:
+  - Python 3.11 & FastAPI REST API (`/api/v1/external/*`)
+  - Deterministic financial reconciliation engine with PostgreSQL row-level locks
+  - Google Gemini 1.5 Flash (`gemini-1.5-flash`) multimodal vision & local Ollama CPU fallback (`llama3.2-vision`)
+  - Fernet symmetric encryption at rest for proof files and banking credentials
+  - Cryptographic tamper-evident SHA-256 hash-chain audit log
+- **PayVerify ComBank WhatsApp Bot**:
+  - Node.js & `@whiskeysockets/baileys` multi-device client
+  - 8-digit pairing code and QR linking
+  - 60-second in-memory buffered OTP queue
+- **PayVerify Android Interceptor (`payverify-android`)**:
+  - Native Kotlin & Jetpack Compose (Android SDK 34)
+  - Hardware-backed ECDSA P-256 cryptographic request signing (Android Keystore)
+  - Zero-leak in-memory OTP relay over TLS
+  - Dual-mode architecture: Smart Bank Message Card Viewer & Mobile Admin Console
+- **PayVerify Web Dashboard (`payverify-web`)**:
+  - Next.js 16 (App Router) & React 19
+  - Monochrome glassmorphism styling
+  - Backend-For-Frontend (BFF) architecture with HttpOnly cookies & CSRF protection
+
 ## DevOps, Containerization & Infrastructure
 
 - **Docker Engine & Docker Compose v2**: Container orchestration and cgroups resource limits

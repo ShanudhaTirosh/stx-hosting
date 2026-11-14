@@ -29,8 +29,11 @@ Ensure you have the following installed locally:
 
 ## 2. Environment Configuration
 
-1. In the repository root, copy the development environment file:
+1. In the repository root, copy the environment template:
    ```bash
+   # Standard local development:
+   cp .env.example .env
+   # Or using the local dev container defaults:
    cp .env.development.example .env
    ```
 2. For self-hosted multi-service deployments (including Supabase and WildDuck Mail):
@@ -200,3 +203,22 @@ If your Docker containers or database state become corrupted:
    docker exec -it stx php artisan db:seed --class=HostingCatalogSeeder
    docker exec -it stx php artisan db:seed --class=NativeStatusMonitorSeeder
    ```
+
+---
+
+## 10. Technical Documentation Index
+
+For deep-dives into specific subsystems, see the comprehensive guides in [`docs/`](docs/):
+- [Platform Architecture Reference](docs/architecture.md)
+- [Database Schema & RLS Policies](docs/database-schema-and-rls.md)
+- [Authentication & Authorization Flows](docs/auth-flows.md)
+- [Domains, DNS & Automated SSL](docs/domains-dns-ssl.md)
+- [Multi-Node Server Management](docs/node-management.md)
+- [Mail System & STX Webmail](docs/mail-system.md)
+- [Payments & PayVerify AI Verification](docs/payments-flow.md)
+- [GitHub App Integration](docs/github-integration.md)
+- [API Reference & Developer Guide](docs/api-reference.md)
+- [Deployment & Operational Runbook](docs/deployment-operations.md)
+- [Troubleshooting & Known Gotchas](docs/troubleshooting.md)
+- [AI Coding Agent Guidelines](AGENTS.md)
+

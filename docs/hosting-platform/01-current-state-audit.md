@@ -1,9 +1,13 @@
 # Deliverable A: Current-State Codebase Audit & Storefront Inventory
 
+> [!NOTE]
+> **Historical Milestone Note (Milestone 8 Consolidation)**:  
+> This audit document records the architectural baseline established during initial planning in October 2026 prior to Milestone 8. In Milestone 8 (M8), the separate Next.js storefront (`web/`) and status platform (`status/`) were unified and rewritten natively into the core Laravel 12 / Livewire 3 / Blade application on port `8000` (`/`, `/vps`, `/pricing`, `/status`), eliminating the separate Node.js containers. For current live architecture, see [`docs/architecture.md`](../architecture.md).
+
 **Document Reference:** `docs/hosting-platform/01-current-state-audit.md`  
-**Repository:** `stx-enterprises/stx-hosting` with Integrated ShanuTechX Ecosystem (`web/` & `status/`)  
+**Repository:** `stx-enterprises/stx-hosting`  
 **Core Version:** STX Hosting `4.5.4` (`versions.json:4`, `config/constants.php:8`)  
-**Date of Audit:** October 2026  
+**Date of Audit:** October 2026 (Historical Baseline)  
 **Auditor:** Teamwork Architecture & Engineering Implementation Group (`worker_m1`)  
 **Integrity Mode:** Genuine Development & Production Architecture Audit
 
