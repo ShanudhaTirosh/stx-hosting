@@ -204,6 +204,38 @@
                                     class="input input-sm w-full bg-neutral-900 border-neutral-700 text-white font-mono rounded"
                                 />
                             </div>
+
+                            <div>
+                                <label class="block font-bold text-neutral-300 mb-1">Upstream Purchase Cost (USD $)</label>
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    wire:model="upstream_cost_usd" 
+                                    placeholder="e.g. 4.50" 
+                                    class="input input-sm w-full bg-neutral-900 border-neutral-700 text-white font-mono rounded"
+                                />
+                                <span class="text-[10px] text-neutral-500">Recorded for fleet profit reporting</span>
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-neutral-300 mb-1">Upstream Provider Renewal Date</label>
+                                <input 
+                                    type="date" 
+                                    wire:model="provider_renews_at" 
+                                    class="input input-sm w-full bg-neutral-900 border-neutral-700 text-white font-mono rounded"
+                                />
+                                <span class="text-[10px] text-neutral-500">Alerts staff before upstream bill is due</span>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="block font-bold text-neutral-300 mb-1">Upstream Order / Server ID (Optional)</label>
+                                <input 
+                                    type="text" 
+                                    wire:model="provider_invoice_ref" 
+                                    placeholder="e.g. HETZNER-SRV-987654 or INV-2026-001" 
+                                    class="input input-sm w-full bg-neutral-900 border-neutral-700 text-white font-mono rounded"
+                                />
+                            </div>
                         </div>
                     </div>
                 @else

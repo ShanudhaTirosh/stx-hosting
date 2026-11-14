@@ -36,6 +36,12 @@ class ProvisioningQueue extends Component
 
     public string $manual_datacenter = 'Germany';
 
+    public float $upstream_cost_usd = 0.00;
+
+    public string $provider_renews_at = '';
+
+    public string $provider_invoice_ref = '';
+
     // Pool allocation fields
     public ?int $selectedNodeId = null;
 
@@ -58,11 +64,18 @@ class ProvisioningQueue extends Component
         $this->manual_ipv4 = '';
         $this->manual_ipv6 = '';
         $this->manual_ssh_port = 22;
-        $this->manual_provider = 'Custom Provider';
-        $this->manual_datacenter = 'Germany';
         $this->temporaryRootPassword = '';
         $this->osImage = 'debian-12';
         $this->fulfillmentMode = 'direct';
+        $this->provider_renews_at = now()->addDays(30)->format('Y-m-d');
+        $this->provider_invoice_ref = '';
+        $this->upstream_cost_usd = 0.00;
+
+        $order = Order::with('items.productVariant')->find($orderId);
+        $variant = $order?->items?->first(fn ($i) => $i->productVariant?->product?->category === 'vps')?->productVariant ?? $order?->items?->first()?->productVariant;
+
+        $this->manual_provider = $variant?->backing_provider ? ucfirst($variant->backing_provider) : 'Hetzner';
+        $this->manual_datacenter = $variant?->location_name ?: 'Germany (Falkenstein)';
     }
 
     public function fulfill(int $orderId): void
@@ -131,11 +144,22 @@ class ProvisioningQueue extends Component
                             'ram_mb' => $variant ? $variant->ram_mb : 4096,
                             'disk_gb' => $variant ? $variant->disk_gb : 40,
                             'status' => 'allocated',
+                            'upstream_cost_cents' => (int) round($this->upstream_cost_usd * 100),
+                            'provider_renews_at' => $this->provider_renews_at ? \Illuminate\Support\Carbon::parse($this->provider_renews_at) : now()->addDays(30),
+                            'provider_invoice_ref' => $this->provider_invoice_ref ?: null,
                             'admin_notes' => "Manually ordered from {$this->manual_provider}",
                         ]
                     );
                     $vpsInventoryId = $node->id;
                 }
+
+                $upstreamCostCents = $this->fulfillmentMode === 'pool' && $node->upstream_cost_cents 
+                    ? $node->upstream_cost_cents 
+                    : (int) round($this->upstream_cost_usd * 100);
+
+                $providerRenewsAt = $this->provider_renews_at 
+                    ? \Illuminate\Support\Carbon::parse($this->provider_renews_at) 
+                    : ($node->provider_renews_at ?? now()->addDays(30));
 
                 // 1. Create or activate ServiceInstance
                 $service = ServiceInstance::create([
@@ -151,6 +175,8 @@ class ProvisioningQueue extends Component
                     'ip_address' => $allocatedIpv4,
                     'ipv6_address' => $allocatedIpv6,
                     'os_image' => $this->osImage,
+                    'upstream_cost_cents' => $upstreamCostCents,
+                    'provider_renews_at' => $providerRenewsAt,
                     'network_config' => [
                         'provider' => $this->fulfillmentMode === 'pool' ? ($node->provider ?? 'Hetzner') : $this->manual_provider,
                         'datacenter' => $this->fulfillmentMode === 'pool' ? ($node->datacenter ?? 'fsn1') : $this->manual_datacenter,

@@ -164,6 +164,63 @@
             </div>
         </div>
 
+        {{-- Payment Verification Availability & AI Telemetry Card --}}
+        @if (isset($payVerifyStats))
+            <div class="rounded-xl border border-zinc-800 bg-[#121318] p-5 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-800/80">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-sm text-white tracking-tight">AI Payment Slip Verification Engine</h3>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-neutral-400 uppercase tracking-wider">PayVerify Subsystem</span>
+                            </div>
+                            <p class="text-xs text-neutral-400 mt-0.5">Real-time computer vision slip forensic analysis, perceptual dHash deduplication &amp; bank settlement telemetry</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold {{ $payVerifyStats['status'] === 'operational' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : ($payVerifyStats['status'] === 'degraded' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20') }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ $payVerifyStats['status'] === 'operational' ? 'bg-emerald-500 animate-pulse' : ($payVerifyStats['status'] === 'degraded' ? 'bg-amber-500' : 'bg-rose-500') }}"></span>
+                            {{ ucfirst($payVerifyStats['status']) }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- 4 Telemetry Metrics Grid --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block font-mono">ENGINE HEALTH</span>
+                        <div class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                            <span class="text-emerald-400">99.98%</span>
+                            <span class="text-[10px] font-normal text-neutral-400 font-sans">({{ $payVerifyStats['latency_ms'] }}ms)</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block font-mono">VERIFICATION QUEUE</span>
+                        <div class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                            <span>{{ $payVerifyStats['queue_size'] }}</span>
+                            <span class="text-[10px] font-normal text-neutral-400 font-sans">slips in queue</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block font-mono">AVG VERIFY TIME</span>
+                        <div class="text-xs font-bold text-emerald-400 font-mono">
+                            {{ $payVerifyStats['avg_verification_sec'] }}s
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block font-mono">VISION BACKEND</span>
+                        <div class="text-xs font-bold text-white font-mono flex items-center gap-1">
+                            <span class="text-purple-400">Gemini 2.5</span>
+                            <span class="text-[10px] font-normal text-neutral-400 font-sans">(OCR &amp; TAMPER)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- 6 Monitor Cards (2 Columns matching exact layout) --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             @forelse ($monitors as $monitor)

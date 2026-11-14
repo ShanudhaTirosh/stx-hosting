@@ -42,8 +42,22 @@
                             @php($first = $row['terms']->first())
                             <tr>
                                 <td class="plan">
-                                    <strong>{{ $row['variant']->name }}@if ($row['product']->is_popular)<span class="tag">Most chosen</span>@endif</strong>
-                                    <small>{{ $row['product']->name }}</small>
+                                    <strong>{{ $row['variant']->name }}
+                                        @if ($row['is_sold_out'])
+                                            <span class="tag" style="background:#dc2626;color:#fff">Sold out</span>
+                                        @elseif ($row['product']->is_popular)
+                                            <span class="tag">Most chosen</span>
+                                        @endif
+                                    </strong>
+                                    <small>
+                                        {{ $row['product']->name }}
+                                        @if (!empty($row['location']))
+                                            &bull; {{ $row['location'] }}
+                                        @endif
+                                        @if ($g['slug'] === 'vps')
+                                            &bull; <span style="color:#a78bfa">24–72h delivery</span>
+                                        @endif
+                                    </small>
                                 </td>
                                 <td class="num" data-label="vCPU">{{ $row['variant']->vcpu }}</td>
                                 <td class="num" data-label="Memory">{{ $row['ram'] }}</td>
@@ -57,7 +71,9 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if ($first)
+                                    @if ($row['is_sold_out'])
+                                        <button class="btn small" type="button" disabled style="opacity:0.5;cursor:not-allowed">Sold out</button>
+                                    @elseif ($first)
                                         <form class="buy" method="post" action="{{ route('cart.add') }}">
                                             @csrf
                                             <input type="hidden" name="variant" value="{{ $row['variant']->uuid }}">

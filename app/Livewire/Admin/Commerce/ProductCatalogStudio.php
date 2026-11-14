@@ -74,6 +74,14 @@ class ProductCatalogStudio extends Component
 
     public bool $variant_active = true;
 
+    public string $stock_status = 'available';
+
+    public string $backing_provider = 'hetzner';
+
+    public string $location_name = 'Falkenstein, Germany';
+
+    public string $location_flag = 'DE';
+
     // Pricing Tier Form Fields
     public string $billing_type = 'monthly';
 
@@ -177,6 +185,10 @@ class ProductCatalogStudio extends Component
         $this->bandwidth_gb = (int) $variant->bandwidth_gb;
         $this->specs = (array) ($variant->specs_json ?? []);
         $this->variant_active = (bool) $variant->is_active;
+        $this->stock_status = (string) ($variant->stock_status ?? 'available');
+        $this->backing_provider = (string) ($variant->backing_provider ?? 'hetzner');
+        $this->location_name = (string) ($variant->location_name ?? 'Falkenstein, Germany');
+        $this->location_flag = (string) ($variant->location_flag ?? 'DE');
 
         $this->showVariantModal = true;
     }
@@ -217,6 +229,10 @@ class ProductCatalogStudio extends Component
             'bandwidth_gb' => $this->bandwidth_gb,
             'specs_json' => ! empty($this->specs) ? $this->specs : null,
             'is_active' => $this->variant_active,
+            'stock_status' => $this->stock_status,
+            'backing_provider' => $this->backing_provider,
+            'location_name' => $this->location_name ?: null,
+            'location_flag' => $this->location_flag ?: null,
         ];
 
         if ($this->editingVariantId) {
@@ -358,6 +374,10 @@ class ProductCatalogStudio extends Component
         $this->specKey = '';
         $this->specValue = '';
         $this->variant_active = true;
+        $this->stock_status = 'available';
+        $this->backing_provider = 'hetzner';
+        $this->location_name = 'Falkenstein, Germany';
+        $this->location_flag = 'DE';
     }
 
     private function resetPricingForm(): void

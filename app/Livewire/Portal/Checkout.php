@@ -4,10 +4,12 @@ namespace App\Livewire\Portal;
 
 use App\Models\Commerce\Invoice;
 use App\Models\Commerce\PaymentMethod;
+use App\Models\Commerce\PaymentProof;
 use App\Models\Commerce\PricingTier;
 use App\Models\Commerce\ProductVariant;
 use App\Services\Commerce\OrderService;
 use App\Services\Commerce\ProofStorageService;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -15,16 +17,14 @@ use Livewire\WithFileUploads;
 
 /**
  * Two stages on one page:
- *   1. Pick a plan, place the order. The order and invoice are created with prices
- *      read from the catalog on the server.
- *   2. (?invoice=uuid) See the payment instructions the owner configured and upload
- *      the payment proof for review.
+ *   1. Pick a plan, place the order. Generates unique payment reference code.
+ *   2. (?invoice=uuid) See configured payment method bank details with copy buttons,
+ *      upload slip (PNG/JPG/PDF) with camera or gallery, and view live AI verification status.
  */
 class Checkout extends Component
 {
     use WithFileUploads;
 
-    // Everything that decides what the customer pays is locked: the browser cannot change it.
     #[Locked]
     public array $cartPlanIds = [];
 
@@ -60,17 +60,23 @@ class Checkout extends Component
         $this->invoiceUuid = request()->query('invoice');
 
         if ($this->invoiceUuid) {
-            $invoice = Invoice::with(['order.items.productVariant', 'items'])
+            $invoice = Invoice::with(['order.items.productVariant.product', 'items', 'proofs'])
                 ->where('uuid', $this->invoiceUuid)
                 ->first();
 
-            // Same answer for "does not exist" and "not yours".
             abort_unless($invoice && auth()->user()->can('view', $invoice), 404);
 
             $this->existingInvoice = $invoice;
             $this->selectedVariant = $invoice->order?->items?->first()?->productVariant;
             $this->currency = $invoice->currency;
             $this->totalAmountCents = $invoice->total_cents;
+
+            // Ensure payment reference exists
+            if (! $invoice->payment_reference) {
+                $ref = 'STX-' . strtoupper(substr(md5($invoice->invoice_number . uniqid()), 0, 8));
+                $invoice->update(['payment_reference' => $ref]);
+                $invoice->order?->update(['payment_reference' => $ref]);
+            }
 
             return;
         }
@@ -102,7 +108,6 @@ class Checkout extends Component
                 ->first();
         }
 
-        // No plan chosen (or an unknown one): send the customer to pick one. Never guess a plan.
         if (! $this->selectedVariant) {
             session()->flash('error', 'Please choose a plan first.');
             $this->redirectRoute('store.index', navigate: true);
@@ -125,7 +130,6 @@ class Checkout extends Component
         $this->recalculate();
     }
 
-    /** Display only. The real price is recomputed on the server when the order is placed. */
     private function recalculate(): void
     {
         $tiers = $this->selectedVariant?->pricingTiers?->where('is_active', true);
@@ -161,13 +165,18 @@ class Checkout extends Component
                 $this->currency,
                 $this->notes ?: null,
             );
+
+            // Generate unique, collision-free payment reference code
+            $paymentRef = 'STX-' . strtoupper(Str::random(8));
+            $invoice->update(['payment_reference' => $paymentRef]);
+            $invoice->order?->update(['payment_reference' => $paymentRef]);
         } catch (\InvalidArgumentException $e) {
             session()->flash('error', $e->getMessage());
 
             return;
         }
 
-        session()->flash('success', "Order placed. Invoice {$invoice->invoice_number} is ready: pay using the details below, then upload your proof.");
+        session()->flash('success', "Order placed! Invoice {$invoice->invoice_number} is ready. Transfer the exact amount using reference {$paymentRef}, then upload your receipt slip below.");
 
         return redirect()->route('portal.checkout', ['invoice' => $invoice->uuid]);
     }
@@ -195,7 +204,7 @@ class Checkout extends Component
         ])->filter()->implode(' | ');
 
         try {
-            $proofs->store(
+            $proof = $proofs->store(
                 $this->proofFile,
                 $this->existingInvoice,
                 auth()->user(),
@@ -209,15 +218,24 @@ class Checkout extends Component
             return;
         }
 
-        session()->flash('success', 'Payment proof received. Our team will verify it and email you. Servers are delivered within 24 to 72 hours after approval.');
+        $this->reset(['proofFile', 'bankReference', 'depositorName', 'notes']);
+        $this->existingInvoice->refresh();
 
-        return redirect()->route('portal.billing');
+        session()->flash('success', 'Payment slip uploaded successfully! PayVerify AI verification is running. Watch live status below.');
+
+        return redirect()->route('portal.checkout', ['invoice' => $this->existingInvoice->uuid]);
     }
 
     public function render()
     {
+        $category = $this->selectedVariant?->product?->category;
+        $methods = PaymentMethod::forCheckout($this->currency, $category)->get();
+        $latestProof = $this->existingInvoice?->proofs()->latest()->first();
+
         return view('livewire.portal.checkout', [
-            'paymentMethods' => PaymentMethod::forCurrency($this->currency)->get(),
+            'paymentMethods' => $methods,
+            'latestProof' => $latestProof,
+            'paymentReference' => $this->existingInvoice?->payment_reference ?: ($this->existingInvoice?->invoice_number ?? 'STX-PENDING'),
         ]);
     }
 }

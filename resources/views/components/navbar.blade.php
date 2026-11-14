@@ -153,6 +153,7 @@
                         ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('admin.operations.provisioning'), 'active' => request()->is('admin/operations/provisioning*'), 'visible' => $can('vps.provision')],
                         ['label' => 'Proof Reviews', 'icon' => 'subscription', 'href' => route('admin.billing.proofs'), 'active' => request()->is('admin/billing/proofs*'), 'visible' => $can('payments.verify')],
                         ['label' => 'Payment Methods', 'icon' => 'subscription', 'href' => route('admin.billing.methods'), 'active' => request()->is('admin/billing/methods*'), 'visible' => $can('payment_methods.manage')],
+                        ['label' => 'AI Verification Settings', 'icon' => 'shield-star', 'href' => route('admin.billing.verification-settings'), 'active' => request()->is('admin/billing/verification-settings*'), 'visible' => $can('payment_methods.manage')],
                         ['label' => 'Support Inbox'.(($u = $can('chat.reply') ? app(\App\Services\Chat\ChatService::class)->unreadForStaff() : 0) > 0 ? " ({$u})" : ''), 'icon' => 'subscription', 'href' => route('admin.support'), 'active' => request()->is('admin/support*'), 'visible' => $can('chat.reply')],
                         ['label' => 'Alert Channels', 'icon' => 'subscription', 'href' => route('admin.notifications'), 'active' => request()->is('admin/notifications*'), 'visible' => $can('notifications.manage')],
                         ['label' => 'Backups', 'icon' => 'storages', 'href' => route('admin.backups'), 'active' => request()->is('admin/backups*'), 'visible' => $can('backups.manage')],
@@ -160,6 +161,8 @@
                         ['label' => 'Staff Handbook', 'icon' => 'layers', 'href' => route('admin.docs.index'), 'active' => request()->is('admin/docs*'), 'visible' => $can('admin.console')],
                         ['label' => 'Emails', 'icon' => 'subscription', 'href' => route('admin.emails'), 'active' => request()->is('admin/emails*'), 'visible' => $can('email_templates.manage')],
                         ['label' => 'Status & Telemetry', 'icon' => 'analytics', 'href' => route('admin.status.index'), 'active' => request()->is('admin/status*'), 'visible' => $can('status.manage')],
+                        ['label' => 'Platform Domains & SSL', 'icon' => 'globe', 'href' => route('admin.platform.domains'), 'active' => request()->is('admin/platform/domains*'), 'visible' => $can('platform.settings')],
+                        ['label' => 'Cluster Nodes', 'icon' => 'servers', 'href' => route('admin.cluster.nodes'), 'active' => request()->is('admin/cluster/nodes*'), 'visible' => $can('platform.settings')],
                     ],
                     'Customer Portal' => [
                         ['label' => 'My Services', 'icon' => 'layers', 'href' => route('portal.index'), 'active' => request()->is('portal', 'portal/services*')],

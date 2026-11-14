@@ -11,6 +11,66 @@
         </a>
     </div>
 
+    <!-- Pending Delivery VPS Orders (24-72h SLA Countdown) -->
+    @if ($pendingVpsOrders->isNotEmpty())
+        <div class="bg-gradient-to-r from-purple-950/40 via-neutral-900 to-neutral-900 border border-purple-500/30 rounded-xl p-5 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                    </span>
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">VPS Deployment in Progress</h2>
+                </div>
+                <span class="px-2.5 py-1 text-[11px] font-mono font-bold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    24–72h Delivery Guarantee
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                @foreach ($pendingVpsOrders as $pendingOrder)
+                    @php
+                        $dueAt = \App\Services\Commerce\VpsFulfillmentService::dueAt($pendingOrder);
+                        $waitingHours = \App\Services\Commerce\VpsFulfillmentService::hoursWaiting($pendingOrder);
+                        $progressPercent = min(100, max(5, round(($waitingHours / 72) * 100)));
+                        $firstVpsItem = $pendingOrder->items->first(fn ($i) => $i->productVariant?->product?->category === 'vps') ?? $pendingOrder->items->first();
+                        $variant = $firstVpsItem?->productVariant;
+                    @endphp
+                    <div class="bg-neutral-950 p-4 rounded-lg border border-neutral-800 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-white font-bold text-sm">{{ $variant?->name ?? 'Cloud VPS' }}</h3>
+                                    <span class="text-xs text-neutral-400 font-mono">({{ $variant?->vcpu ?? 2 }} vCPU &bull; {{ ($variant?->ram_mb ?? 4096)/1024 }} GB RAM &bull; {{ $variant?->disk_gb ?? 40 }} GB NVMe)</span>
+                                </div>
+                                <p class="text-xs text-neutral-500 font-mono mt-0.5">Order #{{ substr($pendingOrder->uuid, 0, 13) }} &bull; Paid {{ \App\Services\Commerce\VpsFulfillmentService::paidAt($pendingOrder)->diffForHumans() }}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[11px] text-neutral-400 block">SLA Deadline:</span>
+                                <span class="text-xs font-mono font-bold text-purple-300">
+                                    {{ $dueAt->isPast() ? 'Delivery in final stage' : 'Due ' . $dueAt->diffForHumans() }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 72h SLA Progress Bar -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[10px] font-mono text-neutral-500">
+                                <span>Fulfillment Stage: {{ $waitingHours < 24 ? 'Upstream Allocation' : ($waitingHours < 48 ? 'OS & Network Configuration' : 'Verification & Key Bootstrapping') }}</span>
+                                <span>{{ $waitingHours }}h / 72h</span>
+                            </div>
+                            <div class="w-full bg-neutral-900 rounded-full h-1.5 overflow-hidden">
+                                <div class="bg-gradient-to-r from-purple-600 to-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: {{ $progressPercent }}%"></div>
+                            </div>
+                        </div>
+
+                        <p class="text-[11px] text-neutral-400">Our engineering team is hand-configuring your server. You will be notified via email the moment your server goes active.</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <!-- Services Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse ($services as $service)
@@ -45,6 +105,13 @@
                             </div>
                         @endif
                     </div>
+
+                    @if ($service->status === 'suspended')
+                        <div class="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-300 text-xs text-center space-y-1">
+                            <span class="font-bold block">Renewal Overdue</span>
+                            <p class="text-[10px] text-rose-200/80">Management tools are locked until renewed.</p>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="pt-3 border-t border-neutral-800 flex items-center justify-between">

@@ -19,6 +19,16 @@
         </div>
     </div>
 
+    @if ($cloningSourceName)
+        <div class="p-3.5 rounded-xl bg-purple-950/40 border border-purple-500/50 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 text-purple-200">
+                <span>📑</span>
+                <span>Duplicating application based on <strong>{{ $cloningSourceName }}</strong>. Configurations and environment variables have been pre-filled.</span>
+            </div>
+            <a href="{{ route('portal.deploy') }}" class="text-[11px] font-mono text-neutral-400 hover:text-white underline">Start Fresh</a>
+        </div>
+    @endif
+
     <!-- TAB 1: 1-Click Curated Templates -->
     @if ($mode === 'template')
         <div class="space-y-6">
@@ -87,7 +97,7 @@
             <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-4">
                 <h3 class="text-sm font-bold text-white uppercase tracking-wider">Deployment Details</h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label for="template-app-name" class="block text-xs font-semibold text-neutral-300 mb-1">Application Name</label>
                         <input id="template-app-name" type="text" wire:model.live.debounce.150ms="appName" placeholder="e.g. my-company-blog" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
@@ -95,13 +105,95 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-neutral-300 mb-1">Assigned HTTPS Address</label>
+                        <label for="custom-subdomain" class="block text-xs font-semibold text-neutral-300 mb-1">Custom Subdomain (Optional)</label>
+                        <input id="custom-subdomain" type="text" wire:model.live.debounce.150ms="customSubdomain" placeholder="e.g. acme-backend" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                        @error('customSubdomain') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-neutral-300 mb-1">Primary HTTPS Address</label>
+                        @php
+                            $targetSlug = $customSubdomain ?: ($appName ? \Illuminate\Support\Str::slug($appName) : 'your-app');
+                        @endphp
                         <div class="px-3 py-1.5 rounded bg-neutral-950 border border-neutral-800 text-xs font-mono text-emerald-400 truncate">
-                            https://{{ $appName ? \Illuminate\Support\Str::slug($appName) : 'your-app' }}.{{ $appsDomain }}
+                            https://{{ $targetSlug }}.{{ $appsDomain }}
                         </div>
                         <span class="text-[11px] text-neutral-500 mt-1 block">Wildcard SSL issued instantly on deploy.</span>
                     </div>
                 </div>
+
+                @if($availableServers->count() > 1)
+                    <div class="pt-3 border-t border-neutral-800">
+                        <label class="block text-xs font-semibold text-neutral-300 mb-2">Target Cluster Node / Server</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            @foreach($availableServers as $srv)
+                                <label class="cursor-pointer flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedServerId == $srv->id ? 'bg-indigo-950/40 border-indigo-600' : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700' }} transition">
+                                    <input type="radio" wire:model.live="selectedServerId" value="{{ $srv->id }}" class="radio radio-xs radio-primary">
+                                    <div class="truncate text-xs">
+                                        <span class="font-bold text-white block truncate">{{ $srv->name }}</span>
+                                        <span class="text-neutral-400 font-mono text-[11px]">{{ $srv->ip }}</span>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Exposable Multi-Container Services Picker -->
+                @if (count($exposableServices) > 0)
+                    <div class="pt-4 border-t border-neutral-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Public Endpoints</h4>
+                                <p class="text-[11px] text-neutral-400">Select which services to publish with automatic HTTPS addresses.</p>
+                            </div>
+                            <span class="text-[11px] font-mono text-neutral-500">Zero configuration needed</span>
+                        </div>
+
+                        <div class="space-y-2">
+                            @foreach ($exposableServices as $endpoint)
+                                @php
+                                    $isDef = (bool) ($endpoint['is_default'] ?? false);
+                                    $prefix = trim($endpoint['subdomain_prefix'] ?? '');
+                                    $endpointHost = ($isDef || $prefix === '')
+                                        ? "{$targetSlug}.{$appsDomain}"
+                                        : "{$prefix}.{$targetSlug}.{$appsDomain}";
+                                @endphp
+                                <label class="flex items-start gap-3 p-3 rounded-lg border transition {{ in_array($endpoint['service_name'], $selectedEndpoints) || $isDef ? 'bg-neutral-950/80 border-purple-500/50' : 'bg-neutral-950/30 border-neutral-800 opacity-60' }} cursor-pointer">
+                                    <input type="checkbox"
+                                           value="{{ $endpoint['service_name'] }}"
+                                           wire:model.live="selectedEndpoints"
+                                           @if ($isDef) checked disabled @endif
+                                           class="mt-1 checkbox checkbox-xs checkbox-primary">
+                                    <div class="flex-1 space-y-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-bold text-white">{{ $endpoint['friendly_name'] }}</span>
+                                            @if ($isDef)
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-900/60 text-purple-300 border border-purple-700/50">Primary</span>
+                                            @endif
+                                            @if (($endpoint['access_type'] ?? '') === 'admin_only')
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-900/60 text-amber-300 border border-amber-700/50">Admin Console</span>
+                                            @else
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">Public API</span>
+                                            @endif
+                                            <span class="text-[10px] font-mono text-neutral-500">:{{ $endpoint['internal_port'] }}</span>
+                                        </div>
+                                        <p class="text-[11px] text-neutral-400">{{ $endpoint['description'] }}</p>
+                                        <div class="text-[10px] font-mono text-purple-300">
+                                            https://{{ $endpointHost }}
+                                        </div>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <!-- Internal Security Guarantee Box -->
+                        <div class="p-2.5 rounded-lg bg-neutral-950 border border-neutral-800/80 flex items-center gap-2 text-[11px] text-neutral-400">
+                            <span class="text-emerald-400 text-xs">🛡️</span>
+                            <span><strong>Internal Security Guarantee:</strong> Databases, persistent caches, and task workers are strictly isolated and never exposed to the public internet.</span>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Environment Variables -->
                 <div class="pt-3 border-t border-neutral-800 space-y-2">
@@ -190,7 +282,7 @@
             <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-4">
                 <h3 class="text-sm font-bold text-white uppercase tracking-wider">2. Configure Git Repository</h3>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label for="git-app-name" class="block text-xs font-semibold text-neutral-300 mb-1">Application Name</label>
                         <input id="git-app-name" type="text" wire:model.live.debounce.150ms="appName" placeholder="e.g. my-saas-api" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
@@ -198,9 +290,18 @@
                     </div>
 
                     <div>
+                        <label for="git-custom-subdomain" class="block text-xs font-semibold text-neutral-300 mb-1">Custom Subdomain (Optional)</label>
+                        <input id="git-custom-subdomain" type="text" wire:model.live.debounce.150ms="customSubdomain" placeholder="e.g. api-staging" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                        @error('customSubdomain') <span class="text-rose-400 text-xs block mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-semibold text-neutral-300 mb-1">Assigned HTTPS Address</label>
+                        @php
+                            $gitTargetSlug = $customSubdomain ?: ($appName ? \Illuminate\Support\Str::slug($appName) : 'your-app');
+                        @endphp
                         <div class="px-3 py-1.5 rounded bg-neutral-950 border border-neutral-800 text-xs font-mono text-emerald-400 truncate">
-                            https://{{ $appName ? \Illuminate\Support\Str::slug($appName) : 'your-app' }}.{{ $appsDomain }}
+                            https://{{ $gitTargetSlug }}.{{ $appsDomain }}
                         </div>
                     </div>
 
@@ -227,6 +328,23 @@
                         </select>
                     </div>
                 </div>
+
+                @if($availableServers->count() > 1)
+                    <div class="pt-3 border-t border-neutral-800">
+                        <label class="block text-xs font-semibold text-neutral-300 mb-2">Target Cluster Node / Server</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            @foreach($availableServers as $srv)
+                                <label class="cursor-pointer flex items-center gap-3 p-2.5 rounded-lg border {{ $selectedServerId == $srv->id ? 'bg-indigo-950/40 border-indigo-600' : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700' }} transition">
+                                    <input type="radio" wire:model.live="selectedServerId" value="{{ $srv->id }}" class="radio radio-xs radio-primary">
+                                    <div class="truncate text-xs">
+                                        <span class="font-bold text-white block truncate">{{ $srv->name }}</span>
+                                        <span class="text-neutral-400 font-mono text-[11px]">{{ $srv->ip }}</span>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Environment Variables -->
                 <div class="pt-3 border-t border-neutral-800 space-y-2">

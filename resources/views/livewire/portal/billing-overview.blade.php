@@ -48,15 +48,42 @@
                             </span>
                         </td>
                         <td class="p-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
+                            @php
+                                $latestProof = $invoice->proofs->sortByDesc('created_at')->first();
+                            @endphp
+                            <div class="flex items-center justify-end gap-2 flex-wrap">
                                 <a href="{{ route('portal.invoices.show', $invoice->uuid) }}" target="_blank" class="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-[10px] font-sans font-bold flex items-center gap-1 transition-all">
                                     <svg class="w-3 h-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                     View / Print
                                 </a>
-                                @if ($invoice->proofs->count() > 0)
-                                    <span class="text-neutral-400 text-[11px] font-mono">Submitted ({{ $invoice->proofs->count() }})</span>
+
+                                @if ($latestProof)
+                                    @if ($latestProof->status === 'verifying')
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-sans animate-pulse">
+                                            <svg class="w-2.5 h-2.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                            AI Verifying
+                                        </span>
+                                    @elseif ($latestProof->status === 'pending_review')
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-sans">
+                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            In Review
+                                        </span>
+                                    @elseif (in_array($latestProof->status, ['approved', 'auto_verified']))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-sans">
+                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Slip Verified
+                                        </span>
+                                    @elseif (in_array($latestProof->status, ['rejected', 'resubmit']))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-sans" title="{{ $latestProof->rejection_reason ?: 'Slip rejected. Please upload a clear receipt.' }}">
+                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            {{ $latestProof->status === 'resubmit' ? 'Resubmit Needed' : 'Slip Rejected' }}
+                                        </span>
+                                        <a href="{{ route('portal.checkout') }}?invoice={{ $invoice->uuid }}" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-sans font-bold shadow-sm transition-all">
+                                            Re-upload Slip
+                                        </a>
+                                    @endif
                                 @elseif (in_array($invoice->status, ['unpaid', 'payment_pending']))
-                                    <a href="{{ route('portal.checkout') }}?invoice={{ $invoice->uuid }}" class="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-sans font-bold">
+                                    <a href="{{ route('portal.checkout') }}?invoice={{ $invoice->uuid }}" class="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-sans font-bold shadow-sm transition-all">
                                         Upload Slip
                                     </a>
                                 @endif

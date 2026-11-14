@@ -196,6 +196,11 @@ class StorefrontController extends Controller
                         'ram' => $variant->ram_mb >= 1024 ? rtrim(rtrim(number_format($variant->ram_mb / 1024, 1), '0'), '.').' GB' : $variant->ram_mb.' MB',
                         'disk' => $variant->disk_gb.' GB '.($variant->disk_type === 'nvme' ? 'NVMe' : strtoupper($variant->disk_type)),
                         'traffic' => $variant->bandwidth_gb >= 1000 ? rtrim(rtrim(number_format($variant->bandwidth_gb / 1000, 1), '0'), '.').' TB' : $variant->bandwidth_gb.' GB',
+                        'stock_status' => $variant->stock_status ?? 'available',
+                        'is_sold_out' => ($variant->stock_status ?? 'available') === 'sold_out',
+                        'location' => $variant->location_name ?? null,
+                        'location_flag' => $variant->location_flag ?? null,
+                        'backing_provider' => $variant->backing_provider ?? null,
                     ];
                 }
             }

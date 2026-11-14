@@ -381,6 +381,32 @@
                         </div>
                     </div>
 
+                    {{-- Stock & Provider Configuration --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-neutral-50 dark:bg-white/[0.02] border border-neutral-200 dark:border-white/5 rounded-xl">
+                        <div>
+                            <label class="block text-[11px] font-medium text-neutral-600 dark:text-neutral-300 mb-1">Stock Availability</label>
+                            <select wire:model="stock_status" class="w-full px-2.5 py-1.5 rounded border border-neutral-300 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.03] text-black dark:text-white text-xs">
+                                <option value="available">Available (In Stock)</option>
+                                <option value="sold_out">Sold Out (Waitlist)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-neutral-600 dark:text-neutral-300 mb-1">Backing Upstream Provider</label>
+                            <select wire:model="backing_provider" class="w-full px-2.5 py-1.5 rounded border border-neutral-300 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.03] text-black dark:text-white text-xs">
+                                <option value="hetzner">Hetzner Cloud</option>
+                                <option value="ovh">OVHcloud</option>
+                                <option value="vultr">Vultr</option>
+                                <option value="digitalocean">DigitalOcean</option>
+                                <option value="contabo">Contabo</option>
+                                <option value="custom">Custom / Dedicated Provider</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-[11px] font-medium text-neutral-600 dark:text-neutral-300 mb-1">Datacenter / Location Display Label</label>
+                            <input wire:model="location_name" type="text" placeholder="e.g. Falkenstein, Germany or Helsinki, Finland" class="w-full px-2.5 py-1.5 rounded border border-neutral-300 dark:border-white/10 bg-neutral-50 dark:bg-white/[0.03] text-black dark:text-white text-xs" />
+                        </div>
+                    </div>
+
                     <div class="pt-1">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input wire:model="variant_active" type="checkbox" class="rounded border-neutral-300 text-emerald-500" />

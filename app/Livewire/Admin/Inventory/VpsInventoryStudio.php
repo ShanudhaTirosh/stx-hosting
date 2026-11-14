@@ -41,6 +41,12 @@ class VpsInventoryStudio extends Component
 
     public string $provider = 'hetzner';
 
+    public float $upstream_cost_usd = 0.00;
+
+    public string $provider_renews_at = '';
+
+    public string $provider_invoice_ref = '';
+
     public string $admin_notes = '';
 
     public function openCreateModal(): void
@@ -48,12 +54,15 @@ class VpsInventoryStudio extends Component
         $this->reset([
             'ipv4_address', 'ipv6_address', 'gateway', 'subnet_mask',
             'mac_address', 'vcpu', 'ram_mb', 'disk_gb', 'admin_notes',
+            'upstream_cost_usd', 'provider_renews_at', 'provider_invoice_ref',
         ]);
         $this->vcpu = 2;
         $this->ram_mb = 4096;
         $this->disk_gb = 40;
         $this->datacenter = 'fsn1';
         $this->provider = 'hetzner';
+        $this->upstream_cost_usd = 0.00;
+        $this->provider_renews_at = now()->addDays(30)->format('Y-m-d');
         $this->showCreateModal = true;
     }
 
@@ -85,6 +94,9 @@ class VpsInventoryStudio extends Component
             'datacenter' => $this->datacenter,
             'provider' => $this->provider,
             'status' => 'available',
+            'upstream_cost_cents' => (int) round($this->upstream_cost_usd * 100),
+            'provider_renews_at' => $this->provider_renews_at ? \Illuminate\Support\Carbon::parse($this->provider_renews_at) : null,
+            'provider_invoice_ref' => $this->provider_invoice_ref ?: null,
             'admin_notes' => $this->admin_notes ?: null,
         ]);
 
@@ -130,7 +142,7 @@ class VpsInventoryStudio extends Component
 
     public function render()
     {
-        $query = VpsInventory::query()->latest();
+        $query = VpsInventory::with(['serviceInstances.user', 'serviceInstances.team', 'serviceInstances.productVariant.pricingTiers'])->latest();
 
         if ($this->search !== '') {
             $query->where(function ($q) {

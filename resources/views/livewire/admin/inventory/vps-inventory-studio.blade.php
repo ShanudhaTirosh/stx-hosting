@@ -44,21 +44,35 @@
         <table class="w-full text-left text-xs text-neutral-300">
             <thead class="bg-neutral-950 text-neutral-400 uppercase text-[10px] tracking-wider border-b border-neutral-800 font-mono">
                 <tr>
-                    <th class="p-4">Public IPv4</th>
+                    <th class="p-4">Public IPv4 & Client</th>
                     <th class="p-4">Hardware Specs</th>
                     <th class="p-4">Location / DC</th>
-                    <th class="p-4">Provider</th>
+                    <th class="p-4">Provider & Renewal</th>
+                    <th class="p-4">Cost & Margin</th>
                     <th class="p-4">Status</th>
                     <th class="p-4 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-neutral-800">
                 @forelse ($nodes as $node)
+                    @php
+                        $assignedService = $node->serviceInstances->first();
+                        $customerPriceCents = $assignedService?->productVariant?->pricingTiers?->first()?->price_cents ?? 0;
+                        $costCents = $node->upstream_cost_cents ?: ($assignedService?->upstream_cost_cents ?? 0);
+                        $marginCents = $customerPriceCents - $costCents;
+                        $marginPercent = $customerPriceCents > 0 ? round(($marginCents / $customerPriceCents) * 100) : 0;
+                        $renewsAt = $node->provider_renews_at ?: $assignedService?->provider_renews_at;
+                        $daysToRenewal = $renewsAt ? (int) now()->diffInDays($renewsAt, false) : null;
+                    @endphp
                     <tr class="hover:bg-neutral-800/50 transition-all font-mono">
                         <td class="p-4 font-bold text-white">
                             {{ $node->ipv4_address }}
-                            @if ($node->ipv6_address)
-                                <span class="block text-[10px] text-neutral-500 font-normal truncate max-w-[140px]">{{ $node->ipv6_address }}</span>
+                            @if ($assignedService)
+                                <span class="block text-[10px] text-purple-300 font-normal truncate max-w-[160px]">
+                                    Client: {{ $assignedService->user?->email ?? $assignedService->name }}
+                                </span>
+                            @else
+                                <span class="block text-[10px] text-neutral-500 font-normal">Unassigned pool</span>
                             @endif
                         </td>
                         <td class="p-4">
@@ -71,8 +85,27 @@
                                 {{ $node->datacenter }}
                             </span>
                         </td>
-                        <td class="p-4 uppercase text-neutral-400">
-                            {{ $node->provider }}
+                        <td class="p-4">
+                            <span class="text-neutral-300 font-bold uppercase block">{{ $node->provider }}</span>
+                            @if ($renewsAt)
+                                <span class="text-[10px] {{ $daysToRenewal !== null && $daysToRenewal <= 2 ? 'text-rose-400 font-bold animate-pulse' : ($daysToRenewal !== null && $daysToRenewal <= 7 ? 'text-amber-400 font-bold' : 'text-neutral-500') }}">
+                                    Renews: {{ $renewsAt->format('M d, Y') }} ({{ $daysToRenewal }}d)
+                                </span>
+                            @else
+                                <span class="text-[10px] text-neutral-600">No renewal set</span>
+                            @endif
+                        </td>
+                        <td class="p-4">
+                            @if ($costCents > 0)
+                                <span class="text-neutral-400 text-[11px] block">Cost: ${{ number_format($costCents / 100, 2) }}</span>
+                                @if ($customerPriceCents > 0)
+                                    <span class="text-[11px] font-bold {{ $marginCents >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">
+                                        Profit: ${{ number_format($marginCents / 100, 2) }} ({{ $marginPercent }}%)
+                                    </span>
+                                @endif
+                            @else
+                                <span class="text-[10px] text-neutral-600">Not recorded</span>
+                            @endif
                         </td>
                         <td class="p-4">
                             <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full {{ 
@@ -84,20 +117,27 @@
                             </span>
                         </td>
                         <td class="p-4 text-right space-x-1">
+                            @if ($assignedService)
+                                <a href="{{ route('portal.service.detail', ['uuid' => $assignedService->uuid]) }}" class="px-2 py-1 bg-purple-950 hover:bg-purple-900 text-purple-300 rounded text-[10px] inline-block font-sans font-bold">
+                                    Support View &rarr;
+                                </a>
+                            @endif
                             @if ($node->status === 'available')
                                 <button wire:click="setStatus({{ $node->id }}, 'maintenance')" class="px-2 py-1 bg-neutral-800 hover:bg-neutral-700 text-amber-400 rounded text-[10px]">
-                                    Set Maintenance
+                                    Maintenance
                                 </button>
                             @elseif ($node->status === 'maintenance')
                                 <button wire:click="setStatus({{ $node->id }}, 'available')" class="px-2 py-1 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 rounded text-[10px]">
-                                    Make Available
+                                    Available
                                 </button>
                             @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="p-8 text-center text-neutral-500">
+                        <td colspan="7" class="p-8 text-center text-neutral-500">No hardware nodes found.</td>
+                    </tr>
+                @endforelse
                             No VPS inventory nodes registered yet. Click "Register New Node" to add slices.
                         </td>
                     </tr>
@@ -161,8 +201,25 @@
                             <option value="hetzner">Hetzner Cloud</option>
                             <option value="digitalocean">DigitalOcean</option>
                             <option value="vultr">Vultr</option>
+                            <option value="ovh">OVHcloud</option>
+                            <option value="contabo">Contabo</option>
                             <option value="custom">Custom / Dedicated</option>
                         </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-neutral-300 mb-1">Upstream Purchase Cost (USD $)</label>
+                        <input type="number" step="0.01" wire:model="upstream_cost_usd" placeholder="e.g. 4.50" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded font-mono" />
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-neutral-300 mb-1">Upstream Renewal Due Date</label>
+                        <input type="date" wire:model="provider_renews_at" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded font-mono" />
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block font-bold text-neutral-300 mb-1">Upstream Order / Server Ref (Optional)</label>
+                        <input type="text" wire:model="provider_invoice_ref" placeholder="e.g. HETZNER-SRV-12345" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded font-mono" />
                     </div>
 
                     <div class="col-span-2">

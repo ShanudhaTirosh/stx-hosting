@@ -40,9 +40,14 @@
                         </div>
 
                         <div style="margin-top:1.5rem;border-top:1px solid rgba(255,255,255,0.06);padding-top:1rem">
-                            <a class="btn" href="{{ route('portal.mail') }}" style="width:100%;text-align:center;display:block">
-                                Get Started
-                            </a>
+                            <form action="{{ route('cart.add') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="variant" value="{{ $p['slug'] ?? 'mail-basic' }}">
+                                <input type="hidden" name="billing_type" value="monthly">
+                                <button type="submit" class="btn" style="width:100%;text-align:center;display:block;cursor:pointer">
+                                    Order {{ $p['name'] }}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 @endforeach

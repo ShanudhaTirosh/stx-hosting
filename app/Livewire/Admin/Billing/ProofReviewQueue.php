@@ -13,12 +13,13 @@ use Livewire\WithPagination;
 class ProofReviewQueue extends Component
 {
     use RequiresPlatformStaff;
-
     use WithPagination;
 
     public ?int $selectedProofId = null;
 
     public string $rejectionReason = '';
+
+    public string $resubmitReason = '';
 
     public string $refundReason = '';
 
@@ -32,6 +33,7 @@ class ProofReviewQueue extends Component
     {
         $this->selectedProofId = $proofId;
         $this->rejectionReason = '';
+        $this->resubmitReason = '';
         $this->refundReason = '';
         $this->refundAmount = null;
     }
@@ -66,6 +68,25 @@ class ProofReviewQueue extends Component
             $this->dispatch('error', 'Rejection failed: '.collect($e->errors())->flatten()->first());
         } catch (\Throwable $e) {
             $this->dispatch('error', 'Rejection failed: '.$e->getMessage());
+        }
+    }
+
+    public function requestResubmission(int $proofId, PaymentReviewService $reviews): void
+    {
+        $this->validate([
+            'resubmitReason' => 'required|string|min:5|max:500',
+        ]);
+
+        try {
+            $reviews->requestResubmission(PaymentProof::findOrFail($proofId), auth()->user(), $this->resubmitReason);
+
+            $this->dispatch('success', 'New slip requested from customer. Order remains open.');
+            $this->selectedProofId = null;
+            $this->resubmitReason = '';
+        } catch (ValidationException $e) {
+            $this->dispatch('error', 'Request failed: '.collect($e->errors())->flatten()->first());
+        } catch (\Throwable $e) {
+            $this->dispatch('error', 'Request failed: '.$e->getMessage());
         }
     }
 
@@ -120,10 +141,19 @@ class ProofReviewQueue extends Component
             }
         }
 
+        $pendingCount = PaymentProof::where('status', PaymentProof::STATUS_PENDING_REVIEW)->count();
+        $verifyingCount = PaymentProof::where('status', PaymentProof::STATUS_VERIFYING)->count();
+        $autoVerifiedCount = PaymentProof::where('status', PaymentProof::STATUS_AUTO_VERIFIED)->count();
+        $rejectedCount = PaymentProof::where('status', PaymentProof::STATUS_REJECTED)->count();
+
         return view('livewire.admin.billing.proof-review-queue', [
             'proofs' => $proofs,
             'selectedProof' => $selectedProof,
             'signedViewUrl' => $signedViewUrl,
+            'pendingCount' => $pendingCount,
+            'verifyingCount' => $verifyingCount,
+            'autoVerifiedCount' => $autoVerifiedCount,
+            'rejectedCount' => $rejectedCount,
         ]);
     }
 }

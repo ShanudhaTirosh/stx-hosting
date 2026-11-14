@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DeployController;
 use App\Http\Controllers\Api\DestinationsController;
 use App\Http\Controllers\Api\DigitalOceanController;
 use App\Http\Controllers\Api\DnsController;
+use App\Http\Controllers\Api\DomainTlsValidationController;
 use App\Http\Controllers\Api\GiteaController;
 use App\Http\Controllers\Api\GithubController;
 use App\Http\Controllers\Api\GitlabController;
@@ -52,6 +53,7 @@ Route::group([
     'prefix' => 'v1',
 ], function () {
     Route::get('/health', [OtherController::class, 'healthcheck']);
+    Route::get('/domains/validate-ask', [DomainTlsValidationController::class, 'validateAsk']);
 });
 
 Route::post('/feedback', [OtherController::class, 'feedback'])
@@ -496,6 +498,8 @@ Route::group([
     'prefix' => 'v1',
 ], function () {
     Route::post('/sentinel/push', [SentinelController::class, 'push']);
+    Route::post('/cluster/nodes/register', [\App\Http\Controllers\Api\ClusterNodeRegistrationController::class, 'register']);
+    Route::post('/cluster/nodes/heartbeat', [\App\Http\Controllers\Api\ClusterNodeRegistrationController::class, 'heartbeat']);
 });
 
 Route::any('/{any}', function () {

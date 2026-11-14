@@ -49,9 +49,12 @@
                     </div>
                 </div>
 
-                <div class="pt-3 border-t border-neutral-800">
-                    <a href="{{ route('portal.apps.detail', ['uuid' => $app->uuid]) }}" class="block w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs rounded text-center transition-all">
+                <div class="pt-3 border-t border-neutral-800 flex gap-2">
+                    <a href="{{ route('portal.apps.detail', ['uuid' => $app->uuid]) }}" class="flex-1 py-2 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs rounded text-center transition-all">
                         Build Logs &amp; Settings &rarr;
+                    </a>
+                    <a href="{{ route('portal.deploy', ['clone_from' => $app->uuid]) }}" title="Deploy Another Copy" class="px-3 py-2 bg-neutral-800 hover:bg-purple-900/40 text-purple-300 border border-purple-500/30 hover:border-purple-500 font-bold text-xs rounded text-center transition-all flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
                     </a>
                 </div>
             </div>

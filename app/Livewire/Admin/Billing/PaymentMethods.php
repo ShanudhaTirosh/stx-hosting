@@ -8,8 +8,8 @@ use App\Services\RbacService;
 use Livewire\Component;
 
 /**
- * Owner-managed payment instructions shown to clients on their invoice.
- * Admins can see the staff console but cannot change how clients are told to pay.
+ * Owner-managed payment instructions shown to clients on their invoice and checkout.
+ * Configures bank accounts, wallets, currency, product category scoping, and logos.
  */
 class PaymentMethods extends Component
 {
@@ -21,7 +21,23 @@ class PaymentMethods extends Component
 
     public string $label = '';
 
+    public string $bankName = '';
+
+    public string $branch = '';
+
+    public string $accountHolder = '';
+
+    public string $accountNumber = '';
+
     public string $currency = 'ANY';
+
+    public string $logoPath = '';
+
+    public array $allowedCategories = [];
+
+    public ?int $minAmount = null;
+
+    public ?int $maxAmount = null;
 
     public string $instructions = '';
 
@@ -41,7 +57,7 @@ class PaymentMethods extends Component
     public function create(): void
     {
         $this->resetForm();
-        $this->details = [['label' => 'Account name', 'value' => ''], ['label' => 'Account number', 'value' => '']];
+        $this->details = [['label' => 'SWIFT / Routing', 'value' => '']];
         $this->showForm = true;
     }
 
@@ -52,7 +68,15 @@ class PaymentMethods extends Component
         $this->editingId = $method->id;
         $this->type = $method->type;
         $this->label = $method->label;
+        $this->bankName = (string) $method->bank_name;
+        $this->branch = (string) $method->branch;
+        $this->accountHolder = (string) $method->account_holder;
+        $this->accountNumber = (string) $method->account_number;
         $this->currency = $method->currency;
+        $this->logoPath = (string) $method->logo_path;
+        $this->allowedCategories = $method->allowed_categories ?? [];
+        $this->minAmount = $method->min_amount_cents ? (int) ($method->min_amount_cents / 100) : null;
+        $this->maxAmount = $method->max_amount_cents ? (int) ($method->max_amount_cents / 100) : null;
         $this->instructions = (string) $method->instructions;
         $this->details = array_values($method->details ?? []);
         $this->isActive = $method->is_active;
@@ -78,7 +102,16 @@ class PaymentMethods extends Component
         $this->validate([
             'type' => 'required|in:'.implode(',', array_keys(PaymentMethod::TYPES)),
             'label' => 'required|string|max:120',
+            'bankName' => 'nullable|string|max:128',
+            'branch' => 'nullable|string|max:128',
+            'accountHolder' => 'nullable|string|max:255',
+            'accountNumber' => 'nullable|string|max:128',
             'currency' => 'required|in:ANY,USD,LKR',
+            'logoPath' => 'nullable|string|max:512',
+            'allowedCategories' => 'array',
+            'allowedCategories.*' => 'string|in:'.implode(',', array_keys(PaymentMethod::PRODUCT_CATEGORIES)),
+            'minAmount' => 'nullable|numeric|min:0',
+            'maxAmount' => 'nullable|numeric|min:0',
             'instructions' => 'nullable|string|max:2000',
             'details' => 'array|max:12',
             'details.*.label' => 'nullable|string|max:80',
@@ -86,7 +119,7 @@ class PaymentMethods extends Component
             'sortOrder' => 'integer|min:0|max:9999',
         ]);
 
-        $rows = collect($this->details)
+        $customRows = collect($this->details)
             ->map(fn ($r) => ['label' => trim((string) ($r['label'] ?? '')), 'value' => trim((string) ($r['value'] ?? ''))])
             ->filter(fn ($r) => $r['label'] !== '' && $r['value'] !== '')
             ->values()
@@ -97,9 +130,17 @@ class PaymentMethods extends Component
             [
                 'type' => $this->type,
                 'label' => trim($this->label),
+                'bank_name' => trim($this->bankName) ?: null,
+                'branch' => trim($this->branch) ?: null,
+                'account_holder' => trim($this->accountHolder) ?: null,
+                'account_number' => trim($this->accountNumber) ?: null,
                 'currency' => $this->currency,
+                'logo_path' => trim($this->logoPath) ?: null,
+                'allowed_categories' => empty($this->allowedCategories) ? null : array_values($this->allowedCategories),
+                'min_amount_cents' => $this->minAmount ? (int) ($this->minAmount * 100) : null,
+                'max_amount_cents' => $this->maxAmount ? (int) ($this->maxAmount * 100) : null,
                 'instructions' => trim($this->instructions) ?: null,
-                'details' => $rows,
+                'details' => $customRows,
                 'is_active' => $this->isActive,
                 'sort_order' => $this->sortOrder,
             ]
@@ -140,7 +181,22 @@ class PaymentMethods extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['showForm', 'editingId', 'label', 'instructions', 'details', 'sortOrder']);
+        $this->reset([
+            'showForm',
+            'editingId',
+            'label',
+            'bankName',
+            'branch',
+            'accountHolder',
+            'accountNumber',
+            'logoPath',
+            'allowedCategories',
+            'minAmount',
+            'maxAmount',
+            'instructions',
+            'details',
+            'sortOrder',
+        ]);
         $this->type = 'bank_transfer';
         $this->currency = 'ANY';
         $this->isActive = true;
@@ -152,6 +208,7 @@ class PaymentMethods extends Component
         return view('livewire.admin.billing.payment-methods', [
             'methods' => PaymentMethod::orderBy('sort_order')->orderBy('id')->get(),
             'types' => PaymentMethod::TYPES,
+            'categories' => PaymentMethod::PRODUCT_CATEGORIES,
         ]);
     }
 }

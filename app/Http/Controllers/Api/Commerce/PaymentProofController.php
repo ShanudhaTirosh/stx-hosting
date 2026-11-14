@@ -105,6 +105,15 @@ class PaymentProofController extends Controller
      */
     public static function getSignedViewUrl(PaymentProof $proof, int $expirationMinutes = 30): string
     {
+        $supabase = app(\App\Services\Supabase\SupabaseClient::class);
+        if (config('commerce.storage_driver') === 'supabase' && $supabase->isConfigured()) {
+            $bucket = config('commerce.supabase_proof_bucket', 'payment-proofs');
+            $signedUrl = $supabase->createSignedUrl($bucket, $proof->file_path, $expirationMinutes * 60);
+            if ($signedUrl) {
+                return $signedUrl;
+            }
+        }
+
         return URL::temporarySignedRoute(
             'api.commercial.proof.view',
             now()->addMinutes($expirationMinutes),

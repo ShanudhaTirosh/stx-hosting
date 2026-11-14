@@ -5,6 +5,7 @@ namespace App\Livewire\Portal;
 use App\Exceptions\PlatformRestrictionException;
 use App\Models\Commerce\Product;
 use App\Models\Commerce\ProductVariant;
+use App\Models\Server;
 use App\Models\TemplatePermission;
 use App\Services\Commerce\AppProvisioningService;
 use App\Services\Commerce\HostingCatalogSeederService;
@@ -29,22 +30,64 @@ class DeployWizard extends Component
     public string $buildPack = 'nixpacks';
 
     // Common Fields
+    public ?int $selectedServerId = null;
     public string $appName = '';
+    public string $customSubdomain = '';
+    public array $selectedEndpoints = [];
     public array $envVars = [];
     public string $newEnvKey = '';
     public string $newEnvValue = '';
+    public ?string $cloningSourceName = null;
 
-    public function mount(): void
+    public function mount(?string $clone_from = null): void
     {
+        // Pre-select default server
+        try {
+            $this->selectedServerId = Server::isUsable()->first()?->id;
+        } catch (\Throwable) {
+            $this->selectedServerId = null;
+        }
+
         // Ensure catalog is seeded
         if (TemplatePermission::count() === 0 || Product::where('slug', 'git-app-hosting')->count() === 0) {
             HostingCatalogSeederService::seedAll();
+        }
+
+        if ($clone_from) {
+            $source = \App\Models\Commerce\ServiceInstance::where('uuid', $clone_from)
+                ->where('team_id', currentTeam()->id)
+                ->first();
+
+            if ($source) {
+                $this->cloningSourceName = $source->name;
+                $this->appName = PlatformDomainService::nextAvailableSlug($source->name);
+                $this->customSubdomain = PlatformDomainService::nextAvailableSlug($source->name);
+                $this->envVars = data_get($source->network_config, 'env_vars', []);
+                if (data_get($source->network_config, 'server_id')) {
+                    $this->selectedServerId = (int) data_get($source->network_config, 'server_id');
+                }
+
+                if ($source->service_type === 'template_app' && $source->template_name) {
+                    $this->mode = 'template';
+                    $this->selectedTemplate = $source->template_name;
+                    $this->selectedEndpoints = array_keys(data_get($source->network_config, 'assigned_endpoints', []));
+                } else {
+                    $this->mode = 'git';
+                    $this->gitRepo = data_get($source->network_config, 'git_repo', '');
+                    $this->gitBranch = data_get($source->network_config, 'git_branch', 'main');
+                    $this->buildPack = data_get($source->network_config, 'build_pack', $source->os_image ?: 'nixpacks');
+                    $this->selectedPlanId = $source->product_variant_id;
+                }
+
+                return;
+            }
         }
 
         // Default select the first popular template and first Git plan
         $firstTmpl = TemplatePermission::where('is_globally_enabled', true)->where('is_featured', true)->first();
         if ($firstTmpl) {
             $this->selectedTemplate = $firstTmpl->template_name;
+            $this->initTemplateEndpoints($firstTmpl->template_name);
         }
 
         $standardPlan = ProductVariant::where('slug', 'git-standard')->first() 
@@ -70,6 +113,17 @@ class DeployWizard extends Component
     public function selectTemplate(string $templateName): void
     {
         $this->selectedTemplate = $templateName;
+        $this->initTemplateEndpoints($templateName);
+    }
+
+    private function initTemplateEndpoints(string $templateName): void
+    {
+        $services = TemplateAccessService::getExposableServices($templateName);
+        $this->selectedEndpoints = collect($services)
+            ->filter(fn ($s) => ($s['suggested'] ?? true) || ($s['is_default'] ?? false))
+            ->pluck('service_name')
+            ->values()
+            ->all();
     }
 
     public function selectPlan(int $planId): void
@@ -103,7 +157,14 @@ class DeployWizard extends Component
             $this->validate([
                 'selectedTemplate' => 'required|string',
                 'appName' => 'required|string|min:2|max:64|regex:/^[a-zA-Z0-9-]+$/',
+                'customSubdomain' => 'nullable|string|min:3|max:50|regex:/^[a-z0-9-]+$/',
             ]);
+
+            if (filled($this->customSubdomain) && ! PlatformDomainService::isSubdomainAvailable($this->customSubdomain)) {
+                $this->addError('customSubdomain', "The address '{$this->customSubdomain}' is already in use. Please choose another subdomain.");
+
+                return null;
+            }
 
             try {
                 $service = AppProvisioningService::provisionTemplate(
@@ -111,7 +172,11 @@ class DeployWizard extends Component
                     $user,
                     $this->selectedTemplate,
                     $this->appName,
-                    $this->envVars
+                    $this->envVars,
+                    null,
+                    $this->customSubdomain ?: null,
+                    $this->selectedEndpoints,
+                    $this->selectedServerId
                 );
 
                 $this->dispatch('success', "{$service->name} deployed successfully with instant HTTPS!");
@@ -126,10 +191,17 @@ class DeployWizard extends Component
             $this->validate([
                 'selectedPlanId' => 'required|exists:product_variants,id',
                 'appName' => 'required|string|min:2|max:64|regex:/^[a-zA-Z0-9-]+$/',
+                'customSubdomain' => 'nullable|string|min:3|max:50|regex:/^[a-z0-9-]+$/',
                 'gitRepo' => 'required|url',
                 'gitBranch' => 'required|string|max:100',
                 'buildPack' => 'required|string|in:nixpacks,dockerfile,node,python,php',
             ]);
+
+            if (filled($this->customSubdomain) && ! PlatformDomainService::isSubdomainAvailable($this->customSubdomain)) {
+                $this->addError('customSubdomain', "The address '{$this->customSubdomain}' is already in use. Please choose another subdomain.");
+
+                return null;
+            }
 
             $variant = ProductVariant::findOrFail($this->selectedPlanId);
 
@@ -141,7 +213,9 @@ class DeployWizard extends Component
                 $this->gitRepo,
                 $this->gitBranch,
                 $this->buildPack,
-                $this->envVars
+                $this->envVars,
+                $this->customSubdomain ?: null,
+                $this->selectedServerId
             );
 
             $this->dispatch('success', "Git application {$service->name} created and bound to {$variant->name}!");
@@ -177,10 +251,23 @@ class DeployWizard extends Component
 
         $appsDomain = PlatformDomainService::appsDomain() ?: config('hosting.default_domain', 'apps.stxapp.io');
 
+        $exposableServices = $this->selectedTemplate
+            ? TemplateAccessService::getExposableServices($this->selectedTemplate)
+            : [];
+
+        $availableServers = collect();
+        try {
+            $availableServers = Server::isUsable()->get();
+        } catch (\Throwable) {
+            $availableServers = collect();
+        }
+
         return view('livewire.portal.deploy-wizard', [
             'templates' => $curatedTemplates,
             'gitPlans' => $gitPlans,
             'appsDomain' => $appsDomain,
+            'exposableServices' => $exposableServices,
+            'availableServers' => $availableServers,
         ]);
     }
 }

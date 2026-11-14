@@ -26,6 +26,8 @@ class VpsPanel extends Component
 
     public const MAX_UPLOAD_KB = 10240;
 
+    public const MAX_EDIT_BYTES = 512 * 1024;
+
     public string $uuid = '';
 
     public string $path = '/root';
@@ -40,6 +42,25 @@ class VpsPanel extends Component
     public string $restartConfirm = '';
 
     public $upload;
+
+    // File Manager Modals
+    public bool $showEditModal = false;
+
+    public string $editingFileName = '';
+
+    public string $fileContent = '';
+
+    public bool $showRenameModal = false;
+
+    public string $renameOldName = '';
+
+    public string $renameNewName = '';
+
+    public bool $showNewModal = false;
+
+    public string $newEntryName = '';
+
+    public string $newEntryType = 'file'; // 'file' or 'dir'
 
     public ?string $error = null;
 
@@ -223,6 +244,120 @@ class VpsPanel extends Component
             }
 
             CommerceAuditLog::record('vps.file_deleted', ServiceInstance::class, $this->service()->id, ['path' => $path]);
+        });
+
+        $this->loadFiles();
+    }
+
+    public function editFile(string $name): void
+    {
+        $this->guarded(function () use ($name) {
+            $path = VpsPaths::join($this->path, $name);
+            $shell = $this->connect();
+            try {
+                $this->fileContent = $shell->download($path, self::MAX_EDIT_BYTES);
+                $this->editingFileName = $name;
+                $this->showEditModal = true;
+            } finally {
+                $shell->disconnect();
+            }
+        });
+    }
+
+    public function saveFileContent(): void
+    {
+        $this->guarded(function () {
+            $path = VpsPaths::join($this->path, $this->editingFileName);
+            $shell = $this->connect();
+            try {
+                $shell->upload($path, $this->fileContent);
+            } finally {
+                $shell->disconnect();
+            }
+
+            CommerceAuditLog::record('vps.file_edited', ServiceInstance::class, $this->service()->id, ['path' => $path]);
+            $this->showEditModal = false;
+            $this->editingFileName = '';
+            $this->fileContent = '';
+            $this->dispatch('success', 'File saved successfully.');
+        });
+
+        $this->loadFiles();
+    }
+
+    public function openRename(string $name): void
+    {
+        $this->renameOldName = $name;
+        $this->renameNewName = $name;
+        $this->showRenameModal = true;
+    }
+
+    public function renameEntry(): void
+    {
+        $this->validate([
+            'renameNewName' => 'required|string|max:255',
+        ]);
+
+        $this->guarded(function () {
+            $oldPath = VpsPaths::join($this->path, $this->renameOldName);
+            $newPath = VpsPaths::join($this->path, VpsPaths::safeName($this->renameNewName));
+
+            $shell = $this->connect();
+            try {
+                $shell->rename($oldPath, $newPath);
+            } finally {
+                $shell->disconnect();
+            }
+
+            CommerceAuditLog::record('vps.file_renamed', ServiceInstance::class, $this->service()->id, [
+                'old_path' => $oldPath,
+                'new_path' => $newPath,
+            ]);
+
+            $this->showRenameModal = false;
+            $this->renameOldName = '';
+            $this->renameNewName = '';
+            $this->dispatch('success', 'Renamed successfully.');
+        });
+
+        $this->loadFiles();
+    }
+
+    public function openNew(string $type = 'file'): void
+    {
+        $this->newEntryType = $type === 'dir' ? 'dir' : 'file';
+        $this->newEntryName = '';
+        $this->showNewModal = true;
+    }
+
+    public function createEntry(): void
+    {
+        $this->validate([
+            'newEntryName' => 'required|string|max:255',
+        ]);
+
+        $this->guarded(function () {
+            $name = VpsPaths::safeName($this->newEntryName);
+            $path = VpsPaths::join($this->path, $name);
+            $shell = $this->connect();
+            try {
+                if ($this->newEntryType === 'dir') {
+                    $shell->exec('mkdir -p ' . escapeshellarg($path));
+                } else {
+                    $shell->upload($path, '');
+                }
+            } finally {
+                $shell->disconnect();
+            }
+
+            CommerceAuditLog::record('vps.file_created', ServiceInstance::class, $this->service()->id, [
+                'path' => $path,
+                'type' => $this->newEntryType,
+            ]);
+
+            $this->showNewModal = false;
+            $this->newEntryName = '';
+            $this->dispatch('success', ucfirst($this->newEntryType) . ' created.');
         });
 
         $this->loadFiles();
