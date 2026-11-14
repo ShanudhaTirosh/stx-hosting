@@ -143,13 +143,31 @@ Because the "server" and the test share one PHP process, they share the phpunit 
 
 ### Backend Structure (app/)
 - **Actions/** — Domain actions organized by area (Application, Database, Docker, Proxy, Server, Service, Shared, Stripe, User, STX HostingTask, Fortify). Uses `lorisleiva/laravel-actions` with `AsAction` trait — actions can be called as objects, dispatched as jobs, or used as controllers.
-- **Livewire/** — All UI components (Livewire 3). Pages organized by domain: Server, Project, Settings, Security, Notifications, Terminal, Subscription, SharedVariables. This is the primary UI layer — no traditional Blade controllers. Components listen to private team channels for real-time status updates via Laravel Reverb.
-- **Jobs/** — Queue jobs for deployments (`ApplicationDeploymentJob`), backups, Docker cleanup, server management, proxy configuration. Uses Redis queue with Horizon for monitoring.
-- **Models/** — Eloquent models extending `BaseModel` which provides auto-CUID2 UUID generation. Key models: `Server`, `Application`, `Service`, `Project`, `Environment`, `Team`, plus standalone database models (`StandalonePostgresql`, `StandaloneMysql`, etc.). Common traits: `HasConfiguration`, `HasMetrics`, `HasSafeStringAttribute`, `ClearsGlobalSearchCache`.
-- **Services/** — Business logic services (ConfigurationGenerator, DockerImageParser, ContainerStatusAggregator, HetznerService, etc.). Use Services for complex orchestration; use Actions for single-purpose domain operations.
-- **Helpers/** — Global helpers loaded via `bootstrap/includeHelpers.php` from `bootstrap/helpers/` — organized into `shared.php`, `constants.php`, `versions.php`, `subscriptions.php`, `domains.php`, `docker.php`, `services.php`, `github.php`, `proxy.php`, `notifications.php`.
+- **Livewire/** — All UI components (Livewire 3). Pages organized by domain: Server, Project, Settings, Security, Notifications, Terminal, Subscription, SharedVariables. Plus commercial modules:
+  - `Admin/Billing/ProofReviewQueue.php` — Staff bank transfer & cash deposit slip verification queue.
+  - `Admin/Commerce/TemplateCatalogStudio.php` — Application template curation, toggles, resource bounds.
+  - `Admin/Commerce/MailPlanStudio.php` — Email hosting plan management and quota configurations.
+  - `Admin/Status/StatusStudio.php` — System status node prober and incidents manager.
+  - `Portal/DeployWizard.php` — Customer 1-click deployment wizard (Git, Docker, 31 Curated Templates).
+  - `Portal/Mail/MailDashboard.php` — Customer email hosting management (mailboxes, aliases, Webmail UI deep-link).
+  - `Portal/Backups.php` — Multi-target database restores and customer volume backup schedules.
+  - `Portal/Domains.php` — Custom domains, DNS verification, and automated SSL/HTTPS.
+  - `Status/PublicStatus.php` — Public 90-day status telemetry with privacy-preserving node masking.
+- **Jobs/** — Queue jobs for deployments (`ApplicationDeploymentJob`), backups (`RestoreDatabaseBackupJob`), Docker cleanup, server management, proxy configuration. Commercial automation jobs: `GenerateRenewalInvoicesJob`, `ProcessOverdueSuspensionsJob`, `PollCustomDomainDnsJob`. Uses Redis queue with Horizon for monitoring.
+- **Models/** — Eloquent models extending `BaseModel` which provides auto-CUID2 UUID generation. Key models: `Server`, `Application`, `Service`, `Project`, `Environment`, `Team`, plus standalone database models (`StandalonePostgresql`, `StandaloneMysql`, etc.). Commercial models:
+  - `HostingProduct`, `HostingPlan`, `HostingOrder`, `HostingInvoice`, `HostingEntitlement`, `HostingLimit`.
+  - `Commerce/`: `Order`, `Invoice`, `PaymentProof`, `ServiceInstance`, `ServiceCredential`, `StatusSubscription`, `MailPlan`, `MailSubscription`, `MailDomain`, `MailMailbox`, `MailAlias`, `MailAddon`.
+  - `CustomDomain`, `TemplatePermission`, `BackupRestore`.
+- **Services/** — Business logic services:
+  - `Commerce/`: `OrderService`, `PaymentReviewService`, `ProofStorageService` (pure-pixel sanitization), `RefundService`, `CustomDomainService`, `AppProvisioningService`, `VpsFulfillmentService`, `WildDuckProvisioningService`.
+  - `Supabase/`: `SupabaseClient`, `SupabaseQueryBuilder`, `SupabaseAuthService` (GoTrue bridge).
+  - `Backups/`: `BackupPolicyService`.
+  - `Status/`: `StatusAlertService`.
+  - `Notifications/`: `EmailTemplates`, `StaffEvents`.
+  - `TemplateAccessService`, `LimitEnforcementService`, `RbacService`.
+- **Helpers/** — Global helpers loaded via `bootstrap/includeHelpers.php` from `bootstrap/helpers/` — organized into `shared.php`, `constants.php`, `versions.php`, `subscriptions.php`, `domains.php`, `docker.php`, `services.php` (contains `getServiceLogo()` with `not-used/` fallback), `github.php`, `proxy.php`, `notifications.php`.
 - **Data/** — Spatie Laravel Data DTOs (e.g., `ServerMetadata`).
-- **Enums/** — PHP enums (TitleCase keys). Key enums: `ProcessStatus`, `Role` (MEMBER/ADMIN/OWNER with rank comparison), `BuildPackTypes`, `ProxyTypes`, `ContainerStatusTypes`.
+- **Enums/** — PHP enums (TitleCase keys). Key enums: `ProcessStatus`, `Role` (MEMBER/ADMIN/OWNER with rank comparison), `BuildPackTypes`, `ProxyTypes`, `ContainerStatusTypes`, `EntitlementStatus`, `ProductType`, `LimitType`.
 - **Rules/** — Custom validation rules (`ValidGitRepositoryUrl`, `ValidServerIp`, `ValidHostname`, `DockerImageFormat`, etc.).
 
 ### API Layer
@@ -208,7 +226,12 @@ Before you rate a vulnerability or write an advisory, find the security boundary
 - **Service** — A pre-configured service stack from templates (`templates/service-templates-latest.json`).
 - **Standalone Databases** — Individual database instances (Postgres, MySQL, MariaDB, MongoDB, Redis, Clickhouse, KeyDB, Dragonfly, SQLite).
 - **Project/Environment** — Organizational hierarchy: Team → Project → Environment → Resources.
-- **Proxy** — Traefik reverse proxy managed per server.
+- **Proxy** — Traefik reverse proxy managed per server; Caddy reverse proxy for automated mail/webmail TLS.
+- **Commercial Products & Entitlements** — `HostingProduct` (VPS, App, Database, Email, Game Server), `HostingPlan`, `HostingOrder`, `HostingInvoice`, `HostingEntitlement`. Controls client access and quotas.
+- **Self-Hosted Supabase** — Containerized backend-as-a-service (`docker/supabase/`) managed via `SupabaseClient` and `SupabaseAuthService`.
+- **WildDuck Mail & Webmail** — Complete mail hosting (`docker/mail/`) with pooled plans (`MailPlan`), mailboxes (`MailMailbox`), domains (`MailDomain`), and `webmail-ui` client.
+- **Curated Templates** — 31 active production templates in `templates/compose/` (Supabase, n8n, WordPress, etc.), with unhosted templates archived in `templates/not-used/`. Resource limits and ports curated in `TemplateCatalogStudio`.
+- **Upstream Sync & Adaptation** — Regulated sync with Coolify upstream (v4.6.0 to v4.7.5) verified by `UpstreamSyncAndAdaptationTest.php`. STX Hosting extensions must remain isolated from upstream breaking changes.
 
 ### Server transfer (keep it complete)
 

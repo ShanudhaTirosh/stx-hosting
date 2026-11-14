@@ -464,3 +464,24 @@ For customers with web hosting plans, domain DNS records (`MX`, `DKIM`, `SPF`, `
 ## 7. Deliverable C Summary & Architectural Sign-off
 
 Deliverable C establishes a concrete, cohesive, and resilient target architecture that harmonizes ShanuTechX's existing Next.js web applications with STX Hosting's orchestration engine. By enforcing strict separation of planes, adopting a realistic two-phase VPS rollout, and deploying a secure Platform Abstraction Layer for shared application hosting, the platform guarantees enterprise security, zero cross-tenant compromise, and maximum commercial velocity.
+
+---
+
+## 8. Implementation Evolution: Native Port 8000 Unification & Extended BaaS/Mail
+
+In production implementation, the target architecture evolved to achieve unified runtime performance, native session security, and expanded enterprise offerings:
+
+1. **Port 8000 Native Unification**:
+   - The Storefront and Status Telemetry were consolidated directly into the Laravel 12 application on port `8000`.
+   - Native Livewire 3 components and Blade templates replace separate Next.js containers, running with sub-millisecond local database queries, zero CORS latency, and seamless session team binding.
+2. **Integrated Self-Hosted Supabase Stack**:
+   - Complete containerized Supabase stack (`docker/supabase/docker-compose.yml`, Kong, GoTrue, PostgREST, Realtime, Storage, Studio, pg_cron).
+   - Unified orchestration via `docker-compose.selfhosted.yml` and `.env.selfhosted.example`.
+3. **WildDuck Email Hosting & STX Webmail UI**:
+   - High-throughput mail hosting via WildDuck API, Haraka, Zone-MTA, and Dovecot IMAP.
+   - Containerized Nginx/PHP-FPM `webmail-ui` with instant portal deep-linking and single sign-on security.
+   - Caddy reverse proxy for automated, independent ACME TLS on mail endpoints.
+4. **Curated Template Catalog**:
+   - Curated 31 active, high-demand compose templates with strict cgroups memory and CPU constraints.
+5. **Commercial Automation**:
+   - Automated recurring renewal invoices (`GenerateRenewalInvoicesJob`), overdue suspensions (`ProcessOverdueSuspensionsJob`), multi-target database restores (`RestoreDatabaseBackupJob`), volume snapshots to S3/R2, and administrative refunds (`RefundService`).

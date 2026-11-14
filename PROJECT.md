@@ -1,7 +1,8 @@
-# Project: STX Hosting Production Commercial Hardening
+# Project: STX Hosting Production Commercial Hardening & Cloud Platform
 
 ## Architecture
-The platform is built on Laravel 12 (Laravel 10 structure), Livewire 3, Tailwind CSS v4, PostgreSQL, Horizon (Redis queues), and Reverb (WebSockets). It is enhanced into a production-ready, commercial-grade hosting and deployment platform featuring:
+The platform is built on Laravel 12 (Laravel 10 structure), Livewire 3, Tailwind CSS v4, PostgreSQL 15/16, Horizon (Redis queues), and Reverb (WebSockets). It is engineered into a production-ready, commercial-grade hosting and deployment platform featuring:
+
 1. **Three-Tier Role-Based Access Control (RBAC)**:
    - **Owner (Platform/Root)**: Root team (`team_id === 0`) / instance owners with unrestricted platform-wide access, unlimited resources, global configuration, template & server management, limit override capability.
    - **Administrator**: Platform administrators with granted administrative access across clients, projects, deployments, services, template catalogs, and servers; client limit management; bypasses client limits.
@@ -11,90 +12,99 @@ The platform is built on Laravel 12 (Laravel 10 structure), Livewire 3, Tailwind
    - Server-side enforcement across projects, deployments, running containers, applications, CPU, RAM, storage, bandwidth, servers, databases, and SMTP.
    - Owners and Administrators bypass client limits.
 3. **Purchase-Based Hosting & Entitlement System**:
-   - Models: `HostingProduct`, `HostingPlan`, `HostingOrder`, `HostingInvoice`, `HostingEntitlement`.
+   - Models: `HostingProduct`, `HostingPlan`, `HostingOrder`, `HostingInvoice`, `HostingEntitlement`, `ServiceInstance`, `ServiceCredential`.
    - Active purchases automatically unlock deployment permissions and resource quotas.
-   - Subscription lifecycle management: upgrades, downgrades, renewals, expirations, cancellations with server-side revocation.
-   - Manual admin management (grant, revoke, suspend, modify).
-4. **Deployment Template & Catalog Access Control**:
-   - Granular template permissions: global toggles, product/plan bindings, per-client grants, category/registry restrictions.
-   - Clients only view and deploy authorized templates.
-5. **Security Boundaries & Multi-Tenant Data Isolation**:
-   - Team/client data isolation across API endpoints, Livewire components, and background jobs.
-   - Strict server-side authorization on all mutation and read operations.
-6. **Testing & Verification**:
-   - Pest / PHPUnit unit, feature, and integration test suites.
-   - Multi-tier requirement-driven E2E tests.
+   - Subscription lifecycle management: upgrades, renewals, overdue suspensions, expirations, cancellations with server-side revocation.
+   - Manual admin management (grant, revoke, suspend, modify, refund).
+4. **Curated Deployment Template & Catalog Access Control**:
+   - Curated active 31-template catalog (`templates/compose/`) featuring Supabase, n8n, WordPress, Ghost, Plausible, Nextcloud, Strapi, and developer tools.
+   - Inactive templates archived safely in `templates/not-used/`; active SVG logos curated to 61 in `public/svgs/` with automatic fallback in `getServiceLogo()`.
+   - Template Catalog Studio (`/admin/commerce/templates`) with global toggles, plan bindings, category filters, and container cgroups resource limits.
+5. **Self-Hosted Supabase Backend-as-a-Service**:
+   - Dedicated self-hosted containerized Supabase stack (`docker/supabase/docker-compose.yml`) with Kong API Gateway, Supabase GoTrue Auth, PostgREST, Realtime, Storage, Studio UI, and PostgreSQL 15 with `pg_cron`.
+   - Native integration via `SupabaseClient`, `SupabaseQueryBuilder`, and `SupabaseAuthService`.
+6. **Managed Email Hosting & STX Webmail UI**:
+   - WildDuck mail stack (`docker/mail/docker-compose.yml`) with WildDuck API, Haraka SMTP, Zone-MTA, Dovecot IMAP, and MongoDB.
+   - 4 pooled storage plans (Starter, Basic, Pro, Business) with modular mailbox, domain, and storage add-ons (`MailPlan`, `MailSubscription`, `MailMailbox`, `MailDomain`, `MailAlias`, `MailAddon`).
+   - STX Webmail UI (`webmail-ui`): containerized PHP-FPM/Nginx client with portal deep-linking.
+   - Automated TLS certificates managed via Caddy reverse proxy (`docker/caddy/Caddyfile`).
+7. **Multi-Target Database Restores & Volume Backups**:
+   - Multi-target restore engine (`RestoreDatabaseBackupJob.php`) allowing restore to original container, new standalone database, or custom target schema.
+   - Application volume backups to local disks and Cloudflare R2/S3 storage with scheduling and retention quotas.
+8. **Automated Commercial Billing & Lifecycles**:
+   - Slip verification queue (`/admin/billing/proofs`) with pure-pixel image sanitization (`imagejpeg`/`imagepng`) and pessimistic row locking (`lockForUpdate()`).
+   - Automated renewal invoices generated 7 days before expiry (`GenerateRenewalInvoicesJob`).
+   - Automated overdue service suspension after a 4-day grace period (`ProcessOverdueSuspensionsJob`).
+   - Administrative refund engine (`RefundService`) with ledger tracking and entitlement rollbacks.
+9. **Native High-Performance Storefront & Privacy Telemetry**:
+   - High-performance marketing storefront and documentation running natively on PHP / Blade on port 8000 (`/`, `/vps`, `/pricing`, `/databases`, `/game-servers`, `/email-hosting`, `/docs`).
+   - Public Status platform (`/status`) with 90-day uptime bars, privacy-preserving host node masking, incident history, and subscriber alert broadcasts.
+10. **Upstream Coolify Compatibility**:
+    - Continuously synced with post-Oct-29 Coolify upstream releases (v4.6.0 through v4.7.5) with STX Hosting adaptations and regression test coverage (`UpstreamSyncAndAdaptationTest.php`).
 
 ---
 
 ## Code Layout
+
 - `app/Enums/`:
   - `Role.php`: Three-tier role definitions (Owner, Administrator, Client) with hierarchical comparisons.
-  - `EntitlementStatus.php`, `ProductType.php`, `LimitType.php`.
+  - `EntitlementStatus.php`, `ProductType.php`, `LimitType.php`, `ContainerStatusTypes.php`.
 - `app/Models/`:
   - `User.php`, `Team.php`, `Server.php`, `Project.php`, `Environment.php`, `Application.php`, `Service.php`.
-  - `HostingProduct.php`, `HostingPlan.php`, `HostingOrder.php`, `HostingInvoice.php`, `HostingEntitlement.php`, `HostingLimit.php`, `TemplatePermission.php`.
+  - `HostingProduct.php`, `HostingPlan.php`, `HostingOrder.php`, `HostingInvoice.php`, `HostingEntitlement.php`, `HostingLimit.php`, `TemplatePermission.php`, `CustomDomain.php`, `BackupRestore.php`.
+  - `Commerce/`: `Order.php`, `Invoice.php`, `PaymentProof.php`, `ServiceInstance.php`, `ServiceCredential.php`, `StatusSubscription.php`, `MailPlan.php`, `MailSubscription.php`, `MailDomain.php`, `MailMailbox.php`, `MailAlias.php`, `MailAddon.php`.
 - `app/Services/`:
   - `RbacService.php`: Three-tier authorization logic, platform role checks, admin permissions.
   - `LimitEnforcementService.php`: Centralized resource calculation, limit validation, and server-side blocking.
   - `EntitlementService.php`: Purchase validation, entitlement lifecycle, quota unlocking.
   - `TemplateAccessService.php`: Catalog filtering, plan-based template gating, and deployment permission validation.
-- `app/Policies/`:
-  - Enhanced policies for `ServerPolicy`, `ApplicationPolicy`, `ServicePolicy`, `ProjectPolicy`, `DatabasePolicy`, `HostingProductPolicy`, `HostingEntitlementPolicy`.
-- `app/Http/Middleware/`:
-  - `EnforceClientLimits.php`: Validates client quotas before resource creation/deployment.
-  - `EnforceEntitlements.php`: Validates required active purchases for paid services.
-  - `ApiAbility.php`, `ApiSensitiveData.php`: Enhanced token ability clamping and data isolation.
+  - `Commerce/`: `OrderService.php`, `PaymentReviewService.php`, `ProofStorageService.php`, `RefundService.php`, `CustomDomainService.php`, `AppProvisioningService.php`, `VpsFulfillmentService.php`, `WildDuckProvisioningService.php`.
+  - `Supabase/`: `SupabaseClient.php`, `SupabaseQueryBuilder.php`, `SupabaseAuthService.php`.
+  - `Backups/`: `BackupPolicyService.php`.
+  - `Status/`: `StatusAlertService.php`.
+  - `Notifications/`: `EmailTemplates.php`, `StaffEvents.php`.
+- `app/Jobs/`:
+  - `Commerce/`: `GenerateRenewalInvoicesJob.php`, `ProcessOverdueSuspensionsJob.php`, `PollCustomDomainDnsJob.php`.
+  - `RestoreDatabaseBackupJob.php`, `ApplicationDeploymentJob.php`.
+- `app/Http/Controllers/`:
+  - `Storefront/StorefrontController.php`: Native PHP marketing storefront routes and cart management.
+  - `Status/StatusSubscriptionController.php`: Public status alert subscription signups and verification.
+  - `Api/Commerce/`: `OrderCheckoutController.php`, `ProductCatalogController.php`.
 - `app/Livewire/`:
-  - Admin/Owner management views for limits, entitlements, products, and templates.
-  - Client portal views for purchased services, active quotas, and authorized template catalog.
-- `database/migrations/`:
-  - Clean, dedicated migrations for hosting products, plans, orders, invoices, entitlements, limits, and template permissions.
-- `tests/Feature/Hosting/`:
-  - Automated tests covering RBAC, limits, entitlements, templates, and security boundaries.
+  - `Admin/`: `Billing/ProofReviewQueue.php`, `Commerce/TemplateCatalogStudio.php`, `Commerce/MailPlanStudio.php`, `Status/StatusStudio.php`, `Operations/ProvisioningQueue.php`.
+  - `Portal/`: `DeployWizard.php`, `Apps/AppList.php`, `Backups.php`, `Domains.php`, `Mail/MailDashboard.php`, `BillingOverview.php`, `VpsPanel.php`.
+  - `Status/PublicStatus.php`.
+- `docker/`:
+  - `caddy/`: Caddyfile automated reverse proxy for mail and webmail TLS.
+  - `mail/`: WildDuck, Haraka, Zone-MTA, Dovecot, MongoDB stack.
+  - `supabase/`: Kong API gateway configuration and full Supabase stack.
+  - `webmail/`: STX Webmail UI containerization.
+  - `docker-compose.selfhosted.yml`: All-in-one unified self-hosted compose orchestrator.
+- `templates/`:
+  - `compose/`: 31 active curated production templates.
+  - `not-used/`: 357 archived compose templates.
+- `tests/Feature/`:
+  - `Hosting/`: RBAC, resource limits, entitlements, templates, navigation tests.
+  - `Commerce/`: Renewals and suspensions, refund workflow, HTTPS and template deployment, multi-target restore and volume backups, status alerts.
+  - `Supabase/SupabaseIntegrationTest.php`.
+  - `UpstreamSyncAndAdaptationTest.php`.
 
 ---
 
-## Feature Inventory
-Every feature identified during the survey phase is mapped to an assigned milestone.
+## Milestones & Status
 
-| # | Feature | Description | Milestone | Source |
-|---|---------|-------------|-----------|--------|
-| 1 | Baseline Test Suite Stabilization | Fix existing failing/flaky tests in tests/Feature and tests/Unit to achieve a clean baseline | M1 | survey_3 |
-| 2 | Core UI/UX & Navigation Repairs | Fix broken routes, non-functional buttons, forms, modals, and missing error/loading states in existing Livewire components | M1 | survey_1, survey_3 |
-| 3 | Three-Tier RBAC Core Definition | Define Owner, Administrator, and Client roles with hierarchy and permission comparisons | M2 | R2, survey_1 |
-| 4 | Owner Unrestricted Access Engine | Ensure Owners (Root Team / Platform Owners) have unrestricted platform-wide access, unlimited resources, and limit override capability | M2 | R2, survey_1 |
-| 5 | Administrator Delegation & Scoping | Implement Administrator role with configurable administrative permissions across clients, projects, servers, and subscriptions without client limits | M2 | R2, survey_1 |
-| 6 | Client Tenant Scoping & Isolation | Scope Clients strictly to their own projects, servers, deployments, and purchased services with strict 403 rejection on cross-tenant access | M2 | R2, R6, survey_1 |
-| 7 | Policy & Middleware Hardening | Update model policies, AuthServiceProvider, and API middleware to enforce the 3-tier RBAC server-side | M2 | R2, R6, survey_1 |
-| 8 | Centralized Limits Data Model | Create database schema and models for global default limits and per-client / per-plan overrides | M3 | R3, survey_2 |
-| 9 | Multi-Dimensional Quota Calculation | Implement calculation engine for projects, deployments, containers, applications, CPU, RAM, storage, bandwidth, servers, databases, and SMTP | M3 | R3, survey_2 |
-| 10 | Server-Side Creation & Deployment Limit Gate | Block resource creation and deployment queueing when client quota is exceeded; bypass for Owners and Admins | M3 | R3, survey_2 |
-| 11 | Container Runtime Limit Injection | Inject CPU, RAM, and swap limits into Docker Compose configs generated for client deployments | M3 | R3, survey_2, survey_3 |
-| 12 | Admin Resource Limits Management UI | Interactive Livewire interface for Owners and Admins to configure global defaults and per-client custom overrides | M3 | R3, survey_3 |
-| 13 | Hosting Product & Plan Catalog | Schema, models, and administration for hosting products (VPS, app hosting, managed DBs, SMTP, game servers, templates) | M4 | R4, survey_2, survey_3 |
-| 14 | Entitlement Purchase & Activation Flow | Purchase or assignment of products automatically grants deployment permissions and resource quotas | M4 | R4, survey_2 |
-| 15 | Subscription Lifecycle State Machine | Handle active, past_due, canceled, expired states with automated revocation of deployment capabilities | M4 | R4, survey_2, survey_3 |
-| 16 | Manual Entitlement Management | Administrative actions to manually grant, revoke, suspend, or modify client entitlements | M4 | R4, survey_2 |
-| 17 | Client Entitlement Dashboard & Paywall | Display active entitlements, quota usage, and clear upgrade/purchase prompts for unavailable services | M4 | R4, survey_1, survey_3 |
-| 18 | Global & Plan-Based Template Toggles | Ability for Owners and Admins to toggle template availability globally and bind templates to plans | M5 | R5, survey_2 |
-| 19 | Per-Client Template & Category Permissions | Grant specific templates or categories (Docker, Git, Databases) to individual clients | M5 | R5, survey_2 |
-| 20 | Template Gating & Deployment Validation | Ensure clients only see and deploy templates authorized by active entitlements or explicit grants | M5 | R5, survey_2 |
-| 21 | Template Resource Requirements Config | Configure minimum CPU, RAM, and storage requirements per template and enforce against client limits | M5 | R5, survey_2 |
-| 22 | Comprehensive Dual Track E2E Test Suite | Tier 1 (Feature), Tier 2 (Boundaries), Tier 3 (Cross-Feature), Tier 4 (Real-World) automated test suite | M6 | R7 |
-| 23 | Adversarial Coverage Hardening (Tier 5) | White-box adversarial testing, boundary probes, integrity checks, and regression prevention | M6 | R7 |
-
----
-
-## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Test Suite Baseline & Core Bug Resolutions | Fix existing test failures, audit/repair broken UI routes, buttons, forms, and validation states (R1, R7) | none | DONE |
-| M2 | Three-Tier RBAC Architecture & Tenant Isolation | Implement Owner, Administrator, Client roles, policies, gates, middleware, and strict tenant isolation (R2, R6) | M1 | IN_PROGRESS |
-| M3 | Centralized Client Restrictions & Server-Side Limits | Global defaults, custom client/plan limits, server-side blocking on creation/deployment, Owner/Admin bypass (R3, R6) | M2 | PLANNED |
-| M4 | Purchase-Based Hosting & Entitlements Management | Products, plans, orders, invoices, entitlements lifecycle, quota unlocking, and admin controls (R4, R6) | M3 | PLANNED |
-| M5 | Deployment Template & Catalog Access Control | Template permissions, plan bindings, category restrictions, client catalog filtering, deployment gating (R5, R6) | M4 | PLANNED |
-| M6 | Final Milestone: 100% E2E Pass & Adversarial Hardening | Pass 100% of Dual Track E2E Test Suite (Tiers 1-4) and Tier 5 Adversarial Coverage Hardening (R1-R7) | M5, TEST_READY | PLANNED |
+| M1 | Test Suite Baseline & Core Bug Resolutions | Fix existing test failures, audit/repair broken UI routes, buttons, forms, and validation states | none | COMPLETED |
+| M2 | Three-Tier RBAC Architecture & Tenant Isolation | Implement Owner, Administrator, Client roles, policies, gates, middleware, and strict tenant isolation | M1 | COMPLETED |
+| M3 | Centralized Client Restrictions & Server-Side Limits | Global defaults, custom client/plan limits, server-side blocking on creation/deployment, Owner/Admin bypass | M2 | COMPLETED |
+| M4 | Purchase-Based Hosting & Entitlements Management | Products, plans, orders, invoices, entitlements lifecycle, quota unlocking, and admin controls | M3 | COMPLETED |
+| M5 | Deployment Template & Catalog Access Control | Template permissions, plan bindings, category restrictions, client catalog filtering, deployment gating | M4 | COMPLETED |
+| M6 | Dual Track E2E Test Suite & Adversarial Hardening | Pass 100% of Dual Track E2E Test Suite (Tiers 1-4) and Tier 5 Adversarial Coverage Hardening | M5 | COMPLETED |
+| M7 | Commercial Hosting Platform Launch (Phases 0–8) | Security headers, CSP, proof quarantine, printable PDF invoices, VPS telemetry, live chat, R2 backups | M6 | COMPLETED |
+| M8 | Native Storefront, Status Telemetry & Commerce Automation | Native PHP storefront on port 8000, 90-day status heatmap, alert subscriptions, renewal jobs, suspensions, refunds | M7 | COMPLETED |
+| M9 | Self-Hosted Supabase BaaS & WildDuck Mail Hosting | Containerized Supabase stack, WildDuck mail hosting, STX Webmail UI, Caddy TLS, and curated 31-template catalog | M8 | COMPLETED |
+| M10 | Upstream Coolify Sync & Corpus Maintenance | Integrate post-Oct-29 Coolify upstream changes (v4.6.0 to v4.7.5) with full regression coverage | M9 | COMPLETED |
 
 ---
 
@@ -114,7 +124,11 @@ Every feature identified during the survey phase is mapped to an assigned milest
 - `EntitlementService::getActiveEntitlements(Team $team): Collection`
 - `EntitlementService::hasCapability(Team $team, string $capability): bool`
 
-### M4 (Entitlements) ↔ M5 (Templates)
+### M4 (Entitlements) ↔ M5 (Templates & Commerce)
 - `TemplateAccessService::canDeployTemplate(Team $team, string $templateNameOrId): bool`
 - `TemplateAccessService::filterAuthorizedTemplates(Team $team, Collection $templates): Collection`
 - `TemplateAccessService::getTemplateRequirements(string $templateNameOrId): array`
+- `CustomDomainService::verifyDomain(CustomDomain $domain): bool`
+- `RefundService::processRefund(Invoice $invoice, ?float $amount, string $reason, User $admin): RefundResult`
+- `WildDuckProvisioningService::createMailbox(MailSubscription $subscription, array $data): MailMailbox`
+- `SupabaseClient::from(string $table): SupabaseQueryBuilder`

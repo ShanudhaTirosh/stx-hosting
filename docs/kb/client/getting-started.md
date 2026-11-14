@@ -15,10 +15,12 @@ order: 1
 ## Where things are
 
 - **My Services**: your servers and plans, with login details.
+- **Deploy Wizard**: 1-click launch of Git apps, Docker containers, and curated application templates (`/portal/deploy`).
+- **Mail**: business email hosting, custom domains, mailboxes, aliases, and direct webmail access (`/portal/mail`).
 - **Billing**: invoices, receipts and their status.
-- **Domains**: use your own domain name on an app.
-- **Backups**: schedule, download and restore database backups.
-- **Support**: talk to our team.
+- **Domains**: use your own domain name on an app with automated HTTPS.
+- **Backups**: schedule, download, and multi-target restore database and app volume backups.
+- **Support**: talk to our team via real-time live chat.
 - **Help Center**: these guides.
 
 ## Good to know

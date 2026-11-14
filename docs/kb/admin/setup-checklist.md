@@ -20,6 +20,9 @@ Run `php artisan migrate`. Make sure a **queue worker** and the **scheduler** (`
 | `STX_REQUIRE_STAFF_2FA` | Keep `true`: staff need two-factor |
 | `BACKUP_DEFAULT_QUOTA_GB`, `BACKUP_STORAGE_UUID` | Backup space per team and an optional pre-chosen storage |
 | `PAYMENT_PROOFS_DISK`, `CHAT_DISK` | Where receipts and chat files live (private disks) |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase API connection parameters (if BaaS or Auth bridge enabled) |
+| `WILDDUCK_API_URL`, `WILDDUCK_API_TOKEN` | WildDuck mail server API address and administrative bearer token |
+| `WEBMAIL_URL` | Public URL for the STX Webmail UI client |
 
 ## 3. In the staff area
 
@@ -29,7 +32,9 @@ Run `php artisan migrate`. Make sure a **queue worker** and the **scheduler** (`
 4. **Alert Channels**: add Discord webhooks for orders, proofs, delivery reminders, support and backups.
 5. **Backups**: choose the R2 storage and test it.
 6. **Products and plans**: check prices (USD and LKR).
-7. Install `composer require dompdf/dompdf` for PDF invoices.
+7. **Template Catalog Studio** (`/admin/commerce/templates`): review active application templates, verify resource limits, and set popular badges.
+8. **Mail Plan Studio** (`/admin/commerce/mail`): configure pooled email plans (Starter, Basic, Pro, Business) and storage add-ons.
+9. Install `composer require dompdf/dompdf` for PDF invoices.
 
 ## 4. Check
 

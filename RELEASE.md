@@ -76,3 +76,15 @@ main → hotfix/X.Y.Z → main → next
 | `sha-<commit>` | Exact commit build |
 
 Git tags use the `v` prefix, such as `v4.5.0`. Docker image tags do not.
+
+---
+
+## Upstream Synchronization & Adaptation Checklist
+
+STX Hosting maintains upstream compatibility with Coolify releases (v4.6.0 through v4.7.5+) while strictly safeguarding proprietary commercial extensions:
+
+1. **Adaptation Verification**: Always run `php artisan test --compact tests/Feature/UpstreamSyncAndAdaptationTest.php` prior to tagging any release.
+2. **Template Catalog Integrity**: Verify that only the 31 active curated templates reside in `templates/compose/` and that `tests/Feature/DockerComposeInjectionCompatibilityTest.php` passes cleanly.
+3. **Logo Fallback Resolution**: Run `tests/Feature/ResourceLogoTest.php` to confirm all 61 active logos and fallback lookups resolve without broken images.
+4. **Self-Hosted Compose Validation**: Validate `docker-compose.selfhosted.yml`, `docker/caddy/Caddyfile`, `docker/mail/`, `docker/supabase/`, and `docker/webmail/` configurations before publishing images.
+5. **Database Migration Gate**: Ensure all migrations (including commerce, custom domains, status subscriptions, and supabase bridges) apply cleanly on PostgreSQL 15/16.

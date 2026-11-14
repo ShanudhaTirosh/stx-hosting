@@ -1,212 +1,202 @@
 # Contributing to STX Hosting
-> "First, thanks for considering contributing to my project. It really means a lot!" - [@andrasbacsai](https://github.com/andrasbacsai)
 
-You can ask for guidance anytime on our [Discord server](https://coollabs.io/discord) in the `#contribute` channel.
+Welcome to the STX Hosting development guide. To understand the overall architecture and technologies, please refer to the [Tech Stack](TECH_STACK.md) and [Agents Reference](AGENTS.md).
 
-To understand the tech stack, please refer to the [Tech Stack](TECH_STACK.md) document.
-
+---
 
 ## Table of Contents
-1. [Setup Development Environment](#1-setup-development-environment)
-2. [Verify Installation](#2-verify-installation-optional)
-3. [Fork and Setup Local Repository](#3-fork-and-setup-local-repository)
-4. [Set up Environment Variables](#4-set-up-environment-variables)
-5. [Start STX Hosting](#5-start-stx-hosting)
-6. [Start Development](#6-start-development)
-7. [Create a Pull Request](#7-create-a-pull-request)
-8. [Development Notes](#development-notes)
-9. [Resetting Development Environment](#resetting-development-environment)
-10. [Additional Contribution Guidelines](#additional-contribution-guidelines)
+1. [Prerequisites & Development Setup](#1-prerequisites--development-setup)
+2. [Environment Configuration](#2-environment-configuration)
+3. [Running the Application](#3-running-the-application)
+4. [Self-Hosted Production Stack (Docker Compose)](#4-self-hosted-production-stack-docker-compose)
+5. [Database Migrations & Seeders](#5-database-migrations--seeders)
+6. [Testing & Verification Suites](#6-testing--verification-suites)
+7. [Template & Logo Catalog Guidelines](#7-template--logo-catalog-guidelines)
+8. [Dev Tools & Server-Timing](#8-dev-tools--server-timing)
+9. [Resetting the Development Environment](#9-resetting-the-development-environment)
 
+---
 
-## 1. Setup Development Environment
-Follow the steps below for your operating system:
+## 1. Prerequisites & Development Setup
 
-<details>
-<summary><strong>Windows</strong></summary>
+Ensure you have the following installed locally:
+- **Docker Engine & Docker Compose v2** (or Docker Desktop / Orbstack)
+- **PHP 8.2+** with `pdo_pgsql`, `redis`, `gd`, `curl`, `mbstring`, `fileinfo`
+- **Composer 2.x**
+- **Node.js 20+** & **npm**
 
-1. Install `docker-ce`, Docker Desktop (or similar):
-   - Docker CE (recommended):
-     - Install Windows Subsystem for Linux v2 (WSL2) by following this guide: [Install WSL](https://learn.microsoft.com/en-us/windows/wsl/install?ref=stxhosting)
-     - After installing WSL2, install Docker CE for your Linux distribution by following this guide: [Install Docker Engine](https://docs.docker.com/engine/install/?ref=stxhosting)
-     - Make sure to choose the appropriate Linux distribution (e.g., Ubuntu) when following the Docker installation guide
-   - Install Docker Desktop (easier):
-     - Download and install [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/?ref=stxhosting)
-     - Ensure WSL2 backend is enabled in Docker Desktop settings
+---
 
+## 2. Environment Configuration
 
-</details>
-
-<details>
-<summary><strong>MacOS</strong></summary>
-
-1. Install Orbstack, Docker Desktop (or similar):
-   - Orbstack (recommended, as it is a faster and lighter alternative to Docker Desktop):
-     - Download and install [Orbstack](https://docs.orbstack.dev/quick-start#installation?ref=stxhosting)
-   - Docker Desktop:
-     - Download and install [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/?ref=stxhosting)
-
-
-</details>
-
-<details>
-<summary><strong>Linux</strong></summary>
-
-1. Install Docker Engine, Docker Desktop (or similar):
-   - Docker Engine (recommended, as there is no VM overhead):
-     - Follow the official [Docker Engine installation guide](https://docs.docker.com/engine/install/?ref=stxhosting) for your Linux distribution
-   - Docker Desktop:
-     - If you want a GUI, you can use [Docker Desktop for Linux](https://docs.docker.com/desktop/install/linux-install/?ref=stxhosting)
-
-
-</details>
-
-
-## 2. Verify Installation (Optional)
-After installing Docker (or Orbstack), verify the installation:
-
-1. Open a terminal or command prompt
-2. Run the following commands:
+1. In the repository root, copy the development environment file:
    ```bash
-   docker --version
-   docker compose version
+   cp .env.development.example .env
    ```
-   You should see version information for Docker and Docker Compose.
-
-
-## 3. Fork and Setup Local Repository
-1. Fork the [STX Hosting](https://github.com/stx-enterprises/stx-hosting) repository to your GitHub account.
-
-2. Install a code editor on your machine (choose one):
-
-   | Editor | Platform | Download Link |
-   |--------|----------|---------------|
-   | Visual Studio Code (recommended free) | Windows/macOS/Linux | [Download](https://code.visualstudio.com/download?ref=stxhosting) |
-   | Cursor (recommended but paid) | Windows/macOS/Linux | [Download](https://www.cursor.com/?ref=stxhosting) |
-   | Zed (very fast) | Windows/macOS/Linux | [Download](https://zed.dev/download?ref=stxhosting) |
-
-3. Clone the STX Hosting Repository from your fork to your local machine
-   - Use `git clone` in the command line, or
-   - Use GitHub Desktop (recommended):
-     - Download and install from [https://desktop.github.com/](https://desktop.github.com/?ref=stxhosting)
-     - Open GitHub Desktop and login with your GitHub account
-     - Click on `File` -> `Clone Repository` select `github.com` as the repository location, then select your forked STX Hosting repository, choose the local path and then click `Clone`
-
-4. Open the cloned STX Hosting Repository in your chosen code editor.
-
-
-## 4. Set up Environment Variables
-1. In the Code Editor, locate the `.env.development.example` file in the root directory of your local STX Hosting repository.
-2. Duplicate the `.env.development.example` file and rename the copy to `.env`.
-3. Open the new `.env` file and review its contents. Adjust any environment variables as needed for your development setup.
-4. If you encounter errors during database migrations, update the database connection settings in your `.env` file. Use the IP address or hostname of your PostgreSQL database container. You can find this information by running `docker ps` after executing `docker compose -f docker-compose.yml -f docker-compose.dev.yml up`.
-5. Save the changes to your `.env` file.
-
-
-## 5. Start STX Hosting
-1. Open a terminal in the local STX Hosting directory.
-2. Run the following command in the terminal (leave that terminal open):
+2. For self-hosted multi-service deployments (including Supabase and WildDuck Mail):
    ```bash
-   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+   cp .env.selfhosted.example .env
+   cp .env.supabase.example .env.supabase
+   ```
+3. Generate your application key if running outside Docker:
+   ```bash
+   php artisan key:generate
    ```
 
-> [!NOTE]
-> You may see some errors, but don't worry; this is expected.
+---
 
-3. If you encounter permission errors, especially on macOS, use:
-   ```bash
-   sudo docker compose -f docker-compose.yml -f docker-compose.dev.yml up
-   ```
+## 3. Running the Application
 
-> [!NOTE]
-> If you change environment variables afterwards or anything seems broken, press Ctrl + C to stop the process and run `docker compose -f docker-compose.yml -f docker-compose.dev.yml up` again.
+### Option A: Standard Dev Container Stack (Recommended)
+Run the development stack with Docker Compose:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
 
+### Option B: Local CLI Server
+If running PHP and PostgreSQL directly on your host machine:
+```bash
+composer install
+npm install
+npm run build
+php artisan migrate --seed
+php artisan serve --port=8000
+```
 
-## 6. Start Development
-1. Access your STX Hosting instance:
-   - URL: `http://localhost:8000`
-   - Login: `test@example.com`
-   - Password: `password`
+### Platform Endpoints (All on Port 8000)
+- **Storefront**: `http://localhost:8000`
+- **Customer Portal**: `http://localhost:8000/portal`
+- **Email Dashboard**: `http://localhost:8000/portal/mail`
+- **Application Deploy Wizard**: `http://localhost:8000/portal/deploy`
+- **Public Status Telemetry**: `http://localhost:8000/status`
+- **Admin Provisioning Operations**: `http://localhost:8000/admin/operations/provisioning`
+- **Payment Verification Queue**: `http://localhost:8000/admin/billing/proofs`
+- **Template Catalog Studio**: `http://localhost:8000/admin/commerce/templates`
+- **Mail Plan Studio**: `http://localhost:8000/admin/commerce/mail`
+- **Laravel Horizon**: `http://localhost:8000/horizon` (Root account only)
+- **Mailpit (Email Catcher)**: `http://localhost:8025`
 
-2. Additional development tools:
+Default development credentials:
+- **Email**: `test@example.com`
+- **Password**: `password`
 
-   | Tool | URL | Note |
-   |------|-----|------|
-   | Laravel Horizon (scheduler) | `http://localhost:8000/horizon` | Only accessible when logged in as root user |
-   | Mailpit (email catcher) | `http://localhost:8025` | |
+---
 
-   **Server-Timing + HUD** (headers + bottom-right pill on full HTML pages):
+## 4. Self-Hosted Production Stack (Docker Compose)
 
-   | Setting | Effect |
-   |---------|--------|
-   | `APP_ENV=local` and `SERVER_TIMING_ENABLED` unset | **On** (default in dev) |
-   | `SERVER_TIMING_ENABLED=true` | **On** in any env, including production |
-   | `SERVER_TIMING_ENABLED=false` | **Off** even when `APP_ENV=local` |
+STX Hosting provides a unified production compose file (`docker-compose.selfhosted.yml`) that coordinates:
+- **STX Hosting Core Application** (Laravel 12, Reverb, Terminal daemon)
+- **PostgreSQL 15** & **Redis 7**
+- **Self-Hosted Supabase** (Kong Gateway, GoTrue Auth, PostgREST, Realtime, Storage, Studio)
+- **WildDuck Email Hosting** (Haraka SMTP, Zone-MTA, Dovecot IMAP, MongoDB)
+- **STX Webmail UI** (`webmail-ui` containerized PHP-FPM / Nginx)
+- **Caddy Reverse Proxy** (Automatic ACME TLS management)
 
-   Metrics: `app` / `db` / `php` / `dbslow` (ms), `queries`, `html` (bytes), `mem` (MB).
-   HUD keeps a request log (click row → AI-ready dump). Production: enable only
-   temporarily (`SERVER_TIMING_ENABLED=true`); if you use `config:cache`, rebuild
-   or clear config after changing the env var.
+To launch the unified self-hosted stack:
+```bash
+docker compose -f docker-compose.selfhosted.yml up -d
+```
 
+---
 
-## Development Notes
-When working on STX Hosting, keep the following in mind:
+## 5. Database Migrations & Seeders
 
-1. **Database Migrations**: After switching branches or making changes to the database structure, always run migrations:
-   ```bash
-   docker exec -it stx php artisan migrate
-   ```
+Whenever you switch branches or update database schema:
+```bash
+docker exec -it stx php artisan migrate
+```
 
-2. **Resetting Development Setup**: To reset your development setup to a clean database with default values:
-   ```bash
-   docker exec -it stx php artisan migrate:fresh --seed
-   ```
+To seed the commercial hosting catalog, product pricing, and native status monitors:
+```bash
+docker exec -it stx php artisan db:seed --class=HostingCatalogSeeder
+docker exec -it stx php artisan db:seed --class=NativeStatusMonitorSeeder
+```
 
-3. **Troubleshooting**: If you encounter unexpected behavior, ensure your database is up-to-date with the latest migrations and if possible reset the development setup to eliminate any environment-specific issues.
+To reset the database completely:
+```bash
+docker exec -it stx php artisan migrate:fresh --seed
+docker exec -it stx php artisan db:seed --class=HostingCatalogSeeder
+docker exec -it stx php artisan db:seed --class=NativeStatusMonitorSeeder
+```
 
-> [!IMPORTANT]
-> Forgetting to migrate the database can cause problems, so make it a habit to run migrations after pulling changes or switching branches.
+---
 
+## 6. Testing & Verification Suites
 
-## Resetting Development Environment
-If you encounter issues or break your database or something else, follow these steps to start from a clean slate (works since `v4.0.0-beta.342`):
+### Running Pest & PHPUnit Tests
+STX Hosting uses **Pest 4** for unit and feature testing:
 
-1. Stop all running containers `ctrl + c`.
+```bash
+# Run all tests
+php artisan test --compact
 
-2. Force-remove all STX Hosting dev containers:
-   ```bash
-   npm run clean
-   ```
+# Run specific feature domains
+php artisan test --compact tests/Feature/Commerce/
+php artisan test --compact tests/Feature/Supabase/SupabaseIntegrationTest.php
+php artisan test --compact tests/Feature/UpstreamSyncAndAdaptationTest.php
+php artisan test --compact tests/Feature/DockerComposeInjectionCompatibilityTest.php
 
-3. Remove STX Hosting volumes (it is possible that the volumes have no `stx` prefix on your machine, in that case remove the prefix from the command):
+# Run single test
+php artisan test --compact --filter=testName
+```
+
+### Browser Tests (Pest Browser Plugin / Playwright)
+Browser tests run headless Chromium via Playwright:
+```bash
+# Run all browser tests
+php artisan test --compact tests/v4/Browser/
+```
+
+### Adversarial Hardening & Verification Scripts
+```bash
+python tests/verification/test_adversarial_gate2_verification.py
+python tests/verification/test_remediation_verification.py
+```
+
+---
+
+## 7. Template & Logo Catalog Guidelines
+
+### Curated Active Templates (`templates/compose/`)
+The platform maintains **31 active, verified production templates** (e.g. Supabase, n8n-postgresql, WordPress, Ghost, Plausible, Nextcloud, Strapi, Uptime Kuma).
+- Active templates must validate against `DockerComposeInjectionCompatibilityTest`.
+- Legacy or unhosted templates (357 items) are archived in `templates/not-used/` to keep the catalog clean and reliable.
+- Template resource limits and internal ports are configured in `app/Livewire/Admin/Commerce/TemplateCatalogStudio.php`.
+
+### Curated Logos & SVGs (`public/svgs/`)
+The repository maintains **61 active icons/logos** in `public/svgs/`.
+- Unused icons are kept in `public/svgs/not-used/`.
+- The global helper `getServiceLogo()` (`bootstrap/helpers/services.php`) automatically checks `public/svgs/` first, falling back to `public/svgs/not-used/` or a placeholder SVG to ensure no broken icons are displayed.
+
+---
+
+## 8. Dev Tools & Server-Timing
+
+STX Hosting includes built-in Server-Timing headers and a bottom-right HUD pill on full HTML pages.
+
+| Setting | Effect |
+|---|---|
+| `APP_ENV=local` and `SERVER_TIMING_ENABLED` unset | **On** (default in dev) |
+| `SERVER_TIMING_ENABLED=true` | **On** in any env, including production |
+| `SERVER_TIMING_ENABLED=false` | **Off** even when `APP_ENV=local` |
+
+Metrics reported: `app`, `db`, `php`, `dbslow` (ms), `queries`, `html` (bytes), and `mem` (MB).
+
+---
+
+## 9. Resetting the Development Environment
+
+If your Docker containers or database state become corrupted:
+
+1. Stop all containers: `docker compose down` (or `Ctrl + C`).
+2. Remove container volumes:
    ```bash
    docker volume rm stx_dev_backups_data stx_dev_postgres_data stx_dev_redis_data stx_dev_stx_data stx_dev_minio_data
    ```
-
-4. Remove unused images:
+3. Restart the containers and rerun migrations:
    ```bash
-   docker image prune -a
-   ```
-
-5. Start STX Hosting again:
-   ```bash
-   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
-   ```
-
-6. Run database migrations and seeders:
-   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    docker exec -it stx php artisan migrate:fresh --seed
+   docker exec -it stx php artisan db:seed --class=HostingCatalogSeeder
+   docker exec -it stx php artisan db:seed --class=NativeStatusMonitorSeeder
    ```
-
-After completing these steps, you'll have a fresh development setup.
-
-> [!IMPORTANT]
-> Always run database migrations and seeders after switching branches or pulling updates to ensure your local database structure matches the current codebase and includes necessary seed data.
-
-
-## Additional Development Guidelines
-### Adding a New Service
-To add a new service to STX Hosting, please refer to our documentation: [Adding a New Service](https://docs.stxhosting.com/get-started/contribute/service)
-
-### Development for Documentation
-To contribute to the STX Hosting documentation, please refer to this guide: [Contributing to the STX Hosting Documentation](https://docs.stxhosting.com/get-started/contribute/documentation)

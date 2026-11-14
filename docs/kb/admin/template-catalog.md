@@ -6,9 +6,11 @@ order: 6
 ---
 Platform administrators and the owner curate which application templates appear in the customer deploy wizard and control their resource limits.
 
-## Template Catalog Studio (`/admin/templates`)
+## Template Catalog Studio (`/admin/commerce/templates`)
 
 The Template Catalog Studio allows staff to manage the deployable application catalog:
+- **Curated 31-Template Production Corpus**: The active catalog in `templates/compose/` includes verified, high-impact stacks (Supabase, n8n-postgresql, WordPress, Ghost, Plausible, Nextcloud, Strapi, Uptime Kuma, etc.). 357 unhosted or legacy CMS templates are archived safely in `templates/not-used/`.
+- **Active Logo Management**: 61 active icons/logos are maintained in `public/svgs/` with automatic fallback to `public/svgs/not-used/` or placeholder SVG via `getServiceLogo()` helper.
 - **Enable / Disable Toggle**: Instantly enable or disable a template globally. When disabled, customers cannot deploy new instances of it.
 - **Featured / Popular Toggle**: Flags high-demand templates (like WordPress or n8n) with a "Popular" badge in the customer deploy wizard.
 - **Resource Limits**: Define minimum RAM (MB) and vCPU allocations for each template.

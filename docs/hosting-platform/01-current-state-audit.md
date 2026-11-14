@@ -398,3 +398,30 @@ STX Hosting contains production-grade REST clients for major cloud VPS providers
 4. **Phased VPS Rollout**:
    - **Phase 1**: Manual VPS allocation from pre-provisioned server inventory + Application Hosting via STX Hosting.
    - **Phase 2**: Automated VPS provisioning leveraging existing `HetznerService` and `DigitalOceanService` clients.
+
+---
+
+## 9. Post-Audit Platform Architecture Evolution (Production Addendum)
+
+Following this initial audit, the commercial hosting platform underwent substantial architectural upgrades to achieve maximum performance, security, and maintainability:
+
+1. **Native PHP / Livewire Architecture Migration**:
+   - The Next.js storefront (`web/`) and status platform (`status/`) were rebuilt natively into the core Laravel 12 application on port `8000` using Blade, Livewire 3, and Tailwind CSS v4.
+   - This eliminated cross-origin cookie issues, port fragmentation (ports 3000/3003), Node runtime memory overhead, and duplicate authentication layers.
+2. **Implementation of Commercial Hosting (Phases 0–8)**:
+   - Security hardening (CSP, security headers, pure-pixel proof sanitization, quarantine streaming).
+   - 3-tier RBAC (Platform Owner, Administrator, Client) with server-side limit enforcement and paywall gating.
+   - Manual bank transfer and cash deposit verification queue (`ProofReviewQueue`) with pessimistic locking (`lockForUpdate()`).
+   - Automated recurring renewals (`GenerateRenewalInvoicesJob`) and overdue suspensions (`ProcessOverdueSuspensionsJob`).
+   - Full/partial administrative refund workflows (`RefundService`).
+3. **Self-Hosted Supabase Stack & BaaS Integration**:
+   - Containerized Kong Gateway, GoTrue Auth, PostgREST, Realtime, Storage, and Studio under `docker/supabase/` and `docker-compose.selfhosted.yml`.
+   - Native `SupabaseClient`, `SupabaseQueryBuilder`, and `SupabaseAuthService`.
+4. **Managed Email Hosting & STX Webmail UI**:
+   - Integrated WildDuck mail stack (Haraka, Zone-MTA, Dovecot, MongoDB) with Caddy TLS and pooled storage plans in `MailPlanStudio`.
+   - Standalone, containerized STX Webmail UI (`webmail-ui`) with portal deep-linking.
+5. **Curated Application Templates**:
+   - Curated 31 active, verified production templates in `templates/compose/` (moving 357 unhosted templates to `templates/not-used/`).
+   - Curated 61 active logos in `public/svgs/` with automatic fallback in `getServiceLogo()`.
+6. **Coolify Upstream Synchronization**:
+   - Synchronized post-Oct-29 Coolify upstream changes (v4.6.0 through v4.7.5) with STX Hosting adaptations (`UpstreamSyncAndAdaptationTest.php`).

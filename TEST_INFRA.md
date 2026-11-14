@@ -197,7 +197,18 @@ tests/
 │   │   ├── TemplateAccessControlTest.php       # Features 18, 19, 20, 21 (Template Catalogs & Gating)
 │   │   ├── BaselineAndNavigationTest.php       # Features 1, 2 (Test suite stability & UI routes)
 │   │   └── DualTrackCoverageVerificationTest.php # Features 22, 23 (Meta-test verifying coverage & thresholds)
-│   └── Commerce/                               # Existing commerce feature tests
+│   ├── Commerce/                               # Commercial feature & workflow tests
+│   │   ├── RenewalsAndSuspensionTest.php       # Automated renewal invoices & grace-period suspensions
+│   │   ├── RefundWorkflowTest.php              # Administrative refund processing & quota reversals
+│   │   ├── SecureHttpsAndTemplateDeploymentTest.php # Curated template deployment & TLS verification
+│   │   ├── MultiTargetRestoreAndVolumeBackupsTest.php # Multi-target database restores & customer volume backups
+│   │   └── StatusSubscriptionAlertsTest.php    # Status alert subscriptions & email incident alerts
+│   ├── Supabase/
+│   │   └── SupabaseIntegrationTest.php         # Supabase client, query builder, auth bridge, and user sync
+│   ├── UpstreamSyncAndAdaptationTest.php       # Post-Oct-29 Coolify upstream adaptation coverage (v4.6.0-v4.7.5)
+│   ├── DockerComposeInjectionCompatibilityTest.php # 31 Curated active templates compose syntax & cgroups injection
+│   ├── ResourceLogoTest.php                    # 61 Curated active SVGs & fallback resolution
+│   └── ServiceTemplatesLastUpdatedHintTest.php # Template catalog caching & sync hints
 └── Fixtures/
     └── parser/                                 # Compose parser golden reference fixtures
 ```
@@ -239,6 +250,30 @@ docker exec stx vendor/bin/pest tests/Feature/E2E/RealWorldScenariosTest.php
 
 # Tier 5: Adversarial & Security Isolation
 docker exec stx vendor/bin/pest tests/Feature/E2E/AdversarialIsolationTest.php
+
+# Commercial Renewals & Overdue Suspensions
+docker exec stx php artisan test --compact tests/Feature/Commerce/RenewalsAndSuspensionTest.php
+
+# Administrative Refund Workflows
+docker exec stx php artisan test --compact tests/Feature/Commerce/RefundWorkflowTest.php
+
+# Curated Template Deployment & Custom Domains HTTPS
+docker exec stx php artisan test --compact tests/Feature/Commerce/SecureHttpsAndTemplateDeploymentTest.php
+
+# Multi-Target Restores & Volume Backups
+docker exec stx php artisan test --compact tests/Feature/Commerce/MultiTargetRestoreAndVolumeBackupsTest.php
+
+# Status Alert Subscriptions & Incident Notifications
+docker exec stx php artisan test --compact tests/Feature/Commerce/StatusSubscriptionAlertsTest.php
+
+# Supabase BaaS Integration (DB, Auth, Queries)
+docker exec stx php artisan test --compact tests/Feature/Supabase/SupabaseIntegrationTest.php
+
+# Coolify Post-Oct-29 Upstream Adaptation Test
+docker exec stx php artisan test --compact tests/Feature/UpstreamSyncAndAdaptationTest.php
+
+# Curated Templates Compose Compatibility
+docker exec stx php artisan test --compact tests/Feature/DockerComposeInjectionCompatibilityTest.php
 ```
 
 ### 7.3 Running by Test Tier Groups

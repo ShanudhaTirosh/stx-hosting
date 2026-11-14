@@ -289,3 +289,22 @@ Immediately following the Day 14 commercial launch, the platform transitions int
 ## 7. Summary & Sign-Off
 
 This 14-Day Prioritized Roadmap provides an aggressive, realistic, and highly disciplined plan to launch the ShanuTechX Cloud Hosting Platform. By focusing on manual payment verification and pre-provisioned inventory in Sprint Blocks 1–3, the business eliminates external dependencies and guarantees revenue generation on Day 14.
+
+---
+
+## 8. Launch Milestones Accomplished & Production Status Addendum
+
+The commercial roadmap and scale milestones have been fully accomplished and verified:
+
+1. **Commercial Hardening & Customer Launch (Days 1–14)**:
+   - Full 14-table commerce schema, models, catalog seeders, and manual payment verification queue deployed.
+   - VPS inventory management, SLA monitoring, and customer credentials vault active.
+   - Customer portal with printable PDF invoices and real-time live chat with file attachments launched.
+2. **Scale & Post-Launch Automation (Days 15–30 & Beyond)**:
+   - **Automated Renewals & Suspensions**: `GenerateRenewalInvoicesJob` and `ProcessOverdueSuspensionsJob` automated with customer notifications.
+   - **Automated Refunds**: `RefundService` with ledger audit logging and entitlement revocation.
+   - **Storefront & Telemetry Port 8000 Unification**: Marketing storefront and status telemetry migrated natively into Laravel 12 on port `8000`.
+   - **Self-Hosted Supabase BaaS**: Kong, GoTrue, PostgREST, Realtime, Storage, Studio, and PostgreSQL 15 with `pg_cron` containerized under `docker/supabase/` and `docker-compose.selfhosted.yml`.
+   - **WildDuck Email Hosting & STX Webmail**: Enterprise mail hosting with pooled plans, Haraka SMTP, Zone-MTA, Dovecot IMAP, and containerized `webmail-ui`.
+   - **Curated Application Templates**: 31 high-demand production templates verified with cgroups memory/CPU limits and automated SSL reverse proxying.
+   - **Upstream Coolify Sync**: Successfully synchronized post-Oct-29 Coolify upstream changes (v4.6.0 through v4.7.5) with full regression test coverage.

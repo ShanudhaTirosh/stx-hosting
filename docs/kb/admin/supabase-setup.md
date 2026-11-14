@@ -86,3 +86,38 @@ To enable social logins via Supabase:
 2. Enable your desired providers (e.g. Google, GitHub) and enter the Client ID and Secret.
 3. Users authenticating via Supabase OAuth are automatically mapped to their STX Hosting team.
 
+---
+
+## 3. Running the Self-Hosted Supabase Stack
+
+For environments requiring full data sovereignty or offline capabilities, STX Hosting includes a production-ready, containerized Supabase compose stack under `docker/supabase/` and within the unified `docker-compose.selfhosted.yml`.
+
+### Components Included:
+- **Kong Gateway**: API Gateway routing traffic to PostgREST, GoTrue, Realtime, and Storage on port `8000`.
+- **GoTrue**: Supabase Auth service.
+- **PostgREST**: High-performance RESTful API generation.
+- **Realtime**: Elixir engine for PostgreSQL WAL change streaming.
+- **Storage**: S3-compatible file storage API.
+- **Studio**: Web management UI accessible on port `3001` or via reverse proxy.
+- **PostgreSQL 15**: Core database pre-configured with `pg_cron`, `pgcrypto`, and `pg_stat_statements`.
+
+### Launching Self-Hosted Supabase:
+
+1. Copy `.env.supabase.example` to `.env.supabase`:
+   ```bash
+   cp .env.supabase.example .env.supabase
+   ```
+2. Set secure secrets: `POSTGRES_PASSWORD`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`.
+3. Start the stack:
+   ```bash
+   docker compose -f docker/supabase/docker-compose.yml up -d
+   ```
+4. Point STX Hosting `.env` to the self-hosted Kong endpoint:
+   ```dotenv
+   SUPABASE_URL=http://localhost:8000
+   SUPABASE_KEY=<your-anon-key>
+   SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+   SUPABASE_JWT_SECRET=<your-jwt-secret>
+   ```
+5. Access Supabase Studio at `http://localhost:3001` to view databases, run SQL queries, and inspect authentication tables.
+

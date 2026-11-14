@@ -139,3 +139,13 @@ the user types the 6-digit code; `POST /users/{id}/2fa/totp/check` (`token`, `to
 ## Layout
 `src/Core` (router, session, csrf, crypto, view) · `src/WildDuck` (client, services, models) ·
 `src/Http/Controllers` · `views/` · `public/assets` (design tokens from DESIGN.md) · `tests/`
+
+---
+
+## Docker Containerization & STX Hosting Integration
+
+STX Webmail is containerized for seamless production orchestration alongside STX Hosting and WildDuck mail stack:
+
+- **Dedicated Dockerfile & Compose**: `docker/webmail/docker-compose.yml` builds from `webmail-ui/Dockerfile` using lightweight Alpine Linux with PHP 8.3-FPM and Nginx.
+- **Unified Self-Hosted Compose**: Orchestrated within `docker-compose.selfhosted.yml` and exposed via Caddy automated TLS reverse proxy on `https://webmail.<your-domain>`.
+- **Portal Deep-Linking**: Integrated with the STX Hosting Customer Portal (`/portal/mail`) allowing 1-click launch with account credential passing.

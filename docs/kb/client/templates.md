@@ -8,9 +8,10 @@ Templates are ready-made applications curated and verified by our engineering te
 ## Available Templates
 
 Our curated catalog includes popular self-hosted applications such as:
+- **Supabase** (Full self-hosted BaaS: Kong, Auth, PostgREST, Realtime, Storage, Studio)
 - **WordPress** (CMS & blogging)
 - **Ghost** (Modern newsletter and publication platform)
-- **n8n** (Visual workflow automation)
+- **n8n** (Visual workflow automation with PostgreSQL backend)
 - **Nextcloud** (Self-hosted cloud collaboration and storage)
 - **Strapi** (Headless CMS for building custom APIs)
 - **Plausible** (Privacy-friendly analytics)
