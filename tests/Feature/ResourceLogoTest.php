@@ -32,9 +32,9 @@ test('applications get the logo of how they are built', function (string $buildP
 ]);
 
 test('services get the logo of their template, with the CDN as fallback', function () {
-    $template = get_service_templates()->get('n8n');
+    $template = get_service_templates()->get('n8n-with-postgresql');
 
-    expect(resource_logo(new Service(['name' => 'renamed', 'service_type' => 'n8n'])))->toBe([
+    expect(resource_logo(new Service(['name' => 'renamed', 'service_type' => 'n8n-with-postgresql'])))->toBe([
         'src' => asset($template->logo),
         'dark' => null,
         'fallback' => service_logo_urls($template->logo)['logo_cdn_url'],
@@ -44,7 +44,7 @@ test('services get the logo of their template, with the CDN as fallback', functi
 });
 
 test('services created before the service type was stored use the template in their name', function () {
-    expect(resource_logo(new Service(['name' => 'n8n-abc123']))['src'])->toBe(asset(get_service_templates()->get('n8n')->logo));
+    expect(resource_logo(new Service(['name' => 'n8n-with-postgresql-abc123']))['src'])->toBe(asset(get_service_templates()->get('n8n-with-postgresql')->logo));
 });
 
 test('services without a template logo have no logo', function () {

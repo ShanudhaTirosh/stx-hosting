@@ -1,0 +1,52 @@
+# docker-compose.selfhosted.yml
+# Master Compose Stack for Self-Hosted Supabase, WildDuck Mail, Webmail UI, and Caddy Reverse Proxy
+
+services:
+  # Webmail UI PHP Application
+  webmail-php:
+    build:
+      context: ./webmail-ui
+      dockerfile: Dockerfile
+    container_name: webmail-php
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: "https://webmail.${DOMAIN:-ourdomain.com}"
+      APP_KEY: ${WEBMAIL_APP_KEY}
+      WILDDUCK_API_URL: "http://wildduck:8080"
+      WILDDUCK_API_TOKEN: ${WILDDUCK_API_TOKEN}
+      SESSION_LIFETIME_MIN: 480
+      SESSION_COOKIE_SECURE: "true"
+      MAX_ATTACHMENT_MB: 25
+      MAX_MESSAGE_MB: 30
+    volumes:
+      - webmail_sessions:/var/lib/webmail
+    networks:
+      - mail_net
+      - caddy_net
+
+  # Webmail Nginx Web Front
+  webmail:
+    image: nginx:1.27-alpine
+    container_name: webmail
+    restart: unless-stopped
+    depends_on:
+      - webmail-php
+    volumes:
+      - ./webmail-ui/deploy/nginx.docker.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./webmail-ui/deploy/webmail-upstream.docker.conf:/etc/nginx/webmail-upstream.conf:ro
+      - ./webmail-ui/public:/srv/webmail/public:ro
+    networks:
+      - caddy_net
+
+volumes:
+  webmail_sessions:
+    name: webmail_sessions
+
+networks:
+  caddy_net:
+    name: caddy_net
+  mail_net:
+    external: true
+

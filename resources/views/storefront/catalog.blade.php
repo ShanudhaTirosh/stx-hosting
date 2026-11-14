@@ -83,5 +83,20 @@
         @empty
             <p class="empty">No plans are listed here yet. <a href="{{ route('store.contact') }}">Tell us what you need</a> and we will let you know.</p>
         @endforelse
+
+        @if (! $single)
+            <section class="band ink" style="margin-top:3rem;border-radius:14px;padding:2rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem">
+                    <div>
+                        <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#a391ff">New Product</span>
+                        <h2 style="font-size:1.4rem;font-weight:700;margin:0.25rem 0 0.5rem 0">Email Hosting with Custom Domains</h2>
+                        <p style="margin:0;font-size:0.9rem;color:#ccc;max-width:38rem">Bring your own domain, get dedicated mailboxes, pure Webmail UI, IMAP/SMTP access, and pooled storage (Starter 500MB, Basic 1GB, Pro 3GB, Business 5GB) with no daily send limits.</p>
+                    </div>
+                    <div>
+                        <a class="btn" href="{{ route('store.email-hosting') }}">View Email Hosting Plans</a>
+                    </div>
+                </div>
+            </section>
+        @endif
     </div>
 </x-storefront.layout>

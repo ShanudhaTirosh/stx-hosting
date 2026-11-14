@@ -1,4 +1,17 @@
-<div class="min-h-screen bg-[#09090b] text-[#fafafa] font-sans selection:bg-emerald-500 selection:text-black">
+<div 
+    class="min-h-screen bg-[#09090b] text-[#fafafa] font-sans selection:bg-emerald-500 selection:text-black"
+    x-data="{
+        initRealtime() {
+            if (window.supabaseClient) {
+                const channel = window.supabaseClient.channel('realtime:public:status');
+                channel.on('broadcast', { event: 'monitor_status_changed' }, () => {
+                    $wire.$refresh();
+                }).subscribe();
+            }
+        }
+    }"
+    x-init="initRealtime()"
+>
     <main class="mx-auto max-w-6xl p-6 sm:p-8 space-y-8">
         {{-- Header matching Next.js Status --}}
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-2">

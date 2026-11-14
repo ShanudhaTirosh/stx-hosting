@@ -1,4 +1,5 @@
 <a href="{{ route('store.pricing') }}" @if (request()->routeIs('store.pricing', 'store.vps', 'store.app-hosting', 'store.web-hosting', 'store.bot-hosting', 'store.databases', 'store.games', 'store.v2ray')) aria-current="page" @endif>Plans</a>
+<a href="{{ route('store.email-hosting') }}" @if (request()->routeIs('store.email-hosting')) aria-current="page" @endif>Email Hosting</a>
 <a href="{{ route('status.public') }}">Status</a>
 <a href="{{ route('docs.index') }}" @if (request()->routeIs('docs.*')) aria-current="page" @endif>Help</a>
 <a href="{{ route('store.faqs') }}" @if (request()->routeIs('store.faqs')) aria-current="page" @endif>FAQ</a>

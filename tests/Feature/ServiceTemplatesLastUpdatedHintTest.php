@@ -37,11 +37,11 @@ it('returns each service template last updated timestamp from the generated bund
 it('returns local, CDN, and default logo fallbacks for every service', function () {
     $services = (new Select)->loadServices()['services'];
 
-    expect($services['opnform']['logo'])->toBe(asset('svgs/opnform.svg'))
-        ->and($services['pydio-cells']['logo'])->toBe(asset('svgs/cells.svg'))
-        ->and($services['pydio-cells']['logo_cdn_url'])
-        ->toBe('https://raw.githubusercontent.com/coollabsio/coolify/refs/heads/main/public/svgs/cells.svg')
-        ->and($services['pydio-cells']['logo_default_url'])->toBe(asset('svgs/default.webp'));
+    expect($services['activepieces']['logo'])->toBe(asset('svgs/activepieces.png'))
+        ->and($services['pocketbase']['logo'])->toBe(asset('svgs/pocketbase.svg'))
+        ->and($services['pocketbase']['logo_cdn_url'])
+        ->toBe('https://raw.githubusercontent.com/coollabsio/coolify/refs/heads/main/public/svgs/pocketbase.svg')
+        ->and($services['pocketbase']['logo_default_url'])->toBe(asset('svgs/default.webp'));
 });
 
 it('uses resource tile icons for databases', function () {

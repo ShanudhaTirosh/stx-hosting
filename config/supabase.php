@@ -44,5 +44,33 @@ return [
     |
     */
     'auto_create_team' => env('SUPABASE_AUTO_CREATE_TEAM', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supabase Storage Buckets
+    |--------------------------------------------------------------------------
+    |
+    | Standard storage buckets configured for assets, logos, invoices, and uploads.
+    |
+    */
+    'storage' => [
+        'logos' => env('SUPABASE_STORAGE_LOGOS', 'logos'),
+        'template_assets' => env('SUPABASE_STORAGE_TEMPLATE_ASSETS', 'template-assets'),
+        'invoices' => env('SUPABASE_STORAGE_INVOICES', 'invoices'),
+        'user_uploads' => env('SUPABASE_STORAGE_USER_UPLOADS', 'user-uploads'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supabase Realtime Channels
+    |--------------------------------------------------------------------------
+    |
+    | Channel names for live telemetry and notifications.
+    |
+    */
+    'realtime' => [
+        'public_status' => 'realtime:public:status',
+        'admin_feed' => 'realtime:admin:feed',
+    ],
 ];
 

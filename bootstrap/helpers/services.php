@@ -18,6 +18,13 @@ function service_logo_urls(mixed $logo): array
 
     $logo = ltrim($logo, '/');
 
+    if (! file_exists(public_path($logo))) {
+        $notUsed = 'svgs/not-used/'.basename($logo);
+        if (file_exists(public_path($notUsed))) {
+            $logo = $notUsed;
+        }
+    }
+
     return [
         'logo' => asset($logo),
         'logo_cdn_url' => 'https://raw.githubusercontent.com/coollabsio/coolify/refs/heads/main/public/'.$logo,

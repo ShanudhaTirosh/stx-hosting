@@ -1,0 +1,42 @@
+# docker/caddy/docker-compose.yml
+# Ingress Caddy Reverse Proxy
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 QUIC support
+    environment:
+      DOMAIN: ${DOMAIN:-ourdomain.com}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@ourdomain.com}
+      STUDIO_BCRYPT_PASSWORD: ${STUDIO_BCRYPT_PASSWORD}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - caddy_net
+      - supabase_net
+      - mail_net
+      - stx
+
+volumes:
+  caddy_data:
+    name: caddy_data
+  caddy_config:
+    name: caddy_config
+
+networks:
+  caddy_net:
+    name: caddy_net
+  supabase_net:
+    external: true
+  mail_net:
+    external: true
+  stx:
+    external: true
+

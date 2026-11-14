@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Mail\StorefrontContactMail;
 use App\Models\Commerce\Monitor;
 use App\Models\Commerce\Product;
+use App\Models\Commerce\MailPlan;
+use App\Models\Commerce\MailAddon;
+use App\Services\Supabase\SupabaseClient;
 use App\Models\Team;
 use App\Services\Commerce\CartService;
 use App\Support\Money;
@@ -54,6 +57,36 @@ class StorefrontController extends Controller
             'groups' => $groups,
             'single' => $category !== null ? ($categories[$category] ?? null) : null,
             'currency' => $currency,
+        ]);
+    }
+
+    /** Dedicated Email Hosting pricing and plans landing */
+    public function emailHosting(CartService $cart)
+    {
+        $currency = $cart->currency();
+        $supabase = app(SupabaseClient::class);
+
+        try {
+            $plans = $supabase->from('mail_plans')->eq('is_active', true)->order('storage_mb')->get();
+            $addons = $supabase->from('mail_addons')->eq('is_active', true)->order('type')->get();
+        } catch (\Throwable $e) {
+            $plans = MailPlan::active()->orderBy('storage_mb')->get()->toArray();
+            $addons = MailAddon::active()->orderBy('type')->get()->toArray();
+        }
+
+        if (empty($plans)) {
+            $plans = [
+                ['name' => 'Starter', 'storage_mb' => 500, 'max_mailboxes' => 3, 'price_cents' => 150, 'price_lkr_cents' => 48000],
+                ['name' => 'Basic', 'storage_mb' => 1024, 'max_mailboxes' => 5, 'price_cents' => 300, 'price_lkr_cents' => 95000],
+                ['name' => 'Pro', 'storage_mb' => 3072, 'max_mailboxes' => 15, 'price_cents' => 600, 'price_lkr_cents' => 190000],
+                ['name' => 'Business', 'storage_mb' => 5120, 'max_mailboxes' => 30, 'price_cents' => 1000, 'price_lkr_cents' => 320000],
+            ];
+        }
+
+        return view('storefront.email-hosting', [
+            'currency' => $currency,
+            'plans' => $plans,
+            'addons' => $addons,
         ]);
     }
 
@@ -202,6 +235,12 @@ class StorefrontController extends Controller
                 ['How do I deploy my code?', 'Connect your GitHub repository, choose a branch, add environment variables, and deploy. Pushes to that branch redeploy automatically. You can also start from one of our templates.'],
                 ['Do I get a domain and HTTPS?', 'Every deployment gets a subdomain on our domain with an automatic HTTPS certificate. You can add your own domain as well.'],
                 ['Can I go back to an earlier version?', 'Yes. You can roll back to a previous deployment from your deployment history.'],
+            ],
+            'Email hosting' => [
+                ['Can I bring my own domain?', 'Yes. You bring your own domain, add the MX, SPF, DKIM, and DMARC DNS records we generate, and verify in seconds.'],
+                ['Are there daily send or receive limits?', 'No daily send or receive quotas are enforced or advertised. Standard burst anti-spam protection keeps our IP reputation clean.'],
+                ['How do I access my mail?', 'You can use our pure modern Webmail in any browser, or configure IMAP/SMTP on mobile and desktop email clients.'],
+                ['Is storage pooled?', 'Yes. The storage of your chosen plan is shared across all your team mailboxes, and you can assign optional per-mailbox limits.'],
             ],
             'Backups' => [
                 ['Are my databases and apps backed up?', 'Backups run on a schedule you choose, and you can start one yourself at any time. They are stored in Cloudflare R2, and you can restore from your client panel.'],

@@ -100,9 +100,15 @@ it('resolves the directory the parsers use for each resource', function () {
 function composeTemplatesWithContentVolumes(): array
 {
     $templates = [];
-    foreach (glob(dirname(__DIR__, 2).'/templates/compose/*.{yaml,yml}', GLOB_BRACE) as $file) {
-        if (preg_match('/^\s+content:/m', file_get_contents($file))) {
-            $templates[basename($file)] = [$file];
+    $dirs = [
+        dirname(__DIR__, 2).'/templates/compose/',
+        dirname(__DIR__, 2).'/templates/not-used/',
+    ];
+    foreach ($dirs as $dir) {
+        foreach (glob($dir.'*.{yaml,yml}', GLOB_BRACE) as $file) {
+            if (preg_match('/^\s+content:/m', file_get_contents($file))) {
+                $templates[basename($file)] = [$file];
+            }
         }
     }
 

@@ -6,8 +6,14 @@
  */
 function composeTemplateFiles(): array
 {
-    $dir = dirname(__DIR__, 2).'/templates/compose/';
-    $files = array_merge(glob($dir.'*.yaml') ?: [], glob($dir.'*.yml') ?: []);
+    $dirs = [
+        dirname(__DIR__, 2).'/templates/compose/',
+        dirname(__DIR__, 2).'/templates/not-used/',
+    ];
+    $files = [];
+    foreach ($dirs as $dir) {
+        $files = array_merge($files, glob($dir.'*.yaml') ?: [], glob($dir.'*.yml') ?: []);
+    }
 
     return collect($files)->mapWithKeys(fn (string $file): array => [basename($file) => [$file]])->all();
 }

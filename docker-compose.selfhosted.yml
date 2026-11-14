@@ -1,0 +1,369 @@
+# docker-compose.selfhosted.yml
+# Master Compose Stack for STX Hosting: Self-Hosted Supabase, WildDuck Mail, Webmail UI, STX PaaS, and Caddy Auto-SSL
+
+services:
+  # =========================================================================
+  # 1. Edge Reverse Proxy with Automated TLS
+  # =========================================================================
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-ourdomain.com}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@ourdomain.com}
+      STUDIO_BCRYPT_PASSWORD: ${STUDIO_BCRYPT_PASSWORD:-$2a$14$Z1kH4yL3k.7e5uF2q6F6j.4yO9U6E0wW8C2k2i3P4w6r8t0y2u4e}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - caddy_net
+    depends_on:
+      - supabase-kong
+      - webmail
+
+  # =========================================================================
+  # 2. Self-Hosted Supabase Core Stack
+  # =========================================================================
+  supabase-kong:
+    image: kong:2.8.1-alpine
+    container_name: supabase-kong
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+    volumes:
+      - ./docker/supabase/kong.yml:/var/lib/kong/kong.yml:ro
+    networks:
+      - supabase_net
+      - caddy_net
+
+  supabase-auth:
+    image: supabase/gotrue:v2.158.1
+    container_name: supabase-auth
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${SUPABASE_PUBLIC_URL:-https://api.ourdomain.com}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@supabase-db:5432/postgres?sslmode=disable
+      GOTRUE_SITE_URL: ${SITE_URL:-https://app.ourdomain.com}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-https://app.ourdomain.com/auth/callback}
+      GOTRUE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "false"
+      # Transactional auth emails via WildDuck SMTP
+      GOTRUE_SMTP_HOST: zonemta
+      GOTRUE_SMTP_PORT: 587
+      GOTRUE_SMTP_USER: ${SMTP_USER:-no-reply@ourdomain.com}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_USER:-no-reply@ourdomain.com}
+      GOTRUE_SMTP_MAX_FREQUENCY: 1s
+    networks:
+      - supabase_net
+      - mail_net
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.2
+    container_name: supabase-rest
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      PGRST_DB_USE_BUILTIN_AUTH: "false"
+    networks:
+      - supabase_net
+
+  supabase-realtime:
+    image: supabase/realtime:v2.30.23
+    container_name: supabase-realtime
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SSL: "false"
+      SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE}
+      JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+      SECURE_CHANNELS: "true"
+    networks:
+      - supabase_net
+
+  supabase-storage:
+    image: supabase/storage-api:v1.0.6
+    container_name: supabase-storage
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      ANON_KEY: ${SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://supabase-rest:3000
+      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+    volumes:
+      - supabase_storage_data:/var/lib/storage
+    networks:
+      - supabase_net
+
+  supabase-edge-runtime:
+    image: supabase/edge-runtime:v1.53.0
+    container_name: supabase-edge-runtime
+    restart: unless-stopped
+    environment:
+      JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@supabase-db:5432/postgres
+    volumes:
+      - ./supabase/functions:/home/deno/functions:ro
+    networks:
+      - supabase_net
+
+  supabase-studio:
+    image: supabase/studio:20240729-fa825e9
+    container_name: supabase-studio
+    restart: unless-stopped
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-https://api.ourdomain.com}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+    networks:
+      - supabase_net
+      - caddy_net
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.84.1
+    container_name: supabase-meta
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_DB_SSL_MODE: disable
+    networks:
+      - supabase_net
+
+  supabase-db:
+    image: supabase/postgres:15.1.1.78
+    container_name: supabase-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations:ro
+      - ./supabase/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - supabase_net
+
+  # =========================================================================
+  # 3. Self-Hosted Mail Server (WildDuck + ZoneMTA + Haraka)
+  # =========================================================================
+  wildduck:
+    image: wildduck/wildduck:latest
+    container_name: wildduck
+    restart: unless-stopped
+    depends_on:
+      - wildduck-mongo
+      - wildduck-redis
+    environment:
+      NODE_ENV: production
+      WILDDUCK_SECRET: ${WILDDUCK_SECRET}
+      MONGODB_URL: mongodb://wildduck-mongo:27017/wildduck
+      REDIS_URL: redis://wildduck-redis:6379/1
+      ZONE_MTA_URL: http://zonemta:8080
+      HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
+      API_PORT: 8080
+      API_HOST: 0.0.0.0
+      IMAPS_PORT: 993
+      POP3S_PORT: 995
+    ports:
+      - "993:993"
+      - "995:995"
+    volumes:
+      - wildduck_attachments:/var/lib/wildduck/attachments
+    networks:
+      - mail_net
+
+  zonemta:
+    image: zonecheck/zonemta:latest
+    container_name: zonemta
+    restart: unless-stopped
+    depends_on:
+      - wildduck-mongo
+      - wildduck-redis
+    environment:
+      NODE_ENV: production
+      HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
+      MONGODB_URL: mongodb://wildduck-mongo:27017/zonemta
+      REDIS_URL: redis://wildduck-redis:6379/2
+      DKIM_KEY_LOCATOR: mongodb
+      OUTBOUND_RELAY_ENABLED: ${OUTBOUND_RELAY_ENABLED:-false}
+      OUTBOUND_RELAY_HOST: ${OUTBOUND_RELAY_HOST:-smtp.sendgrid.net}
+      OUTBOUND_RELAY_PORT: ${OUTBOUND_RELAY_PORT:-587}
+      OUTBOUND_RELAY_USER: ${OUTBOUND_RELAY_USER:-}
+      OUTBOUND_RELAY_PASS: ${OUTBOUND_RELAY_PASS:-}
+    ports:
+      - "587:587"
+      - "465:465"
+    networks:
+      - mail_net
+
+  haraka:
+    image: wildduck/haraka:latest
+    container_name: haraka
+    restart: unless-stopped
+    depends_on:
+      - wildduck
+      - wildduck-redis
+    environment:
+      HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
+      REDIS_URL: redis://wildduck-redis:6379/3
+      WILDDUCK_URL: http://wildduck:8080
+    ports:
+      - "25:25"
+    networks:
+      - mail_net
+
+  wildduck-mongo:
+    image: mongo:6.0
+    container_name: wildduck-mongo
+    restart: unless-stopped
+    volumes:
+      - wildduck_mongo_data:/data/db
+    networks:
+      - mail_net
+
+  wildduck-redis:
+    image: redis:7-alpine
+    container_name: wildduck-redis
+    restart: unless-stopped
+    volumes:
+      - wildduck_redis_data:/data
+    networks:
+      - mail_net
+
+  # =========================================================================
+  # 4. Pure Webmail UI Application Stack
+  # =========================================================================
+  webmail-php:
+    build:
+      context: ./webmail-ui
+      dockerfile: Dockerfile
+    container_name: webmail-php
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: "https://webmail.${DOMAIN:-ourdomain.com}"
+      DOMAIN: ${DOMAIN:-ourdomain.com}
+      APP_KEY: ${WEBMAIL_APP_KEY}
+      WILDDUCK_API_URL: "http://wildduck:8080"
+      WILDDUCK_API_TOKEN: ${WILDDUCK_API_TOKEN}
+      SESSION_LIFETIME_MIN: 480
+      SESSION_COOKIE_SECURE: "true"
+      MAX_ATTACHMENT_MB: 25
+      MAX_MESSAGE_MB: 30
+    volumes:
+      - webmail_sessions:/var/lib/webmail
+    networks:
+      - mail_net
+      - caddy_net
+
+  webmail:
+    image: nginx:1.27-alpine
+    container_name: webmail
+    restart: unless-stopped
+    depends_on:
+      - webmail-php
+    volumes:
+      - ./webmail-ui/deploy/nginx.docker.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./webmail-ui/deploy/webmail-upstream.docker.conf:/etc/nginx/webmail-upstream.conf:ro
+      - ./webmail-ui/public:/srv/webmail/public:ro
+    networks:
+      - caddy_net
+
+volumes:
+  caddy_data:
+    name: caddy_data
+  caddy_config:
+    name: caddy_config
+  supabase_db_data:
+    name: supabase_db_data
+  supabase_storage_data:
+    name: supabase_storage_data
+  wildduck_mongo_data:
+    name: wildduck_mongo_data
+  wildduck_redis_data:
+    name: wildduck_redis_data
+  wildduck_attachments:
+    name: wildduck_attachments
+  webmail_sessions:
+    name: webmail_sessions
+
+networks:
+  caddy_net:
+    name: caddy_net
+    driver: bridge
+  supabase_net:
+    name: supabase_net
+    driver: bridge
+  mail_net:
+    name: mail_net
+    driver: bridge
+

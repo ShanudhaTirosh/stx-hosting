@@ -41,6 +41,12 @@ return [
             'blurb' => 'Sites and storefronts on managed hosting, with your own domain.',
             'db' => ['web_hosting'],
         ],
+        'email-hosting' => [
+            'label' => 'Email hosting',
+            'route' => 'store.email-hosting',
+            'blurb' => 'Custom domain email with modern webmail, IMAP/SMTP, and shared storage quotas.',
+            'db' => ['email_hosting', 'mail_hosting'],
+        ],
         'bot-hosting' => [
             'label' => 'Bot hosting',
             'route' => 'store.bot-hosting',

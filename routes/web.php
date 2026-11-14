@@ -181,6 +181,7 @@ Route::middleware(['storefront.currency', 'storefront.csp'])->group(function () 
     Route::get('/vps', [$store, 'catalog'])->defaults('category', 'vps')->name('store.vps');
     Route::get('/app-hosting', [$store, 'catalog'])->defaults('category', 'app-hosting')->name('store.app-hosting');
     Route::get('/web-hosting', [$store, 'catalog'])->defaults('category', 'web-hosting')->name('store.web-hosting');
+    Route::get('/email-hosting', [$store, 'emailHosting'])->name('store.email-hosting');
     Route::get('/bot-hosting', [$store, 'catalog'])->defaults('category', 'bot-hosting')->name('store.bot-hosting');
     Route::get('/databases', [$store, 'catalog'])->defaults('category', 'databases')->name('store.databases');
     Route::get('/game-servers', [$store, 'catalog'])->defaults('category', 'game-servers')->name('store.games');
@@ -347,6 +348,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
         Route::get('/admin/operations/approvals', \App\Livewire\Admin\Operations\DeploymentApprovals::class)->name('admin.operations.approvals');
         Route::get('/admin/status', \App\Livewire\Admin\Status\StatusStudio::class)->name('admin.status.index');
+        Route::get('/admin/commerce/mail-plans', \App\Livewire\Admin\Commerce\MailPlanStudio::class)->name('admin.commerce.mail-plans');
     });
 
     // Customer Self-Service Portal
@@ -359,6 +361,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/portal/databases', DatabaseList::class)->name('portal.databases');
     Route::get('/portal/billing', BillingOverview::class)->name('portal.billing');
     Route::get('/portal/domains', \App\Livewire\Portal\Domains::class)->name('portal.domains');
+    Route::get('/portal/mail', \App\Livewire\Portal\Mail\MailDashboard::class)->name('portal.mail');
     Route::get('/portal/backups', \App\Livewire\Portal\Backups::class)->name('portal.backups');
     Route::get('/portal/support', \App\Livewire\Support\ClientIndex::class)->name('portal.support');
     Route::get('/portal/support/{uuid}', \App\Livewire\Support\ThreadView::class)->name('portal.support.thread');

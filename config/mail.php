@@ -123,4 +123,19 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Self-Hosted WildDuck Mail Server API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Connection parameters for the WildDuck administrative API (used for
+    | provisioning domains, DKIM keys, mailboxes, quotas, and aliases).
+    |
+    */
+    'wildduck' => [
+        'api_url' => env('WILDDUCK_API_URL', 'http://127.0.0.1:8080'),
+        'api_token' => env('WILDDUCK_API_TOKEN'),
+        'timeout' => (int) env('WILDDUCK_TIMEOUT', 15),
+    ],
+
 ];

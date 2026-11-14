@@ -1,0 +1,111 @@
+# docker/mail/docker-compose.yml
+# Self-Hosted WildDuck & ZoneMTA Mail Infrastructure Stack
+# Services: WildDuck Core (IMAP/API), ZoneMTA (Outbound SMTP), Haraka (Inbound SMTP), MongoDB, Redis
+
+services:
+  wildduck:
+    image: wildduck/wildduck:latest
+    container_name: wildduck
+    restart: unless-stopped
+    depends_on:
+      - wildduck-mongo
+      - wildduck-redis
+    environment:
+      NODE_ENV: production
+      WILDDUCK_SECRET: ${WILDDUCK_SECRET}
+      MONGODB_URL: mongodb://wildduck-mongo:27017/wildduck
+      REDIS_URL: redis://wildduck-redis:6379/1
+      ZONE_MTA_URL: http://zonemta:8080
+      HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
+      API_PORT: 8080
+      API_HOST: 0.0.0.0
+      IMAPS_PORT: 993
+      POP3S_PORT: 995
+    ports:
+      # IMAPS and POP3S for client apps (Thunderbird, Apple Mail, Outlook)
+      - "993:993"
+      - "995:995"
+      # Internal API for Webmail UI and Platform Provisioning
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - wildduck_attachments:/var/lib/wildduck/attachments
+      - ./config/wildduck.toml:/etc/wildduck/wildduck.toml:ro
+    networks:
+      - mail_net
+
+  zonemta:
+    image: zonecheck/zonemta:latest
+    container_name: zonemta
+    restart: unless-stopped
+    depends_on:
+      - wildduck-mongo
+      - wildduck-redis
+    environment:
+      NODE_ENV: production
+      HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
+      MONGODB_URL: mongodb://wildduck-mongo:27017/zonemta
+      REDIS_URL: redis://wildduck-redis:6379/2
+      DKIM_KEY_LOCATOR: mongodb
+      OUTBOUND_RELAY_ENABLED: ${OUTBOUND_RELAY_ENABLED:-false}
+      OUTBOUND_RELAY_HOST: ${OUTBOUND_RELAY_HOST:-smtp.sendgrid.net}
+      OUTBOUND_RELAY_PORT: ${OUTBOUND_RELAY_PORT:-587}
+      OUTBOUND_RELAY_USER: ${OUTBOUND_RELAY_USER:-}
+      OUTBOUND_RELAY_PASS: ${OUTBOUND_RELAY_PASS:-}
+    ports:
+      # SMTP Submission over TLS
+      - "587:587"
+      # SMTPS (Implicit TLS)
+      - "465:465"
+    volumes:
+      - ./config/zonemta.toml:/etc/zonemta/zonemta.toml:ro
+    networks:
+      - mail_net
+
+  haraka:
+    image: wildduck/haraka:latest
+    container_name: haraka
+    restart: unless-stopped
+    depends_on:
+      - wildduck
+      - wildduck-redis
+    environment:
+      HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
+      REDIS_URL: redis://wildduck-redis:6379/3
+      WILDDUCK_URL: http://wildduck:8080
+    ports:
+      # Inbound SMTP from external mail servers (Gmail, Outlook)
+      - "25:25"
+    networks:
+      - mail_net
+
+  wildduck-mongo:
+    image: mongo:6.0
+    container_name: wildduck-mongo
+    restart: unless-stopped
+    volumes:
+      - wildduck_mongo_data:/data/db
+    networks:
+      - mail_net
+
+  wildduck-redis:
+    image: redis:7-alpine
+    container_name: wildduck-redis
+    restart: unless-stopped
+    volumes:
+      - wildduck_redis_data:/data
+    networks:
+      - mail_net
+
+volumes:
+  wildduck_mongo_data:
+    name: wildduck_mongo_data
+  wildduck_redis_data:
+    name: wildduck_redis_data
+  wildduck_attachments:
+    name: wildduck_attachments
+
+networks:
+  mail_net:
+    name: mail_net
+    driver: bridge
+

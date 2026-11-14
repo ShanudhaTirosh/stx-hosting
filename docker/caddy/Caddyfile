@@ -1,0 +1,119 @@
+# docker/caddy/Caddyfile
+# Production Edge Reverse Proxy with Automated TLS (Let's Encrypt / ZeroSSL), HSTS, and Basic Auth
+
+{
+    email {$ACME_EMAIL:-admin@ourdomain.com}
+    admin off
+
+    # Automated on-demand TLS for custom customer domains
+    on_demand_tls {
+        ask http://stx:8080/api/v1/domains/validate-ask
+        interval 2m
+        burst 10
+    }
+}
+
+# 1. Supabase API Gateway (REST, Auth, Realtime, Storage, Functions)
+api.{$DOMAIN:-ourdomain.com} {
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    reverse_proxy supabase-kong:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# 2. Supabase Studio (Protected behind HTTP Basic Auth)
+studio.{$DOMAIN:-ourdomain.com} {
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+    }
+
+    # Ingress Basic Auth gate to prevent unauthorized public access
+    basicauth {
+        admin {$STUDIO_BCRYPT_PASSWORD:-$2a$14$Z1kH4yL3k.7e5uF2q6F6j.4yO9U6E0wW8C2k2i3P4w6r8t0y2u4e}
+    }
+
+    reverse_proxy supabase-studio:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# 3. Webmail Interface (webmail-ui)
+webmail.{$DOMAIN:-ourdomain.com}, mail.{$DOMAIN:-ourdomain.com} {
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+    }
+
+    reverse_proxy webmail:80 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# 4. Platform Application (Customer Portal, Admin Console, Owner Studio)
+app.{$DOMAIN:-ourdomain.com} {
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+    }
+
+    reverse_proxy stx:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# 5. Public Status Page
+status.{$DOMAIN:-ourdomain.com} {
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+    }
+
+    reverse_proxy stx:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# 6. Customer Custom Domains (On-Demand TLS with validation)
+https:// {
+    tls {
+        on_demand
+    }
+
+    reverse_proxy stx:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+

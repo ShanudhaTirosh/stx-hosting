@@ -14,6 +14,7 @@ webmail/node_modules
 .env
 .env.backup
 .env.secrets
+.env.selfhosted
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml

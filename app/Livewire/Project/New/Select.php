@@ -382,6 +382,12 @@ class Select extends Component
             if (file_exists($templatePath)) {
                 return $this->formatLastModified($templatePath);
             }
+
+            $notUsedPath = base_path("templates/not-used/{$serviceName}.{$extension}");
+
+            if (file_exists($notUsedPath)) {
+                return $this->formatLastModified($notUsedPath);
+            }
         }
 
         return null;

@@ -1,4 +1,18 @@
-<div class="max-w-4xl mx-auto p-6 space-y-6">
+<div 
+    class="max-w-4xl mx-auto p-6 space-y-6"
+    x-data="{
+        initDomainRealtime() {
+            if (window.supabaseClient) {
+                const teamId = '{{ currentTeam()?->id }}';
+                const channel = window.supabaseClient.channel('realtime:domains:team_id=eq.' + teamId);
+                channel.on('broadcast', { event: 'domain_verified' }, () => {
+                    $wire.$refresh();
+                }).subscribe();
+            }
+        }
+    }"
+    x-init="initDomainRealtime()"
+>
     <div class="pb-4 border-b border-neutral-800 flex flex-wrap items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-white tracking-tight">Custom Domains</h1>

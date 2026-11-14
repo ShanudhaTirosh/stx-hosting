@@ -1,0 +1,28 @@
+# docker compose up -d --build        (put certificates in ./certs/fullchain.pem and ./certs/privkey.pem, create .env first)
+# NOTE: not run in the environment this was developed in; the same nginx/PHP-FPM files were verified on a plain host.
+services:
+  php:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./.env:/srv/webmail/.env:ro
+      - webmail-data:/var/lib/webmail
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on: [php]
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/webmail.conf:ro
+      - ./deploy/webmail-upstream.docker.conf:/etc/nginx/webmail-upstream.conf:ro
+      - ./public:/srv/webmail/public:ro
+      - ./certs/fullchain.pem:/etc/letsencrypt/live/mail.example.org/fullchain.pem:ro
+      - ./certs/privkey.pem:/etc/letsencrypt/live/mail.example.org/privkey.pem:ro
+    security_opt: ["no-new-privileges:true"]
+
+volumes:
+  webmail-data:

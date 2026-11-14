@@ -146,6 +146,7 @@
                     'Administration' => [
                         ['label' => 'Admin Console', 'icon' => 'admin', 'href' => route('admin.index'), 'active' => request()->is('admin'), 'visible' => $can('admin.console')],
                         ['label' => 'Products & Plans', 'icon' => 'layers', 'href' => route('admin.commerce.products'), 'active' => request()->is('admin/commerce/products*'), 'visible' => $can('catalog.manage')],
+                        ['label' => 'Email Hosting Studio', 'icon' => 'subscription', 'href' => route('admin.commerce.mail-plans'), 'active' => request()->is('admin/commerce/mail-plans*'), 'visible' => $can('pricing.manage')],
                         ['label' => 'Template Catalog', 'icon' => 'layers', 'href' => route('admin.templates'), 'active' => request()->is('admin/templates*'), 'visible' => $can('catalog.manage')],
                         ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('admin.operations.approvals'), 'active' => request()->is('admin/operations/approvals*'), 'visible' => $can('deployments.approve')],
                         ['label' => 'VPS Inventory', 'icon' => 'servers', 'href' => route('admin.inventory.vps'), 'active' => request()->is('admin/inventory/vps*'), 'visible' => $can('vps.inventory')],
@@ -168,6 +169,7 @@
                         ['label' => 'Applications', 'icon' => 'code', 'href' => route('portal.apps'), 'active' => request()->is('portal/apps*')],
                         ['label' => 'Databases', 'icon' => 'database', 'href' => route('portal.databases'), 'active' => request()->is('portal/databases*')],
                         ['label' => 'Domains', 'icon' => 'globe', 'href' => route('portal.domains'), 'active' => request()->is('portal/domains*')],
+                        ['label' => 'Email Hosting', 'icon' => 'subscription', 'href' => route('portal.mail'), 'active' => request()->is('portal/mail*')],
                         ['label' => 'Backups', 'icon' => 'storages', 'href' => route('portal.backups'), 'active' => request()->is('portal/backups*')],
                         ['label' => 'Help Center', 'icon' => 'layers', 'href' => route('docs.index'), 'active' => request()->is('docs*')],
                         ['label' => 'Support'.(($c = $navUser ? app(\App\Services\Chat\ChatService::class)->unreadForCustomer($navUser) : 0) > 0 ? " ({$c})" : ''), 'icon' => 'layers', 'href' => route('portal.support'), 'active' => request()->is('portal/support*')],

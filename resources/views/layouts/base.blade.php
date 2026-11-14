@@ -398,6 +398,18 @@
         <script type="text/javascript" src="{{ URL::asset('js/apexcharts.js') }}"></script>
         <script type="text/javascript" src="{{ URL::asset('js/purify.min.js') }}"></script>
     @endauth
+    @if(config('supabase.url') && config('supabase.key'))
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script>
+            try {
+                if (typeof supabase !== 'undefined' && !window.supabaseClient) {
+                    window.supabaseClient = supabase.createClient("{{ config('supabase.url') }}", "{{ config('supabase.key') }}");
+                }
+            } catch (e) {
+                console.warn('Supabase JS init deferred:', e);
+            }
+        </script>
+    @endif
 </head>
 @section('body')
 
