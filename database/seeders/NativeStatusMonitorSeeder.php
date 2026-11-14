@@ -101,6 +101,18 @@ class NativeStatusMonitorSeeder extends Seeder
                 'current_status' => 'operational',
                 'display_order' => 7,
             ],
+            [
+                'name' => 'service-payverify',
+                'public_label' => 'AI Slip Verification & Bank Settlement Engine',
+                'group_name' => 'Managed Cloud Services',
+                'type' => 'http',
+                'target_host' => 'http://localhost:8000/api/v1/external/health',
+                'port' => 8000,
+                'uptime_percentage' => 100.00,
+                'last_latency_ms' => 18,
+                'current_status' => 'operational',
+                'display_order' => 8,
+            ],
 
             // Group 4: Customer Control Plane
             [
@@ -113,7 +125,7 @@ class NativeStatusMonitorSeeder extends Seeder
                 'uptime_percentage' => 99.99,
                 'last_latency_ms' => 16,
                 'current_status' => 'operational',
-                'display_order' => 8,
+                'display_order' => 9,
             ],
         ];
 

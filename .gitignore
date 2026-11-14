@@ -67,3 +67,7 @@ ref
 /tests/Fixtures/parser/expected/templates/
 
 .agents/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db

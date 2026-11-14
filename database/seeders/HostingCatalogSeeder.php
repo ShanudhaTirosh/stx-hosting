@@ -137,6 +137,10 @@ class HostingCatalogSeeder extends Seeder
                     'disk_type' => $planData['disk_type'],
                     'bandwidth_gb' => $planData['bandwidth_gb'],
                     'specs_json' => $planData['specs'],
+                    'stock_status' => 'available',
+                    'backing_provider' => 'hetzner',
+                    'location_name' => 'Falkenstein, Germany',
+                    'location_flag' => 'DE',
                     'is_active' => true,
                 ]
             );
