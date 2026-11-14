@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #09090b; }
+      .group-box { fill: #121215; stroke: #27272a; stroke-width: 1.5; rx: 12px; }
+      .group-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; font-weight: 700; fill: #71717a; text-transform: uppercase; letter-spacing: 1.2px; }
+      .card { fill: #18181b; stroke: #3f3f46; stroke-width: 1.5; rx: 8px; }
+      .card-highlight { fill: #1c1917; stroke: #e4e4e7; stroke-width: 2; rx: 8px; }
+      .card-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; font-weight: 600; fill: #fafafa; }
+      .card-sub { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; fill: #a1a1aa; }
+      .arrow { stroke: #71717a; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .arrow-hl { stroke: #fafafa; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .badge { fill: #27272a; stroke: #3f3f46; stroke-width: 1; rx: 4px; }
+      .badge-text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; fill: #e4e4e7; }
+    </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#71717a" />
+    </marker>
+    <marker id="arrowhead-hl" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#fafafa" />
+    </marker>
+  </defs>
+
+  <rect width="1000" height="700" class="bg" rx="16" />
+  <text x="40" y="45" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="20" font-weight="700" fill="#ffffff">PAYVERIFY MULTI-VECTOR ARCHITECTURE</text>
+  <text x="40" y="68" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" fill="#a1a1aa">Deterministic Reconciliation Engine with Independent Evidence Vectors</text>
+
+  <rect x="40" y="100" width="280" height="560" class="group-box" />
+  <text x="60" y="130" class="group-title">1. Evidence Vectors</text>
+
+  <rect x="60" y="150" width="240" height="85" class="card" />
+  <text x="75" y="175" class="card-title">Vector 1: Customer Proofs</text>
+  <text x="75" y="195" class="card-sub">JPEG, PNG, Multi-page PDF slips</text>
+  <rect x="75" y="205" width="115" height="20" class="badge" />
+  <text x="82" y="219" class="badge-text">POST /orders/upload</text>
+
+  <rect x="60" y="250" width="240" height="85" class="card" />
+  <text x="75" y="275" class="card-title">Vector 2: WhatsApp Banking</text>
+  <text x="75" y="295" class="card-sub">ComBank WhatsApp Daemon</text>
+  <rect x="75" y="305" width="125" height="20" class="badge" />
+  <text x="82" y="319" class="badge-text">Baileys + Pairing Code</text>
+
+  <rect x="60" y="350" width="240" height="85" class="card" />
+  <text x="75" y="375" class="card-title">Vector 3: Android SMS Relay</text>
+  <text x="75" y="395" class="card-sub">Hardware Key ECDSA P-256</text>
+  <rect x="75" y="405" width="125" height="20" class="badge" />
+  <text x="82" y="419" class="badge-text">vas.combank.net URLs</text>
+
+  <rect x="60" y="450" width="240" height="85" class="card" />
+  <text x="75" y="475" class="card-title">Vector 4: Bank Statements</text>
+  <text x="75" y="495" class="card-sub">CSV, Excel XLSX imports</text>
+  <rect x="75" y="505" width="125" height="20" class="badge" />
+  <text x="82" y="519" class="badge-text">statement-imports API</text>
+
+  <rect x="60" y="550" width="240" height="85" class="card" />
+  <text x="75" y="575" class="card-title">Vector 5: External Checkout</text>
+  <text x="75" y="595" class="card-sub">Shopify, WooCommerce, POS</text>
+  <rect x="75" y="605" width="125" height="20" class="badge" />
+  <text x="82" y="619" class="badge-text">/api/v1/external/*</text>
+
+  <rect x="360" y="100" width="280" height="560" class="group-box" />
+  <text x="380" y="130" class="group-title">2. Processing &amp; Forensics</text>
+
+  <rect x="380" y="150" width="240" height="95" class="card" />
+  <text x="395" y="175" class="card-title">Multimodal AI Vision</text>
+  <text x="395" y="195" class="card-sub">Google Gemini 1.5 Flash / Ollama</text>
+  <text x="395" y="215" class="card-sub">Amount, Ref, Account OCR</text>
+  <rect x="395" y="222" width="115" height="18" class="badge" />
+  <text x="402" y="235" class="badge-text">Advisory Evidence E2</text>
+
+  <rect x="380" y="260" width="240" height="85" class="card" />
+  <text x="395" y="285" class="card-title">Forensics Engine</text>
+  <text x="395" y="305" class="card-sub">SHA-256 duplicate detection</text>
+  <text x="395" y="325" class="card-sub">Perceptual dHash &amp; EXIF analysis</text>
+
+  <rect x="380" y="360" width="240" height="85" class="card" />
+  <text x="395" y="385" class="card-title">Zero-Leak OTP Buffer</text>
+  <text x="395" y="405" class="card-sub">In-Memory 60s TTL relay</text>
+  <text x="395" y="425" class="card-sub">Never persisted to disk or DB</text>
+
+  <rect x="380" y="460" width="240" height="85" class="card" />
+  <text x="395" y="485" class="card-title">ComBank Receipt Advice</text>
+  <text x="395" y="505" class="card-sub">Official STAN &amp; Notes breakdown</text>
+  <text x="395" y="525" class="card-sub">Encrypted Deposit Advice PDF</text>
+
+  <rect x="380" y="560" width="240" height="80" class="card" />
+  <text x="395" y="585" class="card-title">Encrypted Storage</text>
+  <text x="395" y="605" class="card-sub">Fernet 256-bit AES encryption</text>
+  <text x="395" y="625" class="card-sub">/srv/storage encrypted at rest</text>
+
+  <rect x="680" y="100" width="280" height="560" class="group-box" />
+  <text x="700" y="130" class="group-title">3. Deterministic Settlement</text>
+
+  <rect x="700" y="150" width="240" height="150" class="card-highlight" />
+  <text x="715" y="180" class="card-title">Reconciliation Matcher</text>
+  <text x="715" y="205" class="card-sub">Exact amount matching</text>
+  <text x="715" y="225" class="card-sub">STAN / Remarks Payment Code</text>
+  <text x="715" y="245" class="card-sub">Booking window enforcement</text>
+  <rect x="715" y="260" width="145" height="24" class="badge" style="fill:#22c55e22; stroke:#22c55e;" />
+  <text x="723" y="276" class="badge-text" style="fill:#4ade80;">basis="bank_match"</text>
+
+  <rect x="700" y="320" width="240" height="100" class="card" />
+  <text x="715" y="345" class="card-title">Cryptographic Audit Chain</text>
+  <text x="715" y="365" class="card-sub">Immutable SHA-256 hash log</text>
+  <text x="715" y="385" class="card-sub">hash_prev / hash_self verification</text>
+  <text x="715" y="405" class="card-sub">Zero-tamper guarantee</text>
+
+  <rect x="700" y="440" width="240" height="90" class="card" />
+  <text x="715" y="465" class="card-title">Outbound Webhooks</text>
+  <text x="715" y="485" class="card-sub">HMAC-SHA256 signed events</text>
+  <text x="715" y="505" class="card-sub">Replay prevention timestamp</text>
+  <text x="715" y="520" class="card-sub">payment.verified dispatch</text>
+
+  <rect x="700" y="550" width="240" height="90" class="card" />
+  <text x="715" y="575" class="card-title">Manual Review Workbench</text>
+  <text x="715" y="595" class="card-sub">High-contrast split view</text>
+  <text x="715" y="615" class="card-sub">One-click staff override</text>
+  <text x="715" y="630" class="card-sub">basis="admin_override"</text>
+
+  <path d="M 300 190 L 340 190 L 340 195 L 380 195" class="arrow" marker-end="url(#arrowhead)" />
+  <path d="M 300 200 L 340 200 L 340 300 L 380 300" class="arrow" marker-end="url(#arrowhead)" />
+  <path d="M 300 290 L 380 290" class="arrow" marker-end="url(#arrowhead)" />
+  <path d="M 300 390 L 380 390" class="arrow" marker-end="url(#arrowhead)" />
+  <path d="M 620 200 L 660 200 L 660 210 L 700 210" class="arrow-hl" marker-end="url(#arrowhead-hl)" />
+  <path d="M 620 300 L 660 300 L 660 230 L 700 230" class="arrow-hl" marker-end="url(#arrowhead-hl)" />
+  <path d="M 620 500 L 660 500 L 660 250 L 700 250" class="arrow-hl" marker-end="url(#arrowhead-hl)" />
+  <path d="M 820 300 L 820 320" class="arrow" marker-end="url(#arrowhead)" />
+  <path d="M 820 420 L 820 440" class="arrow" marker-end="url(#arrowhead)" />
+</svg>

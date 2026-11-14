@@ -1,0 +1,19 @@
+# Caddy obtains and renews HTTPS certificates automatically for real domain names that point at this server.
+{$PUBLIC_HOST} {
+	encode zstd gzip
+	header -Server
+	request_body { max_size 32MB }
+	reverse_proxy web:3000
+}
+
+# Phones reach ONLY the device endpoints. Everything else on this host is closed.
+{$PHONE_API_HOST} {
+	@devices path /api/v1/devices/*
+	handle @devices {
+		request_body { max_size 1MB }
+		reverse_proxy api:8000
+	}
+	handle {
+		respond "Not found" 404
+	}
+}
