@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: payverify
+      POSTGRES_USER: payverify
+      POSTGRES_PASSWORD: ${PV_DB_PASSWORD:?set PV_DB_PASSWORD}
+    volumes: [pgdata:/var/lib/postgresql/data]
+  api:
+    build: .
+    depends_on: [db]
+    environment:
+      PV_DATABASE_URL: postgresql+psycopg2://payverify:${PV_DB_PASSWORD}@db:5432/payverify
+      PV_ENV: production
+      PV_DATA_KEY: ${PV_DATA_KEY:?set PV_DATA_KEY}
+      PV_CORS_ORIGINS: ${PV_CORS_ORIGINS:?set PV_CORS_ORIGINS (https only)}
+      PV_PAY_TO_ACCOUNT_NAME: ${PV_PAY_TO_ACCOUNT_NAME:-}
+      PV_PAY_TO_ACCOUNT_NUMBER: ${PV_PAY_TO_ACCOUNT_NUMBER:-}
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+      PV_JWT_SECRET: ${PV_JWT_SECRET:?set PV_JWT_SECRET}
+      PV_BANK_ACCOUNT_TAIL: ${PV_BANK_ACCOUNT_TAIL:?set PV_BANK_ACCOUNT_TAIL}
+    volumes: [proofs:/srv/storage]
+    ports: ["127.0.0.1:8000:8000"]   # put a TLS reverse proxy in front
+volumes: {pgdata: {}, proofs: {}}

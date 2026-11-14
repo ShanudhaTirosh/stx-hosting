@@ -78,5 +78,28 @@ class DHashService
 
         return $distance;
     }
+
+    /**
+     * Find existing verified or approved payment proof with similar dHash.
+     */
+    public function findDuplicate(string $dhash, ?int $excludeProofId = null, int $maxDistance = 5): ?\App\Models\Commerce\PaymentProof
+    {
+        $existing = \App\Models\Commerce\PaymentProof::query()
+            ->whereNotNull('dhash')
+            ->when($excludeProofId, fn ($q) => $q->where('id', '!=', $excludeProofId))
+            ->whereIn('status', [
+                \App\Models\Commerce\PaymentProof::STATUS_APPROVED,
+                \App\Models\Commerce\PaymentProof::STATUS_AUTO_VERIFIED,
+            ])
+            ->get();
+
+        foreach ($existing as $proof) {
+            if ($proof->dhash && self::distance($dhash, $proof->dhash) <= $maxDistance) {
+                return $proof;
+            }
+        }
+
+        return null;
+    }
 }
 

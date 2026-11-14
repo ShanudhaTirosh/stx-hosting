@@ -8,6 +8,7 @@ use App\Models\Commerce\PaymentProof;
 use App\Notifications\Commerce\PaymentApprovedNotification;
 use App\Notifications\Commerce\PaymentRejectedNotification;
 use App\Notifications\Commerce\StaffProofSubmittedNotification;
+use App\Services\Commerce\DHashService;
 use App\Services\Commerce\PaymentReviewService;
 use App\Services\Commerce\PayVerifyClient;
 use App\Services\Commerce\PdfRasterizerService;
@@ -36,7 +37,8 @@ class VerifyPaymentProofJob implements ShouldQueue
     public function handle(
         PayVerifyClient $payverify,
         PaymentReviewService $reviewService,
-        PdfRasterizerService $rasterizer
+        PdfRasterizerService $rasterizer,
+        ?DHashService $dhashService = null
     ): void {
         $proof = PaymentProof::with(['invoice.order.items.pricingTier.productVariant.product', 'invoice.user', 'user'])->find($this->proofId);
 
@@ -84,6 +86,23 @@ class VerifyPaymentProofJob implements ShouldQueue
             if ($pngBytes) {
                 $reviewBytes = $pngBytes;
                 $reviewMime = 'image/png';
+            }
+        }
+
+        // 2b. Fast local duplicate detection via perceptual dHash
+        if ($dhashService && $proof->dhash) {
+            $duplicate = $dhashService->findDuplicate($proof->dhash, $proof->id, maxDistance: 5);
+            if ($duplicate) {
+                Log::warning("VerifyPaymentProofJob: Duplicate dHash detected for Proof #{$proof->id} matching Proof #{$duplicate->id}.");
+                $rejectionReason = 'Duplicate payment slip detected. This receipt was already submitted for another invoice.';
+                $proof->update([
+                    'status' => PaymentProof::STATUS_REJECTED,
+                    'rejection_reason' => $rejectionReason,
+                    'discrepancies' => ['duplicate_proof'],
+                ]);
+                $reviewService->reject($proof, null, $rejectionReason);
+
+                return;
             }
         }
 

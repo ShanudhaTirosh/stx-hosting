@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Services\Commerce\DHashService;
 use App\Services\Commerce\PayVerifyClient;
+use App\Services\Commerce\PdfRasterizerService;
 use App\Services\Commerce\ProofStorageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -153,6 +154,7 @@ test('verification job auto-approves proof when payverify returns high confidenc
     $job->handle(
         $mockClient,
         app(\App\Services\Commerce\PaymentReviewService::class),
+        app(PdfRasterizerService::class),
         app(DHashService::class)
     );
 
@@ -231,6 +233,7 @@ test('verification job routes to manual review when confidence is moderate or pa
     $job->handle(
         $mockClient,
         app(\App\Services\Commerce\PaymentReviewService::class),
+        app(PdfRasterizerService::class),
         app(DHashService::class)
     );
 
@@ -321,6 +324,7 @@ test('verification job detects duplicate perceptual hash and rejects reused rece
     $job->handle(
         $mockClient,
         app(\App\Services\Commerce\PaymentReviewService::class),
+        app(PdfRasterizerService::class),
         app(DHashService::class)
     );
 

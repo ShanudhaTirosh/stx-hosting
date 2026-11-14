@@ -15,6 +15,8 @@ class VerificationSettings extends Component
     public float $autoApproveThreshold = 0.90;
     public float $manualReviewThreshold = 0.60;
     public int $maxDateSkewDays = 7;
+    public string $geminiApiKeys = '';
+    public int $geminiRateLimitRpm = 14;
 
     public ?array $healthStatus = null;
     public ?string $testError = null;
@@ -33,6 +35,8 @@ class VerificationSettings extends Component
         $this->autoApproveThreshold = (float) CommercialSetting::get('payverify_auto_approve_min_confidence', config('commerce.payverify.auto_approve_min_confidence', 0.90));
         $this->manualReviewThreshold = (float) CommercialSetting::get('payverify_manual_review_min_confidence', config('commerce.payverify.manual_review_min_confidence', 0.60));
         $this->maxDateSkewDays = (int) CommercialSetting::get('payverify_max_date_skew_days', config('commerce.payverify.max_date_skew_days', 7));
+        $this->geminiApiKeys = (string) CommercialSetting::get('payverify_gemini_api_keys', env('PV_GEMINI_API_KEYS', ''));
+        $this->geminiRateLimitRpm = (int) CommercialSetting::get('payverify_gemini_rate_limit_rpm', 14);
     }
 
     public function testConnection(PayVerifyClient $client): void
@@ -71,6 +75,8 @@ class VerificationSettings extends Component
         CommercialSetting::set('payverify_auto_approve_min_confidence', $this->autoApproveThreshold, 'string', 'Minimum confidence score for auto approval');
         CommercialSetting::set('payverify_manual_review_min_confidence', $this->manualReviewThreshold, 'string', 'Minimum confidence score for manual review queue');
         CommercialSetting::set('payverify_max_date_skew_days', $this->maxDateSkewDays, 'integer', 'Maximum allowed receipt date age in days');
+        CommercialSetting::set('payverify_gemini_api_keys', trim($this->geminiApiKeys), 'string', 'Multi-key rotation for Gemini Vision API');
+        CommercialSetting::set('payverify_gemini_rate_limit_rpm', $this->geminiRateLimitRpm, 'integer', 'Gemini requests per minute token bucket ceiling');
 
         $this->dispatch('success', 'Verification settings saved successfully.');
     }

@@ -83,6 +83,32 @@
             </div>
         </div>
 
+        <!-- Vision AI Multi-Key Rotation & Rate Limiting -->
+        <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4 shadow-xl">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-purple-400 font-mono">3. Gemini Vision Multi-Key Rotation &amp; Rate Limiting</h2>
+            <p class="text-[11px] text-neutral-400">
+                To stay comfortably within Google AI Studio free tier limits (15 RPM), enter multiple API keys. PayVerify automatically rotates through available keys, sets 60s cooldowns on HTTP 429s, and uses adaptive token-bucket throttling.
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="gemini-keys" class="block text-xs font-bold text-neutral-300 mb-1">
+                        Gemini API Keys (Comma or newline separated)
+                    </label>
+                    <textarea id="gemini-keys" rows="3" wire:model="geminiApiKeys" placeholder="AIzaSyA...&#10;AIzaSyB...&#10;AIzaSyC..." class="textarea textarea-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono"></textarea>
+                    <span class="text-[10px] text-neutral-500 font-mono block mt-1">Leave empty to use the primary default key in server environment variables.</span>
+                </div>
+
+                <div>
+                    <label for="gemini-rpm" class="block text-xs font-bold text-neutral-300 mb-1">
+                        Requests-per-Minute Ceiling per Key
+                    </label>
+                    <input id="gemini-rpm" type="number" min="1" max="60" wire:model="geminiRateLimitRpm" class="input input-sm w-48 bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono">
+                    <span class="text-[10px] text-neutral-500 font-mono block mt-1">Default 14 RPM (leaves safety buffer below free tier 15 RPM cap).</span>
+                </div>
+            </div>
+        </div>
+
         <div class="flex justify-end gap-3 pt-2">
             <button type="submit" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg text-xs shadow-lg shadow-purple-600/30 transition-all">
                 Save Verification Settings
