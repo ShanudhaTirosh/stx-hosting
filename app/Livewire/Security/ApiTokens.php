@@ -151,6 +151,8 @@ class ApiTokens extends Component
 
     public function mount()
     {
+        $this->authorize('viewAny', PersonalAccessToken::class);
+
         $this->canUseRootPermissions = auth()->user()->can('useRootPermissions', PersonalAccessToken::class);
         $this->canUseWritePermissions = auth()->user()->can('useWritePermissions', PersonalAccessToken::class);
         $this->canUseDeployPermissions = auth()->user()->can('useDeployPermissions', PersonalAccessToken::class);

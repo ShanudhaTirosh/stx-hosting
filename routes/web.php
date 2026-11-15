@@ -428,6 +428,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/settings/oauth/{provider}', SettingsOauth::class)
             ->where('provider', '[A-Za-z0-9_-]+')
             ->name('admin.settings.oauth.provider');
+
+        // Keys & Tokens (Platform Staff / Owners)
+        Route::get('/admin/security/private-key', SecurityPrivateKeyIndex::class)->name('admin.security.private-key.index');
+        Route::get('/admin/security/private-key/{private_key_uuid}', SecurityPrivateKeyShow::class)->name('admin.security.private-key.show');
+        Route::get('/admin/security/cloud-tokens', CloudTokens::class)->name('admin.security.cloud-tokens');
+        Route::get('/admin/security/cloud-tokens/{cloud_token_uuid}', SecurityCloudProviderTokenShow::class)->name('admin.security.cloud-tokens.show');
+        Route::get('/admin/security/integration-tokens', IntegrationTokens::class)->name('admin.security.integration-tokens');
+        Route::get('/admin/security/cloud-init-scripts', CloudInitScripts::class)->name('admin.security.cloud-init-scripts');
+        Route::get('/admin/security/cloud-init-scripts/{cloud_init_script_uuid}', SecurityCloudInitScriptShow::class)->name('admin.security.cloud-init-scripts.show');
+        Route::get('/admin/security/api-tokens', ApiTokens::class)->name('admin.security.api-tokens');
     });
 
     // Customer Self-Service Portal
@@ -460,16 +470,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/subscription', SubscriptionShow::class)->name('subscription.show');
     Route::get('/subscription/new', SubscriptionIndex::class)->name('subscription.index');
 
-    Route::get('/settings', SettingsIndex::class)->name('settings.index');
-    Route::get('/settings/advanced', SettingsAdvanced::class)->name('settings.advanced');
-    Route::get('/settings/updates', SettingsUpdates::class)->name('settings.updates');
-
-    Route::get('/settings/backup', SettingsBackup::class)->name('settings.backup');
-    Route::get('/settings/email', SettingsEmail::class)->name('settings.email');
-    Route::get('/settings/oauth', SettingsOauth::class)->name('settings.oauth');
-    Route::get('/settings/oauth/{provider}', SettingsOauth::class)
-        ->where('provider', '[A-Za-z0-9_-]+')
-        ->name('settings.oauth.provider');
+    Route::middleware('platform.staff')->group(function () {
+        Route::get('/settings', fn () => redirect()->route('admin.settings.index'))->name('settings.index');
+        Route::get('/settings/advanced', fn () => redirect()->route('admin.settings.advanced'))->name('settings.advanced');
+        Route::get('/settings/updates', fn () => redirect()->route('admin.settings.updates'))->name('settings.updates');
+        Route::get('/settings/backup', fn () => redirect()->route('admin.settings.backup'))->name('settings.backup');
+        Route::get('/settings/email', fn () => redirect()->route('admin.settings.email'))->name('settings.email');
+        Route::get('/settings/oauth', fn () => redirect()->route('admin.settings.oauth'))->name('settings.oauth');
+        Route::get('/settings/oauth/{provider}', fn (string $provider) => redirect()->route('admin.settings.oauth.provider', ['provider' => $provider]))
+            ->where('provider', '[A-Za-z0-9_-]+')
+            ->name('settings.oauth.provider');
+    });
     Route::get('/profile', ProfileIndex::class)->name('profile');
     Route::get('/profile/avatar', ProfileAvatarController::class)->name('profile.avatar');
     Route::get('/profile/appearance', ProfileAppearance::class)->name('profile.appearance');

@@ -178,6 +178,12 @@
                             ['label' => 'Staff Handbook', 'icon' => 'layers', 'href' => route('admin.docs.index'), 'active' => request()->is('admin/docs*'), 'visible' => $can('admin.console')],
                             ['label' => 'Alert Channels', 'icon' => 'subscription', 'href' => route('admin.notifications'), 'active' => request()->is('admin/notifications*'), 'visible' => $can('notifications.manage')],
                             ['label' => 'Email Templates', 'icon' => 'subscription', 'href' => route('admin.emails'), 'active' => request()->is('admin/emails*'), 'visible' => $can('email_templates.manage')],
+                            ['label' => 'Keys & Tokens', 'icon' => 'keys', 'visible' => $can('platform.settings'), 'children' => [
+                                ['label' => 'Private Keys', 'icon' => 'keys', 'href' => route('admin.security.private-key.index'), 'active' => request()->is('admin/security/private-key*', 'security/private-key*')],
+                                ['label' => 'Cloud Tokens', 'icon' => 'cloud', 'href' => route('admin.security.cloud-tokens'), 'active' => request()->is('admin/security/cloud-tokens*', 'security/cloud-tokens*')],
+                                ['label' => 'Integration Tokens', 'icon' => 'network', 'href' => route('admin.security.integration-tokens'), 'active' => request()->is('admin/security/integration-tokens*', 'security/integration-tokens*')],
+                                ['label' => 'API Tokens', 'icon' => 'code', 'href' => route('admin.security.api-tokens'), 'active' => request()->is('admin/security/api-tokens*', 'security/api-tokens*')],
+                            ]],
                             ['label' => 'Instance Settings', 'icon' => 'settings', 'visible' => $can('platform.settings'), 'children' => [
                                 ['label' => 'General', 'icon' => 'settings', 'href' => route('admin.settings.index'), 'active' => request()->is('admin/settings', 'settings')],
                                 ['label' => 'Advanced', 'icon' => 'grid', 'href' => route('admin.settings.advanced'), 'active' => request()->is('admin/settings/advanced', 'settings/advanced')],
@@ -227,7 +233,7 @@
                                 ['label' => 'Pushover', 'brandIcon' => 'pushover', 'href' => route('notifications.pushover'), 'active' => request()->is('notifications/pushover')],
                                 ['label' => 'Webhook', 'icon' => 'destinations', 'href' => route('notifications.webhook'), 'active' => request()->is('notifications/webhook')],
                             ]],
-                            ['label' => 'Keys & Tokens', 'icon' => 'keys', 'children' => [
+                            ['label' => 'Keys & Tokens', 'icon' => 'keys', 'visible' => auth()->user()?->isOwner() || auth()->user()?->isInstanceAdmin(), 'children' => [
                                 ['label' => 'Private Keys', 'icon' => 'keys', 'href' => route('security.private-key.index'), 'active' => request()->is('security/private-key*')],
                                 ['label' => 'Cloud Tokens', 'icon' => 'cloud', 'href' => route('security.cloud-tokens'), 'active' => request()->is('security/cloud-tokens*'), 'visible' => $can('nodes.add') && auth()->user()?->can('viewAny', App\Models\CloudProviderToken::class)],
                                 ['label' => 'Integration Tokens', 'icon' => 'network', 'href' => route('security.integration-tokens'), 'active' => request()->is('security/integration-tokens'), 'visible' => $can('nodes.add') && auth()->user()?->can('viewAny', App\Models\IntegrationToken::class)],

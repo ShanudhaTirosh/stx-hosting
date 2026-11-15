@@ -12,7 +12,7 @@ class ApiTokenPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     /**
@@ -28,7 +28,7 @@ class ApiTokenPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     /**

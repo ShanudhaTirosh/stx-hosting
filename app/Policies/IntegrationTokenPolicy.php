@@ -12,12 +12,12 @@ class IntegrationTokenPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     /**

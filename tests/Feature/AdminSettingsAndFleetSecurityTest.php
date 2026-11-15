@@ -1,13 +1,17 @@
 <?php
 
+use App\Models\CloudProviderToken;
 use App\Models\InstanceSettings;
+use App\Models\IntegrationToken;
 use App\Models\OauthSetting;
+use App\Models\PrivateKey;
 use App\Models\Server;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Once;
+use Laravel\Sanctum\PersonalAccessToken;
 
 uses(RefreshDatabase::class);
 
@@ -85,6 +89,10 @@ test('both admin and owner staff can access all admin settings routes', function
         'admin.settings.oauth',
         'admin.settings.email',
         'admin.settings.backup',
+        'admin.security.private-key.index',
+        'admin.security.cloud-tokens',
+        'admin.security.integration-tokens',
+        'admin.security.api-tokens',
     ];
 
     foreach ($routes as $routeName) {
@@ -116,6 +124,10 @@ test('client users are strictly forbidden from admin settings, servers, and term
         'admin.settings.oauth',
         'admin.settings.email',
         'admin.settings.backup',
+        'admin.security.private-key.index',
+        'admin.security.cloud-tokens',
+        'admin.security.integration-tokens',
+        'admin.security.api-tokens',
         'admin.servers',
         'admin.terminal',
         'terminal',
@@ -139,4 +151,66 @@ test('client users are strictly forbidden from terminal auth and session endpoin
 
     $this->postJson(route('terminal.session'), ['token' => str_repeat('a', 64)])
         ->assertForbidden();
+});
+
+test('legacy settings routes redirect staff to admin settings and forbid client users', function () {
+    $staff = createStaffMember('admin');
+    $this->actingAs($staff);
+
+    $this->get('/settings')->assertRedirect(route('admin.settings.index'));
+    $this->get('/settings/oauth')->assertRedirect(route('admin.settings.oauth'));
+    $this->get('/settings/advanced')->assertRedirect(route('admin.settings.advanced'));
+    $this->get('/settings/updates')->assertRedirect(route('admin.settings.updates'));
+    $this->get('/settings/backup')->assertRedirect(route('admin.settings.backup'));
+    $this->get('/settings/email')->assertRedirect(route('admin.settings.email'));
+
+    $client = createClientUser();
+    $this->actingAs($client);
+
+    $this->get('/settings')->assertForbidden();
+    $this->get('/settings/oauth')->assertForbidden();
+    $this->get('/settings/advanced')->assertForbidden();
+    $this->get('/settings/updates')->assertForbidden();
+    $this->get('/settings/backup')->assertForbidden();
+    $this->get('/settings/email')->assertForbidden();
+});
+
+test('only team owners and instance admins can view and create private keys, tokens, and credentials', function () {
+    $member = User::factory()->create();
+    $this->clientTeam->members()->attach($member->id, ['role' => 'member']);
+    $this->actingAs($member);
+    session(['currentTeam' => $this->clientTeam]);
+
+    expect($member->can('viewAny', PrivateKey::class))->toBeFalse()
+        ->and($member->can('create', PrivateKey::class))->toBeFalse()
+        ->and($member->can('viewAny', CloudProviderToken::class))->toBeFalse()
+        ->and($member->can('create', CloudProviderToken::class))->toBeFalse()
+        ->and($member->can('viewAny', IntegrationToken::class))->toBeFalse()
+        ->and($member->can('create', IntegrationToken::class))->toBeFalse()
+        ->and($member->can('viewAny', PersonalAccessToken::class))->toBeFalse()
+        ->and($member->can('create', PersonalAccessToken::class))->toBeFalse();
+
+    $this->get(route('security.private-key.index'))->assertForbidden();
+    $this->get(route('security.cloud-tokens'))->assertForbidden();
+    $this->get(route('security.integration-tokens'))->assertForbidden();
+    $this->get(route('security.api-tokens'))->assertForbidden();
+
+    $owner = User::factory()->create();
+    $this->clientTeam->members()->attach($owner->id, ['role' => 'owner']);
+    $this->actingAs($owner);
+    session(['currentTeam' => $this->clientTeam]);
+
+    expect($owner->can('viewAny', PrivateKey::class))->toBeTrue()
+        ->and($owner->can('create', PrivateKey::class))->toBeTrue()
+        ->and($owner->can('viewAny', CloudProviderToken::class))->toBeTrue()
+        ->and($owner->can('create', CloudProviderToken::class))->toBeTrue()
+        ->and($owner->can('viewAny', IntegrationToken::class))->toBeTrue()
+        ->and($owner->can('create', IntegrationToken::class))->toBeTrue()
+        ->and($owner->can('viewAny', PersonalAccessToken::class))->toBeTrue()
+        ->and($owner->can('create', PersonalAccessToken::class))->toBeTrue();
+
+    $this->get(route('security.private-key.index'))->assertSuccessful();
+    $this->get(route('security.cloud-tokens'))->assertSuccessful();
+    $this->get(route('security.integration-tokens'))->assertSuccessful();
+    $this->get(route('security.api-tokens'))->assertSuccessful();
 });

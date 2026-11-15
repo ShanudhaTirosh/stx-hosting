@@ -1,33 +1,34 @@
 @php
+    $isAdmin = request()->is('admin*');
     $securityMenuItems = collect([
         [
             'label' => 'Private Keys',
-            'route' => 'security.private-key.index',
-            'active' => request()->routeIs('security.private-key.*'),
+            'route' => $isAdmin ? 'admin.security.private-key.index' : 'security.private-key.index',
+            'active' => request()->routeIs('*security.private-key.*'),
             'icon' => 'keys',
         ],
         auth()->user()?->can('viewAny', App\Models\CloudProviderToken::class) ? [
             'label' => 'Cloud Tokens',
-            'route' => 'security.cloud-tokens',
-            'active' => request()->routeIs('security.cloud-tokens*'),
+            'route' => $isAdmin ? 'admin.security.cloud-tokens' : 'security.cloud-tokens',
+            'active' => request()->routeIs('*security.cloud-tokens*'),
             'icon' => 'cloud',
         ] : null,
         auth()->user()?->can('viewAny', App\Models\IntegrationToken::class) ? [
             'label' => 'Integration Tokens',
-            'route' => 'security.integration-tokens',
-            'active' => request()->routeIs('security.integration-tokens'),
+            'route' => $isAdmin ? 'admin.security.integration-tokens' : 'security.integration-tokens',
+            'active' => request()->routeIs('*security.integration-tokens*'),
             'icon' => 'network',
         ] : null,
         auth()->user()?->can('viewAny', App\Models\CloudInitScript::class) ? [
             'label' => 'Cloud-Init Scripts',
-            'route' => 'security.cloud-init-scripts',
-            'active' => request()->routeIs('security.cloud-init-scripts*'),
+            'route' => $isAdmin ? 'admin.security.cloud-init-scripts' : 'security.cloud-init-scripts',
+            'active' => request()->routeIs('*security.cloud-init-scripts*'),
             'icon' => 'file-content',
         ] : null,
         [
             'label' => 'API Tokens',
-            'route' => 'security.api-tokens',
-            'active' => request()->routeIs('security.api-tokens'),
+            'route' => $isAdmin ? 'admin.security.api-tokens' : 'security.api-tokens',
+            'active' => request()->routeIs('*security.api-tokens*'),
             'icon' => 'code',
         ],
     ])->filter();

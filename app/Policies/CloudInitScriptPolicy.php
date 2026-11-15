@@ -12,7 +12,7 @@ class CloudInitScriptPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     /**
@@ -28,7 +28,7 @@ class CloudInitScriptPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     /**

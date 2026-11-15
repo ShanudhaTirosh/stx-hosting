@@ -12,6 +12,11 @@ class Index extends Component
 
     public ?string $selectedPrivateKeyUuid = null;
 
+    public function mount(): void
+    {
+        $this->authorize('viewAny', PrivateKey::class);
+    }
+
     public function getListeners(): array
     {
         return [

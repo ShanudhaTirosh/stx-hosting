@@ -12,7 +12,7 @@ class PrivateKeyPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     /**
@@ -39,9 +39,8 @@ class PrivateKeyPolicy
      */
     public function create(User $user): bool
     {
-        // Only admins/owners can create private keys
-        // Members should not be able to create SSH keys that could be used for deployments
-        return $user->isAdmin();
+        // Only team owners or platform instance admins/owners can create private keys
+        return $user->isOwner() || $user->isInstanceAdmin();
     }
 
     /**
