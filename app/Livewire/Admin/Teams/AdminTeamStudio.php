@@ -27,6 +27,10 @@ class AdminTeamStudio extends Component
             abort(403);
         }
 
+        if (RbacService::isPlatformAdminOnly(Auth::user())) {
+            abort(403, 'Platform Admins are restricted from entering the client portal.');
+        }
+
         $team = Team::findOrFail($teamId);
         refreshSession($team);
 

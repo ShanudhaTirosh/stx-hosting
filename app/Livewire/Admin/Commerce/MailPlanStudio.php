@@ -23,26 +23,44 @@ class MailPlanStudio extends Component
 
     // Plan editing
     public bool $showPlanModal = false;
+
     public ?string $editingPlanId = null;
+
     public string $planName = '';
+
     public string $planSlug = '';
+
     public int $planStorageMb = 1024;
+
     public int $planMaxMailboxes = 5;
+
     public float $planPriceUsd = 3.00;
+
     public float $planPriceLkr = 950.00;
+
     public string $planBillingInterval = 'monthly';
+
     public bool $planIsActive = true;
+
     public string $planFeaturesText = '';
 
     // Addon editing
     public bool $showAddonModal = false;
+
     public ?string $editingAddonId = null;
+
     public string $addonName = '';
+
     public string $addonSlug = '';
+
     public string $addonType = 'storage'; // storage, mailbox, domain, feature
+
     public float $addonPriceUsd = 1.00;
+
     public string $addonBillingInterval = 'monthly';
+
     public bool $addonIsActive = true;
+
     public string $addonSpecsJson = '{"storage_mb": 1024}';
 
     // Telemetry & WildDuck Stats
@@ -93,6 +111,7 @@ class MailPlanStudio extends Component
 
         if (! $plan) {
             $this->dispatch('error', 'Plan not found.');
+
             return;
         }
 
@@ -199,6 +218,7 @@ class MailPlanStudio extends Component
 
         if (! $addon) {
             $this->dispatch('error', 'Add-on not found.');
+
             return;
         }
 
@@ -336,4 +356,3 @@ class MailPlanStudio extends Component
         ])->layout('layouts.app', ['title' => 'Email Hosting Studio | STX Admin']);
     }
 }
-

@@ -4,6 +4,7 @@ namespace App\Livewire\Settings;
 
 use App\Models\InstanceSettings;
 use App\Models\Server;
+use App\Services\RbacService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
@@ -59,6 +60,13 @@ class Index extends Component
     public function render()
     {
         return view('livewire.settings.index');
+    }
+
+    public function boot(): void
+    {
+        if (! RbacService::isPlatformOwner(auth()->user())) {
+            abort(403, 'Platform owner access required.');
+        }
     }
 
     public function mount()

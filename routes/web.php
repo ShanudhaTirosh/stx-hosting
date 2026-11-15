@@ -21,7 +21,6 @@ use App\Http\Controllers\Commerce\InvoiceViewController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FileBrowserDownloadController;
 use App\Http\Controllers\Mail\MailClientProfileController;
-use App\Http\Controllers\OauthController;
 use App\Http\Controllers\Portal\MailClientConfigController;
 use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\ProjectIconController;
@@ -54,6 +53,8 @@ use App\Livewire\Admin\Operations\ProvisioningQueue;
 use App\Livewire\Admin\Platform\PlatformDomainStudio;
 use App\Livewire\Admin\Status\StatusStudio;
 use App\Livewire\Admin\Teams\AdminTeamStudio;
+use App\Livewire\Owner\Index as OwnerIndex;
+use App\Livewire\Owner\Admins\AdminManagementStudio;
 use App\Livewire\Analytics;
 use App\Livewire\Boarding\Index as BoardingIndex;
 use App\Livewire\Dashboard;
@@ -158,7 +159,6 @@ use App\Livewire\Settings\Index as SettingsIndex;
 use App\Livewire\Settings\Updates as SettingsUpdates;
 use App\Livewire\SettingsBackup;
 use App\Livewire\SettingsEmail;
-use App\Livewire\SettingsOauth;
 use App\Livewire\SharedVariables\Canvas as SharedVariablesCanvas;
 use App\Livewire\SharedVariables\Environment\Index as EnvironmentSharedVariablesIndex;
 use App\Livewire\SharedVariables\Environment\Show as EnvironmentSharedVariablesShow;
@@ -208,8 +208,6 @@ Route::get('/email/verify/{id}/{hash}', [Controller::class, 'email_verify'])->mi
 Route::get('/auth/link', [Controller::class, 'link'])->name('auth.link');
 Route::post('/auth/link', [Controller::class, 'acceptLink'])->middleware('throttle:magic-link')->name('auth.link.accept');
 
-Route::get('/auth/{provider}/redirect', [OauthController::class, 'redirect'])->name('auth.redirect');
-Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->name('auth.callback');
 // Public storefront: plain server-rendered pages (no Livewire, no JavaScript needed)
 Route::middleware(['storefront.currency', 'storefront.csp'])->group(function () {
     $store = StorefrontController::class;
@@ -321,12 +319,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('dashboard');
     })->name('two-factor.required.switch-team');
 
-    Route::get('/dashboard', Dashboard::class)->name('dashboard');
-    Route::get('/dashboard/canvas', DashboardCanvas::class)->name('dashboard.canvas');
-    Route::get('/analytics', Analytics::class)->name('analytics');
-    Route::get('/metrics', FleetMetrics::class)->name('metrics');
-    Route::get('/canvas', DeployCanvas::class)->name('deploy-canvas');
-    Route::get('/canvas/tags', TagsCanvas::class)->name('tags.canvas');
+    Route::middleware(['portal.client'])->group(function () {
+        Route::get('/dashboard', Dashboard::class)->name('dashboard');
+        Route::get('/dashboard/canvas', DashboardCanvas::class)->name('dashboard.canvas');
+        Route::get('/analytics', Analytics::class)->name('analytics');
+        Route::get('/metrics', FleetMetrics::class)->name('metrics');
+        Route::get('/canvas', DeployCanvas::class)->name('deploy-canvas');
+        Route::get('/canvas/tags', TagsCanvas::class)->name('tags.canvas');
+    });
     // The canvas calls these API controllers with the browser session (no API token).
     Route::prefix('canvas/api')->middleware([UseSessionTeamApiToken::class, 'api.token.team', 'api.sensitive'])->group(function () {
         Route::get('/projects', [ProjectController::class, 'projects'])->middleware(['api.ability:read']);
@@ -384,87 +384,134 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/deploy', [DeployController::class, 'deploy'])->middleware(['api.ability:deploy']);
         Route::get('/deployments/{uuid}', [DeployController::class, 'deployment_by_uuid'])->middleware(['api.ability:read']);
     });
-    // Administration Console & Commerce Studio (platform staff only; each component also re-checks per request)
-    Route::middleware(['platform.staff'])->group(function () {
+    // Administration Console (Platform Admin only - management tasks only)
+    Route::middleware(['platform.admin'])->group(function () {
         Route::get('/admin', AdminIndex::class)->name('admin.index');
-        Route::get('/admin/commerce/products', ProductCatalogStudio::class)->name('admin.commerce.products');
-        Route::get('/admin/templates', TemplateCatalogStudio::class)->name('admin.templates');
+        Route::get('/admin/teams', AdminTeamStudio::class)->name('admin.teams');
+        Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
         Route::get('/admin/billing/proofs', ProofReviewQueue::class)->name('admin.billing.proofs');
-        Route::get('/admin/billing/methods', PaymentMethods::class)->name('admin.billing.methods')->middleware('platform.owner');
-        Route::get('/admin/billing/verification-settings', VerificationSettings::class)->name('admin.billing.verification-settings')->middleware('platform.owner');
-        Route::get('/admin/notifications', DiscordRoutes::class)->name('admin.notifications')->middleware('platform.owner');
-        Route::get('/admin/emails', EmailTemplatesPage::class)->name('admin.emails')->middleware('platform.owner');
-        Route::get('/admin/mailboxes', MailboxStudio::class)->name('admin.mailboxes')->middleware('platform.owner');
+        Route::get('/admin/support', StaffInbox::class)->name('admin.support');
+        Route::get('/admin/support/{uuid}', ThreadView::class)->name('admin.support.thread');
+        Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
+        Route::get('/admin/status', StatusStudio::class)->name('admin.status.index');
+        Route::get('/admin/audit', AuditLog::class)->name('admin.audit');
         Route::get('/admin/my-mailboxes', MyMailboxes::class)->name('admin.my-mailboxes');
         Route::get('/admin/mailboxes/{id}/webmail-sso', [MailboxSsoController::class, 'launch'])->name('admin.mailboxes.webmail-sso');
         Route::get('/mail/profiles/apple/{mailboxId}', [MailClientProfileController::class, 'appleProfile'])->name('mail.profiles.apple');
         Route::get('/.well-known/autoconfig/mail/config-v1.1.xml', [MailClientProfileController::class, 'thunderbirdAutoconfig']);
         Route::get('/admin/docs', [DocsController::class, 'index'])->defaults('audience', 'admin')->name('admin.docs.index');
         Route::get('/admin/docs/{slug}', [DocsController::class, 'show'])->where('slug', '[a-z0-9-]+')->defaults('audience', 'admin')->name('admin.docs.show');
-        Route::get('/admin/audit', AuditLog::class)->name('admin.audit');
-        Route::get('/admin/backups', Backups::class)->name('admin.backups');
-        Route::get('/admin/support', StaffInbox::class)->name('admin.support');
-        Route::get('/admin/support/{uuid}', ThreadView::class)->name('admin.support.thread');
-        Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
-        Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
-        Route::get('/admin/operations/approvals', DeploymentApprovals::class)->name('admin.operations.approvals');
-        Route::get('/admin/status', StatusStudio::class)->name('admin.status.index');
-        Route::get('/admin/commerce/mail-plans', MailPlanStudio::class)->name('admin.commerce.mail-plans');
-        Route::get('/admin/platform/domains', PlatformDomainStudio::class)->name('admin.platform.domains')->middleware('platform.owner');
-        Route::get('/admin/cluster/nodes', ClusterNodeStudio::class)->name('admin.cluster.nodes');
-        Route::get('/admin/teams', AdminTeamStudio::class)->name('admin.teams');
 
-        // Fleet Servers & Terminal (Admin or Owner)
-        Route::get('/admin/servers', ServerIndex::class)->name('admin.servers');
-        Route::get('/admin/terminal', TerminalIndex::class)->name('admin.terminal')->middleware('can.access.terminal');
-
-        // Instance Settings (Admin or Owner)
-        Route::get('/admin/settings', SettingsIndex::class)->name('admin.settings.index');
-        Route::get('/admin/settings/advanced', SettingsAdvanced::class)->name('admin.settings.advanced');
-        Route::get('/admin/settings/updates', SettingsUpdates::class)->name('admin.settings.updates');
-        Route::get('/admin/settings/backup', SettingsBackup::class)->name('admin.settings.backup');
-        Route::get('/admin/settings/email', SettingsEmail::class)->name('admin.settings.email');
-        Route::get('/admin/settings/oauth', SettingsOauth::class)->name('admin.settings.oauth');
-        Route::get('/admin/settings/oauth/{provider}', SettingsOauth::class)
-            ->where('provider', '[A-Za-z0-9_-]+')
-            ->name('admin.settings.oauth.provider');
-
-        // Keys & Tokens (Platform Staff / Owners)
-        Route::get('/admin/security/private-key', SecurityPrivateKeyIndex::class)->name('admin.security.private-key.index');
-        Route::get('/admin/security/private-key/{private_key_uuid}', SecurityPrivateKeyShow::class)->name('admin.security.private-key.show');
-        Route::get('/admin/security/cloud-tokens', CloudTokens::class)->name('admin.security.cloud-tokens');
-        Route::get('/admin/security/cloud-tokens/{cloud_token_uuid}', SecurityCloudProviderTokenShow::class)->name('admin.security.cloud-tokens.show');
-        Route::get('/admin/security/integration-tokens', IntegrationTokens::class)->name('admin.security.integration-tokens');
-        Route::get('/admin/security/cloud-init-scripts', CloudInitScripts::class)->name('admin.security.cloud-init-scripts');
-        Route::get('/admin/security/cloud-init-scripts/{cloud_init_script_uuid}', SecurityCloudInitScriptShow::class)->name('admin.security.cloud-init-scripts.show');
-        Route::get('/admin/security/api-tokens', ApiTokens::class)->name('admin.security.api-tokens');
+        // Backward compatibility redirects for owner-only sections previously mapped under /admin/
+        Route::get('/admin/commerce/products', fn () => redirect()->route('owner.commerce.products'))->name('admin.commerce.products');
+        Route::get('/admin/templates', fn () => redirect()->route('owner.templates'))->name('admin.templates');
+        Route::get('/admin/commerce/mail-plans', fn () => redirect()->route('owner.commerce.mail-plans'))->name('admin.commerce.mail-plans');
+        Route::get('/admin/billing/methods', fn () => redirect()->route('owner.billing.methods'))->name('admin.billing.methods');
+        Route::get('/admin/billing/verification-settings', fn () => redirect()->route('owner.billing.verification-settings'))->name('admin.billing.verification-settings');
+        Route::get('/admin/notifications', fn () => redirect()->route('owner.notifications'))->name('admin.notifications');
+        Route::get('/admin/emails', fn () => redirect()->route('owner.emails'))->name('admin.emails');
+        Route::get('/admin/mailboxes', fn () => redirect()->route('owner.mailboxes'))->name('admin.mailboxes');
+        Route::get('/admin/platform/domains', fn () => redirect()->route('owner.platform.domains'))->name('admin.platform.domains');
+        Route::get('/admin/cluster/nodes', fn () => redirect()->route('owner.cluster.nodes'))->name('admin.cluster.nodes');
+        Route::get('/admin/servers', fn () => redirect()->route('owner.servers'))->name('admin.servers');
+        Route::get('/admin/terminal', fn () => redirect()->route('owner.terminal'))->name('admin.terminal');
+        Route::get('/admin/backups', fn () => redirect()->route('owner.backups'))->name('admin.backups');
+        Route::get('/admin/operations/approvals', fn () => redirect()->route('owner.operations.approvals'))->name('admin.operations.approvals');
+        Route::get('/admin/settings', fn () => redirect()->route('owner.settings.index'))->name('admin.settings.index');
+        Route::get('/admin/settings/advanced', fn () => redirect()->route('owner.settings.advanced'))->name('admin.settings.advanced');
+        Route::get('/admin/settings/updates', fn () => redirect()->route('owner.settings.updates'))->name('admin.settings.updates');
+        Route::get('/admin/settings/backup', fn () => redirect()->route('owner.settings.backup'))->name('admin.settings.backup');
+        Route::get('/admin/settings/email', fn () => redirect()->route('owner.settings.email'))->name('admin.settings.email');
+        Route::get('/admin/security/private-key', fn () => redirect()->route('owner.security.private-key.index'))->name('admin.security.private-key.index');
+        Route::get('/admin/security/private-key/{private_key_uuid}', fn (string $uuid) => redirect()->route('owner.security.private-key.show', ['private_key_uuid' => $uuid]))->name('admin.security.private-key.show');
+        Route::get('/admin/security/cloud-tokens', fn () => redirect()->route('owner.security.cloud-tokens'))->name('admin.security.cloud-tokens');
+        Route::get('/admin/security/cloud-tokens/{cloud_token_uuid}', fn (string $uuid) => redirect()->route('owner.security.cloud-tokens.show', ['cloud_token_uuid' => $uuid]))->name('admin.security.cloud-tokens.show');
+        Route::get('/admin/security/integration-tokens', fn () => redirect()->route('owner.security.integration-tokens'))->name('admin.security.integration-tokens');
+        Route::get('/admin/security/cloud-init-scripts', fn () => redirect()->route('owner.security.cloud-init-scripts'))->name('admin.security.cloud-init-scripts');
+        Route::get('/admin/security/cloud-init-scripts/{cloud_init_script_uuid}', fn (string $uuid) => redirect()->route('owner.security.cloud-init-scripts.show', ['cloud_init_script_uuid' => $uuid]))->name('admin.security.cloud-init-scripts.show');
+        Route::get('/admin/security/api-tokens', fn () => redirect()->route('owner.security.api-tokens'))->name('admin.security.api-tokens');
     });
 
-    // Customer Self-Service Portal
-    Route::get('/portal', ServicesList::class)->name('portal.index');
-    Route::get('/portal/deploy', DeployWizard::class)->name('portal.deploy');
-    Route::get('/portal/services', ServicesList::class)->name('portal.services');
-    Route::get('/portal/services/{uuid}', ServiceDetail::class)->name('portal.service.detail');
-    Route::get('/portal/teams', TeamList::class)->name('portal.teams.index');
-    Route::get('/portal/teams/invites', InvitesList::class)->name('portal.teams.invites');
-    Route::get('/portal/teams/{uuid}', TeamDetail::class)->name('portal.teams.detail');
-    Route::get('/portal/apps', AppList::class)->name('portal.apps');
-    Route::get('/portal/apps/{uuid}', AppDetail::class)->name('portal.apps.detail');
-    Route::get('/portal/databases', DatabaseList::class)->name('portal.databases');
-    Route::get('/portal/billing', BillingOverview::class)->name('portal.billing');
-    Route::get('/portal/domains', Domains::class)->name('portal.domains');
-    Route::get('/portal/mail', MailDashboard::class)->name('portal.mail');
-    Route::get('/portal/mail/apple-profile/{mailboxId}', [MailClientConfigController::class, 'downloadAppleProfile'])->name('portal.mail.apple-profile');
-    Route::get('/portal/backups', App\Livewire\Portal\Backups::class)->name('portal.backups');
-    Route::get('/portal/support', ClientIndex::class)->name('portal.support');
-    Route::get('/portal/support/{uuid}', ThreadView::class)->name('portal.support.thread');
-    Route::get('/support/attachments/{uuid}', [AttachmentController::class, 'show'])->middleware('throttle:60,1')->name('support.attachment');
-    Route::get('/portal/vps/{uuid}', VpsPanel::class)->name('portal.vps');
-    Route::get('/portal/invoices/{uuid}', [InvoiceViewController::class, 'show'])->name('portal.invoices.show');
-    Route::get('/invoices/{uuid}', [InvoiceViewController::class, 'show'])->middleware('throttle:60,1')->name('invoices.show');
-    Route::get('/invoices/{uuid}/pdf', [InvoicePdfController::class, 'show'])->middleware('throttle:30,1')->name('invoices.pdf');
-    Route::get('/portal/checkout', Checkout::class)->name('portal.checkout');
-    Route::get('/orders', Checkout::class)->name('orders.checkout');
+    // Owner Console & Full Platform Governance (Platform Owner only)
+    Route::middleware(['platform.owner'])->prefix('owner')->group(function () {
+        Route::get('/', OwnerIndex::class)->name('owner.index');
+        Route::get('/admins', AdminManagementStudio::class)->name('owner.admins');
+
+        // Embedded Operational Management (Owner has full access to all admin tools)
+        Route::get('/billing/proofs', ProofReviewQueue::class)->name('owner.billing.proofs');
+        Route::get('/operations/provisioning', ProvisioningQueue::class)->name('owner.operations.provisioning');
+        Route::get('/support', StaffInbox::class)->name('owner.support');
+        Route::get('/support/{uuid}', ThreadView::class)->name('owner.support.thread');
+        Route::get('/teams', AdminTeamStudio::class)->name('owner.teams');
+        Route::get('/inventory/vps', VpsInventoryStudio::class)->name('owner.inventory.vps');
+        Route::get('/status', StatusStudio::class)->name('owner.status.index');
+        Route::get('/audit', AuditLog::class)->name('owner.audit');
+        Route::get('/mailboxes', MailboxStudio::class)->name('owner.mailboxes');
+        Route::get('/mailboxes/{id}/webmail-sso', [MailboxSsoController::class, 'launch'])->name('owner.mailboxes.webmail-sso');
+
+        // Products, Plans & Pricing (Owner Only)
+        Route::get('/commerce/products', ProductCatalogStudio::class)->name('owner.commerce.products');
+        Route::get('/commerce/mail-plans', MailPlanStudio::class)->name('owner.commerce.mail-plans');
+        Route::get('/templates', TemplateCatalogStudio::class)->name('owner.templates');
+        Route::get('/billing/methods', PaymentMethods::class)->name('owner.billing.methods');
+        Route::get('/billing/verification-settings', VerificationSettings::class)->name('owner.billing.verification-settings');
+
+        // Infrastructure & Fleet (Owner Only)
+        Route::get('/platform/domains', PlatformDomainStudio::class)->name('owner.platform.domains');
+        Route::get('/cluster/nodes', ClusterNodeStudio::class)->name('owner.cluster.nodes');
+        Route::get('/servers', ServerIndex::class)->name('owner.servers');
+        Route::get('/terminal', TerminalIndex::class)->name('owner.terminal')->middleware('can.access.terminal');
+        Route::get('/operations/approvals', DeploymentApprovals::class)->name('owner.operations.approvals');
+        Route::get('/notifications', DiscordRoutes::class)->name('owner.notifications');
+        Route::get('/emails', EmailTemplatesPage::class)->name('owner.emails');
+        Route::get('/backups', Backups::class)->name('owner.backups');
+        Route::get('/docs', [DocsController::class, 'index'])->defaults('audience', 'admin')->name('owner.docs.index');
+
+        // System Settings (Owner Only)
+        Route::get('/settings', SettingsIndex::class)->name('owner.settings.index');
+        Route::get('/settings/advanced', SettingsAdvanced::class)->name('owner.settings.advanced');
+        Route::get('/settings/updates', SettingsUpdates::class)->name('owner.settings.updates');
+        Route::get('/settings/backup', SettingsBackup::class)->name('owner.settings.backup');
+        Route::get('/settings/email', SettingsEmail::class)->name('owner.settings.email');
+
+        // Keys & Security (Owner Only)
+        Route::get('/security/private-key', SecurityPrivateKeyIndex::class)->name('owner.security.private-key.index');
+        Route::get('/security/private-key/{private_key_uuid}', SecurityPrivateKeyShow::class)->name('owner.security.private-key.show');
+        Route::get('/security/cloud-tokens', CloudTokens::class)->name('owner.security.cloud-tokens');
+        Route::get('/security/cloud-tokens/{cloud_token_uuid}', SecurityCloudProviderTokenShow::class)->name('owner.security.cloud-tokens.show');
+        Route::get('/security/integration-tokens', IntegrationTokens::class)->name('owner.security.integration-tokens');
+        Route::get('/security/cloud-init-scripts', CloudInitScripts::class)->name('owner.security.cloud-init-scripts');
+        Route::get('/security/cloud-init-scripts/{cloud_init_script_uuid}', SecurityCloudInitScriptShow::class)->name('owner.security.cloud-init-scripts.show');
+        Route::get('/security/api-tokens', ApiTokens::class)->name('owner.security.api-tokens');
+    });
+
+    // Customer Self-Service Portal (Client & Owner only - Admins restricted)
+    Route::middleware(['portal.client'])->group(function () {
+        Route::get('/portal', ServicesList::class)->name('portal.index');
+        Route::get('/portal/deploy', DeployWizard::class)->name('portal.deploy');
+        Route::get('/portal/services', ServicesList::class)->name('portal.services');
+        Route::get('/portal/services/{uuid}', ServiceDetail::class)->name('portal.service.detail');
+        Route::get('/portal/teams', TeamList::class)->name('portal.teams.index');
+        Route::get('/portal/teams/invites', InvitesList::class)->name('portal.teams.invites');
+        Route::get('/portal/teams/{uuid}', TeamDetail::class)->name('portal.teams.detail');
+        Route::get('/portal/apps', AppList::class)->name('portal.apps');
+        Route::get('/portal/apps/{uuid}', AppDetail::class)->name('portal.apps.detail');
+        Route::get('/portal/databases', DatabaseList::class)->name('portal.databases');
+        Route::get('/portal/billing', BillingOverview::class)->name('portal.billing');
+        Route::get('/portal/domains', Domains::class)->name('portal.domains');
+        Route::get('/portal/mail', MailDashboard::class)->name('portal.mail');
+        Route::get('/portal/mail/apple-profile/{mailboxId}', [MailClientConfigController::class, 'downloadAppleProfile'])->name('portal.mail.apple-profile');
+        Route::get('/portal/backups', App\Livewire\Portal\Backups::class)->name('portal.backups');
+        Route::get('/portal/support', ClientIndex::class)->name('portal.support');
+        Route::get('/portal/support/{uuid}', ThreadView::class)->name('portal.support.thread');
+        Route::get('/support/attachments/{uuid}', [AttachmentController::class, 'show'])->middleware('throttle:60,1')->name('support.attachment');
+        Route::get('/portal/vps/{uuid}', VpsPanel::class)->name('portal.vps');
+        Route::get('/portal/invoices/{uuid}', [InvoiceViewController::class, 'show'])->name('portal.invoices.show');
+        Route::get('/invoices/{uuid}', [InvoiceViewController::class, 'show'])->middleware('throttle:60,1')->name('invoices.show');
+        Route::get('/invoices/{uuid}/pdf', [InvoicePdfController::class, 'show'])->middleware('throttle:30,1')->name('invoices.pdf');
+        Route::get('/portal/checkout', Checkout::class)->name('portal.checkout');
+        Route::get('/orders', Checkout::class)->name('orders.checkout');
+    });
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');
 
     Route::get('/subscription', SubscriptionShow::class)->name('subscription.show');
@@ -476,10 +523,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/settings/updates', fn () => redirect()->route('admin.settings.updates'))->name('settings.updates');
         Route::get('/settings/backup', fn () => redirect()->route('admin.settings.backup'))->name('settings.backup');
         Route::get('/settings/email', fn () => redirect()->route('admin.settings.email'))->name('settings.email');
-        Route::get('/settings/oauth', fn () => redirect()->route('admin.settings.oauth'))->name('settings.oauth');
-        Route::get('/settings/oauth/{provider}', fn (string $provider) => redirect()->route('admin.settings.oauth.provider', ['provider' => $provider]))
-            ->where('provider', '[A-Za-z0-9_-]+')
-            ->name('settings.oauth.provider');
     });
     Route::get('/profile', ProfileIndex::class)->name('profile');
     Route::get('/profile/avatar', ProfileAvatarController::class)->name('profile.avatar');

@@ -105,14 +105,21 @@
                             </td>
                             <td class="py-3 px-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button type="button" wire:click="switchToTeam({{ $team->id }})"
-                                        class="px-2.5 py-1 rounded text-[11px] font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-white/[0.06] hover:bg-neutral-200 dark:hover:bg-white/[0.1] transition-all">
-                                        Switch Context
-                                    </button>
-                                    <a href="{{ route('portal.teams.detail', ['uuid' => $team->uuid ?: ($team->id === 0 ? '00000000-0000-0000-0000-000000000000' : 'team-'.$team->id)]) }}" {{ wireNavigate() }}
-                                        class="px-2.5 py-1 rounded text-[11px] font-semibold text-amber-400 hover:text-amber-300 transition-colors">
-                                        Inspect
-                                    </a>
+                                    @if (\App\Services\RbacService::isPlatformOwner(auth()->user()))
+                                        <button type="button" wire:click="switchToTeam({{ $team->id }})"
+                                            class="px-2.5 py-1 rounded text-[11px] font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-white/[0.06] hover:bg-neutral-200 dark:hover:bg-white/[0.1] transition-all">
+                                            Switch Context
+                                        </button>
+                                        <a href="{{ route('portal.teams.detail', ['uuid' => $team->uuid ?: ($team->id === 0 ? '00000000-0000-0000-0000-000000000000' : 'team-'.$team->id)]) }}" {{ wireNavigate() }}
+                                            class="px-2.5 py-1 rounded text-[11px] font-semibold text-amber-400 hover:text-amber-300 transition-colors">
+                                            Inspect
+                                        </a>
+                                    @else
+                                        <a href="{{ route('admin.operations.provisioning') }}?team={{ $team->id }}" {{ wireNavigate() }}
+                                            class="px-2.5 py-1 rounded text-[11px] font-medium text-amber-400 hover:text-amber-300 transition-colors">
+                                            Orders
+                                        </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

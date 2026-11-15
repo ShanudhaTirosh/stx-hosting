@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Admin\Operations;
 
+use App\Jobs\BootstrapVpsPanelAccessJob;
+use App\Livewire\Concerns\RequiresPlatformStaff;
 use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\Order;
 use App\Models\Commerce\ServiceCredential;
@@ -10,15 +12,14 @@ use App\Models\Commerce\VpsInventory;
 use App\Notifications\Commerce\ServiceDeliveredNotification;
 use App\Services\Commerce\StatusTelemetryBridge;
 use App\Services\Commerce\VpsFulfillmentService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Livewire\Concerns\RequiresPlatformStaff;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class ProvisioningQueue extends Component
 {
     use RequiresPlatformStaff;
-
     use WithPagination;
 
     public ?int $selectedOrderId = null;
@@ -145,7 +146,7 @@ class ProvisioningQueue extends Component
                             'disk_gb' => $variant ? $variant->disk_gb : 40,
                             'status' => 'allocated',
                             'upstream_cost_cents' => (int) round($this->upstream_cost_usd * 100),
-                            'provider_renews_at' => $this->provider_renews_at ? \Illuminate\Support\Carbon::parse($this->provider_renews_at) : now()->addDays(30),
+                            'provider_renews_at' => $this->provider_renews_at ? Carbon::parse($this->provider_renews_at) : now()->addDays(30),
                             'provider_invoice_ref' => $this->provider_invoice_ref ?: null,
                             'admin_notes' => "Manually ordered from {$this->manual_provider}",
                         ]
@@ -153,12 +154,12 @@ class ProvisioningQueue extends Component
                     $vpsInventoryId = $node->id;
                 }
 
-                $upstreamCostCents = $this->fulfillmentMode === 'pool' && $node->upstream_cost_cents 
-                    ? $node->upstream_cost_cents 
+                $upstreamCostCents = $this->fulfillmentMode === 'pool' && $node->upstream_cost_cents
+                    ? $node->upstream_cost_cents
                     : (int) round($this->upstream_cost_usd * 100);
 
-                $providerRenewsAt = $this->provider_renews_at 
-                    ? \Illuminate\Support\Carbon::parse($this->provider_renews_at) 
+                $providerRenewsAt = $this->provider_renews_at
+                    ? Carbon::parse($this->provider_renews_at)
                     : ($node->provider_renews_at ?? now()->addDays(30));
 
                 // 1. Create or activate ServiceInstance
@@ -201,7 +202,7 @@ class ProvisioningQueue extends Component
                 // 4. Register with Status telemetry platform
                 StatusTelemetryBridge::registerVpsProbe($service);
 
-                \App\Jobs\BootstrapVpsPanelAccessJob::dispatch($service)->afterCommit()->delay(now()->addMinute());
+                BootstrapVpsPanelAccessJob::dispatch($service)->afterCommit()->delay(now()->addMinute());
 
                 // 4b. Notify customer of active VPS delivery
                 if ($order->user) {

@@ -3,26 +3,42 @@
 namespace App\Livewire\Admin\Cluster;
 
 use App\Models\Commerce\ClusterNode;
+use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\NodePlacementRule;
 use App\Services\Commerce\ClusterPlacementService;
 use App\Services\Commerce\NodeMigrationService;
+use App\Services\RbacService;
 use Livewire\Component;
 
 class ClusterNodeStudio extends Component
 {
     public bool $showEnrollModal = false;
+
     public string $newNodeName = '';
+
     public string $newNodeRegion = 'default';
+
     public string $enrollmentCommand = '';
 
     public ?int $selectedNodeId = null;
+
     public ?int $drainingNodeId = null;
+
     public array $drainResults = [];
 
     // Placement rules state
     public string $ruleType = 'pin_template';
+
     public string $ruleTarget = '';
+
     public ?int $ruleNodeId = null;
+
+    public function boot(): void
+    {
+        if (! RbacService::isPlatformOwner(auth()->user())) {
+            abort(403, 'Platform owner access required to manage cluster nodes.');
+        }
+    }
 
     public function mount(): void
     {
@@ -31,7 +47,7 @@ class ClusterNodeStudio extends Component
 
     public function openEnrollModal(): void
     {
-        $this->newNodeName = 'worker-node-' . (ClusterNode::count() + 1);
+        $this->newNodeName = 'worker-node-'.(ClusterNode::count() + 1);
         $this->newNodeRegion = 'default';
 
         $node = ClusterNode::create([
@@ -44,6 +60,11 @@ class ClusterNodeStudio extends Component
             'reserved_ram_mb' => 512,
             'total_disk_gb' => 80,
             'max_apps' => 50,
+        ]);
+
+        CommerceAuditLog::record('cluster.node_enrolled', ClusterNode::class, $node->id, [
+            'name' => $node->name,
+            'region' => $node->region,
         ]);
 
         $endpoint = url('/');
@@ -64,6 +85,11 @@ class ClusterNodeStudio extends Component
         $newStatus = $node->status === 'maintenance' ? 'ready' : 'maintenance';
         $node->update(['status' => $newStatus]);
 
+        CommerceAuditLog::record('cluster.node_cordoned', ClusterNode::class, $node->id, [
+            'name' => $node->name,
+            'status' => $newStatus,
+        ]);
+
         $this->dispatch('success', "Node '{$node->name}' status updated to {$newStatus}.");
     }
 
@@ -74,9 +100,13 @@ class ClusterNodeStudio extends Component
 
         try {
             $this->drainResults = NodeMigrationService::drainNode($node);
+            CommerceAuditLog::record('cluster.node_drained', ClusterNode::class, $node->id, [
+                'name' => $node->name,
+                'results' => $this->drainResults,
+            ]);
             $this->dispatch('success', "Node '{$node->name}' is now draining. Applications relocated.");
         } catch (\Throwable $e) {
-            $this->dispatch('error', 'Drain failed: ' . $e->getMessage());
+            $this->dispatch('error', 'Drain failed: '.$e->getMessage());
         } finally {
             $this->drainingNodeId = null;
         }
@@ -88,11 +118,16 @@ class ClusterNodeStudio extends Component
 
         if ($node->activeAppsCount() > 0) {
             $this->dispatch('error', "Cannot delete node '{$node->name}': It still hosts active applications. Drain the node first.");
+
             return;
         }
 
+        CommerceAuditLog::record('cluster.node_deleted', ClusterNode::class, $node->id, [
+            'name' => $node->name,
+        ]);
+
         $node->delete();
-        $this->dispatch('success', "Node deleted successfully.");
+        $this->dispatch('success', 'Node deleted successfully.');
     }
 
     public function addPlacementRule(): void
@@ -103,11 +138,16 @@ class ClusterNodeStudio extends Component
             'ruleNodeId' => 'required|exists:cluster_nodes,id',
         ]);
 
-        NodePlacementRule::create([
+        $rule = NodePlacementRule::create([
             'rule_type' => $this->ruleType,
             'target_identifier' => strtolower(trim($this->ruleTarget)),
             'cluster_node_id' => $this->ruleNodeId,
             'is_active' => true,
+        ]);
+
+        CommerceAuditLog::record('cluster.rule_created', NodePlacementRule::class, $rule->id, [
+            'rule_type' => $this->ruleType,
+            'target' => $this->ruleTarget,
         ]);
 
         $this->ruleTarget = '';
@@ -116,7 +156,12 @@ class ClusterNodeStudio extends Component
 
     public function deleteRule(int $ruleId): void
     {
-        NodePlacementRule::findOrFail($ruleId)->delete();
+        $rule = NodePlacementRule::findOrFail($ruleId);
+        CommerceAuditLog::record('cluster.rule_deleted', NodePlacementRule::class, $rule->id, [
+            'rule_type' => $rule->rule_type,
+            'target' => $rule->target_identifier,
+        ]);
+        $rule->delete();
         $this->dispatch('success', 'Rule deleted.');
     }
 
@@ -143,4 +188,3 @@ class ClusterNodeStudio extends Component
         ])->layout('layouts.app');
     }
 }
-

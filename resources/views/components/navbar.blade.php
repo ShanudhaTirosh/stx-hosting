@@ -88,30 +88,40 @@
         @php
             $navUser = auth()->user();
             $can = fn (string $capability): bool => \App\Services\RbacService::can($navUser, $capability);
+            $isPlatformOwner = \App\Services\RbacService::isPlatformOwner($navUser);
+            $isPlatformAdminOnly = \App\Services\RbacService::isPlatformAdminOnly($navUser);
             $isPlatformStaff = \App\Services\RbacService::isStaff($navUser);
+            $isOwnerArea = request()->is('owner*');
             $isAdminArea = request()->is('admin*');
         @endphp
-        @if ($isPlatformStaff)
+        @if ($isPlatformOwner)
             <div class="px-1 pb-2.5" :class="collapsed && 'lg:hidden'">
                 <div class="grid grid-cols-2 p-0.5 rounded-lg bg-neutral-200/70 dark:bg-neutral-900 border border-neutral-300/60 dark:border-white/10 text-xs font-medium">
-                    <a href="{{ route('admin.index') }}" {{ wireNavigate() }}
+                    <a href="{{ route('owner.index') }}" {{ wireNavigate() }}
                         @class([
                             'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all text-[11px]',
-                            'bg-amber-500 text-black font-semibold shadow-xs' => $isAdminArea,
-                            'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white' => ! $isAdminArea,
+                            'bg-amber-500 text-black font-semibold shadow-xs' => $isOwnerArea || $isAdminArea,
+                            'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white' => ! ($isOwnerArea || $isAdminArea),
                         ])>
-                        <span class="size-1.5 rounded-full {{ $isAdminArea ? 'bg-black animate-pulse' : 'bg-amber-500/60' }}"></span>
-                        Admin Panel
+                        <span class="size-1.5 rounded-full {{ ($isOwnerArea || $isAdminArea) ? 'bg-black animate-pulse' : 'bg-amber-500/60' }}"></span>
+                        Owner Console
                     </a>
                     <a href="{{ route('portal.index') }}" {{ wireNavigate() }}
                         @class([
                             'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md transition-all text-[11px]',
-                            'bg-primary-600 text-white font-semibold shadow-xs' => ! $isAdminArea,
-                            'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white' => $isAdminArea,
+                            'bg-primary-600 text-white font-semibold shadow-xs' => ! ($isOwnerArea || $isAdminArea),
+                            'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white' => ($isOwnerArea || $isAdminArea),
                         ])>
-                        <span class="size-1.5 rounded-full {{ ! $isAdminArea ? 'bg-white animate-pulse' : 'bg-primary-500/60' }}"></span>
+                        <span class="size-1.5 rounded-full {{ ! ($isOwnerArea || $isAdminArea) ? 'bg-white animate-pulse' : 'bg-primary-500/60' }}"></span>
                         Client Area
                     </a>
+                </div>
+            </div>
+        @elseif ($isPlatformAdminOnly)
+            <div class="px-1 pb-2.5" :class="collapsed && 'lg:hidden'">
+                <div class="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] font-semibold text-amber-500">
+                    <span class="size-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    Admin Console
                 </div>
             </div>
         @endif
@@ -141,57 +151,81 @@
                 // One permission map drives every menu item (config/stx-permissions.php).
                 $navUser = auth()->user();
                 $can = fn (string $capability): bool => \App\Services\RbacService::can($navUser, $capability);
-                $isPlatformAdmin = $can('admin.console');
+                $isPlatformOwner = \App\Services\RbacService::isPlatformOwner($navUser);
+                $isOwnerArea = request()->is('owner*');
                 $isAdminArea = request()->is('admin*');
 
-                if ($isAdminArea) {
+                if ($isOwnerArea) {
+                    $rawSections = [
+                        'Executive & Governance' => [
+                            ['label' => 'Owner Console', 'icon' => 'admin', 'href' => route('owner.index'), 'active' => request()->is('owner'), 'visible' => true],
+                            ['label' => 'Admin & Staff Studio', 'icon' => 'shield-star', 'href' => route('owner.admins'), 'active' => request()->is('owner/admins*'), 'visible' => true],
+                            ['label' => 'Audit Log', 'icon' => 'subscription', 'href' => route('owner.audit'), 'active' => request()->is('owner/audit*'), 'visible' => true],
+                        ],
+                        'Operations & Fleet' => [
+                            ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('owner.operations.provisioning'), 'active' => request()->is('owner/operations/provisioning*'), 'visible' => true],
+                            ['label' => 'VPS Inventory Studio', 'icon' => 'servers', 'href' => route('owner.inventory.vps'), 'active' => request()->is('owner/inventory/vps*'), 'visible' => true],
+                            ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('owner.operations.approvals'), 'active' => request()->is('owner/operations/approvals*'), 'visible' => true],
+                            ['label' => 'Cluster Nodes', 'icon' => 'servers', 'href' => route('owner.cluster.nodes'), 'active' => request()->is('owner/cluster/nodes*'), 'visible' => true],
+                            ['label' => 'Fleet Servers', 'icon' => 'servers', 'href' => route('owner.servers'), 'active' => request()->is('owner/servers*', 'servers*', 'server/*'), 'visible' => true],
+                            ['label' => 'Terminal', 'icon' => 'browser-terminal', 'href' => route('owner.terminal'), 'active' => request()->is('owner/terminal*', 'terminal*'), 'navigate' => false, 'visible' => true],
+                            ['label' => 'Service Templates', 'icon' => 'layers', 'href' => route('owner.templates'), 'active' => request()->is('owner/templates*'), 'visible' => true],
+                        ],
+                        'Store & Commerce' => [
+                            ['label' => 'Products & Catalog', 'icon' => 'layers', 'href' => route('owner.commerce.products'), 'active' => request()->is('owner/commerce/products*'), 'visible' => true],
+                            ['label' => 'Email Plans Studio', 'icon' => 'subscription', 'href' => route('owner.commerce.mail-plans'), 'active' => request()->is('owner/commerce/mail-plans*'), 'visible' => true],
+                            ['label' => 'Proof Reviews', 'icon' => 'subscription', 'href' => route('owner.billing.proofs'), 'active' => request()->is('owner/billing/proofs*'), 'visible' => true],
+                            ['label' => 'Payment Methods', 'icon' => 'subscription', 'href' => route('owner.billing.methods'), 'active' => request()->is('owner/billing/methods*'), 'visible' => true],
+                            ['label' => 'AI Verification Settings', 'icon' => 'shield-star', 'href' => route('owner.billing.verification-settings'), 'active' => request()->is('owner/billing/verification-settings*'), 'visible' => true],
+                        ],
+                        'Platform & Infrastructure' => [
+                            ['label' => 'Customer Teams', 'icon' => 'teams', 'href' => route('owner.teams'), 'active' => request()->is('owner/teams*'), 'visible' => true],
+                            ['label' => 'Platform Domains & DNS', 'icon' => 'globe', 'href' => route('owner.platform.domains'), 'active' => request()->is('owner/platform/domains*'), 'visible' => true],
+                            ['label' => 'Mailbox Studio', 'icon' => 'subscription', 'href' => route('owner.mailboxes'), 'active' => request()->is('owner/mailboxes*'), 'visible' => true],
+                            ['label' => 'Global Backups', 'icon' => 'storages', 'href' => route('owner.backups'), 'active' => request()->is('owner/backups*'), 'visible' => true],
+                            ['label' => 'Status & Telemetry', 'icon' => 'analytics', 'href' => route('owner.status.index'), 'active' => request()->is('owner/status*'), 'visible' => true],
+                            ['label' => 'Support Desk'.(($u = app(\App\Services\Chat\ChatService::class)->unreadForStaff()) > 0 ? " ({$u})" : ''), 'icon' => 'subscription', 'href' => route('owner.support'), 'active' => request()->is('owner/support*'), 'visible' => true],
+                        ],
+                        'System & Security' => [
+                            ['label' => 'Staff Handbook', 'icon' => 'layers', 'href' => route('owner.docs.index'), 'active' => request()->is('owner/docs*'), 'visible' => true],
+                            ['label' => 'Alert Channels', 'icon' => 'subscription', 'href' => route('owner.notifications'), 'active' => request()->is('owner/notifications*'), 'visible' => true],
+                            ['label' => 'Email Templates', 'icon' => 'subscription', 'href' => route('owner.emails'), 'active' => request()->is('owner/emails*'), 'visible' => true],
+                            ['label' => 'Keys & Tokens', 'icon' => 'keys', 'visible' => true, 'children' => [
+                                ['label' => 'Private Keys', 'icon' => 'keys', 'href' => route('owner.security.private-key.index'), 'active' => request()->is('owner/security/private-key*', 'security/private-key*')],
+                                ['label' => 'Cloud Tokens', 'icon' => 'cloud', 'href' => route('owner.security.cloud-tokens'), 'active' => request()->is('owner/security/cloud-tokens*', 'security/cloud-tokens*')],
+                                ['label' => 'Integration Tokens', 'icon' => 'network', 'href' => route('owner.security.integration-tokens'), 'active' => request()->is('owner/security/integration-tokens*', 'security/integration-tokens*')],
+                                ['label' => 'API Tokens', 'icon' => 'code', 'href' => route('owner.security.api-tokens'), 'active' => request()->is('owner/security/api-tokens*', 'security/api-tokens*')],
+                            ]],
+                            ['label' => 'Instance Settings', 'icon' => 'settings', 'visible' => true, 'children' => [
+                                ['label' => 'General', 'icon' => 'settings', 'href' => route('owner.settings.index'), 'active' => request()->is('owner/settings', 'settings')],
+                                ['label' => 'Advanced', 'icon' => 'grid', 'href' => route('owner.settings.advanced'), 'active' => request()->is('owner/settings/advanced', 'settings/advanced')],
+                                ['label' => 'Updates', 'icon' => 'refresh3', 'href' => route('owner.settings.updates'), 'active' => request()->is('owner/settings/updates', 'settings/updates')],
+                                ['label' => 'Supabase Studio', 'icon' => 'database', 'href' => config('supabase.studio_url', 'http://localhost:8001'), 'active' => false, 'sectionStart' => true],
+                                ['label' => 'Email', 'icon' => 'mail', 'href' => route('owner.settings.email'), 'active' => request()->is('owner/settings/email', 'settings/email')],
+                                ['label' => 'Backup', 'icon' => 'database', 'href' => route('owner.settings.backup'), 'active' => request()->is('owner/settings/backup', 'settings/backup')],
+                            ]],
+                        ],
+                    ];
+                } elseif ($isAdminArea) {
                     $rawSections = [
                         'Overview' => [
                             ['label' => 'Admin Console', 'icon' => 'admin', 'href' => route('admin.index'), 'active' => request()->is('admin'), 'visible' => $can('admin.console')],
                             ['label' => 'Status & Telemetry', 'icon' => 'analytics', 'href' => route('admin.status.index'), 'active' => request()->is('admin/status*'), 'visible' => $can('status.manage')],
                         ],
-                        'Deployment & Fleet' => [
+                        'Operations' => [
                             ['label' => 'Deployment Approvals', 'icon' => 'shield-star', 'href' => route('admin.operations.approvals'), 'active' => request()->is('admin/operations/approvals*'), 'visible' => $can('deployments.approve')],
                             ['label' => 'Provisioning Queue', 'icon' => 'refresh3', 'href' => route('admin.operations.provisioning'), 'active' => request()->is('admin/operations/provisioning*'), 'visible' => $can('vps.provision')],
                             ['label' => 'VPS Inventory', 'icon' => 'servers', 'href' => route('admin.inventory.vps'), 'active' => request()->is('admin/inventory/vps*'), 'visible' => $can('vps.inventory')],
-                            ['label' => 'Cluster Nodes', 'icon' => 'servers', 'href' => route('admin.cluster.nodes'), 'active' => request()->is('admin/cluster/nodes*'), 'visible' => $can('platform.settings')],
-                            ['label' => 'Service Templates', 'icon' => 'layers', 'href' => route('admin.templates'), 'active' => request()->is('admin/templates*'), 'visible' => $can('catalog.manage')],
-                            ['label' => 'Fleet Servers', 'icon' => 'servers', 'href' => route('admin.servers'), 'active' => request()->is('admin/servers*', 'servers*', 'server/*'), 'visible' => $can('nodes.view')],
-                            ['label' => 'Terminal', 'icon' => 'browser-terminal', 'href' => route('admin.terminal'), 'active' => request()->is('admin/terminal*', 'terminal*'), 'navigate' => false, 'visible' => $can('nodes.terminal')],
-                        ],
-                        'Store & Commerce' => [
-                            ['label' => 'Products & Plans', 'icon' => 'layers', 'href' => route('admin.commerce.products'), 'active' => request()->is('admin/commerce/products*'), 'visible' => $can('catalog.manage')],
-                            ['label' => 'Email Hosting Studio', 'icon' => 'subscription', 'href' => route('admin.commerce.mail-plans'), 'active' => request()->is('admin/commerce/mail-plans*'), 'visible' => $can('pricing.manage')],
                             ['label' => 'Proof Reviews', 'icon' => 'subscription', 'href' => route('admin.billing.proofs'), 'active' => request()->is('admin/billing/proofs*'), 'visible' => $can('payments.verify')],
-                            ['label' => 'Payment Methods', 'icon' => 'subscription', 'href' => route('admin.billing.methods'), 'active' => request()->is('admin/billing/methods*'), 'visible' => $can('payment_methods.manage')],
-                            ['label' => 'AI Verification Settings', 'icon' => 'shield-star', 'href' => route('admin.billing.verification-settings'), 'active' => request()->is('admin/billing/verification-settings*'), 'visible' => $can('payment_methods.manage')],
                         ],
-                        'Management & Platform' => [
+                        'Customer & Support' => [
                             ['label' => 'Support Inbox'.(($u = $can('chat.reply') ? app(\App\Services\Chat\ChatService::class)->unreadForStaff() : 0) > 0 ? " ({$u})" : ''), 'icon' => 'subscription', 'href' => route('admin.support'), 'active' => request()->is('admin/support*'), 'visible' => $can('chat.reply')],
                             ['label' => 'Customer Teams Studio', 'icon' => 'teams', 'href' => route('admin.teams'), 'active' => request()->is('admin/teams*'), 'visible' => $can('admin.console')],
-                            ['label' => 'Platform Domains & SSL', 'icon' => 'globe', 'href' => route('admin.platform.domains'), 'active' => request()->is('admin/platform/domains*'), 'visible' => $can('platform.settings')],
                             ['label' => 'Mailbox Studio', 'icon' => 'subscription', 'href' => route('admin.mailboxes'), 'active' => request()->is('admin/mailboxes*'), 'visible' => $can('pricing.manage')],
-                            ['label' => 'Global Backups', 'icon' => 'storages', 'href' => route('admin.backups'), 'active' => request()->is('admin/backups*'), 'visible' => $can('backups.manage')],
-                            ['label' => 'Audit Log', 'icon' => 'subscription', 'href' => route('admin.audit'), 'active' => request()->is('admin/audit*'), 'visible' => $can('admin.console')],
                         ],
-                        'System & Security' => [
+                        'Governance' => [
                             ['label' => 'Staff Handbook', 'icon' => 'layers', 'href' => route('admin.docs.index'), 'active' => request()->is('admin/docs*'), 'visible' => $can('admin.console')],
-                            ['label' => 'Alert Channels', 'icon' => 'subscription', 'href' => route('admin.notifications'), 'active' => request()->is('admin/notifications*'), 'visible' => $can('notifications.manage')],
-                            ['label' => 'Email Templates', 'icon' => 'subscription', 'href' => route('admin.emails'), 'active' => request()->is('admin/emails*'), 'visible' => $can('email_templates.manage')],
-                            ['label' => 'Keys & Tokens', 'icon' => 'keys', 'visible' => $can('platform.settings'), 'children' => [
-                                ['label' => 'Private Keys', 'icon' => 'keys', 'href' => route('admin.security.private-key.index'), 'active' => request()->is('admin/security/private-key*', 'security/private-key*')],
-                                ['label' => 'Cloud Tokens', 'icon' => 'cloud', 'href' => route('admin.security.cloud-tokens'), 'active' => request()->is('admin/security/cloud-tokens*', 'security/cloud-tokens*')],
-                                ['label' => 'Integration Tokens', 'icon' => 'network', 'href' => route('admin.security.integration-tokens'), 'active' => request()->is('admin/security/integration-tokens*', 'security/integration-tokens*')],
-                                ['label' => 'API Tokens', 'icon' => 'code', 'href' => route('admin.security.api-tokens'), 'active' => request()->is('admin/security/api-tokens*', 'security/api-tokens*')],
-                            ]],
-                            ['label' => 'Instance Settings', 'icon' => 'settings', 'visible' => $can('platform.settings'), 'children' => [
-                                ['label' => 'General', 'icon' => 'settings', 'href' => route('admin.settings.index'), 'active' => request()->is('admin/settings', 'settings')],
-                                ['label' => 'Advanced', 'icon' => 'grid', 'href' => route('admin.settings.advanced'), 'active' => request()->is('admin/settings/advanced', 'settings/advanced')],
-                                ['label' => 'Updates', 'icon' => 'refresh3', 'href' => route('admin.settings.updates'), 'active' => request()->is('admin/settings/updates', 'settings/updates')],
-                                ['label' => 'Authentication', 'icon' => 'keys', 'href' => route('admin.settings.oauth'), 'active' => request()->is('admin/settings/oauth*', 'settings/oauth*'), 'sectionStart' => true],
-                                ['label' => 'Email', 'icon' => 'mail', 'href' => route('admin.settings.email'), 'active' => request()->is('admin/settings/email', 'settings/email')],
-                                ['label' => 'Backup', 'icon' => 'database', 'href' => route('admin.settings.backup'), 'active' => request()->is('admin/settings/backup', 'settings/backup')],
-                            ]],
+                            ['label' => 'Audit Log', 'icon' => 'subscription', 'href' => route('admin.audit'), 'active' => request()->is('admin/audit*'), 'visible' => $can('admin.console')],
                         ],
                     ];
                 } else {

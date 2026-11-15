@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\Commerce\ServiceInstance;
 use App\Models\Team;
 use App\Models\User;
 use App\Services\RbacService;
@@ -28,12 +29,15 @@ class Index extends Component
     public function back()
     {
         $this->authorizeAdminAccess();
-        if (session('impersonator_id') === 0) {
+        $impersonatorId = session('impersonator_id');
+        if ($impersonatorId !== null) {
             session()->forget(['impersonator_id', 'impersonating']);
-            $user = User::find(0);
-            $team_to_switch_to = $user->resolveStoredTeam() ?? $user->teams->first();
-            Auth::login($user);
-            refreshSession($team_to_switch_to);
+            $user = User::find($impersonatorId) ?? User::find(0);
+            if ($user) {
+                $team_to_switch_to = $user->resolveStoredTeam() ?? $user->teams->first();
+                Auth::login($user);
+                refreshSession($team_to_switch_to);
+            }
 
             return redirect()->route('admin.index');
         }
@@ -53,8 +57,17 @@ class Index extends Component
     public function getSubscribers()
     {
         $this->authorizeAdminAccess();
-        $this->inactiveSubscribers = Team::whereRelation('subscription', 'stripe_invoice_paid', false)->count();
-        $this->activeSubscribers = Team::whereRelation('subscription', 'stripe_invoice_paid', true)->count();
+        $activeTeamsCount = ServiceInstance::where('status', 'active')->distinct('team_id')->count('team_id');
+        $activeLegacyCount = Team::whereRelation('subscription', 'stripe_invoice_paid', true)->count();
+        $this->activeSubscribers = max($activeTeamsCount, $activeLegacyCount);
+
+        $activeTeamIds = ServiceInstance::where('status', 'active')->pluck('team_id')->filter()->unique();
+        $this->inactiveSubscribers = Team::where('id', '>', 0)
+            ->whereNotIn('id', $activeTeamIds)
+            ->where(function ($q) {
+                $q->whereDoesntHave('subscription')
+                    ->orWhereRelation('subscription', 'stripe_invoice_paid', false);
+            })->count();
     }
 
     public function switchUser(int $user_id)

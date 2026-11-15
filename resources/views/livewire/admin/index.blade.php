@@ -107,9 +107,10 @@
                             </div>
                             @foreach ($foundUsers as $user)
                                 @php
-                                    $hasActiveSubscription = $user->teams()
-                                        ->whereRelation('subscription', 'stripe_invoice_paid', true)
-                                        ->exists();
+                                    $userTeamIds = $user->teams()->pluck('teams.id');
+                                    $hasActiveSubscription = \App\Models\Commerce\ServiceInstance::whereIn('team_id', $userTeamIds)->where('status', 'active')->exists()
+                                        || $user->teams()->whereRelation('subscription', 'stripe_invoice_paid', true)->exists();
+                                    $isPlatformOwner = \App\Services\RbacService::isPlatformOwner(auth()->user());
                                 @endphp
                                 <div
                                     class="data-table-row admin-search-table-grid border-b border-neutral-200 last:border-b-0 dark:border-white/[0.06]">
@@ -124,10 +125,17 @@
                                             :type="$hasActiveSubscription ? 'success' : 'neutral'" />
                                     </div>
                                     <div class="flex justify-end">
-                                        <button type="button" class="button"
-                                            wire:click="switchUser({{ $user->id }})">
-                                            Switch user
-                                        </button>
+                                        @if ($isPlatformOwner)
+                                            <button type="button" class="button"
+                                                wire:click="switchUser({{ $user->id }})">
+                                                Switch user
+                                            </button>
+                                        @else
+                                            <a href="{{ route('admin.teams') }}?search={{ urlencode($user->email) }}"
+                                                class="button" {{ wireNavigate() }}>
+                                                View Teams
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

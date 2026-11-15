@@ -83,6 +83,39 @@ class RbacService
     }
 
     /**
+     * Platform Admin only (root team pivot role 'admin', excluding owners).
+     */
+    public static function isPlatformAdminOnly(?User $user): bool
+    {
+        return self::platformRole($user) === 'admin';
+    }
+
+    /**
+     * Can access the Admin Management Console.
+     */
+    public static function canAccessAdminDashboard(?User $user): bool
+    {
+        return in_array(self::platformRole($user), ['admin', 'owner'], true);
+    }
+
+    /**
+     * Can access the Owner Platform Control Console.
+     */
+    public static function canAccessOwnerDashboard(?User $user): bool
+    {
+        return self::platformRole($user) === 'owner';
+    }
+
+    /**
+     * Can access the Client Portal.
+     * Platform administrators are strictly prohibited from client resources and deployments.
+     */
+    public static function canAccessClientPortal(?User $user): bool
+    {
+        return in_array(self::platformRole($user), ['owner', 'client'], true);
+    }
+
+    /**
      * 'owner' | 'admin' | 'client' | 'guest'.
      */
     public static function platformRole(?User $user): string

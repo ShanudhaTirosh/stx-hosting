@@ -17,37 +17,44 @@ return [
     'roles' => ['owner', 'admin', 'client'],
 
     'capabilities' => [
-        // Staff console
-        'admin.console' => ['owner', 'admin'],
-        'payments.verify' => ['owner', 'admin'],
-        'catalog.manage' => ['owner', 'admin'],      // products and variants
-        'pricing.manage' => ['owner'],                // prices and payment methods
+        // Consoles
+        'admin.console' => ['admin', 'owner'],
+        'owner.console' => ['owner'],
+        'admins.manage' => ['owner'],
+
+        // Operational management tasks (Admin & Owner)
+        'payments.verify' => ['admin', 'owner'],
+        'vps.provision' => ['admin', 'owner'],
+        'vps.inventory' => ['admin', 'owner'],
+        'chat.reply' => ['admin', 'owner'],
+        'status.manage' => ['admin', 'owner'],
+        'audit.view' => ['admin', 'owner'],
+
+        // Governance, Catalog & Pricing (Owner Only)
+        'catalog.manage' => ['owner'],
+        'pricing.manage' => ['owner'],
         'payment_methods.manage' => ['owner'],
-        'vps.inventory' => ['owner', 'admin'],
-        'vps.provision' => ['owner', 'admin'],
-        'deployments.approve' => ['owner', 'admin'],
-        'status.manage' => ['owner', 'admin'],
+        'deployments.approve' => ['owner'],
 
-        // Nodes
-        'nodes.view' => ['owner', 'admin'],
-        'nodes.add' => ['owner', 'admin'],
+        // Fleet Infrastructure & Nodes (Owner Only)
+        'nodes.view' => ['owner'],
+        'nodes.add' => ['owner'],
         'nodes.remove' => ['owner'],
-        'nodes.migrate' => ['owner', 'admin'],
-        'nodes.stats' => ['owner', 'admin'],
-        'nodes.terminal' => ['owner', 'admin'],       // web terminal, SFTP, power (admin or owner)
-        'nodes.power' => ['owner', 'admin'],
+        'nodes.migrate' => ['owner'],
+        'nodes.stats' => ['owner'],
+        'nodes.terminal' => ['owner'],
+        'nodes.power' => ['owner'],
 
-        // Platform
-        'platform.settings' => ['owner', 'admin'],    // SMTP, auth, updates, instance settings (set to ['owner'] to make owner-only)
-        'integrations.manage' => ['owner', 'admin'],  // sources, destinations, registries
+        // Platform & System Settings (Owner Only)
+        'platform.settings' => ['owner'],
+        'integrations.manage' => ['owner'],
         'users.impersonate' => ['owner'],
-        'notifications.manage' => ['owner'],         // Discord channels per event
+        'notifications.manage' => ['owner'],
         'email_templates.manage' => ['owner'],
-        'chat.reply' => ['owner', 'admin'],          // staff support inbox
-        'backups.manage' => ['owner', 'admin'],      // see all backups, restore for customers
-        'backups.storage' => ['owner'],              // choose the R2 storage, set quotas
+        'backups.manage' => ['owner'],
+        'backups.storage' => ['owner'],
 
-        // Everyone signed in
-        'portal.use' => ['owner', 'admin', 'client'],
+        // Client Portal (Owner & Client - Admins are strictly prohibited)
+        'portal.use' => ['owner', 'client'],
     ],
 ];

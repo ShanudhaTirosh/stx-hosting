@@ -6,6 +6,7 @@ use App\Models\InstanceSettings;
 use App\Models\Team;
 use App\Notifications\TransactionalEmails\Test;
 use App\Rules\ValidHostname;
+use App\Services\RbacService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Locked;
@@ -63,6 +64,13 @@ class SettingsEmail extends Component
     #[Validate(['nullable', 'email'])]
     public ?string $testEmailAddress = null;
 
+    public function boot(): void
+    {
+        if (! RbacService::isPlatformOwner(auth()->user())) {
+            abort(403, 'Platform owner access required.');
+        }
+    }
+
     public function mount()
     {
         if (isInstanceAdmin() === false) {
@@ -84,14 +92,22 @@ class SettingsEmail extends Component
             $this->settings->smtp_port = $this->smtpPort;
             $this->settings->smtp_encryption = $this->smtpEncryption;
             $this->settings->smtp_username = $this->smtpUsername;
-            $this->settings->smtp_password = $this->smtpPassword;
+
+            if ($this->smtpPassword && $this->smtpPassword !== '••••••••' && ! str_starts_with($this->smtpPassword, '••••')) {
+                $this->settings->smtp_password = $this->smtpPassword;
+            }
+
             $this->settings->smtp_timeout = $this->smtpTimeout;
             $this->settings->smtp_ehlo_domain = $this->smtpEhloDomain;
             $this->settings->smtp_from_address = $this->smtpFromAddress;
             $this->settings->smtp_from_name = $this->smtpFromName;
 
             $this->settings->resend_enabled = $this->resendEnabled;
-            $this->settings->resend_api_key = $this->resendApiKey;
+
+            if ($this->resendApiKey && $this->resendApiKey !== '••••••••' && ! str_starts_with($this->resendApiKey, '••••')) {
+                $this->settings->resend_api_key = $this->resendApiKey;
+            }
+
             $this->saveAndAudit();
         } else {
             $this->smtpEnabled = $this->settings->smtp_enabled;
@@ -99,14 +115,14 @@ class SettingsEmail extends Component
             $this->smtpPort = $this->settings->smtp_port;
             $this->smtpEncryption = $this->settings->smtp_encryption;
             $this->smtpUsername = $this->settings->smtp_username;
-            $this->smtpPassword = $this->settings->smtp_password;
+            $this->smtpPassword = filled($this->settings->smtp_password) ? '••••••••' : null;
             $this->smtpTimeout = $this->settings->smtp_timeout;
             $this->smtpEhloDomain = $this->settings->smtp_ehlo_domain;
             $this->smtpFromAddress = $this->settings->smtp_from_address;
             $this->smtpFromName = $this->settings->smtp_from_name;
 
             $this->resendEnabled = $this->settings->resend_enabled;
-            $this->resendApiKey = $this->settings->resend_api_key;
+            $this->resendApiKey = filled($this->settings->resend_api_key) ? '••••••••' : null;
         }
     }
 
@@ -221,7 +237,9 @@ class SettingsEmail extends Component
             $this->settings->smtp_port = $this->smtpPort;
             $this->settings->smtp_encryption = $this->smtpEncryption;
             $this->settings->smtp_username = $this->smtpUsername;
-            $this->settings->smtp_password = $this->smtpPassword;
+            if ($this->smtpPassword && $this->smtpPassword !== '••••••••' && ! str_starts_with($this->smtpPassword, '••••')) {
+                $this->settings->smtp_password = $this->smtpPassword;
+            }
             $this->settings->smtp_timeout = $this->smtpTimeout;
             $this->settings->smtp_ehlo_domain = $this->smtpEhloDomain;
             $this->settings->smtp_from_address = $this->smtpFromAddress;
@@ -248,7 +266,9 @@ class SettingsEmail extends Component
             }
 
             $this->settings->resend_enabled = $this->resendEnabled;
-            $this->settings->resend_api_key = $this->resendApiKey;
+            if ($this->resendApiKey && $this->resendApiKey !== '••••••••' && ! str_starts_with($this->resendApiKey, '••••')) {
+                $this->settings->resend_api_key = $this->resendApiKey;
+            }
             $this->settings->smtp_from_address = $this->smtpFromAddress;
             $this->settings->smtp_from_name = $this->smtpFromName;
 
@@ -308,9 +328,10 @@ class SettingsEmail extends Component
 
     private function validateResendSettings(): void
     {
+        $needsKey = $this->resendEnabled && empty($this->settings->resend_api_key) && ($this->resendApiKey === null || $this->resendApiKey === '');
         $this->validate([
             'resendEnabled' => 'boolean',
-            'resendApiKey' => $this->resendEnabled ? 'required|string' : 'nullable|string',
+            'resendApiKey' => $needsKey ? 'required|string' : 'nullable|string',
             'smtpFromAddress' => 'required|email',
             'smtpFromName' => 'required|string',
         ], [

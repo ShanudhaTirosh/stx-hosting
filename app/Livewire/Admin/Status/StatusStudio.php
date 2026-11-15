@@ -2,15 +2,18 @@
 
 namespace App\Livewire\Admin\Status;
 
+use App\Livewire\Concerns\RequiresPlatformStaff;
+use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\CommercialSetting;
 use App\Models\Commerce\IncidentUpdate;
 use App\Models\Commerce\Monitor;
 use App\Models\Commerce\MonitorCheck;
 use App\Models\Commerce\SystemIncident;
 use App\Services\RbacService;
+use App\Services\Status\StatusAlertService;
 use App\Services\Status\StatusCheckService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use App\Livewire\Concerns\RequiresPlatformStaff;
 use Livewire\Component;
 
 class StatusStudio extends Component
@@ -21,43 +24,72 @@ class StatusStudio extends Component
 
     // Monitor Form State
     public bool $showMonitorModal = false;
+
     public ?int $editingMonitorId = null;
+
     public string $monitorName = '';
+
     public string $monitorPublicLabel = '';
+
     public string $monitorGroupName = 'Core Infrastructure';
+
     public string $monitorType = 'http'; // http, tcp, ping
+
     public string $monitorTargetUrl = '';
+
     public string $monitorTargetHost = '127.0.0.1';
+
     public int $monitorPort = 80;
+
     public int $monitorInterval = 60;
+
     public int $monitorTimeoutMs = 3000;
+
     public int $monitorExpectedStatusCode = 200;
+
     public string $monitorKeywordSearch = '';
+
     public bool $monitorIsPublic = true;
+
     public bool $monitorIsActive = true;
+
     public bool $monitorIsVps = false; // When true, disables & hides IP/link on public status page
 
     // Incident Form State
     public bool $showIncidentModal = false;
+
     public ?int $editingIncidentId = null;
+
     public string $incidentTitle = '';
+
     public string $incidentType = 'incident'; // incident, maintenance
+
     public string $incidentSeverity = 'minor'; // operational, minor, major, critical
+
     public string $incidentStatus = 'investigating'; // investigating, identified, monitoring, resolved, scheduled
+
     public string $incidentMessage = '';
+
     public ?string $scheduledStart = null;
+
     public ?string $scheduledEnd = null;
 
     // Update Form State
     public bool $showUpdateModal = false;
+
     public ?int $targetIncidentId = null;
+
     public string $updateStatus = 'monitoring';
+
     public string $updateMessage = '';
 
     // Notification Settings State
     public string $telegramBotToken = '';
+
     public string $telegramChatId = '';
+
     public string $discordWebhookUrl = '';
+
     public string $alertEmail = '';
 
     public function mount()
@@ -67,9 +99,11 @@ class StatusStudio extends Component
 
     public function loadNotificationSettings()
     {
-        $this->telegramBotToken = (string) CommercialSetting::get('status_telegram_token', '');
+        $botToken = (string) CommercialSetting::get('status_telegram_token', '');
+        $this->telegramBotToken = filled($botToken) ? '••••••••' : '';
         $this->telegramChatId = (string) CommercialSetting::get('status_telegram_chat_id', '');
-        $this->discordWebhookUrl = (string) CommercialSetting::get('status_discord_webhook', '');
+        $webhook = (string) CommercialSetting::get('status_discord_webhook', '');
+        $this->discordWebhookUrl = filled($webhook) ? '••••••••' : '';
         $this->alertEmail = (string) CommercialSetting::get('status_alert_email', '');
     }
 
@@ -189,15 +223,16 @@ class StatusStudio extends Component
     public function toggleMonitorIsVps(int $id)
     {
         $monitor = Monitor::findOrFail($id);
-        $monitor->update(['is_vps' => !$monitor->is_vps]);
+        $monitor->update(['is_vps' => ! $monitor->is_vps]);
         $state = $monitor->is_vps ? 'VPS Mode (IP/link hidden publicly)' : 'Standard Web Service (link visible)';
         $this->dispatch('info', "Monitor '{$monitor->name}': {$state}.");
     }
 
     public function deleteMonitor(int $id)
     {
-        if (!RbacService::isOwner(auth()->user())) {
+        if (! RbacService::isOwner(auth()->user())) {
             $this->dispatch('error', 'Only owners have permission to delete monitors.');
+
             return;
         }
 
@@ -209,8 +244,8 @@ class StatusStudio extends Component
     public function toggleMonitorActive(int $id)
     {
         $monitor = Monitor::findOrFail($id);
-        $monitor->update(['is_active' => !$monitor->is_active]);
-        $this->dispatch('info', "Monitor '{$monitor->name}' is now " . ($monitor->is_active ? 'active' : 'paused') . '.');
+        $monitor->update(['is_active' => ! $monitor->is_active]);
+        $this->dispatch('info', "Monitor '{$monitor->name}' is now ".($monitor->is_active ? 'active' : 'paused').'.');
     }
 
     public function runCheckNow(int $id, StatusCheckService $checker)
@@ -276,9 +311,9 @@ class StatusStudio extends Component
         ]);
 
         try {
-            app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentOpened($incident);
+            app(StatusAlertService::class)->dispatchIncidentOpened($incident);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Could not dispatch status alert: {$e->getMessage()}");
+            Log::warning("Could not dispatch status alert: {$e->getMessage()}");
         }
 
         $this->showIncidentModal = false;
@@ -317,12 +352,12 @@ class StatusStudio extends Component
 
         try {
             if ($this->updateStatus === 'resolved') {
-                app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentResolved($incident, $this->updateMessage);
+                app(StatusAlertService::class)->dispatchIncidentResolved($incident, $this->updateMessage);
             } else {
-                app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentUpdated($incident, $update);
+                app(StatusAlertService::class)->dispatchIncidentUpdated($incident, $update);
             }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Could not dispatch status alert update: {$e->getMessage()}");
+            Log::warning("Could not dispatch status alert update: {$e->getMessage()}");
         }
 
         $this->showUpdateModal = false;
@@ -346,9 +381,9 @@ class StatusStudio extends Component
         ]);
 
         try {
-            app(\App\Services\Status\StatusAlertService::class)->dispatchIncidentResolved($incident);
+            app(StatusAlertService::class)->dispatchIncidentResolved($incident);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Could not dispatch status alert resolution: {$e->getMessage()}");
+            Log::warning("Could not dispatch status alert resolution: {$e->getMessage()}");
         }
 
         $this->dispatch('success', 'Incident marked as Resolved.');
@@ -356,15 +391,32 @@ class StatusStudio extends Component
 
     public function saveNotificationSettings()
     {
-        if (!RbacService::isOwner(auth()->user())) {
-            $this->dispatch('error', 'Only owners have permission to modify alert credentials.');
+        if (! RbacService::isPlatformOwner(auth()->user())) {
+            $this->dispatch('error', 'Only the platform owner has permission to modify alert credentials.');
+
             return;
         }
 
-        CommercialSetting::set('status_telegram_token', $this->telegramBotToken);
+        if ($this->telegramBotToken !== '••••••••' && ! str_starts_with($this->telegramBotToken, '••••')) {
+            CommercialSetting::set('status_telegram_token', $this->telegramBotToken);
+            $this->telegramBotToken = '••••••••';
+        }
+
         CommercialSetting::set('status_telegram_chat_id', $this->telegramChatId);
-        CommercialSetting::set('status_discord_webhook', $this->discordWebhookUrl);
+
+        if ($this->discordWebhookUrl !== '••••••••' && ! str_starts_with($this->discordWebhookUrl, '••••')) {
+            CommercialSetting::set('status_discord_webhook', $this->discordWebhookUrl);
+            $this->discordWebhookUrl = '••••••••';
+        }
+
         CommercialSetting::set('status_alert_email', $this->alertEmail);
+
+        CommerceAuditLog::record('status.notification_settings_updated', null, null, [
+            'has_telegram' => filled(CommercialSetting::get('status_telegram_token')),
+            'telegram_chat_id' => $this->telegramChatId,
+            'has_discord' => filled(CommercialSetting::get('status_discord_webhook')),
+            'alert_email' => $this->alertEmail,
+        ]);
 
         $this->dispatch('success', 'Notification alert settings saved.');
     }
@@ -388,4 +440,3 @@ class StatusStudio extends Component
         ])->layout('layouts.app', ['title' => 'Status & Telemetry Studio — STX Admin']);
     }
 }
-

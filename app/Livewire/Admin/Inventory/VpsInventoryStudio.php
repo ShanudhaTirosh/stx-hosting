@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Admin\Inventory;
 
+use App\Livewire\Concerns\RequiresPlatformStaff;
 use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\VpsInventory;
-use App\Livewire\Concerns\RequiresPlatformStaff;
+use Illuminate\Support\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class VpsInventoryStudio extends Component
 {
     use RequiresPlatformStaff;
-
     use WithPagination;
 
     public string $search = '';
@@ -95,7 +95,7 @@ class VpsInventoryStudio extends Component
             'provider' => $this->provider,
             'status' => 'available',
             'upstream_cost_cents' => (int) round($this->upstream_cost_usd * 100),
-            'provider_renews_at' => $this->provider_renews_at ? \Illuminate\Support\Carbon::parse($this->provider_renews_at) : null,
+            'provider_renews_at' => $this->provider_renews_at ? Carbon::parse($this->provider_renews_at) : null,
             'provider_invoice_ref' => $this->provider_invoice_ref ?: null,
             'admin_notes' => $this->admin_notes ?: null,
         ]);

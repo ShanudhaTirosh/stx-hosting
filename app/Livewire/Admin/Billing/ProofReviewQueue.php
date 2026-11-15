@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin\Billing;
 
 use App\Http\Controllers\Api\Commerce\PaymentProofController;
-use App\Models\Commerce\PaymentProof;
 use App\Livewire\Concerns\RequiresPlatformStaff;
+use App\Models\Commerce\Invoice;
+use App\Models\Commerce\PaymentProof;
 use App\Services\Commerce\PaymentReviewService;
+use App\Services\Commerce\RefundService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -90,14 +92,14 @@ class ProofReviewQueue extends Component
         }
     }
 
-    public function refundInvoice(int $invoiceId, \App\Services\Commerce\RefundService $refunds): void
+    public function refundInvoice(int $invoiceId, RefundService $refunds): void
     {
         $this->validate([
             'refundReason' => 'required|string|min:5|max:500',
         ]);
 
         try {
-            $invoice = \App\Models\Commerce\Invoice::findOrFail($invoiceId);
+            $invoice = Invoice::findOrFail($invoiceId);
             $amountCents = $this->refundAmount ? (int) ($this->refundAmount * 100) : (int) $invoice->total_cents;
 
             $refunds->refund(

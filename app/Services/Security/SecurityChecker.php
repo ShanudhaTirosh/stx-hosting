@@ -8,6 +8,7 @@ use App\Models\Team;
 use App\Services\Backups\PlatformBackupStorage;
 use App\Services\Commerce\VpsFulfillmentService;
 use App\Services\Notifications\StaffEvents;
+use Dompdf\Dompdf;
 
 /**
  * A plain checklist of the settings that decide whether the platform is safe and working in production.
@@ -43,7 +44,7 @@ class SecurityChecker
         // Money and plans
         $add(config('hosting.enforce_entitlements') ? 'ok' : 'fail', 'Plans are enforced (paying unlocks deployments)', 'HOSTING_ENFORCE_ENTITLEMENTS is off: anyone can deploy for free.');
         $add(PaymentMethod::active()->exists() ? 'ok' : 'warn', 'At least one payment method is published', 'Customers see "contact support" until you add one.');
-        $add(class_exists(\Dompdf\Dompdf::class) ? 'ok' : 'warn', 'PDF invoices are available', 'Run: composer require dompdf/dompdf');
+        $add(class_exists(Dompdf::class) ? 'ok' : 'warn', 'PDF invoices are available', 'Run: composer require dompdf/dompdf');
 
         // Where customer files live
         $add(in_array(config('filesystems.disks.'.config('commerce.proof_disk', 'payment_proofs').'.visibility'), ['public'], true) ? 'fail' : 'ok', 'Payment proofs are stored privately');

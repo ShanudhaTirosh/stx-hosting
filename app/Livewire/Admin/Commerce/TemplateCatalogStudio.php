@@ -12,21 +12,32 @@ class TemplateCatalogStudio extends Component
     use RequiresPlatformStaff;
 
     public string $search = '';
+
     public string $selectedCategory = 'all';
 
     public bool $showEditModal = false;
+
     public ?int $editingTemplateId = null;
 
     // Form fields
     public string $template_name = '';
+
     public string $display_name = '';
+
     public string $category = 'cms';
+
     public string $short_description = '';
+
     public int $default_port = 80;
+
     public int $min_ram_mb = 512;
+
     public float $min_vcpu = 1.0;
+
     public string $icon_url = '';
+
     public bool $is_globally_enabled = true;
+
     public bool $is_featured = false;
 
     public function mount(): void
@@ -150,8 +161,8 @@ class TemplateCatalogStudio extends Component
             $q = strtolower(trim($this->search));
             $query->where(function ($b) use ($q) {
                 $b->where('template_name', 'like', "%{$q}%")
-                  ->orWhere('display_name', 'like', "%{$q}%")
-                  ->orWhere('category', 'like', "%{$q}%");
+                    ->orWhere('display_name', 'like', "%{$q}%")
+                    ->orWhere('category', 'like', "%{$q}%");
             });
         }
 
@@ -164,4 +175,3 @@ class TemplateCatalogStudio extends Component
         ]);
     }
 }
-

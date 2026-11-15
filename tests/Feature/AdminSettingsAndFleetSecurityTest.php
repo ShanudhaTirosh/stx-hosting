@@ -3,7 +3,6 @@
 use App\Models\CloudProviderToken;
 use App\Models\InstanceSettings;
 use App\Models\IntegrationToken;
-use App\Models\OauthSetting;
 use App\Models\PrivateKey;
 use App\Models\Server;
 use App\Models\Team;
@@ -22,7 +21,6 @@ beforeEach(function () {
 
     InstanceSettings::forceCreate(['id' => 0]);
     Once::flush();
-    OauthSetting::firstOrCreate(['provider' => 'authentik']);
 
     $this->rootTeam = Team::find(0) ?? Team::forceCreate([
         'id' => 0,
@@ -86,7 +84,6 @@ test('both admin and owner staff can access all admin settings routes', function
         'admin.settings.index',
         'admin.settings.advanced',
         'admin.settings.updates',
-        'admin.settings.oauth',
         'admin.settings.email',
         'admin.settings.backup',
         'admin.security.private-key.index',
@@ -121,7 +118,6 @@ test('client users are strictly forbidden from admin settings, servers, and term
         'admin.settings.index',
         'admin.settings.advanced',
         'admin.settings.updates',
-        'admin.settings.oauth',
         'admin.settings.email',
         'admin.settings.backup',
         'admin.security.private-key.index',
@@ -158,7 +154,6 @@ test('legacy settings routes redirect staff to admin settings and forbid client 
     $this->actingAs($staff);
 
     $this->get('/settings')->assertRedirect(route('admin.settings.index'));
-    $this->get('/settings/oauth')->assertRedirect(route('admin.settings.oauth'));
     $this->get('/settings/advanced')->assertRedirect(route('admin.settings.advanced'));
     $this->get('/settings/updates')->assertRedirect(route('admin.settings.updates'));
     $this->get('/settings/backup')->assertRedirect(route('admin.settings.backup'));
@@ -168,7 +163,6 @@ test('legacy settings routes redirect staff to admin settings and forbid client 
     $this->actingAs($client);
 
     $this->get('/settings')->assertForbidden();
-    $this->get('/settings/oauth')->assertForbidden();
     $this->get('/settings/advanced')->assertForbidden();
     $this->get('/settings/updates')->assertForbidden();
     $this->get('/settings/backup')->assertForbidden();

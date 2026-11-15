@@ -8,12 +8,10 @@ use App\Models\Commerce\MailboxPermission;
 use App\Models\Commerce\MailDomain;
 use App\Models\Commerce\MailMailbox;
 use App\Models\Commerce\MailSystemMapping;
-use App\Models\Team;
 use App\Models\User;
 use App\Services\Commerce\WildDuckProvisioningService;
 use App\Services\RbacService;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -23,54 +21,91 @@ class MailboxStudio extends Component
 
     // Filter & Search
     public string $search = '';
+
     public string $purposeFilter = 'all'; // all, system_sender, shared_inbox, personal_mailbox
 
     // Modal Controls
     public bool $showCreateModal = false;
+
     public bool $isBulkMode = false;
+
     public string $createDomain = '';
+
     public string $createUsername = '';
+
     public string $createDisplayName = '';
+
     public string $createPassword = '';
+
     public ?int $createQuotaMb = 5120;
+
     public string $createPurpose = 'shared_inbox';
+
     public bool $createIsSensitive = false;
+
     public string $bulkInput = ''; // Multi-line: username,displayName,quotaMb,purpose
 
     // Settings Modal
     public bool $showSettingsModal = false;
+
     public ?string $editingMailboxId = null;
+
     public string $editDisplayName = '';
+
     public ?int $editQuotaMb = 5120;
+
     public string $editPurpose = 'shared_inbox';
+
     public bool $editIsSensitive = false;
+
     public bool $editAutoReplyEnabled = false;
+
     public string $editAutoReplySubject = '';
+
     public string $editAutoReplyBody = '';
+
     public ?string $editAutoReplyStart = null;
+
     public ?string $editAutoReplyEnd = null;
+
     public string $editForwardingTargets = ''; // comma or newline separated
+
     public string $editSignature = '';
 
     // Credentials & App Passwords Modal
     public bool $showCredentialsModal = false;
+
     public ?string $credentialsMailboxId = null;
+
     public ?string $credentialsAddress = null;
+
     public ?string $revealedPassword = null;
+
     public string $newAppPasswordLabel = '';
+
     public ?string $newAppPasswordExpiresAt = null;
+
     public ?string $justGeneratedAppPassword = null;
+
     public string $activeSnippet = 'laravel'; // laravel, python, nodejs, wordpress
+
     public ?string $portTestResult = null;
+
     public bool $isTestingPorts = false;
 
     // Admin Grant Modal
     public bool $showGrantModal = false;
+
     public ?string $grantMailboxId = null;
+
     public ?int $grantUserId = null;
+
     public string $grantLevel = 'read_only'; // read_only, read_write, send_as, manage
+
     public string $grantFolders = ''; // comma separated
+
     public bool $grantSensitiveReadOnly = true;
+
     public ?string $grantExpiresAt = null;
 
     // System Senders Mapping Tab
@@ -196,11 +231,13 @@ class MailboxStudio extends Component
 
                     MailboxAuditLog::record($mailbox->id, auth()->id(), 'mailbox_created', null, ['address' => $mailbox->address, 'bulk' => true]);
                     $createdCount++;
-                } catch (\Throwable) {}
+                } catch (\Throwable) {
+                }
             }
 
             $this->showCreateModal = false;
             $this->dispatch('success', "Bulk creation complete: {$createdCount} mailboxes created.");
+
             return;
         }
 
@@ -322,7 +359,7 @@ class MailboxStudio extends Component
         $wildduck->updateMailboxActive($mailbox->wildduck_user_id, $newStatus);
 
         MailboxAuditLog::record($mailbox->id, auth()->id(), $newStatus ? 'mailbox_resumed' : 'mailbox_suspended');
-        $this->dispatch('success', "Mailbox {$mailbox->address} is now ".($newStatus ? 'active' : 'suspended').".");
+        $this->dispatch('success', "Mailbox {$mailbox->address} is now ".($newStatus ? 'active' : 'suspended').'.');
     }
 
     public function deleteMailbox(string $mailboxId, WildDuckProvisioningService $wildduck): void
@@ -399,10 +436,10 @@ class MailboxStudio extends Component
         }
 
         if ($imapOk && $smtpOk) {
-            $this->portTestResult = "Ports Verified: IMAP (993 SSL) and SMTP (587 STARTTLS) are active and accepting connections.";
+            $this->portTestResult = 'Ports Verified: IMAP (993 SSL) and SMTP (587 STARTTLS) are active and accepting connections.';
             $this->dispatch('success', 'Mail ports verified online.');
         } else {
-            $this->portTestResult = "Ports: IMAP 993 is ".($imapOk ? 'Online' : 'Standby').", SMTP 587 is ".($smtpOk ? 'Online' : 'Standby').".";
+            $this->portTestResult = 'Ports: IMAP 993 is '.($imapOk ? 'Online' : 'Standby').', SMTP 587 is '.($smtpOk ? 'Online' : 'Standby').'.';
             $this->dispatch('warning', 'Port check completed.');
         }
 
@@ -490,7 +527,7 @@ class MailboxStudio extends Component
             $term = '%'.strtolower(trim($this->search)).'%';
             $query->where(function ($q) use ($term) {
                 $q->whereRaw('LOWER(address) LIKE ?', [$term])
-                  ->orWhereRaw('LOWER(name) LIKE ?', [$term]);
+                    ->orWhereRaw('LOWER(name) LIKE ?', [$term]);
             });
         }
 

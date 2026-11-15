@@ -49,18 +49,3 @@ it('shows the cloud tokens page to team admins and owners', function (string $ro
         ->assertSuccessful()
         ->assertSee('No cloud tokens');
 })->with(['admin', 'owner']);
-
-it('redirects team members from the oauth settings page to the dashboard', function (string $routeName, array $parameters) {
-    actingAsRootTeamMemberWithRole('member');
-
-    $this->get(route($routeName, $parameters))->assertRedirect(route('dashboard'));
-})->with([
-    'oauth settings' => ['settings.oauth', []],
-    'oauth provider settings' => ['settings.oauth.provider', ['provider' => 'authentik']],
-]);
-
-it('shows the oauth settings page to instance admins', function (string $role) {
-    actingAsRootTeamMemberWithRole($role);
-
-    $this->get(route('settings.oauth'))->assertSuccessful()->assertSee('Authentik');
-})->with(['admin', 'owner']);

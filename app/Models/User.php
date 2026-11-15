@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Actions\User\RevokeUserTeamTokens;
+use App\Enums\Role;
 use App\Jobs\UpdateStripeCustomerEmailJob;
 use App\Notifications\Channels\SendsEmail;
 use App\Notifications\TransactionalEmails\EmailChangeVerification;
 use App\Notifications\TransactionalEmails\ResetPassword as TransactionalEmailsResetPassword;
 use App\Services\ChangelogService;
+use App\Services\RbacService;
 use App\Traits\DeletesUserSessions;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -565,7 +567,7 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
             return false;
         }
 
-        $role = \App\Enums\Role::tryFrom($roleStr);
+        $role = Role::tryFrom($roleStr);
         if (! $role) {
             return false;
         }
@@ -672,14 +674,9 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
             && Carbon::now()->lessThan($this->email_change_code_expires_at);
     }
 
-    public function oauthIdentities(): HasMany
-    {
-        return $this->hasMany(OauthIdentity::class);
-    }
-
     public function hasSsoIdentity(): bool
     {
-        return $this->oauthIdentities()->exists();
+        return false;
     }
 
     /**
@@ -709,7 +706,7 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
      */
     public function requiresPasswordConfirmation(): bool
     {
-        return $this->hasPassword() && ! $this->hasSsoIdentity();
+        return $this->hasPassword();
     }
 
     /**
@@ -717,6 +714,6 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
      */
     public function platformRole(): string
     {
-        return \App\Services\RbacService::platformRole($this);
+        return RbacService::platformRole($this);
     }
 }

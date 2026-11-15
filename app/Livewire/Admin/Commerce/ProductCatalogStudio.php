@@ -2,15 +2,14 @@
 
 namespace App\Livewire\Admin\Commerce;
 
+use App\Livewire\Concerns\RequiresPlatformStaff;
+use App\Models\Commerce\CommerceAuditLog;
 use App\Models\Commerce\PricingTier;
 use App\Models\Commerce\Product;
 use App\Models\Commerce\ProductVariant;
+use App\Services\RbacService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use Livewire\Attributes\Locked;
-use App\Livewire\Concerns\RequiresPlatformStaff;
-use App\Models\Commerce\CommerceAuditLog;
-use App\Services\RbacService;
 use Livewire\Component;
 
 class ProductCatalogStudio extends Component
@@ -467,4 +466,3 @@ class ProductCatalogStudio extends Component
         ])->layout('layouts.app', ['title' => 'Product & Pricing Studio | STX Admin']);
     }
 }
-

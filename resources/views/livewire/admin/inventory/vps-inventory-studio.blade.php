@@ -135,9 +135,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="p-8 text-center text-neutral-500">No hardware nodes found.</td>
-                    </tr>
-                @endforelse
+                        <td colspan="7" class="p-8 text-center text-neutral-500">
                             No VPS inventory nodes registered yet. Click "Register New Node" to add slices.
                         </td>
                     </tr>

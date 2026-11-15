@@ -8,6 +8,7 @@ use App\Models\EmailTemplate;
 use App\Notifications\Commerce\EmailTemplatePreviewNotification;
 use App\Services\Notifications\EmailTemplates;
 use App\Services\RbacService;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 
 /** Owner edits the wording of every customer email, reviews delivery logs, and inspects SMTP health. */
@@ -131,7 +132,7 @@ class EmailTemplatesPage extends Component
             if ($log->template_key) {
                 EmailTemplates::send($log->template_key, $log->recipient, $log->meta['vars'] ?? []);
             } else {
-                \Illuminate\Support\Facades\Mail::raw("Retry of {$log->subject}", function ($msg) use ($log) {
+                Mail::raw("Retry of {$log->subject}", function ($msg) use ($log) {
                     $msg->to($log->recipient)->subject($log->subject);
                 });
             }
@@ -164,8 +165,8 @@ class EmailTemplatesPage extends Component
                     $term = '%'.strtolower(trim($this->logSearch)).'%';
                     $query->where(function ($q) use ($term) {
                         $q->whereRaw('LOWER(recipient) LIKE ?', [$term])
-                          ->orWhereRaw('LOWER(subject) LIKE ?', [$term])
-                          ->orWhereRaw('LOWER(COALESCE(template_key, \'\')) LIKE ?', [$term]);
+                            ->orWhereRaw('LOWER(subject) LIKE ?', [$term])
+                            ->orWhereRaw('LOWER(COALESCE(template_key, \'\')) LIKE ?', [$term]);
                     });
                 }
                 $logs = $query->take(50)->get();

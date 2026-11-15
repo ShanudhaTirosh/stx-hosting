@@ -4,19 +4,18 @@ namespace App\Livewire\Admin\Operations;
 
 use App\Enums\ApplicationDeploymentStatus;
 use App\Jobs\ApplicationDeploymentJob;
+use App\Livewire\Concerns\RequiresPlatformStaff;
 use App\Models\ApplicationDeploymentQueue;
 use App\Services\RbacService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
-use App\Livewire\Concerns\RequiresPlatformStaff;
 use Livewire\Component;
 
 class DeploymentApprovals extends Component
 {
-    use RequiresPlatformStaff;
-
     use AuthorizesRequests;
+    use RequiresPlatformStaff;
 
     public string $filterStatus = 'pending_approval';
 

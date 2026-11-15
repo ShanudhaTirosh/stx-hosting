@@ -10,23 +10,30 @@ use App\Models\Commerce\MailMailbox;
 use App\Services\Auth\MailboxAuthorizationService;
 use App\Services\Commerce\WildDuckProvisioningService;
 use App\Services\RbacService;
-use Carbon\Carbon;
 use Livewire\Component;
 
 class MyMailboxes extends Component
 {
     // Credentials & App Passwords Modal
     public bool $showCredentialsModal = false;
+
     public ?string $selectedMailboxId = null;
+
     public ?string $selectedMailboxAddress = null;
+
     public string $newAppPasswordLabel = '';
+
     public ?string $justGeneratedAppPassword = null;
+
     public string $activeSnippet = 'laravel'; // laravel, python, nodejs, wordpress
 
     // 2FA Step-up Modal for Sensitive Mailboxes
     public bool $showStepUpModal = false;
+
     public ?string $stepUpMailboxId = null;
+
     public string $stepUpCode = '';
+
     public ?string $stepUpAction = null; // 'webmail', 'credentials'
 
     public function boot(): void
@@ -45,6 +52,7 @@ class MyMailboxes extends Component
             $this->stepUpCode = '';
             $this->stepUpAction = 'credentials';
             $this->showStepUpModal = true;
+
             return;
         }
 
@@ -67,6 +75,7 @@ class MyMailboxes extends Component
             $this->stepUpCode = '';
             $this->stepUpAction = 'webmail';
             $this->showStepUpModal = true;
+
             return null;
         }
 
@@ -91,10 +100,12 @@ class MyMailboxes extends Component
             }
 
             $this->openCredentials($mailbox->id, $authService);
+
             return null;
         }
 
         $this->addError('stepUpCode', 'Invalid verification code. Please check your email.');
+
         return null;
     }
 

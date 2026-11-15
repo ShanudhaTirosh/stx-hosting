@@ -172,7 +172,7 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
     public function transferOwnership(User $newOwner, User $currentOwner): bool
     {
         if ($this->id === 0) {
-            throw new \Exception('Root team ownership cannot be transferred.');
+            return $this->transferRootTeamOwnership($newOwner, $currentOwner);
         }
 
         if (! $this->canBeDeletedBy($currentOwner)) {
@@ -191,6 +191,71 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
 
             return true;
         });
+    }
+
+    /**
+     * Platform Root Team (id = 0) ownership transfer.
+     * Enforces that current owner is valid, new owner is in team 0, and at least one owner remains.
+     */
+    public function transferRootTeamOwnership(User $newOwner, User $currentOwner): bool
+    {
+        if ($this->id !== 0) {
+            throw new \Exception('Only applicable to the platform root team.');
+        }
+
+        if (! RbacService::isPlatformOwner($currentOwner)) {
+            throw new \Exception('Only the verified platform Owner can transfer platform ownership.');
+        }
+
+        if ($newOwner->id === $currentOwner->id) {
+            throw new \Exception('Cannot transfer ownership to yourself.');
+        }
+
+        if (! $this->members()->where('users.id', $newOwner->id)->exists()) {
+            throw new \Exception('The target recipient must be an existing member/administrator of the platform root team.');
+        }
+
+        return DB::transaction(function () use ($newOwner, $currentOwner): bool {
+            // Demote current owner to admin
+            $this->members()->updateExistingPivot($currentOwner->id, ['role' => 'admin']);
+            // Promote successor to owner
+            $this->members()->updateExistingPivot($newOwner->id, ['role' => 'owner']);
+
+            $this->assertMinimumOwnersRemaining();
+
+            auditLog('platform.ownership_transferred', [
+                'team_id' => 0,
+                'previous_owner_id' => $currentOwner->id,
+                'previous_owner_email' => $currentOwner->email,
+                'new_owner_id' => $newOwner->id,
+                'new_owner_email' => $newOwner->email,
+            ]);
+
+            return true;
+        });
+    }
+
+    /**
+     * Invariant: Platform root team (id = 0) MUST ALWAYS have at least one active Owner.
+     */
+    public function assertMinimumOwnersRemaining(int|array|null $userIdsBeingRemovedOrDemoted = null): void
+    {
+        if ($this->id !== 0) {
+            return;
+        }
+
+        $query = $this->members()->wherePivot('role', 'owner');
+        if ($userIdsBeingRemovedOrDemoted !== null) {
+            $ids = is_array($userIdsBeingRemovedOrDemoted) ? $userIdsBeingRemovedOrDemoted : [$userIdsBeingRemovedOrDemoted];
+            $query->whereNotIn('users.id', $ids);
+        }
+
+        $remainingOwners = $query->count();
+        if ($remainingOwners < 1) {
+            throw ValidationException::withMessages([
+                'owner' => 'Operation rejected: at least one active platform Owner must always exist in the root team.',
+            ]);
+        }
     }
 
     /**

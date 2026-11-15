@@ -117,7 +117,7 @@ test('instance settings open their own submenu for instance admins', function ()
 
     expect(renderNavbarAt('/settings/email'))
         ->toContain('Back to the main menu')
-        ->toContain('href="'.route('settings.oauth').'"')
+        ->toContain('href="'.route('settings.backup').'"')
         ->toMatch('#aria-current="page"[^>]*>\s*<svg[^>]*>.*?</svg>\s*<span[^>]*>Email</span>#s');
 });
 

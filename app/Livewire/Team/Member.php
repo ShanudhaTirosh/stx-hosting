@@ -22,10 +22,7 @@ class Member extends Component
     {
         try {
             $this->authorize('manageMembers', currentTeam());
-
-            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
-                throw new \Exception('The platform Owner account cannot be modified.');
-            }
+            $this->verifyTeamZeroModification();
 
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
@@ -42,10 +39,7 @@ class Member extends Component
     {
         try {
             $this->authorize('manageMembers', currentTeam());
-
-            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
-                throw new \Exception('The platform Owner account cannot be modified.');
-            }
+            $this->verifyTeamZeroModification();
 
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
@@ -62,10 +56,7 @@ class Member extends Component
     {
         try {
             $this->authorize('manageMembers', currentTeam());
-
-            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
-                throw new \Exception('The platform Owner account cannot be modified.');
-            }
+            $this->verifyTeamZeroModification();
 
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
@@ -82,10 +73,7 @@ class Member extends Component
     {
         try {
             $this->authorize('manageMembers', currentTeam());
-
-            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
-                throw new \Exception('The platform Owner account cannot be modified.');
-            }
+            $this->verifyTeamZeroModification();
 
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
@@ -158,10 +146,7 @@ class Member extends Component
     {
         try {
             $this->authorize('manageMembers', currentTeam());
-
-            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
-                throw new \Exception('The platform Owner account cannot be removed.');
-            }
+            $this->verifyTeamZeroModification(isRemoval: true);
 
             if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
@@ -190,6 +175,20 @@ class Member extends Component
             $this->dispatch('reloadWindow');
         } catch (\Exception $e) {
             $this->dispatch('error', $e->getMessage());
+        }
+    }
+
+    private function verifyTeamZeroModification(bool $isRemoval = false): void
+    {
+        $team = currentTeam();
+        if ($team && $team->id === 0) {
+            if (! RbacService::isPlatformOwner(auth()->user())) {
+                throw new \Exception('Only the platform Owner can modify members or roles in the root team.');
+            }
+
+            if (RbacService::isOwner($this->member)) {
+                $team->assertMinimumOwnersRemaining($this->member->id);
+            }
         }
     }
 
