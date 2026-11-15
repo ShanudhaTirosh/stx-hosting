@@ -51,6 +51,46 @@ docker compose -f docker-compose.selfhosted.yml run --rm stx php artisan db:seed
 docker compose -f docker-compose.selfhosted.yml up -d
 ```
 
+### 1.3 Unified Single Start / Stop / Update Procedure
+
+The entire self-hosted enterprise platform is orchestrated with healthcheck dependencies:
+
+#### Start Entire Platform
+```bash
+docker compose -f docker-compose.selfhosted.yml up -d
+```
+Services start in dependency order with health gates:
+1. `supabase-db` (Postgres 15 with pg_isready healthcheck)
+2. `wildduck-mongo` (MongoDB 6 with mongosh admin ping healthcheck) & `wildduck-redis` (Redis 7 with redis-cli ping healthcheck)
+3. `supabase-kong` (API Gateway with kong healthcheck) & Core Services (`wildduck`, `zonemta`, `supabase-auth`, `supabase-rest`, `supabase-realtime`, `supabase-storage`)
+4. Edge reverse proxy (`caddy`) and Frontend (`webmail`, `webmail-php`, `discord-bot`)
+
+#### Check Health & Readiness Status
+```bash
+docker compose -f docker-compose.selfhosted.yml ps
+```
+Ensure all stateful services report `healthy` or `running`.
+
+#### Stop Platform Gracefully
+```bash
+docker compose -f docker-compose.selfhosted.yml down
+```
+
+#### Zero-Downtime Update Procedure
+```bash
+# Pull latest repository code and images
+git pull origin main
+docker compose -f docker-compose.selfhosted.yml pull
+
+# Recreate updated containers
+docker compose -f docker-compose.selfhosted.yml up -d --remove-orphans
+
+# Run migrations and refresh caches
+docker compose -f docker-compose.selfhosted.yml exec -T stx php artisan migrate --force
+docker compose -f docker-compose.selfhosted.yml exec -T stx php artisan config:cache
+docker compose -f docker-compose.selfhosted.yml exec -T stx php artisan horizon:terminate
+```
+
 ---
 
 ## 2. Local Development Environments

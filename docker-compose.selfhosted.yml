@@ -33,6 +33,12 @@ services:
     image: kong:2.8.1-alpine
     container_name: supabase-kong
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "kong health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
@@ -219,8 +225,10 @@ services:
     container_name: wildduck
     restart: unless-stopped
     depends_on:
-      - wildduck-mongo
-      - wildduck-redis
+      wildduck-mongo:
+        condition: service_healthy
+      wildduck-redis:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       WILDDUCK_SECRET: ${WILDDUCK_SECRET}
@@ -237,6 +245,7 @@ services:
       - "995:995"
     volumes:
       - wildduck_attachments:/var/lib/wildduck/attachments
+      - ./docker/mail/config/wildduck.toml:/etc/wildduck/wildduck.toml:ro
     networks:
       - mail_net
 
@@ -245,8 +254,10 @@ services:
     container_name: zonemta
     restart: unless-stopped
     depends_on:
-      - wildduck-mongo
-      - wildduck-redis
+      wildduck-mongo:
+        condition: service_healthy
+      wildduck-redis:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
@@ -261,6 +272,8 @@ services:
     ports:
       - "587:587"
       - "465:465"
+    volumes:
+      - ./docker/mail/config/zonemta.toml:/etc/zonemta/zonemta.toml:ro
     networks:
       - mail_net
 
@@ -269,8 +282,10 @@ services:
     container_name: haraka
     restart: unless-stopped
     depends_on:
-      - wildduck
-      - wildduck-redis
+      wildduck:
+        condition: service_started
+      wildduck-redis:
+        condition: service_healthy
     environment:
       HOSTNAME: ${MAIL_HOSTNAME:-mail.ourdomain.com}
       REDIS_URL: redis://wildduck-redis:6379/3
@@ -284,6 +299,12 @@ services:
     image: mongo:6.0
     container_name: wildduck-mongo
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     volumes:
       - wildduck_mongo_data:/data/db
     networks:
@@ -293,6 +314,12 @@ services:
     image: redis:7-alpine
     container_name: wildduck-redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     volumes:
       - wildduck_redis_data:/data
     networks:
