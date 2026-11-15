@@ -48,7 +48,7 @@ final class Servers
         mkdir(self::$tmp . '/a', 0700, true);
         mkdir(self::$tmp . '/b', 0700, true);
         $root = dirname(__DIR__);
-        $base = [
+        $base = (getenv() ?: []) + [
             'APP_KEY' => base64_encode(str_repeat('k', 32)), 'SESSION_COOKIE_SECURE' => 'false', 'WILDDUCK_API_TOKEN' => 'svc-token',
             'WILDDUCK_TIMEOUT' => '3', 'PATH' => getenv('PATH') ?: '/usr/bin',
         ];
@@ -68,7 +68,7 @@ final class Servers
     /** @param array<string,string> $env */
     private static function spawn(string $addr, string $router, array $env, ?string $docroot): void
     {
-        $cmd = [PHP_BINARY, '-S', $addr];
+        $cmd = [PHP_BINARY, '-d', 'upload_max_filesize=2M', '-d', 'post_max_size=8M', '-S', $addr];
         if ($docroot) { array_push($cmd, '-t', $docroot); }
         $cmd[] = $router;
         $p = proc_open($cmd, [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', self::$tmp . '/err-' . substr($addr, -5) . '.log', 'w']], $pipes, null, $env);
@@ -120,7 +120,7 @@ final class Browser
     {
         $ch = curl_init($url);
         $h = [];
-        curl_setopt_array($ch, [CURLOPT_CUSTOMREQUEST => $method, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_FOLLOWLOCATION => false,
+        curl_setopt_array($ch, [CURLOPT_CUSTOMREQUEST => $method, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10, CURLOPT_FOLLOWLOCATION => false, CURLOPT_PATH_AS_IS => true,
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_HEADERFUNCTION => function ($c, $l) use (&$h) { $p = strpos($l, ':'); if ($p) { $h[strtolower(trim(substr($l, 0, $p)))] = trim(substr($l, $p + 1)); } return strlen($l); }]);
         if ($jar) { curl_setopt_array($ch, [CURLOPT_COOKIEJAR => $jar, CURLOPT_COOKIEFILE => $jar]); }

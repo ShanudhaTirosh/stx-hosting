@@ -1,0 +1,51 @@
+# docker/mail/config/wildduck.toml
+# Production WildDuck Configuration for STX Cloud Platform Mail Stack
+
+[general]
+title = "STX Mail System"
+hostname = "mail.stxcloud.com"
+verbose = false
+
+[storage]
+type = "gridfs"
+maxSize = 26214400 # 25 MB max attachment
+
+[dbs.mongo]
+url = "mongodb://wildduck-mongo:27017/wildduck"
+maxPoolSize = 50
+minPoolSize = 5
+
+[dbs.redis]
+host = "wildduck-redis"
+port = 6379
+db = 1
+
+[api]
+enabled = true
+port = 8080
+host = "0.0.0.0"
+cors = false
+rateLimit = 500
+
+[imap]
+enabled = true
+port = 143
+secure = false
+starttls = true
+
+[imaps]
+enabled = true
+port = 993
+secure = true
+
+[pop3]
+enabled = false
+
+[pop3s]
+enabled = true
+port = 995
+secure = true
+
+[smtp]
+# Internal submit bridge to ZoneMTA
+url = "http://zonemta:8080"

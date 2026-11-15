@@ -8,10 +8,10 @@ test('js: all browser scripts behave correctly in a DOM (notify, bulk, suggest, 
     if ($node === '') { skip('node is not installed'); }
     if (!is_dir($root . '/node_modules/jsdom')) { skip('run "npm install" to enable the browser-script tests'); }
     $files = glob($root . '/tests/js/*.test.js') ?: [];
-    $cmd = escapeshellarg($node) . ' --test ' . implode(' ', array_map('escapeshellarg', $files)) . ' 2>&1';
+    $cmd = escapeshellarg($node) . ' --test-reporter=tap --test ' . implode(' ', array_map('escapeshellarg', $files)) . ' 2>&1';
     exec('cd ' . escapeshellarg($root) . ' && ' . $cmd, $out, $code);
     $text = implode("\n", $out);
-    preg_match('/# pass (\d+)/', $text, $p); preg_match('/# fail (\d+)/', $text, $f);
+    preg_match('/[#ℹ]\s*pass (\d+)/u', $text, $p); preg_match('/[#ℹ]\s*fail (\d+)/u', $text, $f);
     if ($code !== 0 || ($f[1] ?? '0') !== '0') {
         preg_match_all('/^not ok .*$/m', $text, $bad);
         throw new AssertionError('JS tests failed: ' . implode(' | ', array_slice($bad[0], 0, 5)));
