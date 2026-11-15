@@ -904,7 +904,11 @@ class ApplicationDeploymentJob implements ShouldBeEncrypted, ShouldQueue
             $networkId = "{$this->application->uuid}-{$this->pull_request_id}";
         }
         if ($this->server->isSwarm()) {
-            // TODO
+            $this->execute_remote_command([
+                "docker network inspect '{$networkId}' >/dev/null 2>&1 || docker network create --driver overlay --attachable '{$networkId}' >/dev/null || true",
+                'hidden' => true,
+                'ignore_errors' => true,
+            ]);
         } else {
             $this->execute_remote_command([
                 "docker network inspect '{$networkId}' >/dev/null 2>&1 || docker network create --attachable '{$networkId}' >/dev/null || true",

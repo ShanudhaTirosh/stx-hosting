@@ -2137,8 +2137,7 @@ $siteAddress {
 
     public function isProxyShouldRun()
     {
-        // TODO: Do we need "|| $this->proxy->force_stop" here?
-        if ($this->proxyType() === ProxyTypes::NONE->value || $this->isBuildServer()) {
+        if ($this->proxyType() === ProxyTypes::NONE->value || $this->isBuildServer() || (bool) data_get($this, 'proxy.force_stop', false)) {
             return false;
         }
 

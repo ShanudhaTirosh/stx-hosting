@@ -42,12 +42,7 @@ class WildDuckProvisioningService
         $domain = strtolower(trim($domain));
 
         if (! $this->isConfigured()) {
-            // Mock in dev/testing environments without a live WildDuck daemon
-            return [
-                'domain_id' => 'mock_dom_'.md5($domain),
-                'dkim_selector' => 'wildduck',
-                'dkim_public_key' => 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0mockKeyForDevelopmentTestingOnly...',
-            ];
+            throw new PlatformRestrictionException('Mail server is not configured. Please set WILDDUCK_API_URL and WILDDUCK_API_TOKEN in environment configuration.');
         }
 
         try {
@@ -310,7 +305,7 @@ class WildDuckProvisioningService
     public function getMailboxUsageBytes(string $wildduckUserId): int
     {
         if (! $this->isConfigured()) {
-            return 1024 * 1024 * 12; // 12 MB mock
+            return 0;
         }
 
         try {
@@ -388,10 +383,7 @@ class WildDuckProvisioningService
     public function createUserToken(string $wildduckUserId, string $address, string $password): array
     {
         if (! $this->isConfigured()) {
-            return [
-                'token' => 'mock_sso_token_'.bin2hex(random_bytes(16)),
-                'expires_at' => now()->addMinutes(60),
-            ];
+            throw new PlatformRestrictionException('Mail server is not configured for SSO authentication.');
         }
 
         try {
@@ -413,15 +405,11 @@ class WildDuckProvisioningService
             }
 
             Log::warning("WildDuck createUserToken failed for {$address}: ".$response->body());
+            throw new PlatformRestrictionException('Could not authenticate with mail server: '.($response->json('message') ?? 'Invalid credentials.'));
         } catch (\Throwable $e) {
             Log::error("WildDuck createUserToken exception: {$e->getMessage()}");
+            throw new PlatformRestrictionException('Mail server authentication failed: '.$e->getMessage(), 0, $e);
         }
-
-        // Fallback fallback token for authenticated session
-        return [
-            'token' => 'sso_token_'.bin2hex(random_bytes(16)),
-            'expires_at' => now()->addMinutes(30),
-        ];
     }
 
     /**
@@ -433,9 +421,9 @@ class WildDuckProvisioningService
     {
         if (! $this->isConfigured()) {
             return [
-                'unread' => 2,
-                'total' => 14,
-                'storage_bytes' => 1024 * 1024 * 8, // 8 MB mock
+                'unread' => 0,
+                'total' => 0,
+                'storage_bytes' => 0,
             ];
         }
 
@@ -517,12 +505,12 @@ class WildDuckProvisioningService
     {
         if (! $this->isConfigured()) {
             return [
-                'healthy' => true,
-                'latency_ms' => 4,
-                'version' => '1.55.2 (Mock / Container)',
-                'storage_used_bytes' => 1024 * 1024 * 1420, // 1.42 GB mock
-                'active_users' => 14,
-                'active_domains' => 5,
+                'healthy' => false,
+                'latency_ms' => 0,
+                'version' => 'Unconfigured',
+                'storage_used_bytes' => 0,
+                'active_users' => 0,
+                'active_domains' => 0,
             ];
         }
 

@@ -134,9 +134,8 @@ class SendMessageToSlackJob implements ShouldBeEncrypted, ShouldQueue
     }
 
     /**
-     * @todo v5 refactor: Extract this into a separate SendMessageToMattermostJob.php triggered via the "mattermost" notification channel type.
-     */
-    /**
+     * Send notification to Mattermost webhook endpoint.
+     *
      * @param  array<string, mixed>  $httpOptions
      */
     private function sendToMattermost(array $httpOptions): Response

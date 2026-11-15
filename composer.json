@@ -102,6 +102,7 @@
         "sort-packages": true
     },
     "scripts": {
+        "check:clean": "@php scripts/check-clean-code.php",
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "Illuminate\\Foundation\\ComposerScripts::postUpdate"

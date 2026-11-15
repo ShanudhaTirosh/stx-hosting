@@ -185,7 +185,9 @@ class PushServerUpdateJob implements ShouldBeEncrypted, ShouldQueue, Silenced
         // (settings: disk threshold, isProxyShouldRun, isLogDrainEnabled; team: notifications).
         $this->server->loadMissing(['settings', 'team']);
 
-        // TODO: Swarm is not supported yet
+        if ($this->server->isSwarm()) {
+            return;
+        }
         if (! $this->data) {
             throw new \Exception('No data provided');
         }
