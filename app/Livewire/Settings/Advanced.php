@@ -7,6 +7,7 @@ use App\Models\S3Storage;
 use App\Rules\ValidDnsServers;
 use App\Rules\ValidIpOrCidr;
 use App\Services\FileDownloadStorageService;
+use App\Services\RbacService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -35,9 +36,6 @@ class Advanced extends Component
     public bool $is_api_enabled;
 
     public ?string $allowed_ips = null;
-
-    #[Validate('boolean')]
-    public bool $is_sponsorship_popup_enabled;
 
     #[Validate('boolean')]
     public bool $disable_two_step_confirmation;
@@ -82,7 +80,6 @@ class Advanced extends Component
             'custom_dns_servers' => ['nullable', 'string', new ValidDnsServers],
             'is_api_enabled' => 'boolean',
             'allowed_ips' => ['nullable', 'string', new ValidIpOrCidr],
-            'is_sponsorship_popup_enabled' => 'boolean',
             'disable_two_step_confirmation' => 'boolean',
             'is_passkey_enabled' => 'boolean',
             'is_wire_navigate_enabled' => 'boolean',
@@ -95,6 +92,13 @@ class Advanced extends Component
             'server_validation_max_failures_per_ip' => 'required|integer|min:1|max:1000',
             'server_validation_max_failures_per_team' => 'required|integer|min:1|max:10000',
         ];
+    }
+
+    public function boot(): void
+    {
+        if (! RbacService::isPlatformOwner(auth()->user())) {
+            abort(403, 'Platform owner access required.');
+        }
     }
 
     public function mount()
@@ -112,7 +116,6 @@ class Advanced extends Component
         $this->is_api_enabled = $this->settings->is_api_enabled;
         $this->disable_two_step_confirmation = $this->settings->disable_two_step_confirmation;
         $this->is_passkey_enabled = $this->settings->is_passkey_enabled ?? true;
-        $this->is_sponsorship_popup_enabled = $this->settings->is_sponsorship_popup_enabled;
         $this->is_wire_navigate_enabled = $this->settings->is_wire_navigate_enabled ?? true;
         $this->is_mcp_server_enabled = $this->settings->is_mcp_server_enabled ?? false;
         $this->webhook_allowed_internal_hosts = collect($this->settings->webhook_allowed_internal_hosts ?? [])->implode(',');
@@ -243,7 +246,6 @@ class Advanced extends Component
             $this->settings->custom_dns_servers = $this->custom_dns_servers;
             $this->settings->is_api_enabled = $this->is_api_enabled;
             $this->settings->allowed_ips = $this->allowed_ips;
-            $this->settings->is_sponsorship_popup_enabled = $this->is_sponsorship_popup_enabled;
             $this->settings->disable_two_step_confirmation = $this->disable_two_step_confirmation;
             $this->settings->is_passkey_enabled = $this->is_passkey_enabled;
             $this->settings->is_wire_navigate_enabled = $this->is_wire_navigate_enabled;

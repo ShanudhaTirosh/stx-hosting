@@ -905,7 +905,7 @@ class GlobalSearch extends Component
                     'type' => 'navigation',
                     'description' => 'Registration, API access, MCP server, DNS validation and telemetry',
                     'link' => route('admin.settings.advanced'),
-                    'search_text' => 'settings advanced registration api access allowed ips mcp server dns validation custom dns domain connect confirmation telemetry sponsorship cdn',
+                    'search_text' => 'settings advanced registration api access allowed ips mcp server dns validation custom dns domain connect confirmation telemetry cdn',
                 ],
                 [
                     'name' => 'Update Settings',
@@ -927,13 +927,6 @@ class GlobalSearch extends Component
                     'description' => 'Configure SMTP or Resend for system emails',
                     'link' => route('admin.settings.email'),
                     'search_text' => 'settings instance email smtp resend transactional mail',
-                ],
-                [
-                    'name' => 'Authentication',
-                    'type' => 'navigation',
-                    'description' => 'Configure OAuth login providers',
-                    'link' => route('admin.settings.oauth'),
-                    'search_text' => 'settings authentication oauth sso login providers github google gitlab azure',
                 ],
             );
         }
