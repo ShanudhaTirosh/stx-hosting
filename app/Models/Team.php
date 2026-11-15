@@ -10,6 +10,7 @@ use App\Notifications\Channels\SendsEmail;
 use App\Notifications\Channels\SendsPushover;
 use App\Notifications\Channels\SendsSlack;
 use App\Notifications\Server\Unreachable;
+use App\Services\RbacService;
 use App\Services\TeamAvatarStorageService;
 use App\Traits\Auditable;
 use App\Traits\HasNotificationSettings;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Attributes as OA;
 
@@ -90,7 +92,7 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
             if (! $team->uuid) {
                 $team->uuid = ($team->id === 0)
                     ? '00000000-0000-0000-0000-000000000000'
-                    : (string) \Illuminate\Support\Str::uuid();
+                    : (string) Str::uuid();
             }
         });
 
@@ -105,11 +107,89 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
         });
 
         static::deleting(function (Team $team) {
+            if ($team->id === 0) {
+                throw new \Exception('The root team (id = 0) is a protected platform sentinel and cannot be deleted.');
+            }
             $team->deleteOwnedRecords();
         });
 
         static::deleted(function (Team $team) {
             app(TeamAvatarStorageService::class)->deleteTeamFile($team);
+        });
+    }
+
+    /**
+     * Role of a specific user within this team ('owner', 'admin', 'member', or null).
+     */
+    public function userRole(?User $user): ?string
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $member = $this->members()->where('users.id', $user->id)->first();
+
+        return data_get($member, 'pivot.role');
+    }
+
+    /**
+     * Whether the given user has management authority over this team.
+     */
+    public function canBeManagedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if (RbacService::isStaff($user)) {
+            return true;
+        }
+
+        $role = $this->userRole($user);
+
+        return in_array($role, ['owner', 'admin'], true);
+    }
+
+    /**
+     * Whether the given user may delete this team.
+     */
+    public function canBeDeletedBy(?User $user): bool
+    {
+        if (! $user || $this->id === 0) {
+            return false;
+        }
+
+        if (RbacService::isStaff($user)) {
+            return true;
+        }
+
+        return $this->userRole($user) === 'owner';
+    }
+
+    /**
+     * Transfer team ownership from current owner to a target member.
+     */
+    public function transferOwnership(User $newOwner, User $currentOwner): bool
+    {
+        if ($this->id === 0) {
+            throw new \Exception('Root team ownership cannot be transferred.');
+        }
+
+        if (! $this->canBeDeletedBy($currentOwner)) {
+            throw new \Exception('Only the current team owner can transfer ownership.');
+        }
+
+        if (! $this->members()->where('users.id', $newOwner->id)->exists()) {
+            throw new \Exception('The target recipient must be an existing member of the team.');
+        }
+
+        return DB::transaction(function () use ($newOwner, $currentOwner): bool {
+            // Demote old owner to admin
+            $this->members()->updateExistingPivot($currentOwner->id, ['role' => 'admin']);
+            // Promote new owner
+            $this->members()->updateExistingPivot($newOwner->id, ['role' => 'owner']);
+
+            return true;
         });
     }
 
@@ -271,6 +351,11 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
                 return $this->custom_server_limit ?? 2;
             }
         );
+    }
+
+    public function getUuidAttribute(?string $value): string
+    {
+        return $value ?: ($this->id === 0 ? '00000000-0000-0000-0000-000000000000' : 'team-'.$this->id);
     }
 
     public function routeNotificationForDiscord()

@@ -109,7 +109,8 @@ class RbacService
      */
     public static function can(?User $user, string $capability): bool
     {
-        $roles = config("stx-permissions.capabilities.{$capability}");
+        $capabilities = config('stx-permissions.capabilities', []);
+        $roles = $capabilities[$capability] ?? null;
 
         if (! is_array($roles)) {
             return false;

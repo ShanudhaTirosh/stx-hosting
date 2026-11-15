@@ -8,6 +8,8 @@ class TeamInvitation extends Model
 {
     protected $fillable = [
         'team_id',
+        'invited_by_user_id',
+        'target_user_id',
         'uuid',
         'email',
         'role',
@@ -51,6 +53,35 @@ class TeamInvitation extends Model
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function invitedBy()
+    {
+        return $this->belongsTo(User::class, 'invited_by_user_id');
+    }
+
+    public function targetUser()
+    {
+        return $this->belongsTo(User::class, 'target_user_id');
+    }
+
+    public function acceptFor(User $user): bool
+    {
+        if (! $this->isValid()) {
+            return false;
+        }
+
+        if (! $this->team->members->contains('id', $user->id)) {
+            $pivotData = [
+                'role' => $this->role,
+                'access' => is_array($this->access) ? json_encode($this->access) : $this->access,
+            ];
+            $this->team->members()->attach($user->id, $pivotData);
+        }
+
+        $this->recordUse();
+
+        return true;
     }
 
     public static function ownedByCurrentTeam()

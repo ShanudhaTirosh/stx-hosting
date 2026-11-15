@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\MailboxSsoController;
 use App\Http\Controllers\Api\ApplicationsController;
+use App\Http\Controllers\Api\ClusterNodeRegistrationController;
 use App\Http\Controllers\Api\DatabasesController;
 use App\Http\Controllers\Api\DeployController;
 use App\Http\Controllers\Api\DestinationsController;
@@ -14,19 +16,44 @@ use App\Http\Controllers\Api\ServersController;
 use App\Http\Controllers\Api\ServicesController;
 use App\Http\Controllers\Api\SharedVariableCanvasController;
 use App\Http\Controllers\Api\TagCanvasController;
+use App\Http\Controllers\Commerce\InvoicePdfController;
 use App\Http\Controllers\Commerce\InvoiceViewController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FileBrowserDownloadController;
+use App\Http\Controllers\Mail\MailClientProfileController;
 use App\Http\Controllers\OauthController;
+use App\Http\Controllers\Portal\MailClientConfigController;
 use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\ProjectIconController;
+use App\Http\Controllers\Status\StatusSubscriptionController;
+use App\Http\Controllers\Storefront\BlogController;
+use App\Http\Controllers\Storefront\CartController;
+use App\Http\Controllers\Storefront\DocsController;
+use App\Http\Controllers\Storefront\StorefrontController;
+use App\Http\Controllers\Support\AttachmentController;
 use App\Http\Controllers\TeamAvatarController;
 use App\Http\Controllers\UploadController;
 use App\Http\Middleware\UseSessionTeamApiToken;
+use App\Livewire\Admin\AuditLog;
+use App\Livewire\Admin\Backups;
+use App\Livewire\Admin\Billing\PaymentMethods;
 use App\Livewire\Admin\Billing\ProofReviewQueue;
+use App\Livewire\Admin\Billing\VerificationSettings;
+use App\Livewire\Admin\Cluster\ClusterNodeStudio;
+use App\Livewire\Admin\Commerce\MailPlanStudio;
+use App\Livewire\Admin\Commerce\ProductCatalogStudio;
+use App\Livewire\Admin\Commerce\TemplateCatalogStudio;
 use App\Livewire\Admin\Index as AdminIndex;
 use App\Livewire\Admin\Inventory\VpsInventoryStudio;
+use App\Livewire\Admin\Mail\MailboxStudio;
+use App\Livewire\Admin\Mail\MyMailboxes;
+use App\Livewire\Admin\Notifications\DiscordRoutes;
+use App\Livewire\Admin\Notifications\EmailTemplatesPage;
+use App\Livewire\Admin\Operations\DeploymentApprovals;
 use App\Livewire\Admin\Operations\ProvisioningQueue;
+use App\Livewire\Admin\Platform\PlatformDomainStudio;
+use App\Livewire\Admin\Status\StatusStudio;
+use App\Livewire\Admin\Teams\AdminTeamStudio;
 use App\Livewire\Analytics;
 use App\Livewire\Boarding\Index as BoardingIndex;
 use App\Livewire\Dashboard;
@@ -49,8 +76,15 @@ use App\Livewire\Portal\Apps\AppList;
 use App\Livewire\Portal\BillingOverview;
 use App\Livewire\Portal\Checkout;
 use App\Livewire\Portal\Databases\DatabaseList;
+use App\Livewire\Portal\DeployWizard;
+use App\Livewire\Portal\Domains;
+use App\Livewire\Portal\Mail\MailDashboard;
 use App\Livewire\Portal\ServiceDetail;
 use App\Livewire\Portal\ServicesList;
+use App\Livewire\Portal\Teams\InvitesList;
+use App\Livewire\Portal\Teams\TeamDetail;
+use App\Livewire\Portal\Teams\TeamList;
+use App\Livewire\Portal\VpsPanel;
 use App\Livewire\Profile\Appearance as ProfileAppearance;
 use App\Livewire\Profile\Index as ProfileIndex;
 use App\Livewire\Project\Application\Backup\Index as ApplicationBackupIndex;
@@ -137,11 +171,16 @@ use App\Livewire\SharedVariables\Team\Index as TeamSharedVariablesIndex;
 use App\Livewire\Source\Gitea\Change as GiteaChange;
 use App\Livewire\Source\Github\Change as GitHubChange;
 use App\Livewire\Source\Gitlab\Change as GitLabChange;
+use App\Livewire\Status\IncidentsArchive;
+use App\Livewire\Status\MonitorDetail;
 use App\Livewire\Status\PublicStatus;
 use App\Livewire\Storage\Index as StorageIndex;
 use App\Livewire\Storage\Show as StorageShow;
 use App\Livewire\Subscription\Index as SubscriptionIndex;
 use App\Livewire\Subscription\Show as SubscriptionShow;
+use App\Livewire\Support\ClientIndex;
+use App\Livewire\Support\StaffInbox;
+use App\Livewire\Support\ThreadView;
 use App\Livewire\Tags\Canvas as TagsCanvas;
 use App\Livewire\Tags\Show as TagsShow;
 use App\Livewire\Team\AdminView as TeamAdminView;
@@ -151,6 +190,7 @@ use App\Livewire\Team\Index as TeamIndex;
 use App\Livewire\Team\Member\Index as TeamMemberIndex;
 use App\Livewire\Terminal\Index as TerminalIndex;
 use App\Livewire\TwoFactorRequired;
+use App\Models\Commerce\ServiceInstance;
 use App\Models\ScheduledDatabaseBackupExecution;
 use App\Models\ScheduledVolumeBackupExecution;
 use App\Models\Server;
@@ -172,9 +212,9 @@ Route::get('/auth/{provider}/redirect', [OauthController::class, 'redirect'])->n
 Route::get('/auth/{provider}/callback', [OauthController::class, 'callback'])->name('auth.callback');
 // Public storefront: plain server-rendered pages (no Livewire, no JavaScript needed)
 Route::middleware(['storefront.currency', 'storefront.csp'])->group(function () {
-    $store = \App\Http\Controllers\Storefront\StorefrontController::class;
-    $cart = \App\Http\Controllers\Storefront\CartController::class;
-    $blog = \App\Http\Controllers\Storefront\BlogController::class;
+    $store = StorefrontController::class;
+    $cart = CartController::class;
+    $blog = BlogController::class;
 
     Route::get('/', [$store, 'home'])->name('home');
     Route::get('/store', [$store, 'home'])->name('store.index');
@@ -202,16 +242,16 @@ Route::middleware(['storefront.currency', 'storefront.csp'])->group(function () 
     Route::delete('/cart/{line}', [$cart, 'remove'])->name('cart.remove');
     Route::post('/cart/checkout', [$cart, 'checkout'])->middleware('throttle:20,1')->name('cart.checkout');
 
-    $docs = \App\Http\Controllers\Storefront\DocsController::class;
+    $docs = DocsController::class;
     Route::get('/docs', [$docs, 'index'])->name('docs.index');
     Route::get('/docs/{slug}', [$docs, 'show'])->where('slug', '[a-z0-9-]+')->name('docs.show');
 
     Route::get('/about', [$store, 'about'])->name('store.about');
 
     // Mail Client RFC Autoconfig & Autodiscover Endpoints
-    Route::get('/mail/config-v1.1.xml', [\App\Http\Controllers\Portal\MailClientConfigController::class, 'thunderbirdAutoconfig']);
-    Route::get('/.well-known/autoconfig/mail/config-v1.1.xml', [\App\Http\Controllers\Portal\MailClientConfigController::class, 'thunderbirdAutoconfig']);
-    Route::match(['GET', 'POST'], '/autodiscover/autodiscover.xml', [\App\Http\Controllers\Portal\MailClientConfigController::class, 'outlookAutodiscover']);
+    Route::get('/mail/config-v1.1.xml', [MailClientConfigController::class, 'thunderbirdAutoconfig']);
+    Route::get('/.well-known/autoconfig/mail/config-v1.1.xml', [MailClientConfigController::class, 'thunderbirdAutoconfig']);
+    Route::match(['GET', 'POST'], '/autodiscover/autodiscover.xml', [MailClientConfigController::class, 'outlookAutodiscover']);
     Route::get('/faqs', [$store, 'faqs'])->name('store.faqs');
     Route::get('/contact', [$store, 'contact'])->name('store.contact');
     Route::post('/contact', [$store, 'contactSend'])->middleware('throttle:5,1')->name('store.contact.send');
@@ -227,11 +267,11 @@ Route::get('/discord', fn () => redirect()->away('https://discord.gg/shanutechx'
 
 // Public Telemetry & Status Portal
 Route::get('/status', PublicStatus::class)->name('status.public');
-Route::get('/status/monitor/{uuid}', \App\Livewire\Status\MonitorDetail::class)->name('status.monitor');
-Route::get('/status/incidents', \App\Livewire\Status\IncidentsArchive::class)->name('status.incidents');
-Route::get('/status/verify/{token}', [\App\Http\Controllers\Status\StatusSubscriptionController::class, 'verify'])->name('status.verify');
-Route::get('/status/unsubscribe/{token}', [\App\Http\Controllers\Status\StatusSubscriptionController::class, 'unsubscribe'])->name('status.unsubscribe');
-Route::get('/install-node.sh', [\App\Http\Controllers\Api\ClusterNodeRegistrationController::class, 'installScript'])->name('cluster.node.install_script');
+Route::get('/status/monitor/{uuid}', MonitorDetail::class)->name('status.monitor');
+Route::get('/status/incidents', IncidentsArchive::class)->name('status.incidents');
+Route::get('/status/verify/{token}', [StatusSubscriptionController::class, 'verify'])->name('status.verify');
+Route::get('/status/unsubscribe/{token}', [StatusSubscriptionController::class, 'unsubscribe'])->name('status.unsubscribe');
+Route::get('/install-node.sh', [ClusterNodeRegistrationController::class, 'installScript'])->name('cluster.node.install_script');
 
 // Local/testing previews for HTTP error pages and the Laravel debug renderer (never in production).
 if (app()->environment(['local', 'testing'])) {
@@ -347,53 +387,57 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Administration Console & Commerce Studio (platform staff only; each component also re-checks per request)
     Route::middleware(['platform.staff'])->group(function () {
         Route::get('/admin', AdminIndex::class)->name('admin.index');
-        Route::get('/admin/commerce/products', \App\Livewire\Admin\Commerce\ProductCatalogStudio::class)->name('admin.commerce.products');
-        Route::get('/admin/templates', \App\Livewire\Admin\Commerce\TemplateCatalogStudio::class)->name('admin.templates');
+        Route::get('/admin/commerce/products', ProductCatalogStudio::class)->name('admin.commerce.products');
+        Route::get('/admin/templates', TemplateCatalogStudio::class)->name('admin.templates');
         Route::get('/admin/billing/proofs', ProofReviewQueue::class)->name('admin.billing.proofs');
-        Route::get('/admin/billing/methods', \App\Livewire\Admin\Billing\PaymentMethods::class)->name('admin.billing.methods')->middleware('platform.owner');
-        Route::get('/admin/billing/verification-settings', \App\Livewire\Admin\Billing\VerificationSettings::class)->name('admin.billing.verification-settings')->middleware('platform.owner');
-        Route::get('/admin/notifications', \App\Livewire\Admin\Notifications\DiscordRoutes::class)->name('admin.notifications')->middleware('platform.owner');
-        Route::get('/admin/emails', \App\Livewire\Admin\Notifications\EmailTemplatesPage::class)->name('admin.emails')->middleware('platform.owner');
-        Route::get('/admin/mailboxes', \App\Livewire\Admin\Mail\MailboxStudio::class)->name('admin.mailboxes')->middleware('platform.owner');
-        Route::get('/admin/my-mailboxes', \App\Livewire\Admin\Mail\MyMailboxes::class)->name('admin.my-mailboxes');
-        Route::get('/admin/mailboxes/{id}/webmail-sso', [\App\Http\Controllers\Admin\MailboxSsoController::class, 'launch'])->name('admin.mailboxes.webmail-sso');
-        Route::get('/mail/profiles/apple/{mailboxId}', [\App\Http\Controllers\Mail\MailClientProfileController::class, 'appleProfile'])->name('mail.profiles.apple');
-        Route::get('/.well-known/autoconfig/mail/config-v1.1.xml', [\App\Http\Controllers\Mail\MailClientProfileController::class, 'thunderbirdAutoconfig']);
-        Route::get('/admin/docs', [\App\Http\Controllers\Storefront\DocsController::class, 'index'])->defaults('audience', 'admin')->name('admin.docs.index');
-        Route::get('/admin/docs/{slug}', [\App\Http\Controllers\Storefront\DocsController::class, 'show'])->where('slug', '[a-z0-9-]+')->defaults('audience', 'admin')->name('admin.docs.show');
-        Route::get('/admin/audit', \App\Livewire\Admin\AuditLog::class)->name('admin.audit');
-        Route::get('/admin/backups', \App\Livewire\Admin\Backups::class)->name('admin.backups');
-        Route::get('/admin/support', \App\Livewire\Support\StaffInbox::class)->name('admin.support');
-        Route::get('/admin/support/{uuid}', \App\Livewire\Support\ThreadView::class)->name('admin.support.thread');
+        Route::get('/admin/billing/methods', PaymentMethods::class)->name('admin.billing.methods')->middleware('platform.owner');
+        Route::get('/admin/billing/verification-settings', VerificationSettings::class)->name('admin.billing.verification-settings')->middleware('platform.owner');
+        Route::get('/admin/notifications', DiscordRoutes::class)->name('admin.notifications')->middleware('platform.owner');
+        Route::get('/admin/emails', EmailTemplatesPage::class)->name('admin.emails')->middleware('platform.owner');
+        Route::get('/admin/mailboxes', MailboxStudio::class)->name('admin.mailboxes')->middleware('platform.owner');
+        Route::get('/admin/my-mailboxes', MyMailboxes::class)->name('admin.my-mailboxes');
+        Route::get('/admin/mailboxes/{id}/webmail-sso', [MailboxSsoController::class, 'launch'])->name('admin.mailboxes.webmail-sso');
+        Route::get('/mail/profiles/apple/{mailboxId}', [MailClientProfileController::class, 'appleProfile'])->name('mail.profiles.apple');
+        Route::get('/.well-known/autoconfig/mail/config-v1.1.xml', [MailClientProfileController::class, 'thunderbirdAutoconfig']);
+        Route::get('/admin/docs', [DocsController::class, 'index'])->defaults('audience', 'admin')->name('admin.docs.index');
+        Route::get('/admin/docs/{slug}', [DocsController::class, 'show'])->where('slug', '[a-z0-9-]+')->defaults('audience', 'admin')->name('admin.docs.show');
+        Route::get('/admin/audit', AuditLog::class)->name('admin.audit');
+        Route::get('/admin/backups', Backups::class)->name('admin.backups');
+        Route::get('/admin/support', StaffInbox::class)->name('admin.support');
+        Route::get('/admin/support/{uuid}', ThreadView::class)->name('admin.support.thread');
         Route::get('/admin/inventory/vps', VpsInventoryStudio::class)->name('admin.inventory.vps');
         Route::get('/admin/operations/provisioning', ProvisioningQueue::class)->name('admin.operations.provisioning');
-        Route::get('/admin/operations/approvals', \App\Livewire\Admin\Operations\DeploymentApprovals::class)->name('admin.operations.approvals');
-        Route::get('/admin/status', \App\Livewire\Admin\Status\StatusStudio::class)->name('admin.status.index');
-        Route::get('/admin/commerce/mail-plans', \App\Livewire\Admin\Commerce\MailPlanStudio::class)->name('admin.commerce.mail-plans');
-        Route::get('/admin/platform/domains', \App\Livewire\Admin\Platform\PlatformDomainStudio::class)->name('admin.platform.domains')->middleware('platform.owner');
-        Route::get('/admin/cluster/nodes', \App\Livewire\Admin\Cluster\ClusterNodeStudio::class)->name('admin.cluster.nodes')->middleware('platform.owner');
+        Route::get('/admin/operations/approvals', DeploymentApprovals::class)->name('admin.operations.approvals');
+        Route::get('/admin/status', StatusStudio::class)->name('admin.status.index');
+        Route::get('/admin/commerce/mail-plans', MailPlanStudio::class)->name('admin.commerce.mail-plans');
+        Route::get('/admin/platform/domains', PlatformDomainStudio::class)->name('admin.platform.domains')->middleware('platform.owner');
+        Route::get('/admin/cluster/nodes', ClusterNodeStudio::class)->name('admin.cluster.nodes')->middleware('platform.owner');
+        Route::get('/admin/teams', AdminTeamStudio::class)->name('admin.teams');
     });
 
     // Customer Self-Service Portal
     Route::get('/portal', ServicesList::class)->name('portal.index');
-    Route::get('/portal/deploy', \App\Livewire\Portal\DeployWizard::class)->name('portal.deploy');
+    Route::get('/portal/deploy', DeployWizard::class)->name('portal.deploy');
     Route::get('/portal/services', ServicesList::class)->name('portal.services');
     Route::get('/portal/services/{uuid}', ServiceDetail::class)->name('portal.service.detail');
+    Route::get('/portal/teams', TeamList::class)->name('portal.teams.index');
+    Route::get('/portal/teams/invites', InvitesList::class)->name('portal.teams.invites');
+    Route::get('/portal/teams/{uuid}', TeamDetail::class)->name('portal.teams.detail');
     Route::get('/portal/apps', AppList::class)->name('portal.apps');
     Route::get('/portal/apps/{uuid}', AppDetail::class)->name('portal.apps.detail');
     Route::get('/portal/databases', DatabaseList::class)->name('portal.databases');
     Route::get('/portal/billing', BillingOverview::class)->name('portal.billing');
-    Route::get('/portal/domains', \App\Livewire\Portal\Domains::class)->name('portal.domains');
-    Route::get('/portal/mail', \App\Livewire\Portal\Mail\MailDashboard::class)->name('portal.mail');
-    Route::get('/portal/mail/apple-profile/{mailboxId}', [\App\Http\Controllers\Portal\MailClientConfigController::class, 'downloadAppleProfile'])->name('portal.mail.apple-profile');
-    Route::get('/portal/backups', \App\Livewire\Portal\Backups::class)->name('portal.backups');
-    Route::get('/portal/support', \App\Livewire\Support\ClientIndex::class)->name('portal.support');
-    Route::get('/portal/support/{uuid}', \App\Livewire\Support\ThreadView::class)->name('portal.support.thread');
-    Route::get('/support/attachments/{uuid}', [\App\Http\Controllers\Support\AttachmentController::class, 'show'])->middleware('throttle:60,1')->name('support.attachment');
-    Route::get('/portal/vps/{uuid}', \App\Livewire\Portal\VpsPanel::class)->name('portal.vps');
+    Route::get('/portal/domains', Domains::class)->name('portal.domains');
+    Route::get('/portal/mail', MailDashboard::class)->name('portal.mail');
+    Route::get('/portal/mail/apple-profile/{mailboxId}', [MailClientConfigController::class, 'downloadAppleProfile'])->name('portal.mail.apple-profile');
+    Route::get('/portal/backups', App\Livewire\Portal\Backups::class)->name('portal.backups');
+    Route::get('/portal/support', ClientIndex::class)->name('portal.support');
+    Route::get('/portal/support/{uuid}', ThreadView::class)->name('portal.support.thread');
+    Route::get('/support/attachments/{uuid}', [AttachmentController::class, 'show'])->middleware('throttle:60,1')->name('support.attachment');
+    Route::get('/portal/vps/{uuid}', VpsPanel::class)->name('portal.vps');
     Route::get('/portal/invoices/{uuid}', [InvoiceViewController::class, 'show'])->name('portal.invoices.show');
     Route::get('/invoices/{uuid}', [InvoiceViewController::class, 'show'])->middleware('throttle:60,1')->name('invoices.show');
-    Route::get('/invoices/{uuid}/pdf', [\App\Http\Controllers\Commerce\InvoicePdfController::class, 'show'])->middleware('throttle:30,1')->name('invoices.pdf');
+    Route::get('/invoices/{uuid}/pdf', [InvoicePdfController::class, 'show'])->middleware('throttle:30,1')->name('invoices.pdf');
     Route::get('/portal/checkout', Checkout::class)->name('portal.checkout');
     Route::get('/orders', Checkout::class)->name('orders.checkout');
     Route::get('/onboarding', BoardingIndex::class)->name('onboarding');
@@ -478,7 +522,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->where('settings.is_terminal_enabled', true)
                 ->pluck('ip')
                 // Customer VPS the panel can sign in to (it has installed its key).
-                ->merge(\App\Models\Commerce\ServiceInstance::where('team_id', $team->id)
+                ->merge(ServiceInstance::where('team_id', $team->id)
                     ->where('service_type', 'vps')
                     ->where('status', 'active')
                     ->whereNotNull('panel_private_key_id')
