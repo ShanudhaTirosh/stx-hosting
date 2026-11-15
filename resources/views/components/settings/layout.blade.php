@@ -1,14 +1,15 @@
 @php
+    $isAdmin = request()->is('admin*');
     $settingsMenuSections = [
         'Configuration' => [
-            ['label' => 'General', 'route' => 'settings.index', 'icon' => 'settings'],
-            ['label' => 'Advanced', 'route' => 'settings.advanced', 'icon' => 'grid'],
-            ['label' => 'Updates', 'route' => 'settings.updates', 'icon' => 'refresh3'],
+            ['label' => 'General', 'route' => $isAdmin ? 'admin.settings.index' : 'settings.index', 'icon' => 'settings'],
+            ['label' => 'Advanced', 'route' => $isAdmin ? 'admin.settings.advanced' : 'settings.advanced', 'icon' => 'grid'],
+            ['label' => 'Updates', 'route' => $isAdmin ? 'admin.settings.updates' : 'settings.updates', 'icon' => 'refresh3'],
         ],
         'Instance' => [
-            ['label' => 'Authentication', 'route' => 'settings.oauth', 'icon' => 'keys'],
-            ['label' => 'Email', 'route' => 'settings.email', 'icon' => 'mail'],
-            ['label' => 'Backup', 'route' => 'settings.backup', 'icon' => 'database'],
+            ['label' => 'Authentication', 'route' => $isAdmin ? 'admin.settings.oauth' : 'settings.oauth', 'icon' => 'keys'],
+            ['label' => 'Email', 'route' => $isAdmin ? 'admin.settings.email' : 'settings.email', 'icon' => 'mail'],
+            ['label' => 'Backup', 'route' => $isAdmin ? 'admin.settings.backup' : 'settings.backup', 'icon' => 'database'],
         ],
     ];
 @endphp

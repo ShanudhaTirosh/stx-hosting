@@ -411,8 +411,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/status', StatusStudio::class)->name('admin.status.index');
         Route::get('/admin/commerce/mail-plans', MailPlanStudio::class)->name('admin.commerce.mail-plans');
         Route::get('/admin/platform/domains', PlatformDomainStudio::class)->name('admin.platform.domains')->middleware('platform.owner');
-        Route::get('/admin/cluster/nodes', ClusterNodeStudio::class)->name('admin.cluster.nodes')->middleware('platform.owner');
+        Route::get('/admin/cluster/nodes', ClusterNodeStudio::class)->name('admin.cluster.nodes');
         Route::get('/admin/teams', AdminTeamStudio::class)->name('admin.teams');
+
+        // Fleet Servers & Terminal (Admin or Owner)
+        Route::get('/admin/servers', ServerIndex::class)->name('admin.servers');
+        Route::get('/admin/terminal', TerminalIndex::class)->name('admin.terminal')->middleware('can.access.terminal');
+
+        // Instance Settings (Admin or Owner)
+        Route::get('/admin/settings', SettingsIndex::class)->name('admin.settings.index');
+        Route::get('/admin/settings/advanced', SettingsAdvanced::class)->name('admin.settings.advanced');
+        Route::get('/admin/settings/updates', SettingsUpdates::class)->name('admin.settings.updates');
+        Route::get('/admin/settings/backup', SettingsBackup::class)->name('admin.settings.backup');
+        Route::get('/admin/settings/email', SettingsEmail::class)->name('admin.settings.email');
+        Route::get('/admin/settings/oauth', SettingsOauth::class)->name('admin.settings.oauth');
+        Route::get('/admin/settings/oauth/{provider}', SettingsOauth::class)
+            ->where('provider', '[A-Za-z0-9_-]+')
+            ->name('admin.settings.oauth.provider');
     });
 
     // Customer Self-Service Portal
@@ -506,14 +521,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/danger', TeamDangerZone::class)->name('team.danger-zone');
     });
 
-    Route::get('/terminal', TerminalIndex::class)->name('terminal')->middleware(['platform.owner', 'can.access.terminal']);
+    Route::get('/terminal', TerminalIndex::class)->name('terminal')->middleware(['platform.staff', 'can.access.terminal']);
     Route::post('/terminal/auth', function () {
         if (auth()->check()) {
             return response()->json(['authenticated' => true], 200);
         }
 
         return response()->json(['authenticated' => false], 401);
-    })->name('terminal.auth')->middleware(['can.access.terminal', 'throttle:120,1']);
+    })->name('terminal.auth')->middleware(['platform.staff', 'can.access.terminal', 'throttle:120,1']);
 
     Route::post('/terminal/auth/ips', function () {
         if (auth()->check()) {
@@ -545,7 +560,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         }
 
         return response()->json(['ipAddresses' => []], 401);
-    })->name('terminal.auth.ips')->middleware(['can.access.terminal', 'throttle:120,1']);
+    })->name('terminal.auth.ips')->middleware(['platform.staff', 'can.access.terminal', 'throttle:120,1']);
 
     Route::post('/terminal/session', function (Request $request, TerminalSessionService $terminalSessionService) {
         $request->validate(['token' => ['required', 'string', 'size:64']]);
@@ -553,7 +568,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json([
             'command' => $terminalSessionService->redeem($request->user(), $request->string('token')->toString()),
         ]);
-    })->name('terminal.session')->middleware(['can.access.terminal', 'throttle:60,1']);
+    })->name('terminal.session')->middleware(['platform.staff', 'can.access.terminal', 'throttle:60,1']);
 
     Route::prefix('invitations')->group(function () {
         Route::get('/{uuid}', [Controller::class, 'showInvitation'])->name('team.invitation.show');
@@ -702,7 +717,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/proxy/certificates', ProxyCertificatesShow::class)->name('server.proxy.certificates');
         Route::get('/proxy/dynamic', ProxyDynamicConfigurations::class)->name('server.proxy.dynamic-confs');
         Route::get('/proxy/logs', ProxyLogs::class)->name('server.proxy.logs');
-        Route::get('/terminal', ExecuteContainerCommand::class)->name('server.command')->middleware(['platform.owner', 'can.access.terminal']);
+        Route::get('/terminal', ExecuteContainerCommand::class)->name('server.command')->middleware(['platform.staff', 'can.access.terminal']);
         Route::get('/docker-cleanup', DockerCleanup::class)->name('server.docker-cleanup');
         Route::get('/images', DockerImages::class)->name('server.docker-images');
         Route::get('/github-runners', GithubRunners::class)->name('server.github-runners');

@@ -3,6 +3,7 @@
 namespace App\Livewire\Terminal;
 
 use App\Models\Server;
+use App\Services\RbacService;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -18,6 +19,8 @@ class Index extends Component
 
     public function mount()
     {
+        abort_unless(RbacService::can(auth()->user(), 'nodes.terminal') || auth()->user()?->isInstanceAdmin(), 403, 'Restricted to platform administrators and owners.');
+
         $this->servers = Server::isReachable()->get()->filter(function ($server) {
             return $server->isTerminalEnabled();
         });
@@ -25,6 +28,8 @@ class Index extends Component
 
     public function loadContainers()
     {
+        abort_unless(RbacService::can(auth()->user(), 'nodes.terminal') || auth()->user()?->isInstanceAdmin(), 403, 'Restricted to platform administrators and owners.');
+
         try {
             $this->containers = $this->getAllActiveContainers();
         } catch (\Exception $e) {

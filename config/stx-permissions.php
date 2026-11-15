@@ -34,8 +34,8 @@ return [
         'nodes.remove' => ['owner'],
         'nodes.migrate' => ['owner', 'admin'],
         'nodes.stats' => ['owner', 'admin'],
-        'nodes.terminal' => ['owner'],                // web terminal, SFTP, power
-        'nodes.power' => ['owner'],
+        'nodes.terminal' => ['owner', 'admin'],       // web terminal, SFTP, power (admin or owner)
+        'nodes.power' => ['owner', 'admin'],
 
         // Platform
         'platform.settings' => ['owner', 'admin'],    // SMTP, auth, updates, instance settings (set to ['owner'] to make owner-only)

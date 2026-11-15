@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\InstanceSettings;
 use App\Models\User;
+use App\Services\RbacService;
 
 class InstanceSettingsPolicy
 {
@@ -12,7 +13,7 @@ class InstanceSettingsPolicy
      */
     public function view(User $user, InstanceSettings $settings): bool
     {
-        return isInstanceAdmin();
+        return RbacService::can($user, 'platform.settings') || $user->isInstanceAdmin();
     }
 
     /**
@@ -20,6 +21,6 @@ class InstanceSettingsPolicy
      */
     public function update(User $user, InstanceSettings $settings): bool
     {
-        return isInstanceAdmin();
+        return RbacService::can($user, 'platform.settings') || $user->isInstanceAdmin();
     }
 }
