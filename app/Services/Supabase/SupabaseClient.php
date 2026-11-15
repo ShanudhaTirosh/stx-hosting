@@ -71,6 +71,29 @@ class SupabaseClient
     }
 
     /**
+     * PostgREST upsert (merge-duplicates on conflict).
+     */
+    public function upsert(string $table, array $data, ?string $onConflict = null, bool $useServiceRole = true): ?Response
+    {
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        $endpoint = "{$this->url}/rest/v1/{$table}";
+        $queryParams = $onConflict ? ['on_conflict' => $onConflict] : [];
+
+        try {
+            return $this->http($useServiceRole)
+                ->withHeaders(['Prefer' => 'resolution=merge-duplicates,return=representation'])
+                ->post($endpoint, $data);
+        } catch (\Throwable $e) {
+            Log::error("Supabase upsert exception on {$table}: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
+    /**
      * Invoke a Supabase Edge Function.
      */
     public function invokeFunction(string $functionName, array $payload = [], bool $useServiceRole = true): ?array

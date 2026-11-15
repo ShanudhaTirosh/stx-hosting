@@ -67,9 +67,14 @@ class MailDashboard extends Component
     public string $newAliasUsername = '';
     public array $mailboxAliases = [];
 
-    protected function team(): Team
+    protected function team(bool $requireAdmin = false): Team
     {
-        return currentTeam() ?? abort(403, 'No team selected.');
+        $team = currentTeam() ?? abort(403, 'No team selected.');
+        if ($requireAdmin) {
+            abort_unless(auth()->user()->isAdminOfTeam($team->id), 403, 'You do not have permission to modify email hosting resources for this team.');
+        }
+
+        return $team;
     }
 
     public function mount(): void
@@ -141,7 +146,7 @@ class MailDashboard extends Component
         $domain = preg_replace('#^[a-z][a-z0-9+.-]*://#', '', $domain);
         $domain = trim(explode('/', $domain)[0], '. ');
 
-        $team = $this->team();
+        $team = $this->team(true);
 
         // Verify domain limits
         $currentDomainCount = count($this->domains);
@@ -192,7 +197,8 @@ class MailDashboard extends Component
 
     public function deleteDomain(string $domainId, WildDuckProvisioningService $wildduck): void
     {
-        $domain = MailDomain::where('team_id', $this->team()->id)->find($domainId);
+        $team = $this->team(true);
+        $domain = MailDomain::where('team_id', $team->id)->find($domainId);
         if (! $domain) {
             $this->dispatch('error', 'Domain not found.');
             return;
@@ -200,7 +206,7 @@ class MailDashboard extends Component
 
         $activeBoxes = MailMailbox::where('domain_id', $domainId)->count();
         if ($activeBoxes > 0) {
-            $this->dispatch('error', "Cannot delete domain '{$domain->domain}' because it still has {$activeBoxes} active mailbox(es). Delete them first.");
+            $this->dispatch('error', "Cannot delete domain '{$domain->domain}' because it still has {$activeBoxes} active mailbox(es). Please delete all associated mailboxes first.");
             return;
         }
 
@@ -377,7 +383,7 @@ class MailDashboard extends Component
             return;
         }
 
-        $team = $this->team();
+        $team = $this->team(true);
 
         // Check mailbox limit
         $currentCount = count($this->mailboxes);
@@ -486,6 +492,7 @@ class MailDashboard extends Component
 
     public function executePasswordReset(WildDuckProvisioningService $wildduck): void
     {
+        $this->team(true);
         $this->validate([
             'resetNewPassword' => 'required|string|min:8',
         ]);
@@ -517,7 +524,8 @@ class MailDashboard extends Component
             return;
         }
 
-        $box = MailMailbox::where('team_id', $this->team()->id)->find($this->editQuotaMailboxId);
+        $team = $this->team(true);
+        $box = MailMailbox::where('team_id', $team->id)->find($this->editQuotaMailboxId);
         if ($box) {
             $quotaMb = $this->editQuotaMb ?: 0;
             $wildduck->updateMailboxQuota($box->wildduck_user_id, $quotaMb);
@@ -530,7 +538,8 @@ class MailDashboard extends Component
 
     public function toggleMailboxStatus(string $mailboxId, WildDuckProvisioningService $wildduck): void
     {
-        $box = MailMailbox::where('team_id', $this->team()->id)->find($mailboxId);
+        $team = $this->team(true);
+        $box = MailMailbox::where('team_id', $team->id)->find($mailboxId);
         if (! $box) {
             return;
         }
@@ -545,7 +554,8 @@ class MailDashboard extends Component
 
     public function toggleCatchAll(string $mailboxId, WildDuckProvisioningService $wildduck): void
     {
-        $box = MailMailbox::with('domain')->where('team_id', $this->team()->id)->find($mailboxId);
+        $team = $this->team(true);
+        $box = MailMailbox::with('domain')->where('team_id', $team->id)->find($mailboxId);
         if (! $box || ! $box->domain) {
             return;
         }
@@ -589,7 +599,8 @@ class MailDashboard extends Component
             'newAliasUsername' => 'required|string|regex:/^[a-zA-Z0-9._-]+$/|min:1|max:64',
         ]);
 
-        $box = MailMailbox::with('domain')->where('team_id', $this->team()->id)->find($this->selectedMailboxForAliases);
+        $team = $this->team(true);
+        $box = MailMailbox::with('domain')->where('team_id', $team->id)->find($this->selectedMailboxForAliases);
         if (! $box || ! $box->domain) {
             $this->dispatch('error', 'Mailbox not found.');
             return;
@@ -622,7 +633,8 @@ class MailDashboard extends Component
             return;
         }
 
-        $box = MailMailbox::where('team_id', $this->team()->id)->find($alias->mailbox_id);
+        $team = $this->team(true);
+        $box = MailMailbox::where('team_id', $team->id)->find($alias->mailbox_id);
         if ($box) {
             $wildduck->deleteAlias($box->wildduck_user_id, $alias->alias_address);
         }
@@ -639,7 +651,8 @@ class MailDashboard extends Component
 
     public function deleteMailbox(string $mailboxId, WildDuckProvisioningService $wildduck): void
     {
-        $box = MailMailbox::where('team_id', $this->team()->id)->find($mailboxId);
+        $team = $this->team(true);
+        $box = MailMailbox::where('team_id', $team->id)->find($mailboxId);
 
         if ($box) {
             $wildduck->deleteMailbox($box->wildduck_user_id);
@@ -674,7 +687,7 @@ class MailDashboard extends Component
             return;
         }
 
-        $sub = MailSubscription::where('team_id', $this->team()->id)->find($this->subscription['id']);
+        $sub = MailSubscription::where('team_id', $this->team(true)->id)->find($this->subscription['id']);
         if (! $sub) {
             return;
         }

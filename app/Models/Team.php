@@ -54,11 +54,13 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
     }
 
     protected $fillable = [
+        'uuid',
         'name',
         'description',
         'personal_team',
         'show_boarding',
         'custom_server_limit',
+        'seat_limit',
         'is_mcp_server_enabled',
         'is_build_server_fallback_enabled',
         'is_two_factor_required',
@@ -66,6 +68,7 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
     ];
 
     protected $attributes = [
+        'seat_limit' => 5,
         'is_mcp_server_enabled' => true,
         'is_build_server_fallback_enabled' => true,
         'is_two_factor_required' => false,
@@ -74,6 +77,7 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
 
     protected $casts = [
         'personal_team' => 'boolean',
+        'seat_limit' => 'integer',
         'is_mcp_server_enabled' => 'boolean',
         'is_build_server_fallback_enabled' => 'boolean',
         'is_two_factor_required' => 'boolean',
@@ -82,12 +86,20 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
 
     protected static function booted()
     {
+        static::creating(function (Team $team) {
+            if (! $team->uuid) {
+                $team->uuid = ($team->id === 0)
+                    ? '00000000-0000-0000-0000-000000000000'
+                    : (string) \Illuminate\Support\Str::uuid();
+            }
+        });
+
         static::created(function (Team $team) {
             $team->createDefaultNotificationSettings();
         });
 
         static::updating(function ($team) {
-            if (auth()->user()?->roleInTeam($team->id) === 'member') {
+            if (auth()->user() && ! auth()->user()->isAdminOfTeam($team->id)) {
                 throw new \Exception('You are not allowed to update this team.');
             }
         });
@@ -99,6 +111,28 @@ class Team extends Model implements SendsDiscord, SendsEmail, SendsPushover, Sen
         static::deleted(function (Team $team) {
             app(TeamAvatarStorageService::class)->deleteTeamFile($team);
         });
+    }
+
+    /**
+     * Total number of members currently attached to this team.
+     */
+    public function memberCount(): int
+    {
+        return $this->members()->count();
+    }
+
+    /**
+     * Whether the team has reached its member seat limit.
+     */
+    public function hasReachedSeatLimit(): bool
+    {
+        if ($this->id === 0) {
+            return false;
+        }
+
+        $limit = $this->seat_limit ?? 5;
+
+        return $this->memberCount() >= $limit;
     }
 
     /**

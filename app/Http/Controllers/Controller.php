@@ -218,14 +218,25 @@ class Controller extends BaseController
     {
         $invitationUuid = request()->route('uuid');
         $invitation = TeamInvitation::whereUuid($invitationUuid)->firstOrFail();
-        $user = User::whereEmail($invitation->email)->firstOrFail();
 
-        if (Auth::id() !== $user->id) {
-            abort(400, 'You are not allowed to accept this invitation.');
+        if (! Auth::check()) {
+            session(['invitation_uuid' => $invitationUuid]);
+
+            return redirect()->route('login')->with('warning', 'Please sign in or create an account to accept the invitation to '.$invitation->team->name.'.');
+        }
+
+        $user = Auth::user();
+
+        if ($invitation->email && strtolower($user->email) !== strtolower($invitation->email)) {
+            abort(403, "This invitation was sent to {$invitation->email}. You are currently signed in as {$user->email}.");
         }
 
         if (! $invitation->isValid()) {
-            abort(400, 'Invitation expired.');
+            abort(410, 'This invitation has expired or reached its maximum uses.');
+        }
+
+        if ($invitation->team->hasReachedSeatLimit()) {
+            abort(403, 'This team has reached its member seat limit.');
         }
 
         $alreadyMember = $user->teams()->where('team_id', $invitation->team->id)->exists();
@@ -241,29 +252,46 @@ class Controller extends BaseController
     public function acceptInvitation()
     {
         $invitationUuid = request()->route('uuid');
-
         $invitation = TeamInvitation::whereUuid($invitationUuid)->firstOrFail();
-        $user = User::whereEmail($invitation->email)->firstOrFail();
 
-        if (Auth::id() !== $user->id) {
-            abort(400, 'You are not allowed to accept this invitation.');
+        if (! Auth::check()) {
+            session(['invitation_uuid' => $invitationUuid]);
+
+            return redirect()->route('login');
+        }
+
+        $user = Auth::user();
+
+        if ($invitation->email && strtolower($user->email) !== strtolower($invitation->email)) {
+            abort(403, "This invitation was sent to {$invitation->email}.");
         }
 
         if (! $invitation->isValid()) {
-            abort(400, 'Invitation expired.');
+            abort(410, 'This invitation has expired or reached its maximum uses.');
         }
 
-        if ($user->teams()->where('team_id', $invitation->team->id)->exists()) {
-            $invitation->delete();
+        $team = $invitation->team;
+
+        if ($user->teams()->where('team_id', $team->id)->exists()) {
+            $invitation->recordUse();
             $this->auditInvitationAccepted($user, $invitation, alreadyMember: true);
 
             return redirect()->route('team.index');
         }
-        $user->teams()->attach($invitation->team->id, ['role' => $invitation->role]);
-        $invitation->delete();
+
+        if ($team->hasReachedSeatLimit()) {
+            abort(403, 'This team has reached its member seat limit.');
+        }
+
+        $user->teams()->attach($team->id, ['role' => $invitation->role]);
+        $invitation->recordUse();
+
+        // Sync with Supabase for multi-tenant RLS
+        app(\App\Services\Supabase\TeamSyncService::class)->syncMember($team, $user, $invitation->role);
+
         $this->auditInvitationAccepted($user, $invitation, alreadyMember: false);
 
-        refreshSession($invitation->team);
+        refreshSession($team);
 
         return redirect()->route('team.index');
     }

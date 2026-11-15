@@ -24,10 +24,13 @@ class Domains extends Component
 
     public function add(CustomDomainService $domains): void
     {
+        $team = $this->team();
+        abort_unless(auth()->user()->isAdminOfTeam($team->id), 403, 'You do not have permission to add domains to this team.');
+
         $this->validate(['newDomain' => 'required|string|max:253']);
 
         try {
-            $domain = $domains->request($this->team(), $this->newDomain);
+            $domain = $domains->request($team, $this->newDomain);
             \App\Jobs\Commerce\PollCustomDomainDnsJob::dispatch($domain);
         } catch (PlatformRestrictionException $e) {
             $this->addError('newDomain', $e->getMessage());
@@ -41,7 +44,9 @@ class Domains extends Component
 
     public function verify(string $uuid, CustomDomainService $domains): void
     {
-        $domain = CustomDomain::where('uuid', $uuid)->where('team_id', $this->team()->id)->firstOrFail();
+        $team = $this->team();
+        $domain = CustomDomain::where('uuid', $uuid)->where('team_id', $team->id)->firstOrFail();
+        abort_unless(auth()->user()->isAdminOfTeam($team->id), 403, 'You do not have permission to verify domains for this team.');
 
         if ($domains->verify($domain)) {
             $this->dispatch('success', "{$domain->domain} is verified. You can now use it on your apps.");
@@ -52,10 +57,12 @@ class Domains extends Component
 
     public function remove(string $uuid): void
     {
-        $domain = CustomDomain::where('uuid', $uuid)->where('team_id', $this->team()->id)->firstOrFail();
+        $team = $this->team();
+        $domain = CustomDomain::where('uuid', $uuid)->where('team_id', $team->id)->firstOrFail();
+        abort_unless(auth()->user()->isAdminOfTeam($team->id), 403, 'You do not have permission to remove domains from this team.');
 
         $inUse = Application::withoutGlobalScopes()
-            ->whereHas('environment.project', fn ($q) => $q->where('team_id', $this->team()->id))
+            ->whereHas('environment.project', fn ($q) => $q->where('team_id', $team->id))
             ->where('fqdn', 'like', '%'.$domain->domain.'%')
             ->get(['fqdn'])
             ->contains(fn ($app) => collect(PlatformDomainService::hostsOf($app->fqdn))

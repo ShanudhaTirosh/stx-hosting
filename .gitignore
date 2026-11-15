@@ -5,6 +5,9 @@ web/.next
 webmail/.next
 web/node_modules
 webmail/node_modules
+discord-bot/node_modules
+discord-bot/dist
+discord-bot/.env
 /.phpunit.cache
 /node_modules
 /public/build

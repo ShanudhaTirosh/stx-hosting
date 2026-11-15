@@ -180,21 +180,21 @@
                         ['label' => 'Order New Service', 'icon' => 'plus', 'href' => route('portal.checkout'), 'active' => request()->is('portal/checkout*')],
                     ],
                     'Infrastructure' => [
-                        ['label' => 'Fleet Dashboard', 'icon' => 'dashboard', 'href' => '/', 'active' => request()->is('/', 'dashboard/*', 'canvas')],
-                        ['label' => 'Projects', 'icon' => 'projects', 'href' => route('project.index'), 'active' => request()->is('projects', 'projects/*', 'project/*')],
+                        ['label' => 'Fleet Dashboard', 'icon' => 'dashboard', 'href' => '/', 'active' => request()->is('/', 'dashboard/*', 'canvas'), 'visible' => $can('nodes.view')],
+                        ['label' => 'Projects', 'icon' => 'projects', 'href' => route('project.index'), 'active' => request()->is('projects', 'projects/*', 'project/*'), 'visible' => $can('nodes.view')],
                         ['label' => 'Terminal', 'icon' => 'browser-terminal', 'href' => route('terminal'), 'active' => request()->is('terminal*'), 'navigate' => false, 'visible' => $can('nodes.terminal')],
-                        ['label' => 'Monitoring', 'icon' => 'graph', 'children' => [
+                        ['label' => 'Monitoring', 'icon' => 'graph', 'visible' => $can('nodes.stats'), 'children' => [
                             ['label' => 'Analytics', 'icon' => 'analytics', 'href' => route('analytics'), 'active' => request()->is('analytics')],
                             ['label' => 'Metrics', 'icon' => 'graph', 'href' => route('metrics'), 'active' => request()->is('metrics')],
                         ]],
                         ['label' => 'Servers', 'icon' => 'servers', 'href' => '/servers', 'active' => request()->is('server/*', 'servers', 'servers/*'), 'visible' => $can('nodes.view')],
-                        ['label' => 'Integrations', 'icon' => 'link', 'children' => [
+                        ['label' => 'Integrations', 'icon' => 'link', 'visible' => $can('integrations.manage'), 'children' => [
                             ['label' => 'Sources', 'icon' => 'sources', 'href' => route('source.all'), 'active' => request()->is('sources', 'source/*')],
                             ['label' => 'Destinations', 'icon' => 'destinations', 'href' => route('destination.index'), 'active' => request()->is('destinations', 'destination/*')],
                             ['label' => 'Registries', 'icon' => 'layers', 'href' => route('registries.index'), 'active' => request()->is('registries'), 'visible' => $can('integrations.manage')],
                             ['label' => 'S3 Storage', 'icon' => 'storages', 'href' => route('storage.index'), 'active' => request()->is('storages', 'storages/*'), 'visible' => $can('platform.settings')],
                         ]],
-                        ['label' => 'Shared Variables', 'icon' => 'variables', 'children' => [
+                        ['label' => 'Shared Variables', 'icon' => 'variables', 'visible' => $can('nodes.view'), 'children' => [
                             ['label' => 'Overview', 'icon' => 'dashboard', 'href' => route('shared-variables.index'), 'active' => request()->is('shared-variables')],
                             ['label' => 'Team', 'icon' => 'teams', 'href' => route('shared-variables.team.index'), 'active' => request()->is('shared-variables/team*')],
                             ['label' => 'Projects', 'icon' => 'projects', 'href' => route('shared-variables.project.index'), 'active' => request()->is('shared-variables/projects', 'shared-variables/project/*')],
@@ -244,9 +244,12 @@
                         }
                         $children = array_values(array_filter($item['children'], fn (array $child): bool => (bool) ($child['visible'] ?? true)));
 
-                        return [...$item, 'children' => $children, 'href' => $children[0]['href'], 'active' => collect($children)->contains('active', true)];
+                        return [...$item, 'children' => $children, 'href' => $children[0]['href'] ?? '#', 'active' => collect($children)->contains('active', true)];
                     })
-                    ->all());
+                    ->filter(fn (array $item): bool => ! isset($item['children']) || count($item['children']) > 0)
+                    ->values()
+                    ->all()
+                )->filter(fn ($items) => ! empty($items));
                 $activeSubmenu = $navSections->flatten(1)->first(fn (array $item): bool => isset($item['children']) && $item['active']);
                 // Resource menus by depth, registered by registerMainNavContext() (e.g. from
                 // components/main-nav-menu.blade.php). Each one teleports itself into #main-nav-context-{depth}

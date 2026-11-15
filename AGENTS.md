@@ -15,6 +15,7 @@ STX Enterprises Cloud Platform is an enterprise cloud PaaS, managed database, em
 - **Sub-Projects**:
   - `webmail-ui/`: Lightweight PHP 8.3 / Nginx WildDuck email client.
   - `payverify/`: Multi-vector AI bank deposit verification suite (FastAPI, Next.js 16, Baileys WhatsApp bot, Android relay).
+  - `discord-bot/`: Enterprise Node.js 22 / discord.js v14 community, ticketing, fraud protection, and store bot.
   - `docker/`: Unified compose stacks (Supabase BaaS, WildDuck Mail, Caddy TLS).
 
 For detailed subsystem architecture and diagrams, consult:
@@ -42,6 +43,7 @@ For detailed subsystem architecture and diagrams, consult:
 ├── config/                  # Configuration files (commerce.php, supabase.php, hosting.php)
 ├── coolify-docs-main/       # Upstream Coolify official documentation (MDX docs & openapi.json)
 ├── database/migrations/     # PostgreSQL schema migrations
+├── discord-bot/             # Scalable Discord bot (ticketing, moderation, store, invoice DM)
 ├── docker/                  # Self-hosted services (caddy/, mail/, supabase/, webmail/)
 ├── docs/                    # Technical documentation and operational runbooks
 ├── payverify/               # PayVerify AI payment verification suite
@@ -99,8 +101,8 @@ For detailed subsystem architecture and diagrams, consult:
    - Use the session team (`currentTeam()`, `Model::ownedByCurrentTeam()`) **only** for top-level index listings and creating new resources.
    - Once an existing resource is loaded, **all authorization and related queries must use that resource's team** (`$resource->team_id`). Users can switch teams in another tab while a page stays open.
 3. **Role Hierarchy**:
-   - `Role::OWNER` (3) > `Role::ADMIN` (2) > `Role::MEMBER` (1).
-   - Use `RbacService::isOwner()`, `RbacService::isAdmin()`, or `RbacService::isClient()`.
+   - `Role::OWNER` (5) > `Role::ADMIN` (4) > `Role::DEVELOPER` (3) > `Role::BILLING` (2) > `Role::VIEWER` / `Role::MEMBER` (1).
+   - Use `RbacService::isOwner()`, `RbacService::isAdmin()`, or `RbacService::isClient()`, and `$user->canPerformInTeam($teamId, $capability)` for fine-grained client team action checks (`deploy`, `domains.manage`, `servers.access`, `billing.view`, `billing.manage`, `members.manage`, `team.delete`).
 
 ---
 

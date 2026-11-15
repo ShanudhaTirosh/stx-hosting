@@ -203,10 +203,16 @@ class VerifyPaymentProofJob implements ShouldQueue
         }
 
         // CASE 2: HARD REJECTION (Fraud, duplicate, wrong recipient, or low confidence)
-        $shouldReject = $hasDuplicate ||
+        // Note: If PayVerify service is offline/unreachable or returned an API error, never reject the customer;
+        // gracefully escalate to manual review so staff can inspect the proof.
+        $isServiceFailure = in_array('service_unreachable', $discrepancies, true) || in_array('api_error', $discrepancies, true);
+
+        $shouldReject = ! $isServiceFailure && (
+            $hasDuplicate ||
             $hasWrongRecipient ||
-            ($confidenceScore !== null && $confidenceScore < $manualReviewThreshold) ||
-            ($hasAmountMismatch && $confidenceScore !== null && $confidenceScore >= 0.80);
+            ($confidenceScore !== null && $confidenceScore > 0.0 && $confidenceScore < $manualReviewThreshold) ||
+            ($hasAmountMismatch && $confidenceScore !== null && $confidenceScore >= 0.80)
+        );
 
         if ($shouldReject) {
             $rejectionReason = 'Payment verification could not be completed.';

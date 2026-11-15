@@ -98,6 +98,13 @@ class SupabaseQueryBuilder
         return $response && $response->successful() ? $response->json() : null;
     }
 
+    public function upsert(array $data, ?string $onConflict = null): ?array
+    {
+        $response = $this->client->upsert($this->table, $data, $onConflict, $this->useServiceRole);
+
+        return $response && $response->successful() ? $response->json() : null;
+    }
+
     public function delete(): bool
     {
         $response = $this->client->request('DELETE', $this->table, [], $this->queryParams, $this->useServiceRole);

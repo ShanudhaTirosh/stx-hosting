@@ -1,0 +1,40 @@
+{
+  "name": "stx-discord-bot",
+  "version": "1.0.0",
+  "description": "Enterprise Scalable Discord Bot for STX Enterprises Cloud Platform",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "shard": "tsx src/shard.ts",
+    "deploy-commands": "tsx src/scripts/deployCommands.ts",
+    "test": "node --test --import tsx tests/**/*.test.ts"
+  },
+  "keywords": [
+    "discord",
+    "discord.js",
+    "stx-hosting",
+    "coolify",
+    "tickets",
+    "moderation",
+    "store",
+    "honeypot"
+  ],
+  "author": "STX Enterprises",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.4.7",
+    "pino": "^9.6.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "pino-pretty": "^13.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}

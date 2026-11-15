@@ -46,16 +46,18 @@ class ServiceDetail extends Component
     public function mount(string $uuid): void
     {
         $this->uuid = $uuid;
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $this->getService(false);
     }
 
-    private function getService(): ServiceInstance
+    private function getService(bool $requireAdmin = false): ServiceInstance
     {
-        $team = currentTeam();
         $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $user = auth()->user();
+        abort_unless($user && $user->teams->contains('id', $service->team_id), 403, 'Unauthorized access to service resource.');
+
+        if ($requireAdmin) {
+            abort_unless($user->isAdminOfTeam($service->team_id), 403, 'Only team administrators or owners can perform this action.');
+        }
 
         return $service;
     }
@@ -79,7 +81,7 @@ class ServiceDetail extends Component
             return;
         }
 
-        $service = $this->getService();
+        $service = $this->getService(true);
 
         $rootCred = $service->credentials()
             ->where('credential_type', 'root_password')
@@ -115,7 +117,7 @@ class ServiceDetail extends Component
      */
     public function checkSshConnectivity(): void
     {
-        $service = $this->getService();
+        $service = $this->getService(true);
         $factory = app(VpsConnectionFactory::class);
 
         $this->sshCheckStatus = null;
@@ -188,7 +190,7 @@ class ServiceDetail extends Component
             'confirmNewRootPassword' => 'required|same:newRootPassword',
         ]);
 
-        $service = $this->getService();
+        $service = $this->getService(true);
         $factory = app(VpsConnectionFactory::class);
 
         // Pre-flight test live on the server
@@ -253,7 +255,7 @@ class ServiceDetail extends Component
      */
     public function markCustomerManaged(): void
     {
-        $service = $this->getService();
+        $service = $this->getService(true);
 
         $service->credentials()->where('credential_type', 'root_password')->delete();
         $service->update([
@@ -304,7 +306,7 @@ class ServiceDetail extends Component
             return;
         }
 
-        $service = $this->getService();
+        $service = $this->getService(true);
         $factory = app(VpsConnectionFactory::class);
 
         try {
@@ -352,7 +354,7 @@ class ServiceDetail extends Component
 
     public function deleteAuthorizedKey(int $keyId): void
     {
-        $service = $this->getService();
+        $service = $this->getService(true);
         $key = VpsAuthorizedKey::where('service_instance_id', $service->id)->where('id', $keyId)->first();
 
         if ($key) {
@@ -367,7 +369,7 @@ class ServiceDetail extends Component
             'ptrRecord' => 'required|string|regex:/^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i',
         ]);
 
-        $service = $this->getService();
+        $service = $this->getService(true);
 
         CommerceAuditLog::create([
             'user_id' => auth()->id(),

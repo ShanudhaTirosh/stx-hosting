@@ -137,9 +137,9 @@
                         <div class="flex items-center justify-between mb-2">
                             <span class="font-mono font-bold text-sm text-white truncate">{{ $d['domain'] }}</span>
                             @if ($d['is_verified'])
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">DNS Verified</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20">DNS Verified</span>
                             @else
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">DNS Pending</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20">DNS Pending</span>
                             @endif
                         </div>
                         
@@ -220,9 +220,9 @@
                                 </td>
                                 <td class="py-3.5 px-5">
                                     @if ($box['is_active'] ?? true)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20">Active</span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Suspended</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-400 border border-rose-300 dark:border-rose-500/20">Suspended</span>
                                     @endif
                                 </td>
                                 <td class="py-3.5 px-5 text-right space-x-2">
@@ -351,9 +351,9 @@
                         <div class="flex items-center gap-2">
                             <h3 class="text-base font-bold text-white tracking-tight">Dynamic DNS Setup: {{ $selectedDnsDomain['domain'] }}</h3>
                             @if (! empty($selectedDnsDomain['is_verified']))
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">DNS Active</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20">DNS Active</span>
                             @else
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Action Required</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20">Action Required</span>
                             @endif
                         </div>
                         <p class="text-xs text-neutral-400 mt-0.5">Select your DNS provider below for customized record instructions and live propagation checks.</p>
@@ -487,11 +487,11 @@
                                                 <span class="text-neutral-500 font-mono text-[11px]">({{ $diag['record_name'] }})</span>
                                             </div>
                                             @if ($diag['status'] === 'matched')
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active &amp; Matching</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20">Active &amp; Matching</span>
                                             @elseif ($diag['status'] === 'mismatch')
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Config Mismatch</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20">Config Mismatch</span>
                                             @else
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">Not Detected</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-400 border border-rose-300 dark:border-rose-500/20">Not Detected</span>
                                             @endif
                                         </div>
                                         <div class="text-[11px] text-neutral-300 font-mono bg-neutral-950 p-2 rounded border border-neutral-800 truncate">

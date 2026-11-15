@@ -73,6 +73,8 @@ Every capability listed below is verified against the active codebase and config
 | **Dashboards** | Customer Portal | **DONE** | Unified portal at `/portal` (Deploy wizard, app list, mail dashboard, custom domains, database restores, volume backups, billing). |
 | **Dashboards** | Operations & Admin Studio | **DONE** | Administrative operations at `/admin` (Provisioning queue, proof review, template studio, mail plan studio, status studio). |
 | **Dashboards** | Public Status Page | **DONE** | Public status at `/status` with 90-day uptime heatmap, masked host node telemetry, and subscriber email incident notifications. |
+| **Client Teams** | Multi-Tenant Workspaces & RBAC | **DONE** | 5-tier role matrix (`Owner`, `Admin`, `Developer`, `Billing`, `Viewer`), team logo avatars, shareable & expiring invite links, seat limits, ownership succession, and Supabase RLS sync. |
+| **Community & Bot** | Enterprise Discord Bot | **DONE** | Scalable Node.js 22 / discord.js v14 bot in `discord-bot/` with onboarding, honeypot decoy trap, tickets, order lookup, and DM invoice delivery. |
 | **Cloud Automation** | Automated VPS API Provisioning | **PLANNED (FUTURE)** | Provider API clients exist (Hetzner, DigitalOcean, Vultr, Hostinger); commercial flow remains manual review and fulfillment (24 to 72 hours) until user growth triggers automated quotas. |
 | **Payment Gateways** | Direct Card / Stripe Webhooks | **PLANNED (FUTURE)** | Stripe webhook function exists (`supabase/functions/stripe-webhook`); bank transfer with PayVerify AI slip verification remains the live payment method. |
 | **Architecture** | Upstream Coolify v5 Split | **PLANNED (FUTURE)** | Architectural design and ADRs isolated in `docs/v5/` so it does not affect the active v4 production release. |
@@ -218,6 +220,7 @@ stx-hosting/
 │   ├── mail/                    # WildDuck, Haraka, Zone-MTA, Dovecot, MongoDB stack
 │   ├── supabase/                # Kong API gateway, configuration, and Supabase stack
 │   └── webmail/                 # STX Webmail UI containerization
+├── discord-bot/                 # Scalable Node.js 22 / discord.js v14 Enterprise Discord Bot
 ├── docs/                        # Complete technical documentation suite
 ├── payverify/                   # PayVerify Multi-Vector Payment Verification Platform
 │   ├── payverify/               # Core Python FastAPI reconciliation & AI vision engine

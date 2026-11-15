@@ -15,6 +15,52 @@
         <div class="application-settings-form">
             <x-application.settings-section id="team-danger-zone" title="Danger zone"
                 helper="Destructive actions for this team cannot be undone.">
+                @if (auth()->user()->roleInTeam(currentTeam()->id) === 'owner' && $eligibleNewOwners->isNotEmpty())
+                    <x-danger-zone title="Transfer team ownership">
+                        <p class="text-xs text-neutral-600 dark:text-neutral-300 mb-2">
+                            Transfer the primary owner role to another member. You will remain an admin of this team.
+                        </p>
+                        <div class="mt-2 max-w-sm">
+                            <x-forms.select id="selectedNewOwnerId" label="Select new owner" wire:model="selectedNewOwnerId">
+                                <option value="">-- Choose member --</option>
+                                @foreach ($eligibleNewOwners as $candidate)
+                                    <option value="{{ $candidate->id }}">{{ $candidate->name }} ({{ $candidate->email }})</option>
+                                @endforeach
+                            </x-forms.select>
+                        </div>
+                        <x-slot:action>
+                            <x-forms.button wire:click="transferOwnership" wire:target="transferOwnership" defaultClass="button button-highlighted">
+                                Transfer ownership
+                            </x-forms.button>
+                        </x-slot:action>
+                    </x-danger-zone>
+                @endif
+
+                @if (session('currentTeam.id') !== 0 && !auth()->user()->currentTeam()->personal_team)
+                    <x-danger-zone title="Leave team">
+                        @if (auth()->user()->roleInTeam(currentTeam()->id) === 'owner')
+                            <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                                As the team owner, you must transfer ownership to another member before leaving this team.
+                            </p>
+                        @else
+                            <p class="text-xs text-neutral-600 dark:text-neutral-300">
+                                Revoke your membership from <strong class="text-black dark:text-fg">{{ currentTeam()->name }}</strong>. You will lose access to all its applications, databases, and resources.
+                            </p>
+                        @endif
+                        <x-slot:action>
+                            @if (auth()->user()->roleInTeam(currentTeam()->id) === 'owner')
+                                <x-forms.button isError disabled tooltip="Transfer ownership first before leaving.">
+                                    Leave team
+                                </x-forms.button>
+                            @else
+                                <x-forms.button isError wire:click="leaveTeam" wire:target="leaveTeam">
+                                    Leave team
+                                </x-forms.button>
+                            @endif
+                        </x-slot:action>
+                    </x-danger-zone>
+                @endif
+
                 <x-danger-zone title="Delete team">
                             @if (auth()->user()->roleInTeam(currentTeam()->id) !== 'owner')
                                 <p>

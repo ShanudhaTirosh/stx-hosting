@@ -33,6 +33,18 @@ The platform reserves primary key `id = 0` for instance-owned singleton and sent
 
 The platform isolates clients by **Teams** (`Team` model). Every client belongs to their own team; platform staff belong to team `0`.
 
+### 5-Tier Client Role Matrix
+
+Client teams support 5 hierarchical and functional roles:
+
+| Role | Rank | Capabilities | Typical Use |
+|---|---|---|---|
+| `owner` | 5 | All actions: team deletion, ownership transfer, billing, member invites, deployments, domains, servers. | Account/Organization creator |
+| `admin` | 4 | Member invites and management, billing, deployments, custom domains, servers. | Tech leads, co-founders |
+| `developer` | 3 | Deploy applications, configure custom domains, access servers and consoles. No member or billing access. | Software engineers, DevOps |
+| `billing` | 2 | View and pay invoices, submit payment proofs, manage payment methods and receipts. No technical or deployment access. | Accountants, financial managers |
+| `viewer` / `member` | 1 | Read-only view of deployed applications, services, and team profile. | External stakeholders, auditors |
+
 ### Scoping Rules for Developers & AI Agents
 1. **Never rely on UI `@can` directives for authorization**: All reads, queries, and mutations must be authorized server-side using policies, gates (`$this->authorize(...)`), or `RbacService`.
 2. **Session Team vs Resource Team**:

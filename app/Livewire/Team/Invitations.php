@@ -33,9 +33,11 @@ class Invitations extends Component
             $invitationUuid = $invitation->uuid;
             DB::transaction(function () use ($invitation): void {
                 $invitation->delete();
-                $user = User::whereEmail($invitation->email)->first();
-                if (filled($user)) {
-                    $user->deleteIfNotVerifiedAndForcePasswordReset();
+                if (filled($invitation->email)) {
+                    $user = User::whereEmail($invitation->email)->first();
+                    if (filled($user)) {
+                        $user->deleteIfNotVerifiedAndForcePasswordReset();
+                    }
                 }
             });
             auditLog('ui.team_invitation.revoked', [
@@ -47,6 +49,34 @@ class Invitations extends Component
             $this->dispatch('success', 'Invitation revoked.');
         } catch (\Exception) {
             return $this->dispatch('error', 'Invitation not found.');
+        }
+    }
+
+    public function resendInvitation(int $invitation_id)
+    {
+        try {
+            $this->authorize('manageInvitations', currentTeam());
+
+            $invitation = TeamInvitation::ownedByCurrentTeam()->findOrFail($invitation_id);
+
+            if ($invitation->hasExpired()) {
+                return $this->dispatch('error', 'Cannot resend expired invitation. Generate a new link.');
+            }
+
+            if (filled($invitation->email)) {
+                $mail = new \Illuminate\Notifications\Messages\MailMessage;
+                $mail->view('emails.invitation-link', [
+                    'team' => currentTeam()->name,
+                    'invitation_link' => $invitation->link,
+                ]);
+                $mail->subject('Reminder: Invitation to '.currentTeam()->name.' on '.config('app.name').'.');
+                send_user_an_email($mail, $invitation->email);
+                $this->dispatch('success', "Invitation re-sent to {$invitation->email}.");
+            } else {
+                $this->dispatch('success', 'Invitation link copied.');
+            }
+        } catch (\Throwable $e) {
+            return $this->dispatch('error', 'Failed to resend invitation: '.$e->getMessage());
         }
     }
 

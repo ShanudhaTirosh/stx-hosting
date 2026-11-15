@@ -386,6 +386,21 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
         return $this->role() === 'member';
     }
 
+    public function isDeveloper(): bool
+    {
+        return $this->role() === 'developer';
+    }
+
+    public function isBilling(): bool
+    {
+        return $this->role() === 'billing';
+    }
+
+    public function isViewer(): bool
+    {
+        return $this->role() === 'viewer';
+    }
+
     public function isAdminFromSession()
     {
         if (Auth::id() === 0) {
@@ -532,6 +547,38 @@ class User extends Authenticatable implements PasskeyUser, SendsEmail
         $role = $team->pivot->role ?? null;
 
         return $role === 'admin' || $role === 'owner';
+    }
+
+    /**
+     * Check if user can perform an action in a team under the 5-role permission matrix
+     */
+    public function canPerformInTeam(int $teamId, string $permission): bool
+    {
+        $team = $this->teams->where('id', $teamId)->first();
+
+        if (! $team) {
+            return false;
+        }
+
+        $roleStr = $team->pivot->role ?? null;
+        if (! $roleStr) {
+            return false;
+        }
+
+        $role = \App\Enums\Role::tryFrom($roleStr);
+        if (! $role) {
+            return false;
+        }
+
+        return match ($permission) {
+            'billing.view', 'billing.manage' => $role->canViewBilling(),
+            'deploy' => $role->canDeploy(),
+            'domains.manage' => $role->canManageDomains(),
+            'servers.access' => $role->canAccessServers(),
+            'members.manage' => $role->canManageMembers(),
+            'team.delete', 'ownership.transfer' => $role->canDeleteTeam(),
+            default => false,
+        };
     }
 
     /**

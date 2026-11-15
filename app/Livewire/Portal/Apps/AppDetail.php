@@ -32,6 +32,19 @@ class AppDetail extends Component
     public string $duplicateBranch = '';
     public ?int $duplicateVariantId = null;
 
+    private function getAuthorizedService(bool $requireAdmin = false): ServiceInstance
+    {
+        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
+        $user = auth()->user();
+        abort_unless($user && $user->teams->contains('id', $service->team_id), 403, 'Unauthorized access to service resource.');
+
+        if ($requireAdmin) {
+            abort_unless($user->isAdminOfTeam($service->team_id), 403, 'You do not have permission to modify this application.');
+        }
+
+        return $service;
+    }
+
     public function mount(string $uuid): void
     {
         $this->uuid = $uuid;
@@ -40,9 +53,7 @@ class AppDetail extends Component
 
     public function loadAppData(): void
     {
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(false);
 
         $this->domains = array_unique(array_filter([$service->hostname, ...data_get($service->network_config, 'custom_domains', [])]));
         $this->envVars = data_get($service->network_config, 'env_vars', []);
@@ -60,9 +71,9 @@ class AppDetail extends Component
             'newDomain' => 'required|string|regex:/^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i',
         ]);
 
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
+        $team = $service->team;
+        abort_unless($team, 403, 'Team not found for service.');
 
         $domainService = app(CustomDomainService::class);
         $customDomain = $domainService->request($team, $this->newDomain);
@@ -111,7 +122,10 @@ class AppDetail extends Component
 
     public function verifyDomain(string $domainName): void
     {
-        $team = currentTeam();
+        $service = $this->getAuthorizedService(true);
+        $team = $service->team;
+        abort_unless($team, 403, 'Team not found for service.');
+
         $domain = CustomDomain::where('team_id', $team->id)->where('domain', $domainName)->first();
 
         if (! $domain) {
@@ -131,9 +145,7 @@ class AppDetail extends Component
 
     public function removeDomain(string $domainName): void
     {
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
 
         $config = $service->network_config ?? [];
         $customDomains = array_values(array_filter(
@@ -154,9 +166,7 @@ class AppDetail extends Component
 
     public function setPrimaryDomain(string $domainName): void
     {
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
 
         $service->update(['hostname' => $domainName]);
         $this->loadAppData();
@@ -171,9 +181,9 @@ class AppDetail extends Component
             'envValue' => 'required|string',
         ]);
 
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
+        $team = $service->team;
+        abort_unless($team, 403, 'Team not found for service.');
 
         $config = $service->network_config ?? [];
         $envVars = data_get($config, 'env_vars', []);
@@ -203,9 +213,9 @@ class AppDetail extends Component
 
     public function restart(): void
     {
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
+        $team = $service->team;
+        abort_unless($team, 403, 'Team not found for service.');
 
         CommerceAuditLog::create([
             'user_id' => auth()->id(),
@@ -223,9 +233,9 @@ class AppDetail extends Component
 
     public function redeploy(): void
     {
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
+        $team = $service->team;
+        abort_unless($team, 403, 'Team not found for service.');
 
         CommerceAuditLog::create([
             'user_id' => auth()->id(),
@@ -243,9 +253,7 @@ class AppDetail extends Component
 
     public function openDuplicateModal(): void
     {
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
 
         $nextSlug = PlatformDomainService::nextAvailableSlug($service->name);
         $this->duplicateName = $nextSlug;
@@ -262,9 +270,7 @@ class AppDetail extends Component
             'duplicateSubdomain' => 'nullable|string|min:3|max:50|regex:/^[a-z0-9-]+$/',
         ]);
 
-        $team = currentTeam();
-        $service = ServiceInstance::where('uuid', $this->uuid)->firstOrFail();
-        abort_if(! $team || $service->team_id !== $team->id, 403, 'Unauthorized access to service resource.');
+        $service = $this->getAuthorizedService(true);
 
         if (filled($this->duplicateSubdomain) && ! PlatformDomainService::isSubdomainAvailable($this->duplicateSubdomain)) {
             $this->addError('duplicateSubdomain', "The subdomain '{$this->duplicateSubdomain}' is already in use. Please pick another.");

@@ -86,6 +86,9 @@
                                 ['value' => 'all', 'label' => 'All roles'],
                                 ['value' => 'owner', 'label' => 'Owner'],
                                 ['value' => 'admin', 'label' => 'Admin'],
+                                ['value' => 'developer', 'label' => 'Developer'],
+                                ['value' => 'billing', 'label' => 'Billing'],
+                                ['value' => 'viewer', 'label' => 'Viewer'],
                                 ['value' => 'member', 'label' => 'Member'],
                             ]" />
                     </div>

@@ -30,8 +30,9 @@
             <input id="new-domain" type="text" wire:model="newDomain" placeholder="e.g. mybrand.com or app.mybrand.com" autocomplete="off" class="input input-sm w-full bg-neutral-950 border-neutral-700 text-white rounded text-xs font-mono focus:border-purple-500">
             @error('newDomain') <span class="text-rose-400 text-xs block mt-1" role="alert">{{ $message }}</span> @enderror
         </div>
-        <button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg text-xs transition duration-150">
-            Add Domain
+        <button type="submit" wire:loading.attr="disabled" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-bold rounded-lg text-xs transition duration-150 flex items-center gap-1.5">
+            <span wire:loading.remove wire:target="add">Add Domain</span>
+            <span wire:loading wire:target="add">Adding...</span>
         </button>
     </form>
 
@@ -47,17 +48,17 @@
                     
                     <div class="flex items-center gap-3 text-xs">
                         @if ($domain->isSslActive())
-                            <span class="px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-800/60 text-emerald-300 font-medium flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/80 dark:border-emerald-800/60 dark:text-emerald-300 font-medium flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
                                 HTTPS Secured
                             </span>
                         @elseif ($domain->isDnsVerified())
-                            <span class="px-2.5 py-1 rounded-full bg-blue-950/80 border border-blue-800/60 text-blue-300 font-medium">
+                            <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950/80 dark:border-blue-800/60 dark:text-blue-300 font-medium">
                                 DNS Verified (Issuing SSL)
                             </span>
                         @else
-                            <span class="px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-800/60 text-amber-300 font-medium flex items-center gap-1.5">
-                                <svg class="w-3 h-3 text-amber-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/80 dark:border-amber-800/60 dark:text-amber-300 font-medium flex items-center gap-1.5">
+                                <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                                 Waiting for DNS
                             </span>
                             <button type="button" wire:click="verify('{{ $domain->uuid }}')" class="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-purple-300 font-semibold rounded text-xs transition">

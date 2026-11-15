@@ -6,6 +6,7 @@ use App\Actions\User\RevokeUserTeamTokens;
 use App\Enums\Role;
 use App\Models\User;
 use App\Services\RbacService;
+use App\Services\Supabase\TeamSyncService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ class Member extends Component
         try {
             $this->authorize('manageMembers', currentTeam());
 
-            if (RbacService::isOwner($this->member)) {
+            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
                 throw new \Exception('The platform Owner account cannot be modified.');
             }
 
@@ -37,13 +38,77 @@ class Member extends Component
         }
     }
 
+    public function makeDeveloper()
+    {
+        try {
+            $this->authorize('manageMembers', currentTeam());
+
+            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
+                throw new \Exception('The platform Owner account cannot be modified.');
+            }
+
+            if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
+                || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
+                throw new \Exception('You are not authorized to perform this action.');
+            }
+            $this->updateRole(Role::DEVELOPER);
+            $this->dispatch('reloadWindow');
+        } catch (\Exception $e) {
+            $this->dispatch('error', $e->getMessage());
+        }
+    }
+
+    public function makeBilling()
+    {
+        try {
+            $this->authorize('manageMembers', currentTeam());
+
+            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
+                throw new \Exception('The platform Owner account cannot be modified.');
+            }
+
+            if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
+                || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
+                throw new \Exception('You are not authorized to perform this action.');
+            }
+            $this->updateRole(Role::BILLING);
+            $this->dispatch('reloadWindow');
+        } catch (\Exception $e) {
+            $this->dispatch('error', $e->getMessage());
+        }
+    }
+
+    public function makeViewer()
+    {
+        try {
+            $this->authorize('manageMembers', currentTeam());
+
+            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
+                throw new \Exception('The platform Owner account cannot be modified.');
+            }
+
+            if (Role::from(auth()->user()->role())->lt(Role::ADMIN)
+                || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
+                throw new \Exception('You are not authorized to perform this action.');
+            }
+            $this->updateRole(Role::VIEWER);
+            $this->dispatch('reloadWindow');
+        } catch (\Exception $e) {
+            $this->dispatch('error', $e->getMessage());
+        }
+    }
+
     public function makeOwner()
     {
         try {
             $this->authorize('manageMembers', currentTeam());
 
-            if (! RbacService::isOwner(auth()->user())) {
-                throw new \Exception('Only the platform Owner can transfer or assign the Owner role.');
+            $isRootTeam = currentTeam()->id === 0;
+            if ($isRootTeam && ! RbacService::isOwner(auth()->user())) {
+                throw new \Exception('Only the platform Owner can transfer or assign the Owner role in the root team.');
+            }
+            if (! $isRootTeam && auth()->user()->roleInTeam(currentTeam()->id) !== 'owner') {
+                throw new \Exception('Only the team Owner can transfer or assign the Owner role.');
             }
 
             if (Role::from(auth()->user()->role())->lt(Role::OWNER)
@@ -62,7 +127,7 @@ class Member extends Component
         try {
             $this->authorize('manageMembers', currentTeam());
 
-            if (RbacService::isOwner($this->member)) {
+            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
                 throw new \Exception('The platform Owner account cannot be modified or demoted.');
             }
 
@@ -77,12 +142,24 @@ class Member extends Component
         }
     }
 
+    public function setRole(string $roleValue)
+    {
+        match ($roleValue) {
+            'owner' => $this->makeOwner(),
+            'admin' => $this->makeAdmin(),
+            'developer' => $this->makeDeveloper(),
+            'billing' => $this->makeBilling(),
+            'viewer' => $this->makeViewer(),
+            default => $this->makeReadonly(),
+        };
+    }
+
     public function remove()
     {
         try {
             $this->authorize('manageMembers', currentTeam());
 
-            if (RbacService::isOwner($this->member)) {
+            if (RbacService::isOwner($this->member) && currentTeam()->id === 0) {
                 throw new \Exception('The platform Owner account cannot be removed.');
             }
 
@@ -90,19 +167,24 @@ class Member extends Component
                 || Role::from($this->getMemberRole())->gt(auth()->user()->role())) {
                 throw new \Exception('You are not authorized to perform this action.');
             }
-            $teamId = currentTeam()->id;
+            $team = currentTeam();
+            $teamId = $team->id;
             DB::transaction(function () use ($teamId): void {
                 $this->member->teams()->detach($teamId);
                 RevokeUserTeamTokens::forUserTeam($this->member, $teamId);
                 $this->member->clearStoredTeamIfMatches($teamId);
             });
+
+            // Sync removal to Supabase
+            app(TeamSyncService::class)->removeMember($team, $this->member);
+
             auditLog('ui.team_member.removed', [
                 'team_id' => $teamId,
                 'member_id' => $this->member->id,
                 'member_name' => $this->member->name,
                 'member_email' => $this->member->email,
             ]);
-            // Clear cache for the removed user - both old and new key formats
+
             Cache::forget("team:{$this->member->id}");
             Cache::forget("user:{$this->member->id}:team:{$teamId}");
             $this->dispatch('reloadWindow');
@@ -118,15 +200,19 @@ class Member extends Component
 
     private function updateRole(Role $role): void
     {
-        $teamId = currentTeam()->id;
+        $team = currentTeam();
+        $teamId = $team->id;
         $previousRole = Role::from($this->getMemberRole());
         DB::transaction(function () use ($teamId, $role, $previousRole): void {
             $this->member->teams()->updateExistingPivot($teamId, ['role' => $role->value]);
-            // A promotion keeps the tokens: the API checks the abilities against the role on each request.
             if ($role->lt($previousRole)) {
                 RevokeUserTeamTokens::forUserTeam($this->member, $teamId);
             }
         });
+
+        // Sync to Supabase
+        app(TeamSyncService::class)->syncMember($team, $this->member, $role->value);
+
         auditLog('ui.team_member.role_updated', [
             'team_id' => $teamId,
             'member_id' => $this->member->id,

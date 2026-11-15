@@ -14,23 +14,29 @@ class TeamInvitation extends Model
         'link',
         'via',
         'access',
+        'max_uses',
+        'uses_count',
+        'expires_at',
     ];
 
     protected $casts = [
         'link' => 'encrypted',
         'access' => 'array',
+        'max_uses' => 'integer',
+        'uses_count' => 'integer',
+        'expires_at' => 'datetime',
     ];
 
     /**
-     * Set the email attribute to lowercase.
+     * Set the email attribute to lowercase or null.
      */
-    public function setEmailAttribute(string $value): void
+    public function setEmailAttribute(?string $value): void
     {
-        $this->attributes['email'] = strtolower($value);
+        $this->attributes['email'] = $value ? strtolower($value) : null;
     }
 
     /**
-     * Pivot attributes for the new `team_user` row. Grants apply only to the member role.
+     * Pivot attributes for the new `team_user` row.
      *
      * @return array{role: string, access: string|null}
      */
@@ -52,23 +58,54 @@ class TeamInvitation extends Model
         return TeamInvitation::whereTeamId(currentTeam()->id);
     }
 
+    public function isShareableLink(): bool
+    {
+        return empty($this->email);
+    }
+
     public function isValid(): bool
     {
-        if (! $this->hasExpired()) {
-            return true;
-        } else {
+        if ($this->hasExpired()) {
             $this->delete();
-            $user = User::whereEmail($this->email)->first();
-            if (filled($user)) {
-                $user->deleteIfNotVerifiedAndForcePasswordReset();
+            if (filled($this->email)) {
+                $user = User::whereEmail($this->email)->first();
+                if (filled($user)) {
+                    $user->deleteIfNotVerifiedAndForcePasswordReset();
+                }
             }
 
             return false;
         }
+
+        if ($this->max_uses > 0 && $this->uses_count >= $this->max_uses) {
+            $this->delete();
+
+            return false;
+        }
+
+        return true;
     }
 
     public function hasExpired(): bool
     {
-        return $this->created_at->diffInDays(now()) > config('constants.invitation.link.expiration_days');
+        if ($this->expires_at !== null) {
+            return now()->greaterThan($this->expires_at);
+        }
+
+        $days = (int) (config('constants.invitation.link.expiration_days') ?: 3);
+
+        return $this->created_at->diffInDays(now()) > $days;
+    }
+
+    /**
+     * Increment uses_count and remove invitation if limit reached.
+     */
+    public function recordUse(): void
+    {
+        $this->increment('uses_count');
+
+        if ($this->max_uses > 0 && $this->uses_count >= $this->max_uses) {
+            $this->delete();
+        }
     }
 }

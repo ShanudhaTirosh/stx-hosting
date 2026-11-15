@@ -195,8 +195,9 @@ sequenceDiagram
 
 ## Architectural Invariants & Security Boundaries
 
-1. **Root Team Sentinel (`team_id === 0`)**: The instance itself and global administrators operate under team ID `0`. All client teams have IDs `> 0`.
-2. **Customer Resource Isolation**: Customers never receive SSH access to shared control plane nodes. VPS hosting is provided as isolated remote instances; application hosting is sandboxed within Docker containers with cgroups resource boundaries.
-3. **Pessimistic State Transitions**: All payment decisions, order transitions, and quota claims must acquire a row-level pessimistic database lock (`lockForUpdate()`) to eliminate dual-admin or race conditions.
-4. **Pure-Pixel Proof Sanitization**: All uploaded bank receipts are decoded and re-encoded using server-side graphics libraries (`imagejpeg`/`imagepng`), stripping embedded polyglot webshells and EXIF exploits.
-5. **Zero-Leak OTP Policy**: ComBank two-factor authentication codes intercepted from mobile devices are held strictly in transient server memory with a 60-second TTL. They are never written to disk, SQLite, PostgreSQL, or persistent log sinks.
+1. **Root Team Sentinel (`team_id === 0`)**: The instance itself and global administrators operate under team ID `0` (`uuid: 00000000-0000-0000-0000-000000000000`). All client teams have integer IDs `> 0` and unique RFC-4122 UUIDs.
+2. **Client-Facing Teams & 5-Tier RBAC**: Client workspaces support 5 granular roles (`Owner`, `Admin`, `Developer`, `Billing`, `Viewer`). Billing and financial documents (invoices, receipts, slips) are strictly partitioned to `Owner`, `Admin`, and `Billing` roles; deployments, domain management, and server consoles are partitioned to `Owner`, `Admin`, and `Developer` roles.
+3. **Customer Resource Isolation**: Customers never receive SSH access to shared control plane nodes. VPS hosting is provided as isolated remote instances; application hosting is sandboxed within Docker containers with cgroups resource boundaries.
+4. **Pessimistic State Transitions**: All payment decisions, order transitions, and quota claims must acquire a row-level pessimistic database lock (`lockForUpdate()`) to eliminate dual-admin or race conditions.
+5. **Pure-Pixel Proof Sanitization**: All uploaded bank receipts are decoded and re-encoded using server-side graphics libraries (`imagejpeg`/`imagepng`), stripping embedded polyglot webshells and EXIF exploits.
+6. **Zero-Leak OTP Policy**: ComBank two-factor authentication codes intercepted from mobile devices are held strictly in transient server memory with a 60-second TTL. They are never written to disk, SQLite, PostgreSQL, or persistent log sinks.

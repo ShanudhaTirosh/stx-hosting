@@ -53,7 +53,19 @@ class TeamPolicy
             return false;
         }
 
-        return $user->roleInTeam($team->id) === 'owner';
+        return $user->canPerformInTeam($team->id, 'team.delete');
+    }
+
+    /**
+     * Determine whether the user can transfer team ownership.
+     */
+    public function transferOwnership(User $user, Team $team): bool
+    {
+        if (! $user->teams->contains('id', $team->id)) {
+            return false;
+        }
+
+        return $user->canPerformInTeam($team->id, 'ownership.transfer');
     }
 
     /**
@@ -65,7 +77,7 @@ class TeamPolicy
             return false;
         }
 
-        return $user->isAdminOfTeam($team->id);
+        return $user->canPerformInTeam($team->id, 'members.manage');
     }
 
     /**
@@ -89,6 +101,66 @@ class TeamPolicy
             return false;
         }
 
-        return $user->isAdminOfTeam($team->id);
+        return $user->canPerformInTeam($team->id, 'members.manage');
+    }
+
+    /**
+     * Determine whether the user can view billing and invoices.
+     */
+    public function viewBilling(User $user, Team $team): bool
+    {
+        if (! $user->teams->contains('id', $team->id)) {
+            return false;
+        }
+
+        return $user->canPerformInTeam($team->id, 'billing.view');
+    }
+
+    /**
+     * Determine whether the user can manage billing and payment proofs.
+     */
+    public function manageBilling(User $user, Team $team): bool
+    {
+        if (! $user->teams->contains('id', $team->id)) {
+            return false;
+        }
+
+        return $user->canPerformInTeam($team->id, 'billing.manage');
+    }
+
+    /**
+     * Determine whether the user can deploy applications.
+     */
+    public function deploy(User $user, Team $team): bool
+    {
+        if (! $user->teams->contains('id', $team->id)) {
+            return false;
+        }
+
+        return $user->canPerformInTeam($team->id, 'deploy');
+    }
+
+    /**
+     * Determine whether the user can manage custom domains.
+     */
+    public function manageDomains(User $user, Team $team): bool
+    {
+        if (! $user->teams->contains('id', $team->id)) {
+            return false;
+        }
+
+        return $user->canPerformInTeam($team->id, 'domains.manage');
+    }
+
+    /**
+     * Determine whether the user can access servers and consoles.
+     */
+    public function accessServers(User $user, Team $team): bool
+    {
+        if (! $user->teams->contains('id', $team->id)) {
+            return false;
+        }
+
+        return $user->canPerformInTeam($team->id, 'servers.access');
     }
 }

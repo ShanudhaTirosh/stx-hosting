@@ -126,15 +126,53 @@
                 </div>
             </div>
         @empty
-            <div class="col-span-full p-12 text-center bg-neutral-900 border border-neutral-800 rounded-xl space-y-3">
-                <div class="w-12 h-12 rounded-full bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <div class="col-span-full p-8 md:p-12 text-center bg-neutral-900/90 dark:bg-panel border border-neutral-800 rounded-2xl space-y-6 shadow-xl">
+                <div class="size-16 rounded-2xl bg-gradient-to-tr from-purple-600/20 via-purple-500/10 to-cyan-500/10 text-purple-400 flex items-center justify-center mx-auto border border-purple-500/30 shadow-inner">
+                    <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 </div>
-                <h3 class="text-base font-bold text-white">No active services found</h3>
-                <p class="text-xs text-neutral-400 max-w-sm mx-auto">You do not have any provisioned servers or containers yet. Browse our storefront catalog to deploy your first cloud VPS.</p>
-                <div class="pt-2">
-                    <a href="{{ route('portal.checkout') }}" {{ wireNavigate() }} class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded shadow inline-block">
-                        Deploy Cloud VPS
+                <div class="space-y-1.5 max-w-md mx-auto">
+                    <h3 class="text-lg font-bold text-white tracking-tight">No Active Services on This Team Yet</h3>
+                    <p class="text-xs text-neutral-400 leading-relaxed">
+                        Get started with enterprise cloud infrastructure. Deploy production apps from Git, launch managed databases, or provision dedicated NVMe VPS instances.
+                    </p>
+                </div>
+
+                <!-- Quick Start Launchpad -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto pt-2">
+                    <a href="{{ route('portal.deploy') }}" {{ wireNavigate() }}
+                        class="group p-4 bg-neutral-950/80 hover:bg-neutral-800/80 border border-neutral-800 hover:border-purple-500/50 rounded-xl transition-all text-left flex flex-col justify-between">
+                        <div>
+                            <div class="size-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <span class="text-xs font-bold text-white block">Deploy App</span>
+                            <span class="text-[11px] text-neutral-400 block mt-0.5">From Git or 31 curated Docker templates</span>
+                        </div>
+                        <span class="text-[11px] font-semibold text-purple-400 group-hover:translate-x-0.5 transition-transform mt-3 block">&rarr; Start Wizard</span>
+                    </a>
+
+                    <a href="{{ route('store.databases') }}" {{ wireNavigate() }}
+                        class="group p-4 bg-neutral-950/80 hover:bg-neutral-800/80 border border-neutral-800 hover:border-cyan-500/50 rounded-xl transition-all text-left flex flex-col justify-between">
+                        <div>
+                            <div class="size-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1.5 3 3.5 3s3.5-1 3.5-3V7c0-2-1.5-3-3.5-3S4 5 4 7zm0 5c0 2 1.5 3 3.5 3s3.5-1 3.5-3m6-5v10c0 2 1.5 3 3.5 3s3.5-1 3.5-3V7c0-2-1.5-3-3.5-3s-3.5 1-3.5 3zm0 5c0 2 1.5 3 3.5 3s3.5-1 3.5-3"/></svg>
+                            </div>
+                            <span class="text-xs font-bold text-white block">Managed Database</span>
+                            <span class="text-[11px] text-neutral-400 block mt-0.5">Postgres, MySQL, Redis with automated backups</span>
+                        </div>
+                        <span class="text-[11px] font-semibold text-cyan-400 group-hover:translate-x-0.5 transition-transform mt-3 block">&rarr; Launch DB</span>
+                    </a>
+
+                    <a href="{{ route('store.vps') }}" {{ wireNavigate() }}
+                        class="group p-4 bg-neutral-950/80 hover:bg-neutral-800/80 border border-neutral-800 hover:border-amber-500/50 rounded-xl transition-all text-left flex flex-col justify-between">
+                        <div>
+                            <div class="size-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                            </div>
+                            <span class="text-xs font-bold text-white block">Cloud VPS Server</span>
+                            <span class="text-[11px] text-neutral-400 block mt-0.5">Dedicated NVMe cores with root SSH &amp; web terminal</span>
+                        </div>
+                        <span class="text-[11px] font-semibold text-amber-400 group-hover:translate-x-0.5 transition-transform mt-3 block">&rarr; Browse Plans</span>
                     </a>
                 </div>
             </div>

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  discord-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stx-discord-bot
+    restart: unless-stopped
+    ports:
+      - "3050:3050"
+    environment:
+      NODE_ENV: production
+      PORT: 3050
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      SUPABASE_URL: ${SUPABASE_URL:-http://supabase-kong:8000}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET}
+    networks:
+      - default
+
+networks:
+  default:
+    name: coolify

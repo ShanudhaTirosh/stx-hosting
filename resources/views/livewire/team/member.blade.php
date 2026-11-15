@@ -27,11 +27,21 @@
     </div>
     <div class="truncate text-[12px] text-neutral-500 dark:text-fg-dim">{{ $member->email }}</div>
     <div>
+        @php
+            $roleValue = data_get($member, 'pivot.role');
+            $badgeClasses = match($roleValue) {
+                'owner' => 'bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30',
+                'admin' => 'bg-indigo-100 dark:bg-indigo-500/15 text-indigo-800 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-500/30',
+                'developer' => 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30',
+                'billing' => 'bg-cyan-100 dark:bg-cyan-500/15 text-cyan-800 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/30',
+                default => 'bg-neutral-100 dark:bg-white/[0.06] text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-white/10',
+            };
+        @endphp
         <button type="button"
-            class="table-filter-value table-filter-badge inline-flex rounded-full border border-transparent bg-neutral-100 px-2 py-0.5 text-[10px] font-medium capitalize text-neutral-600 dark:bg-white/[0.06] dark:text-fg-dim"
-            title="Filter by {{ data_get($member, 'pivot.role') }}"
-            x-on:click="roleFilter = roleFilter === @js(data_get($member, 'pivot.role')) ? 'all' : @js(data_get($member, 'pivot.role')); page = 1">
-            {{ data_get($member, 'pivot.role') }}
+            class="table-filter-value table-filter-badge inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium capitalize {{ $badgeClasses }}"
+            title="Filter by {{ $roleValue }}"
+            x-on:click="roleFilter = roleFilter === @js($roleValue) ? 'all' : @js($roleValue); page = 1">
+            {{ $roleValue }}
         </button>
     </div>
     @can('manageMembers', currentTeam())
@@ -50,8 +60,8 @@
                     <template x-teleport="body">
                         <div x-show="open" x-cloak role="menu" x-anchor.bottom-end.fixed.offset.4="$refs.trigger"
                             @click.outside="if (! $refs.trigger.contains($event.target)) open = false"
-                            class="listbox-panel w-36! min-w-0! z-50!">
-                            @if (Auth::user()->isOwner())
+                            class="listbox-panel w-40! min-w-0! z-50!">
+                            @if (Auth::user()->isOwner() || Auth::user()->roleInTeam(currentTeam()->id) === 'owner')
                                 @if (data_get($member, 'pivot.role') !== 'owner')
                                     <button type="button" class="listbox-option justify-start!" wire:click="makeOwner"
                                         @click="open = false">
@@ -64,22 +74,47 @@
                                         Make admin
                                     </button>
                                 @endif
+                                @if (data_get($member, 'pivot.role') !== 'developer')
+                                    <button type="button" class="listbox-option justify-start!" wire:click="makeDeveloper"
+                                        @click="open = false">
+                                        Make developer
+                                    </button>
+                                @endif
+                                @if (data_get($member, 'pivot.role') !== 'billing')
+                                    <button type="button" class="listbox-option justify-start!" wire:click="makeBilling"
+                                        @click="open = false">
+                                        Make billing
+                                    </button>
+                                @endif
+                                @if (data_get($member, 'pivot.role') !== 'viewer')
+                                    <button type="button" class="listbox-option justify-start!" wire:click="makeViewer"
+                                        @click="open = false">
+                                        Make viewer
+                                    </button>
+                                @endif
                                 @if (data_get($member, 'pivot.role') !== 'member')
                                     <button type="button" class="listbox-option justify-start!"
                                         wire:click="makeReadonly" @click="open = false">
                                         Make member
                                     </button>
                                 @endif
-                            @elseif (Auth::user()->isAdmin())
-                                @if (data_get($member, 'pivot.role') === 'admin')
-                                    <button type="button" class="listbox-option justify-start!"
-                                        wire:click="makeReadonly" @click="open = false">
-                                        Make member
-                                    </button>
-                                @elseif (data_get($member, 'pivot.role') === 'member')
-                                    <button type="button" class="listbox-option justify-start!" wire:click="makeAdmin"
+                            @elseif (Auth::user()->isAdmin() || Auth::user()->roleInTeam(currentTeam()->id) === 'admin')
+                                @if (data_get($member, 'pivot.role') !== 'owner' && data_get($member, 'pivot.role') !== 'admin')
+                                    <button type="button" class="listbox-option justify-start!" wire:click="makeDeveloper"
                                         @click="open = false">
-                                        Make admin
+                                        Make developer
+                                    </button>
+                                    <button type="button" class="listbox-option justify-start!" wire:click="makeBilling"
+                                        @click="open = false">
+                                        Make billing
+                                    </button>
+                                    <button type="button" class="listbox-option justify-start!" wire:click="makeViewer"
+                                        @click="open = false">
+                                        Make viewer
+                                    </button>
+                                    <button type="button" class="listbox-option justify-start!" wire:click="makeReadonly"
+                                        @click="open = false">
+                                        Make member
                                     </button>
                                 @endif
                             @endif
