@@ -13,6 +13,7 @@ return [
     'url' => env('SUPABASE_URL'),
     'key' => env('SUPABASE_KEY'), // Anon public key
     'service_role_key' => env('SUPABASE_SERVICE_ROLE_KEY'), // Backend admin key
+    'studio_url' => env('SUPABASE_STUDIO_URL', 'http://localhost:8001'),
 
     /*
     |--------------------------------------------------------------------------
@@ -33,7 +34,7 @@ return [
     | delegated to Supabase Auth (GoTrue REST API).
     |
     */
-    'auth_enabled' => env('SUPABASE_AUTH_ENABLED', false),
+    'auth_enabled' => env('SUPABASE_AUTH_ENABLED', true),
 
     /*
     |--------------------------------------------------------------------------
