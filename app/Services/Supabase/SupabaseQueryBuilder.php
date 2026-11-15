@@ -5,8 +5,11 @@ namespace App\Services\Supabase;
 class SupabaseQueryBuilder
 {
     protected SupabaseClient $client;
+
     protected string $table;
+
     protected array $queryParams = [];
+
     protected bool $useServiceRole = true;
 
     public function __construct(SupabaseClient $client, string $table)
@@ -112,4 +115,3 @@ class SupabaseQueryBuilder
         return $response !== null && $response->successful();
     }
 }
-

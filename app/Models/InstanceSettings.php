@@ -196,15 +196,7 @@ class InstanceSettings extends Model
 
     public function isPasswordRegistrationAllowed(): bool
     {
-        if (! $this->is_registration_enabled) {
-            return false;
-        }
-
-        if (! $this->disable_registration_when_oauth_enabled) {
-            return true;
-        }
-
-        return ! OauthSetting::where('enabled', true)->exists();
+        return (bool) $this->is_registration_enabled;
     }
 
     public function fqdn(): Attribute

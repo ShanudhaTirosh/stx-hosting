@@ -7,7 +7,6 @@
             ['label' => 'Updates', 'route' => $isAdmin ? 'admin.settings.updates' : 'settings.updates', 'icon' => 'refresh3'],
         ],
         'Instance' => [
-            ['label' => 'Authentication', 'route' => $isAdmin ? 'admin.settings.oauth' : 'settings.oauth', 'icon' => 'keys'],
             ['label' => 'Email', 'route' => $isAdmin ? 'admin.settings.email' : 'settings.email', 'icon' => 'mail'],
             ['label' => 'Backup', 'route' => $isAdmin ? 'admin.settings.backup' : 'settings.backup', 'icon' => 'database'],
         ],

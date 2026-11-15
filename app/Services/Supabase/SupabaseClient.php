@@ -2,6 +2,7 @@
 
 namespace App\Services\Supabase;
 
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -9,8 +10,12 @@ use Illuminate\Support\Facades\Log;
 class SupabaseClient
 {
     protected ?string $url;
+
     protected ?string $anonKey;
+
     protected ?string $serviceRoleKey;
+
+    protected ?string $userJwt = null;
 
     public function __construct()
     {
@@ -25,10 +30,30 @@ class SupabaseClient
     }
 
     /**
+     * Return a cloned client scoped to a user's JWT to enforce PostgreSQL RLS.
+     */
+    public function forUser(string $jwt): self
+    {
+        $clone = clone $this;
+        $clone->userJwt = $jwt;
+
+        return $clone;
+    }
+
+    /**
      * Get a configured HTTP client with appropriate authorization headers.
      */
-    protected function http(bool $useServiceRole = true): \Illuminate\Http\Client\PendingRequest
+    protected function http(bool $useServiceRole = true): PendingRequest
     {
+        if ($this->userJwt !== null) {
+            return Http::withHeaders([
+                'apikey' => $this->anonKey ?: $this->serviceRoleKey,
+                'Authorization' => "Bearer {$this->userJwt}",
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation',
+            ])->timeout(15);
+        }
+
         $key = ($useServiceRole && filled($this->serviceRoleKey)) ? $this->serviceRoleKey : $this->anonKey;
 
         return Http::withHeaders([
@@ -222,4 +247,3 @@ class SupabaseClient
         }
     }
 }
-

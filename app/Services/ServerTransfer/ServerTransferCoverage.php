@@ -33,8 +33,6 @@ use App\Models\LocalPersistentVolume;
 use App\Models\ManagedDnsRecord;
 use App\Models\ManagedDnsRecordReference;
 use App\Models\NotificationThrottle;
-use App\Models\OauthIdentity;
-use App\Models\OauthSetting;
 use App\Models\PersonalAccessToken;
 use App\Models\PrivateKey;
 use App\Models\Project;
@@ -331,8 +329,6 @@ final class ServerTransferCoverage
         TeamInvitation::class => 'Team data, not server data.',
         Subscription::class => 'Billing of the source instance.',
         InstanceSettings::class => 'Settings of the source instance.',
-        OauthSetting::class => 'Settings of the source instance.',
-        OauthIdentity::class => 'User login data of the source instance.',
         PersonalAccessToken::class => 'API tokens of the source instance.',
         UserChangelogRead::class => 'User data of the source instance.',
         AuditEvent::class => 'Audit log of the source instance.',

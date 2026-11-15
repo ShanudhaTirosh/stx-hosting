@@ -2,9 +2,6 @@
 
 namespace App\Providers;
 
-use App\Auth\Oidc\OidcDiscoveryService;
-use App\Auth\Oidc\OidcTokenValidator;
-use App\Auth\Oidc\Socialite\OidcProvider;
 use App\Models\PersonalAccessToken;
 use App\Models\Server;
 use App\Rules\SafeExternalUrl;
@@ -24,7 +21,6 @@ use Illuminate\Support\Once;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Sanctum\Sanctum;
-use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
 use Stripe\StripeClient;
 
 class AppServiceProvider extends ServiceProvider
@@ -47,7 +43,6 @@ class AppServiceProvider extends ServiceProvider
         $this->configureHttpClient();
         $this->configureGitHubHttp();
         $this->configureGitLabHttp();
-        $this->configureOidcSocialite();
         $this->configureQueue();
         $this->configureServerTransferImport();
     }
@@ -106,24 +101,6 @@ class AppServiceProvider extends ServiceProvider
     private function configureSanctumModel(): void
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
-    }
-
-    private function configureOidcSocialite(): void
-    {
-        if (! $this->app->bound(SocialiteFactory::class)) {
-            return;
-        }
-
-        $this->app->make(SocialiteFactory::class)->extend('oidc', function ($app) {
-            return new OidcProvider(
-                $app['request'],
-                $app->make(OidcDiscoveryService::class),
-                $app->make(OidcTokenValidator::class),
-                '',
-                '',
-                '',
-            );
-        });
     }
 
     private function configureHttpClient(): void

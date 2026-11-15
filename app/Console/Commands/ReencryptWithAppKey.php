@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\GitlabApp;
-use App\Models\OauthSetting;
 use App\Models\ServerSetting;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -32,7 +31,6 @@ class ReencryptWithAppKey extends Command
      */
     public const ACCESSOR_ENCRYPTED_COLUMNS = [
         GitlabApp::class => ['webhook_token'],
-        OauthSetting::class => ['client_secret'],
     ];
 
     private Encrypter $currentKeyOnly;

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\EmailDeliveryLog;
+use App\Services\Supabase\SupabaseAuthService;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -9,6 +11,7 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Event;
 use Laravel\Fortify\Events\RecoveryCodesGenerated;
 use Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed;
@@ -17,28 +20,10 @@ use Laravel\Fortify\Events\TwoFactorAuthenticationEnabled;
 use Laravel\Passkeys\Events\PasskeyDeleted;
 use Laravel\Passkeys\Events\PasskeyRegistered;
 use Laravel\Passkeys\Events\PasskeyVerified;
-use SocialiteProviders\Authentik\AuthentikExtendSocialite;
-use SocialiteProviders\Azure\AzureExtendSocialite;
-use SocialiteProviders\Clerk\ClerkExtendSocialite;
-use SocialiteProviders\Discord\DiscordExtendSocialite;
-use SocialiteProviders\Google\GoogleExtendSocialite;
-use SocialiteProviders\Infomaniak\InfomaniakExtendSocialite;
-use SocialiteProviders\Manager\SocialiteWasCalled;
-use SocialiteProviders\Zitadel\ZitadelExtendSocialite;
 
 class EventServiceProvider extends ServiceProvider
 {
-    protected $listen = [
-        SocialiteWasCalled::class => [
-            AzureExtendSocialite::class.'@handle',
-            AuthentikExtendSocialite::class.'@handle',
-            ClerkExtendSocialite::class.'@handle',
-            DiscordExtendSocialite::class.'@handle',
-            GoogleExtendSocialite::class.'@handle',
-            InfomaniakExtendSocialite::class.'@handle',
-            ZitadelExtendSocialite::class.'@handle',
-        ],
-    ];
+    protected $listen = [];
 
     public function boot(): void
     {
@@ -52,6 +37,12 @@ class EventServiceProvider extends ServiceProvider
             ], 'warning');
         });
         Event::listen(Logout::class, function (Logout $event): void {
+            $token = session('supabase_access_token');
+            if ($token) {
+                app(SupabaseAuthService::class)->signOut($token);
+            }
+            session()->forget(['supabase_access_token', 'supabase_refresh_token']);
+            cookie()->queue(cookie()->forget('sb_access_token'));
             auditLog('auth.user.logged_out', $this->authContext($event->user));
         });
         Event::listen(Registered::class, function (Registered $event): void {
@@ -85,7 +76,7 @@ class EventServiceProvider extends ServiceProvider
             auditLog('auth.user.passkey_deleted', $this->authContext($event->user));
         });
 
-        Event::listen(\Illuminate\Mail\Events\MessageSent::class, function (\Illuminate\Mail\Events\MessageSent $event): void {
+        Event::listen(MessageSent::class, function (MessageSent $event): void {
             try {
                 $symfonyMessage = $event->message;
                 $toAddresses = [];
@@ -99,7 +90,7 @@ class EventServiceProvider extends ServiceProvider
                 $templateKey = $event->data['template_key'] ?? $event->data['key'] ?? null;
                 $mailer = config('mail.default');
 
-                \App\Models\EmailDeliveryLog::record(
+                EmailDeliveryLog::record(
                     recipient: $recipient,
                     subject: $subject,
                     templateKey: $templateKey,

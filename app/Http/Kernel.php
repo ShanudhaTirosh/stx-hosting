@@ -3,11 +3,6 @@
 namespace App\Http;
 
 use App\Http\Middleware\AddServerTimingHeaders;
-use App\Http\Middleware\PlatformOwner;
-use App\Http\Middleware\SecurityHeaders;
-use App\Http\Middleware\StorefrontCsp;
-use App\Http\Middleware\StorefrontCurrency;
-use App\Http\Middleware\PlatformStaff;
 use App\Http\Middleware\ApiAbility;
 use App\Http\Middleware\ApiIpAllowed;
 use App\Http\Middleware\ApiSensitiveData;
@@ -19,17 +14,25 @@ use App\Http\Middleware\CheckForcePasswordReset;
 use App\Http\Middleware\DecideWhatToDoWithUser;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\EnsureMcpEnabled;
+use App\Http\Middleware\EnsureNotRestrictedAdmin;
 use App\Http\Middleware\EnsureTeamMcpEnabled;
 use App\Http\Middleware\EnsureTokenBelongsToCurrentTeamMember;
 use App\Http\Middleware\KeepConcurrentTeamSwitch;
+use App\Http\Middleware\PlatformAdmin;
+use App\Http\Middleware\PlatformOwner;
+use App\Http\Middleware\PlatformStaff;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RequirePassword;
 use App\Http\Middleware\RequireTeamTwoFactor;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\StorefrontCsp;
+use App\Http\Middleware\StorefrontCurrency;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\ValidateSignature;
 use App\Http\Middleware\VerifyCsrfToken;
+use App\Http\Middleware\VerifySupabaseSession;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
@@ -87,6 +90,7 @@ class Kernel extends HttpKernel
             CheckForcePasswordReset::class,
             DecideWhatToDoWithUser::class,
             RequireTeamTwoFactor::class,
+            VerifySupabaseSession::class,
             SecurityHeaders::class,
         ],
 
@@ -124,7 +128,9 @@ class Kernel extends HttpKernel
         'can.update.resource' => CanUpdateResource::class,
         'can.access.terminal' => CanAccessTerminal::class,
         'platform.staff' => PlatformStaff::class,
+        'platform.admin' => PlatformAdmin::class,
         'platform.owner' => PlatformOwner::class,
+        'portal.client' => EnsureNotRestrictedAdmin::class,
         'storefront.currency' => StorefrontCurrency::class,
         'storefront.csp' => StorefrontCsp::class,
         'mcp.enabled' => EnsureMcpEnabled::class,

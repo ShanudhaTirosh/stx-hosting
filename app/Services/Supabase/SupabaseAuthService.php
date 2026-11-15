@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Log;
 class SupabaseAuthService
 {
     protected ?string $url;
+
     protected ?string $key;
+
     protected ?string $serviceRoleKey;
+
     protected ?string $jwtSecret;
 
     public function __construct()
@@ -236,6 +239,88 @@ class SupabaseAuthService
     }
 
     /**
+     * Refresh access token using refresh token.
+     */
+    public function refreshToken(string $refreshToken): ?array
+    {
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->key ?: $this->serviceRoleKey,
+                'Content-Type' => 'application/json',
+            ])->timeout(10)->post("{$this->url}/auth/v1/token?grant_type=refresh_token", [
+                'refresh_token' => $refreshToken,
+            ]);
+
+            return $response->successful() ? $response->json() : null;
+        } catch (\Throwable $e) {
+            Log::error("Supabase refresh token exception: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
+    /**
+     * Create user directly via Supabase Admin API with pre-hashed or clear password.
+     */
+    public function adminCreateUser(string $email, string $password, array $data = [], bool $emailConfirm = true): ?array
+    {
+        if (blank($this->serviceRoleKey) || blank($this->url)) {
+            return null;
+        }
+
+        try {
+            $payload = [
+                'email' => strtolower(trim($email)),
+                'password' => $password,
+                'email_confirm' => $emailConfirm,
+                'user_metadata' => $data,
+                'app_metadata' => [
+                    'provider' => 'email',
+                    'providers' => ['email'],
+                    'role' => $data['role'] ?? 'customer',
+                ],
+            ];
+
+            $response = Http::withHeaders([
+                'apikey' => $this->serviceRoleKey,
+                'Authorization' => "Bearer {$this->serviceRoleKey}",
+                'Content-Type' => 'application/json',
+            ])->timeout(10)->post("{$this->url}/auth/v1/admin/users", $payload);
+
+            return $response->successful() ? $response->json() : null;
+        } catch (\Throwable $e) {
+            Log::error("Supabase admin create user exception: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
+    /**
+     * Delete user via Supabase Admin API.
+     */
+    public function adminDeleteUser(string $supabaseId): bool
+    {
+        if (blank($this->serviceRoleKey) || blank($this->url)) {
+            return false;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'apikey' => $this->serviceRoleKey,
+                'Authorization' => "Bearer {$this->serviceRoleKey}",
+            ])->timeout(10)->delete("{$this->url}/auth/v1/admin/users/{$supabaseId}");
+
+            return $response->successful();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * Fetch user profile from Supabase using an active access token.
      */
     public function getUser(string $accessToken): ?array
@@ -256,4 +341,3 @@ class SupabaseAuthService
         }
     }
 }
-
