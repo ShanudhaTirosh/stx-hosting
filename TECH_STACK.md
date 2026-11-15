@@ -69,7 +69,7 @@
 - **Docker Engine & Docker Compose v2**: Container orchestration and cgroups resource limits
 - **Traefik**: Ingress reverse proxy with automatic SSL certificate management for deployed applications
 - **S6 Overlay**: Multi-process supervision inside the core STX container
-- **Nixpacks & Cloud Native Buildpacks**: Automated zero-config container builds from Git repositories
+- **Railpack & Dockerfile Engine**: High-performance, reproducible container builds from Git repositories
 - **Cloudflare R2 & Amazon S3**: Offsite encrypted volume and database backup storage targets
 
 ## Testing & Quality Assurance

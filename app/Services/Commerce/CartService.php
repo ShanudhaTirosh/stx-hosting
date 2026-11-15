@@ -48,10 +48,13 @@ class CartService
             abort(422, 'The cart is full.');
         }
 
+        $isVps = ($variant->product?->category === 'vps');
+        $maxAllowed = $isVps ? self::MAX_QTY : 1;
+
         $cart[$id] = [
             'variant' => $variant->uuid,
             'billing_type' => $tier->billing_type,
-            'quantity' => min(self::MAX_QTY, ($cart[$id]['quantity'] ?? 0) + max(1, $quantity)),
+            'quantity' => min($maxAllowed, ($cart[$id]['quantity'] ?? 0) + max(1, $quantity)),
         ];
 
         session([self::KEY => $cart]);
@@ -70,7 +73,9 @@ class CartService
         if ($quantity < 1) {
             unset($cart[$id]);
         } else {
-            $cart[$id]['quantity'] = min(self::MAX_QTY, $quantity);
+            $variant = ProductVariant::with('product')->where('uuid', $cart[$id]['variant'])->first();
+            $maxAllowed = ($variant?->product?->category === 'vps') ? self::MAX_QTY : 1;
+            $cart[$id]['quantity'] = min($maxAllowed, $quantity);
         }
 
         session([self::KEY => $cart]);

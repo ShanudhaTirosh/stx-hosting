@@ -47,19 +47,6 @@ class ProofStorageService
         ?string $reference = null,
         ?string $notes = null,
     ): PaymentProof {
-        if (! in_array($invoice->status, ['unpaid', 'payment_pending'], true)) {
-            $this->fail('This invoice is not open for payment.');
-        }
-
-        if ($invoice->proofs()->whereIn('status', [PaymentProof::STATUS_VERIFYING, PaymentProof::STATUS_PENDING_REVIEW])->exists()) {
-            $this->fail('A payment proof for this invoice is already being verified.');
-        }
-
-        $attempts = $invoice->proofs()->count();
-        if ($attempts >= (int) config('commerce.proof_max_attempts', 5)) {
-            $this->fail('Too many proofs were submitted for this invoice. Please contact support.');
-        }
-
         $path = $file->getRealPath();
         if ($path === false || ! is_readable($path)) {
             $this->fail('The uploaded file could not be read.');
@@ -78,32 +65,56 @@ class ProofStorageService
 
         $ext = self::ALLOWED[$mime];
 
-        if ($mime === 'application/pdf' && ! str_starts_with($raw, '%PDF-')) {
-            $this->fail('The PDF file is not valid.');
+        if ($mime === 'application/pdf') {
+            if (! str_starts_with($raw, '%PDF-')) {
+                $this->fail('The PDF file is not valid.');
+            }
+            if (preg_match('/\/JavaScript|\/JS|\/Launch|\/EmbeddedFiles/i', $raw)) {
+                $this->fail('PDF contains prohibited active scripts or embedded files.');
+            }
         }
 
-        // Clean & sanitize raster images to strip polyglot payloads
+        // Clean & sanitize raster images to strip polyglot payloads and prevent decompression bombs (F-07, F-08)
         $clean = $raw;
         $rasterPngBytes = null;
 
-        if (str_starts_with($mime, 'image/') && function_exists('imagecreatefromstring')) {
-            $image = @imagecreatefromstring($raw);
-            if ($image === false) {
+        if (str_starts_with($mime, 'image/')) {
+            $info = @getimagesizefromstring($raw);
+            if ($info === false || empty($info[0]) || empty($info[1])) {
                 $this->fail('The image file is corrupt or unreadable.');
             }
 
-            ob_start();
-            match (true) {
-                $ext === 'png' => imagepng($image),
-                $ext === 'webp' && function_exists('imagewebp') => imagewebp($image),
-                default => imagejpeg($image, null, 90),
-            };
-            $clean = (string) ob_get_clean();
-            imagedestroy($image);
-            $rasterPngBytes = $clean;
+            $width = (int) $info[0];
+            $height = (int) $info[1];
+            if (($width * $height) > 25_000_000 || $width > 6000 || $height > 6000) {
+                $this->fail('Image dimensions exceed the 25 megapixel safety limit.');
+            }
+
+            if (function_exists('imagecreatefromstring')) {
+                $image = @imagecreatefromstring($raw);
+                if ($image === false) {
+                    $this->fail('The image file is corrupt or unreadable.');
+                }
+
+                ob_start();
+                match (true) {
+                    $ext === 'png' => imagepng($image),
+                    $ext === 'webp' && function_exists('imagewebp') => imagewebp($image),
+                    default => imagejpeg($image, null, 90),
+                };
+                $clean = (string) ob_get_clean();
+                imagedestroy($image);
+                $rasterPngBytes = $clean;
+            }
         } elseif ($mime === 'application/pdf') {
-            // Convert first page to PNG for perceptual dHash and AI verification
-            $rasterPngBytes = $this->rasterizer->rasterize($path, 200);
+            // Pure-pixel PDF rasterization: convert first page to PNG
+            $pngBytes = $this->rasterizer->rasterize($path, 200);
+            if ($pngBytes) {
+                $clean = $pngBytes;
+                $mime = 'image/png';
+                $ext = 'png';
+                $rasterPngBytes = $clean;
+            }
         }
 
         // Compute exact cryptographic SHA-256
@@ -142,18 +153,34 @@ class ProofStorageService
         $disk = (string) config('commerce.proof_disk', 'payment_proofs');
         $storagePath = 'proofs/'.Str::uuid().'.'.$ext;
 
-        // Upload to private storage disk
-        Storage::disk($disk)->put($storagePath, $clean);
+        // Execute invoice verification and proof registration inside transaction with pessimistic lock (F-06)
+        $proof = DB::transaction(function () use ($invoice, $uploader, $paymentMethod, $reference, $notes, $storagePath, $mime, $ext, $clean, $hash, $dhash, $disk) {
+            $lockedInvoice = Invoice::lockForUpdate()->findOrFail($invoice->id);
 
-        // Upload to private Supabase Storage bucket if configured
-        if (config('commerce.storage_driver') === 'supabase' && $this->supabase->isConfigured()) {
-            $bucket = config('commerce.supabase_proof_bucket', 'payment-proofs');
-            $this->supabase->uploadFile($bucket, $storagePath, $clean, $mime);
-        }
+            if (! in_array($lockedInvoice->status, ['unpaid', 'payment_pending'], true)) {
+                $this->fail('This invoice is not open for payment.');
+            }
 
-        $proof = DB::transaction(function () use ($invoice, $uploader, $paymentMethod, $reference, $notes, $storagePath, $mime, $clean, $hash, $dhash, $attempts) {
+            if ($lockedInvoice->proofs()->whereIn('status', [PaymentProof::STATUS_VERIFYING, PaymentProof::STATUS_PENDING_REVIEW])->exists()) {
+                $this->fail('A payment proof for this invoice is already being verified.');
+            }
+
+            $attempts = $lockedInvoice->proofs()->count();
+            if ($attempts >= (int) config('commerce.proof_max_attempts', 5)) {
+                $this->fail('Too many proofs were submitted for this invoice. Please contact support.');
+            }
+
+            // Upload to private storage disk
+            Storage::disk($disk)->put($storagePath, $clean);
+
+            // Upload to private Supabase Storage bucket if configured
+            if (config('commerce.storage_driver') === 'supabase' && $this->supabase->isConfigured()) {
+                $bucket = config('commerce.supabase_proof_bucket', 'payment-proofs');
+                $this->supabase->uploadFile($bucket, $storagePath, $clean, $mime);
+            }
+
             $proof = PaymentProof::create([
-                'invoice_id' => $invoice->id,
+                'invoice_id' => $lockedInvoice->id,
                 'user_id' => $uploader->id,
                 'payment_method' => $paymentMethod,
                 'transaction_reference' => $reference ?: null,
@@ -167,30 +194,30 @@ class ProofStorageService
                 'attempt_no' => $attempts + 1,
             ]);
 
-            $invoice->update([
+            $lockedInvoice->update([
                 'status' => 'payment_pending',
-                'payment_reference' => $reference ?: ($invoice->payment_reference ?: ('REF-'.strtoupper(Str::random(8)))),
+                'payment_reference' => $reference ?: ($lockedInvoice->payment_reference ?: ('REF-'.strtoupper(Str::random(8)))),
             ]);
-            $invoice->order?->update([
+            $lockedInvoice->order?->update([
                 'status' => 'payment_submitted',
-                'payment_reference' => $invoice->payment_reference,
+                'payment_reference' => $lockedInvoice->payment_reference,
             ]);
 
             CommerceAuditLog::create([
                 'user_id' => $uploader->id,
-                'team_id' => $invoice->team_id,
+                'team_id' => $lockedInvoice->team_id,
                 'action' => 'payment_proof.uploaded',
                 'target_type' => PaymentProof::class,
                 'target_id' => $proof->id,
                 'payload' => [
-                    'invoice_uuid' => $invoice->uuid,
+                    'invoice_uuid' => $lockedInvoice->uuid,
                     'payment_method' => $paymentMethod,
                     'sha256' => $hash,
                     'dhash' => $dhash,
                     'attempt_no' => $attempts + 1,
                 ],
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
+                'ip_address' => request() ? client_ip(request()) : '127.0.0.1',
+                'user_agent' => request()?->userAgent(),
                 'created_at' => now(),
             ]);
 

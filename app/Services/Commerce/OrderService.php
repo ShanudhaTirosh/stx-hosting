@@ -86,7 +86,8 @@ class OrderService
                     throw new InvalidArgumentException("'".($variant?->name ?? 'Selected plan')."' is no longer available.");
                 }
 
-                $quantity = max(1, min(10, (int) ($line['quantity'] ?? 1)));
+                $maxAllowed = ($variant->product?->category === 'vps') ? 10 : 1;
+                $quantity = max(1, min($maxAllowed, (int) ($line['quantity'] ?? 1)));
                 $unit = $this->unitPrice($tier, $currency);
                 $total = $unit * $quantity;
 
@@ -160,7 +161,7 @@ class OrderService
                     'total_cents' => $subtotal,
                     'currency' => $currency,
                 ],
-                'ip_address' => request()->ip(),
+                'ip_address' => function_exists('client_ip') ? client_ip(request()) : request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'created_at' => now(),
             ]);

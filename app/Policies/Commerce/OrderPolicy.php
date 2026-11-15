@@ -19,7 +19,7 @@ class OrderPolicy
             return true;
         }
 
-        return $user->teams->contains('id', $order->team_id);
+        return $user->canPerformInTeam($order->team_id, 'billing.view');
     }
 
     public function create(User $user): bool
@@ -38,7 +38,7 @@ class OrderPolicy
 
     public function cancel(User $user, Order $order): bool
     {
-        if (!in_array($order->status, ['pending', 'payment_pending', 'payment_submitted'])) {
+        if (! in_array($order->status, ['pending', 'payment_pending', 'payment_submitted'])) {
             return false;
         }
 
@@ -46,7 +46,7 @@ class OrderPolicy
             return true;
         }
 
-        return $user->teams->contains('id', $order->team_id);
+        return $user->canPerformInTeam($order->team_id, 'billing.manage');
     }
 
     public function delete(User $user, Order $order): bool

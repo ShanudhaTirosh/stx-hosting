@@ -48,7 +48,7 @@ This checklist must be executed and verified before enabling automated financial
 
 ### Vector 3: Multimodal Visual AI Extraction
 - [ ] Create a free API key at [Google AI Studio](https://aistudio.google.com/).
-- [ ] Set `PV_EXTRACTION_ENABLED=true`, `PV_AI_PROVIDER=gemini`, `PV_GEMINI_API_KEY=AIzaSy...`, and `PV_GEMINI_MODEL=gemini-1.5-flash` in `deploy/.env`.
+- [ ] Set `PV_EXTRACTION_ENABLED=true`, `PV_AI_PROVIDER=gemini`, `PV_GEMINI_API_KEY=AIzaSy...`, and `PV_GEMINI_MODEL=gemini-2.5-flash` in `deploy/.env`.
 - [ ] If running on an offline VPS without external internet, install Ollama with `llama3.2-vision` and set `PV_AI_PROVIDER=ollama`.
 
 ### Vector 4: Bank Statement CSV / XLSX Importer

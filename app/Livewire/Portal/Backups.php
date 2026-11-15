@@ -49,6 +49,11 @@ class Backups extends Component
         return $team;
     }
 
+    private function authorizeAction(int $teamId): void
+    {
+        abort_unless(auth()->user()?->canPerformInTeam($teamId, 'servers.access'), 403, 'You do not have permission to manage or download backups for this server.');
+    }
+
     private function database(string $uuid)
     {
         return DatabaseCatalog::find($this->team(), $uuid) ?? abort(404);
@@ -73,6 +78,7 @@ class Backups extends Component
 
     public function enable(string $databaseUuid, BackupPolicyService $service): void
     {
+        $this->authorizeAction($this->team()->id);
         $database = $this->database($databaseUuid);
         $chosen = $this->settings[$databaseUuid] ?? [];
 
@@ -81,6 +87,7 @@ class Backups extends Component
 
     public function disable(string $databaseUuid, BackupPolicyService $service): void
     {
+        $this->authorizeAction($this->team()->id);
         $database = $this->database($databaseUuid);
 
         $this->guarded(fn () => $service->disable($database, auth()->user()), 'Backups are off. Existing backups are kept.');
@@ -88,6 +95,7 @@ class Backups extends Component
 
     public function runNow(string $databaseUuid, BackupPolicyService $service): void
     {
+        $this->authorizeAction($this->team()->id);
         $database = $this->database($databaseUuid);
 
         $this->guarded(fn () => $service->runNow($database, auth()->user()), 'Backup started. It appears below when it finishes.');
@@ -95,6 +103,7 @@ class Backups extends Component
 
     public function restore(string $executionUuid, BackupPolicyService $service): void
     {
+        $this->authorizeAction($this->team()->id);
         if (strtoupper(trim($this->confirm[$executionUuid] ?? '')) !== 'RESTORE') {
             $this->addError("confirm.{$executionUuid}", 'Type RESTORE to confirm.');
 
@@ -113,6 +122,7 @@ class Backups extends Component
 
     public function download(string $executionUuid, BackupPolicyService $service)
     {
+        $this->authorizeAction($this->team()->id);
         $execution = $this->execution($executionUuid);
 
         try {
@@ -127,6 +137,7 @@ class Backups extends Component
     /** Volume Backup Controls */
     public function enableVolume(string $volumeUuid): void
     {
+        $this->authorizeAction($this->team()->id);
         $volume = $this->volume($volumeUuid);
         $storage = PlatformBackupStorage::storage();
         if (! $storage) {
@@ -160,6 +171,7 @@ class Backups extends Component
 
     public function disableVolume(string $volumeUuid): void
     {
+        $this->authorizeAction($this->team()->id);
         $volume = $this->volume($volumeUuid);
         $backup = $volume->scheduledBackups()->first();
 
@@ -170,6 +182,7 @@ class Backups extends Component
 
     public function runNowVolume(string $volumeUuid): void
     {
+        $this->authorizeAction($this->team()->id);
         $volume = $this->volume($volumeUuid);
         $backup = $volume->scheduledBackups()->first();
         if (! $backup) {
@@ -191,6 +204,7 @@ class Backups extends Component
 
     public function restoreVolume(string $executionUuid): void
     {
+        $this->authorizeAction($this->team()->id);
         if (strtoupper(trim($this->confirmVolume[$executionUuid] ?? '')) !== 'RESTORE') {
             $this->addError("confirmVolume.{$executionUuid}", 'Type RESTORE to confirm.');
 
@@ -208,6 +222,7 @@ class Backups extends Component
 
     public function downloadVolume(string $executionUuid)
     {
+        $this->authorizeAction($this->team()->id);
         $execution = ScheduledVolumeBackupExecution::where('uuid', $executionUuid)->firstOrFail();
         abort_unless((int) $execution->scheduledVolumeBackup?->team_id === (int) $this->team()->id, 403);
 

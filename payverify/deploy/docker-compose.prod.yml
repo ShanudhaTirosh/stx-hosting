@@ -35,7 +35,7 @@ services:
       PV_EXTRACTION_ENABLED: ${PV_EXTRACTION_ENABLED:-false}
       PV_AI_PROVIDER: ${PV_AI_PROVIDER:-none}
       PV_GEMINI_API_KEY: ${PV_GEMINI_API_KEY:-}
-      PV_GEMINI_MODEL: ${PV_GEMINI_MODEL:-gemini-1.5-flash}
+      PV_GEMINI_MODEL: ${PV_GEMINI_MODEL:-gemini-2.5-flash}
       PV_OLLAMA_URL: ${PV_OLLAMA_URL:-http://localhost:11434}
       PV_OLLAMA_MODEL: ${PV_OLLAMA_MODEL:-llama3.2-vision}
       PV_EXTERNAL_API_KEY: ${PV_EXTERNAL_API_KEY:-}

@@ -28,8 +28,8 @@ class ServiceInstancePolicy
             return true;
         }
 
-        // Only team members can reveal credentials for their service
-        return $user->teams->contains('id', $service->team_id);
+        // Only team members with server access role can reveal credentials
+        return $user->canPerformInTeam($service->team_id, 'servers.access');
     }
 
     public function update(User $user, ServiceInstance $service): bool

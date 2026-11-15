@@ -3,68 +3,97 @@
         ['name' => 'Home', 'url' => url('/')],
         ['name' => 'Templates', 'url' => route('store.templates')],
     ];
-
-    $popularTemplates = [
-        ['slug' => 'nextjs', 'name' => 'Next.js 15', 'category' => 'Framework', 'desc' => 'Full-stack React framework with SSR, static optimization, and API routes.'],
-        ['slug' => 'supabase', 'name' => 'Supabase BaaS', 'category' => 'Backend', 'desc' => 'Open source Firebase alternative with Postgres, Auth, Realtime, and Storage.'],
-        ['slug' => 'wordpress', 'name' => 'WordPress & MySQL', 'category' => 'CMS', 'desc' => 'Production WordPress with high-performance Caddy/Nginx reverse proxy and PHP 8.4.'],
-        ['slug' => 'ghost', 'name' => 'Ghost Publishing', 'category' => 'Publishing', 'desc' => 'Modern professional publishing platform with rich editor and newsletter engine.'],
-        ['slug' => 'n8n', 'name' => 'n8n Workflow Automation', 'category' => 'Automation', 'desc' => 'Fair-code workflow automation tool connecting hundreds of APIs and webhooks.'],
-        ['slug' => 'directus', 'name' => 'Directus Headless CMS', 'category' => 'CMS', 'desc' => 'Real-time API and app dashboard wrapping any SQL database.'],
-        ['slug' => 'appwrite', 'name' => 'Appwrite Backend', 'category' => 'Backend', 'desc' => 'Complete Web, Mobile, and Flutter backend server with auth, db, and storage.'],
-        ['slug' => 'plausible', 'name' => 'Plausible Analytics', 'category' => 'Analytics', 'desc' => 'Lightweight, privacy-friendly Google Analytics alternative.'],
-        ['slug' => 'meilisearch', 'name' => 'Meilisearch', 'category' => 'Search', 'desc' => 'Lightning-fast, typo-tolerant search engine with RESTful API.'],
-        ['slug' => 'redis', 'name' => 'Redis Cache', 'category' => 'Database', 'desc' => 'In-memory data structure store used as a database, cache, and message broker.'],
-        ['slug' => 'postgresql', 'name' => 'PostgreSQL 16', 'category' => 'Database', 'desc' => 'Powerful open-source object-relational database system.'],
-        ['slug' => 'pocketbase', 'name' => 'PocketBase', 'category' => 'Backend', 'desc' => 'Single-file open source backend with embedded SQLite and real-time subscriptions.'],
-    ];
 @endphp
 
 <x-storefront.layout 
     :title="'Curated 1-Click Docker Application Templates'" 
-    :description="'Deploy 31+ curated production Docker application templates: Next.js, Supabase, WordPress, Ghost, n8n, Directus, and PostgreSQL on STX Hosting with auto-SSL.'"
+    :description="'Deploy 31+ curated production Docker application templates with automated SSL, isolated container networks, and zero configuration.'"
     :breadcrumbs="$breadcrumbs"
 >
-    <div class="wrap" style="padding-top:2.5rem;padding-bottom:4rem">
+    <div class="wrap band">
         <nav aria-label="Breadcrumb" style="margin-bottom:1.5rem;font-size:0.875rem;color:var(--muted)">
-            <a href="{{ url('/') }}">Home</a> &rarr; <span>Templates</span>
+            <a href="{{ url('/') }}">Home</a> &rarr; <span style="color:var(--ink);font-weight:600">Templates</span>
         </nav>
 
-        <div class="pagehead" style="margin-bottom:3rem">
-            <h1>Curated 1-Click Application Templates</h1>
-            <p style="font-size:1.15rem;color:var(--muted);max-width:75ch">Launch production-ready open source applications, headless backends, and databases on isolated Docker containers with automated SSL certificates.</p>
+        <div class="pagehead" data-reveal>
+            <div>
+                <span class="pill signal" style="margin-bottom:1rem">
+                    <span class="pill-dot"></span> 31 Active Production Stacks
+                </span>
+                <h1>Curated 1-Click Application Templates</h1>
+                <p class="lead">Launch hardened open-source applications, headless backends, and databases on isolated Docker containers with automated Let's Encrypt SSL certificates.</p>
+            </div>
+            <div>
+                <a href="{{ route('store.app-hosting') }}" class="btn">Deploy Custom Container</a>
+            </div>
         </div>
 
-        <h2 style="font-size:1.5rem;margin-bottom:1.25rem">Popular Production Templates</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.5rem;margin-bottom:3.5rem">
-            @foreach ($popularTemplates as $tpl)
-                <div style="background:var(--card);padding:1.5rem;border-radius:var(--radius);border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between">
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-                            <span style="font-size:0.75rem;text-transform:uppercase;font-weight:700;color:var(--signal);letter-spacing:0.05em">{{ $tpl['category'] }}</span>
-                            <span style="font-size:0.75rem;padding:0.2rem 0.5rem;background:var(--ok-bg);color:var(--ok-ink);border-radius:100px;font-weight:600">Active</span>
-                        </div>
-                        <h3 style="font-size:1.2rem;margin-bottom:0.5rem">{{ $tpl['name'] }}</h3>
-                        <p style="font-size:0.9rem;color:var(--muted);line-height:1.5;margin:0">{{ $tpl['desc'] }}</p>
-                    </div>
-                    <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line)">
-                        <a href="{{ route('store.app-hosting') }}" class="btn small" style="width:100%;text-align:center">Deploy Template &rarr;</a>
-                    </div>
+        @if (!empty($featured))
+            <div style="margin: 3.5rem 0 2rem;" data-reveal>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.5rem">
+                    <h2>Featured Applications</h2>
+                    <span style="font-size:0.9rem;color:var(--muted)">Automated Traefik SSL &bull; High Reliability</span>
                 </div>
-            @endforeach
-        </div>
 
-        @if (!empty($templates))
-            <h2 style="font-size:1.5rem;margin-bottom:1rem">Complete Curated Directory ({{ count($templates) }} Templates)</h2>
-            <div style="background:var(--card);padding:1.5rem;border-radius:var(--radius);border:1px solid var(--line)">
-                <div style="display:flex;flex-wrap:wrap;gap:0.75rem">
-                    @foreach ($templates as $t)
-                        <a href="{{ route('store.app-hosting') }}" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.4rem 0.85rem;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);text-decoration:none;font-size:0.875rem;font-weight:500">
-                            <span>📦</span> {{ $t['name'] }}
-                        </a>
+                <div class="card-grid-3">
+                    @foreach ($featured as $tpl)
+                        <div class="card card-lift" style="display:flex;flex-direction:column;justify-content:space-between">
+                            <div>
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                                    <span class="pill ink">{{ $tpl['category'] }}</span>
+                                    <span class="pill emerald"><span class="pill-dot"></span> Ready</span>
+                                </div>
+                                <h3 style="font-size:1.35rem;margin-bottom:.5rem">{{ $tpl['name'] }}</h3>
+                                <p style="font-size:0.92rem;line-height:1.55;color:var(--muted)">{{ $tpl['desc'] }}</p>
+                                
+                                <div style="display:flex;gap:1rem;margin-top:1rem;font-size:0.82rem;color:var(--muted)">
+                                    <span>RAM: <strong>{{ $tpl['min_ram_mb'] }} MB</strong></span>
+                                    <span>vCPU: <strong>{{ $tpl['min_vcpu'] }} Core</strong></span>
+                                </div>
+                            </div>
+                            <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--line-subtle)">
+                                <a href="{{ route('store.app-hosting') }}" class="btn ghost small full">Deploy {{ $tpl['name'] }} &rarr;</a>
+                            </div>
+                        </div>
                     @endforeach
                 </div>
             </div>
         @endif
+
+        @if (!empty($templates))
+            <div style="margin-top: 4.5rem;" data-reveal>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.5rem">
+                    <h2>All Available Templates ({{ count($templates) }})</h2>
+                    <span style="font-size:0.9rem;color:var(--muted)">Verified Docker Compose v2 Stacks</span>
+                </div>
+
+                <div class="card" style="padding: 2rem;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:1rem">
+                        @foreach ($templates as $t)
+                            <a href="{{ route('store.app-hosting') }}" class="card-lift" style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:var(--paper-soft);border:1px solid var(--line);border-radius:var(--radius-sm);color:var(--ink);text-decoration:none;font-weight:600;font-size:.92rem">
+                                <span>{{ $t['name'] }}</span>
+                                <span style="font-size:.75rem;color:var(--muted);background:var(--card);padding:.15rem .45rem;border-radius:var(--radius-full);border:1px solid var(--line)">{{ $t['category'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Architecture Guarantee Callout -->
+        <div class="card" style="margin-top:4rem;background:#071726;border-color:#1c364e;color:#e2ecf5;padding:2.5rem" data-reveal>
+            <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:2.5rem;align-items:center">
+                <div>
+                    <span class="pill signal" style="margin-bottom:1rem">
+                        <span class="pill-dot"></span> Zero-Vendor-Lockin Standard
+                    </span>
+                    <h3 style="color:#fff;font-size:1.8rem;margin-bottom:.75rem">Production Stacks Built on Standard Docker Compose</h3>
+                    <p style="color:#9bb0c0;margin:0">Every template in our catalog runs on pure Docker Compose v2 definitions. Persistent data volumes are stored on NVMe drives with automated daily snapshots to S3/Cloudflare R2.</p>
+                </div>
+                <div style="text-align:right">
+                    <a href="{{ route('store.pricing') }}" class="btn signal">Browse Application Plans</a>
+                </div>
+            </div>
+        </div>
     </div>
 </x-storefront.layout>

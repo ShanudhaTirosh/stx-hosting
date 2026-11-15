@@ -15,35 +15,75 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="wrap">
-            <div style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.35rem 0.75rem;background:var(--ok-bg);color:var(--ok-ink);border-radius:100px;font-size:0.875rem;font-weight:600;margin-bottom:1.5rem">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981"></span>
-                Direct Bank Transfer &bull; LKR &amp; USD Dual Pricing &bull; No Credit Card Required
-            </div>
+            <div class="hero-layout">
+                <div data-reveal>
+                    <div class="pill emerald" style="margin-bottom: 1.25rem;">
+                        <span class="pill-dot"></span> Direct Bank Transfer &bull; LKR &amp; USD Dual Pricing &bull; No Card Required
+                    </div>
 
-            <h1>Enterprise Cloud Hosting You Can Pay for with a Bank Transfer.</h1>
-            <p class="lede">High-performance NVMe Cloud VPS, Git-driven container app hosting, managed databases, and custom domain email. Priced honestly in Sri Lankan Rupees or US Dollars. You order, pay by bank transfer, PayVerify AI verifies your slip, and your service goes live.</p>
+                    <h1>Enterprise Cloud Hosting You Can Pay for with a Bank Transfer.</h1>
+                    
+                    <p class="lede">High-performance NVMe Cloud VPS, Git-driven container app hosting, managed databases, and custom domain email. Priced honestly in Sri Lankan Rupees or US Dollars. You order, pay by bank transfer, PayVerify AI verifies your slip, and your service goes live.</p>
 
-            <div class="actions">
-                <a class="btn" href="{{ route('store.pricing') }}">View All Plans &amp; Pricing</a>
-                <a class="btn ghost" href="{{ route('store.how-it-works') }}">How Ordering Works</a>
-            </div>
+                    <div class="actions">
+                        <a class="btn" href="{{ route('store.pricing') }}">View All Plans &amp; Pricing</a>
+                        <a class="btn ghost" href="{{ route('store.how-it-works') }}">How Ordering Works</a>
+                    </div>
 
-            @if ($status['total'] > 0)
-                <div style="margin-top:2rem;display:inline-flex;align-items:center;gap:0.75rem;padding:0.5rem 1rem;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);font-size:0.875rem">
-                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ $status['down'] === 0 ? '#10b981' : '#f59e0b' }}"></span>
-                    <span>
-                        @if ($status['down'] === 0)
-                            All <strong>{{ $status['total'] }}</strong> platform monitors are 100% operational.
-                        @else
-                            {{ $status['down'] }} of {{ $status['total'] }} monitors have an open incident.
-                        @endif
-                        <a href="{{ route('status.public') }}" target="_blank" rel="noopener" style="margin-left:0.5rem;font-weight:600">View Live 90-Day Telemetry &rarr;</a>
-                    </span>
+                    @if ($status['total'] > 0)
+                        <div style="margin-top: 2rem; display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 0.88rem; box-shadow: var(--shadow-subtle);">
+                            <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:{{ $status['down'] === 0 ? 'var(--emerald)' : 'var(--amber)' }}"></span>
+                            <span>
+                                @if ($status['down'] === 0)
+                                    All <strong>{{ $status['total'] }}</strong> platform monitors are 100% operational.
+                                @else
+                                    {{ $status['down'] }} of {{ $status['total'] }} monitors have an open incident.
+                                @endif
+                                <a href="{{ route('status.public') }}" target="_blank" rel="noopener" style="margin-left:0.5rem;font-weight:600">View 90-Day Telemetry &rarr;</a>
+                            </span>
+                        </div>
+                    @endif
                 </div>
-            @endif
+
+                <!-- Right Column: Interactive Platform Telemetry Shell -->
+                <div data-reveal data-delay="120">
+                    <div class="telemetry-card">
+                        <div class="telemetry-header">
+                            <div class="telemetry-dots">
+                                <span class="telemetry-dot dot-red"></span>
+                                <span class="telemetry-dot dot-amber"></span>
+                                <span class="telemetry-dot dot-green"></span>
+                            </div>
+                            <span>stx-control-plane &bull; cluster-ready</span>
+                        </div>
+                        <div class="telemetry-body">
+                            <div class="telemetry-line"><span class="telemetry-signal">$</span> stx cluster status --region=colombo-1</div>
+                            <div class="telemetry-line"><span class="telemetry-accent">&gt;</span> Edge Gateway: <span class="telemetry-ok">ACTIVE (Caddy v2.8 / TLS 1.3)</span></div>
+                            <div class="telemetry-line"><span class="telemetry-accent">&gt;</span> Storage Engine: <span class="telemetry-ok">NVMe PCIe 4.0 (ZFS Mirror)</span></div>
+                            <div class="telemetry-line"><span class="telemetry-accent">&gt;</span> PayVerify AI: <span class="telemetry-ok">ONLINE (Gemini 2.5 Flash / dHash)</span></div>
+                            <div class="telemetry-line"><span class="telemetry-accent">&gt;</span> Sentinel Telemetry: <span class="telemetry-ok">100% Operational</span></div>
+                            
+                            <div class="telemetry-stat-row">
+                                <div>
+                                    <div class="telemetry-stat-val" data-counter="99.98" data-decimals="2" data-suffix="%">99.98%</div>
+                                    <div class="telemetry-stat-lbl">Uptime SLA</div>
+                                </div>
+                                <div>
+                                    <div class="telemetry-stat-val" data-counter="31" data-suffix="+">31+</div>
+                                    <div class="telemetry-stat-lbl">Docker Stacks</div>
+                                </div>
+                                <div>
+                                    <div class="telemetry-stat-val">0%</div>
+                                    <div class="telemetry-stat-lbl">Card FX Fees</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             @if ($index->isNotEmpty())
-                <ul class="index" aria-label="Plans by Category" style="margin-top:2.5rem">
+                <ul class="index" aria-label="Plans by Category" style="margin-top: 3.5rem;" data-reveal>
                     @foreach ($index as $row)
                         <li>
                             <a href="{{ route($row['route']) }}">
@@ -57,139 +97,164 @@
         </div>
     </section>
 
-    <!-- Core Pillars / Answer-First Capabilities -->
-    <section class="band" style="background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:4rem 0">
+    <!-- Core Capabilities Band -->
+    <section class="band soft" data-reveal>
         <div class="wrap">
-            <h2 style="font-size:2rem;margin-bottom:0.75rem">Why Developers &amp; Businesses Choose STX Hosting</h2>
-            <p style="color:var(--muted);font-size:1.1rem;margin-bottom:2.5rem">Built from the ground up for technical reliability, financial transparency, and ease of payment.</p>
+            <div class="band-header">
+                <h2>Built for Technical Teams, Agencies &amp; Growing Businesses</h2>
+                <p>Pure isolation, modern developer tooling, and flexible local payment workflows built into one unified control plane.</p>
+            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.5rem">
-                <div style="background:var(--paper);padding:1.75rem;border-radius:var(--radius);border:1px solid var(--line)">
-                    <div style="font-size:1.5rem;margin-bottom:0.75rem">🚀</div>
-                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">High-Performance NVMe VPS</h3>
-                    <p style="margin:0;font-size:0.95rem;color:var(--muted)">Dedicated vCPUs with ultra-fast NVMe storage. Hand-allocated with root SSH credentials delivered within <strong>24 to 72 hours</strong> of payment approval.</p>
-                    <a href="{{ route('store.vps') }}" style="display:inline-block;margin-top:1rem;font-weight:600">Explore VPS Plans &rarr;</a>
+            <div class="card-grid-4">
+                <div class="card card-lift">
+                    <div class="pill signal" style="margin-bottom:1rem">NVMe VPS</div>
+                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">Cloud VPS Servers</h3>
+                    <p style="margin:0;font-size:0.92rem;color:var(--muted)">Dedicated vCPU allocations with ultra-fast NVMe storage. Hand-allocated and hardened by engineers within <strong>24 to 72 hours</strong> with private root keys.</p>
+                    <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line-subtle)">
+                        <a href="{{ route('store.vps') }}" style="font-weight:600;font-size:0.9rem">Explore VPS Plans &rarr;</a>
+                    </div>
                 </div>
 
-                <div style="background:var(--paper);padding:1.75rem;border-radius:var(--radius);border:1px solid var(--line)">
-                    <div style="font-size:1.5rem;margin-bottom:0.75rem">📦</div>
-                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">31+ 1-Click App Templates</h3>
-                    <p style="margin:0;font-size:0.95rem;color:var(--muted)">Deploy Next.js, WordPress, Ghost, Directus, n8n, Supabase, and Laravel in seconds. Automatic Let's Encrypt SSL certificates and zero-downtime Git redeployments.</p>
-                    <a href="{{ route('store.templates') }}" style="display:inline-block;margin-top:1rem;font-weight:600">Browse Curated Templates &rarr;</a>
+                <div class="card card-lift">
+                    <div class="pill emerald" style="margin-bottom:1rem">1-Click Apps</div>
+                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">31+ Production Stacks</h3>
+                    <p style="margin:0;font-size:0.92rem;color:var(--muted)">Deploy Next.js, WordPress, Ghost, Directus, n8n, Supabase, and Laravel in seconds. Automatic Let's Encrypt SSL certificates and zero-downtime Git redeployments.</p>
+                    <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line-subtle)">
+                        <a href="{{ route('store.templates') }}" style="font-weight:600;font-size:0.9rem">Browse App Stacks &rarr;</a>
+                    </div>
                 </div>
 
-                <div style="background:var(--paper);padding:1.75rem;border-radius:var(--radius);border:1px solid var(--line)">
-                    <div style="font-size:1.5rem;margin-bottom:0.75rem">✉️</div>
-                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">Private Business Email Hosting</h3>
-                    <p style="margin:0;font-size:0.95rem;color:var(--muted)">Run corporate email on your domain with modern STX Webmail, pooled team storage, and automatic SPF, DKIM (2048-bit), and DMARC deliverability protection.</p>
-                    <a href="{{ route('store.email-hosting') }}" style="display:inline-block;margin-top:1rem;font-weight:600">See Email Plans &rarr;</a>
+                <div class="card card-lift">
+                    <div class="pill ink" style="margin-bottom:1rem">Mail Hosting</div>
+                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">Business Email</h3>
+                    <p style="margin:0;font-size:0.92rem;color:var(--muted)">Run corporate email on your own domain with lightweight STX Webmail, pooled team storage, and automatic 2048-bit DKIM, SPF, and DMARC deliverability protection.</p>
+                    <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line-subtle)">
+                        <a href="{{ route('store.email-hosting') }}" style="font-weight:600;font-size:0.9rem">See Email Plans &rarr;</a>
+                    </div>
                 </div>
 
-                <div style="background:var(--paper);padding:1.75rem;border-radius:var(--radius);border:1px solid var(--line)">
-                    <div style="font-size:1.5rem;margin-bottom:0.75rem">🛡️</div>
-                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">PayVerify AI Verification</h3>
-                    <p style="margin:0;font-size:0.95rem;color:var(--muted)">No credit card required. Upload your bank transfer slip, and PayVerify AI extracts transaction amounts and corroborates with our bank ledger for rapid approval.</p>
-                    <a href="{{ route('store.how-it-works') }}" style="display:inline-block;margin-top:1rem;font-weight:600">Learn How It Works &rarr;</a>
+                <div class="card card-lift">
+                    <div class="pill amber" style="margin-bottom:1rem">PayVerify AI</div>
+                    <h3 style="font-size:1.25rem;margin-bottom:0.5rem">Slip Verification</h3>
+                    <p style="margin:0;font-size:0.92rem;color:var(--muted)">No international credit card required. Upload your bank slip; PayVerify AI extracts amounts, checks against perceptual hashes, and notifies staff for fast approval.</p>
+                    <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line-subtle)">
+                        <a href="{{ route('store.how-it-works') }}" style="font-weight:600;font-size:0.9rem">How It Works &rarr;</a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Comparison Table: STX vs Legacy cPanel vs Hyperscalers -->
-    <section class="band" style="padding:4rem 0">
+    <!-- Comparison Matrix: STX vs Legacy cPanel vs Hyperscalers -->
+    <section class="band" data-reveal>
         <div class="wrap">
-            <h2 style="font-size:2rem;margin-bottom:0.75rem">Platform Comparison</h2>
-            <p style="color:var(--muted);font-size:1.1rem;margin-bottom:2rem">How STX Hosting stacks up against legacy shared hosting and complex hyperscalers.</p>
+            <div class="band-header">
+                <h2>Engineered Without Compromises</h2>
+                <p>See why modern teams switch away from legacy shared cPanel and avoid the exorbitant complexity of hyperscalers.</p>
+            </div>
 
-            <table class="ledger">
-                <thead>
-                    <tr>
-                        <th scope="col">Feature</th>
-                        <th scope="col">Legacy cPanel Shared Hosting</th>
-                        <th scope="col" style="color:var(--signal);font-weight:700">STX Cloud Platform</th>
-                        <th scope="col">Global Hyperscalers (AWS/Azure)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Payment Methods</strong></td>
-                        <td>Credit card / USD only</td>
-                        <td style="background:var(--ok-bg);font-weight:600">Bank Transfer in LKR &amp; USD (Zero Card Fees)</td>
-                        <td>International Credit Card only (FX Cap risks)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Runtime Architecture</strong></td>
-                        <td>Shared Apache; noisy neighbors slow you down</td>
-                        <td style="background:var(--ok-bg);font-weight:600">Isolated Docker containers &amp; dedicated NVMe VPS</td>
-                        <td>Complex IAM, VPCs, and serverless limits</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Pricing Predictability</strong></td>
-                        <td>Hidden renewal price increases (2x-3x)</td>
-                        <td style="background:var(--ok-bg);font-weight:600">100% Flat Predictable Invoices; No Surprises</td>
-                        <td>Uncapped bandwidth and execution second bills</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Deploy Workflow</strong></td>
-                        <td>Manual FTP / Zip upload</td>
-                        <td style="background:var(--ok-bg);font-weight:600">Automated Git push webhooks &amp; 1-click templates</td>
-                        <td>Complex CI/CD pipelines &amp; CloudFormation</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Delivery SLA</strong></td>
-                        <td>Instant but unmonitored</td>
-                        <td style="background:var(--ok-bg);font-weight:600">Instant apps; 24–72h hand-hardened VPS</td>
-                        <td>Instant VM spinning</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="matrix-card">
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width:25%">Feature</th>
+                            <th scope="col" style="width:25%">Legacy Shared cPanel</th>
+                            <th scope="col" style="width:25%;background:var(--signal-subtle);color:var(--signal)">STX Cloud Platform</th>
+                            <th scope="col" style="width:25%">Hyperscalers (AWS / GCP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Payment Method</strong></td>
+                            <td>Credit Card / USD only</td>
+                            <td style="background:var(--signal-subtle);font-weight:600"><span class="matrix-check">&#10003; Local Bank Transfer (LKR/USD)</span></td>
+                            <td>Credit Card with FX limits</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Runtime Isolation</strong></td>
+                            <td>Shared Apache / Noisy Neighbors</td>
+                            <td style="background:var(--signal-subtle);font-weight:600"><span class="matrix-check">&#10003; Isolated Docker &amp; Dedicated VPS</span></td>
+                            <td><span class="matrix-check">&#10003; Full VM / Container</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pricing Predictability</strong></td>
+                            <td>Hidden renewal hikes (2x–3x)</td>
+                            <td style="background:var(--signal-subtle);font-weight:600"><span class="matrix-check">&#10003; 100% Flat Predictable Invoices</span></td>
+                            <td>Surprise bandwidth &amp; IOPS charges</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Deployment Flow</strong></td>
+                            <td>Manual FTP / Zip extract</td>
+                            <td style="background:var(--signal-subtle);font-weight:600"><span class="matrix-check">&#10003; 1-Click Compose &amp; Git Webhooks</span></td>
+                            <td>Complex IAM, VPC &amp; CI/CD rules</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Provisioning SLA</strong></td>
+                            <td>Instant but unmonitored</td>
+                            <td style="background:var(--signal-subtle);font-weight:600"><span class="matrix-check">&#10003; Instant Apps &bull; 24-72h Hand-Hardened VPS</span></td>
+                            <td>Instant VM creation</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
 
-    <!-- Visual How It Works Band -->
-    <section class="band ink" id="how" style="padding:4rem 0">
+    <!-- Visual 4-Step How It Works Band -->
+    <section class="band dark" id="how" data-reveal>
         <div class="wrap">
-            <h2 style="font-size:2rem;margin-bottom:0.75rem">How Ordering Works (4 Simple Steps)</h2>
-            <p style="color:#cbd5e1;font-size:1.1rem;margin-bottom:2.5rem">Transparent, accountable, and chargeback-free.</p>
+            <div class="band-header">
+                <h2>How Ordering Works in 4 Steps</h2>
+                <p>Simple, transparent, and completely free of chargeback disputes.</p>
+            </div>
 
-            <ol class="steps">
-                <li>
+            <ol class="flow-steps">
+                <li class="flow-step">
                     <strong>1. Select Your Plan</strong>
-                    <p>Choose your Cloud VPS specs, container plan, or email tier. Prices displayed in LKR or USD are exact and final.</p>
+                    <p>Choose your Cloud VPS specs, container app tier, or email package. Prices shown in LKR or USD are exact and transparent.</p>
                 </li>
-                <li>
+                <li class="flow-step">
                     <strong>2. Bank Transfer</strong>
-                    <p>Checkout creates your invoice with bank account details. Transfer funds via your local mobile banking app or branch slip.</p>
+                    <p>Checkout generates your invoice with bank account details (Commercial Bank, Sampath, HNB, BOC). Transfer funds via mobile banking or branch.</p>
                 </li>
-                <li>
+                <li class="flow-step">
                     <strong>3. Upload Slip</strong>
-                    <p>Upload a photo or PDF of your receipt. PayVerify AI and our human review team inspect and verify your payment.</p>
+                    <p>Upload a photo or PDF receipt. PayVerify AI verifies the amount, runs perceptual tamper checks, and notifies operators.</p>
                 </li>
-                <li>
+                <li class="flow-step">
                     <strong>4. Service Activated</strong>
-                    <p>App containers and email start immediately upon approval. Cloud VPS servers are hand-delivered within 24 to 72 hours.</p>
+                    <p>App containers and business email launch immediately upon approval. Cloud VPS servers are hand-delivered in 24 to 72 hours.</p>
                 </li>
             </ol>
         </div>
     </section>
 
-    <!-- FAQs Section -->
-    <section class="band" style="background:var(--card);border-top:1px solid var(--line);padding:4rem 0">
-        <div class="wrap">
-            <h2 style="font-size:2rem;margin-bottom:0.75rem">Frequently Asked Questions</h2>
-            <p style="color:var(--muted);font-size:1.1rem;margin-bottom:2rem">Direct answers to common questions about our platform and payment flows.</p>
+    <!-- Frequently Asked Questions -->
+    <section class="band" data-reveal>
+        <div class="wrap-narrow">
+            <div class="band-header">
+                <h2>Frequently Asked Questions</h2>
+                <p>Direct, clear answers to common questions about payment, provisioning, and platform security.</p>
+            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:1.5rem">
-                @foreach ($faqs as $faq)
-                    <div style="background:var(--paper);padding:1.5rem;border-radius:var(--radius);border:1px solid var(--line)">
-                        <h3 style="font-size:1.1rem;margin-bottom:0.5rem">{{ $faq['question'] }}</h3>
-                        <p style="margin:0;font-size:0.95rem;color:var(--muted);line-height:1.6">{{ $faq['answer'] }}</p>
+            <div class="accordion">
+                @foreach ($faqs as $i => $faq)
+                    <div class="accordion-item {{ $i === 0 ? 'open' : '' }}">
+                        <button class="accordion-trigger" aria-expanded="{{ $i === 0 ? 'true' : 'false' }}">
+                            <span>{{ $faq['question'] }}</span>
+                            <svg class="accordion-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="accordion-content">
+                            <p>{{ $faq['answer'] }}</p>
+                        </div>
                     </div>
                 @endforeach
             </div>
 
             <div style="margin-top:2.5rem;text-align:center">
-                <a href="{{ route('store.faqs') }}" class="btn ghost">Read Full Help Center FAQs &rarr;</a>
+                <a href="{{ route('store.faqs') }}" class="btn ghost">Browse All Help Center FAQs &rarr;</a>
             </div>
         </div>
     </section>

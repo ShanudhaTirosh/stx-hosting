@@ -26,17 +26,12 @@ class VpsTerminal extends Terminal
     #[On('start-vps-terminal')]
     public function startVpsTerminal(): void
     {
-        $team = currentTeam();
+        $service = ServiceInstance::where('uuid', $this->serviceUuid)
+            ->where('service_type', 'vps')
+            ->where('status', 'active')
+            ->first();
 
-        $service = $team
-            ? ServiceInstance::where('uuid', $this->serviceUuid)
-                ->where('team_id', $team->id)
-                ->where('service_type', 'vps')
-                ->where('status', 'active')
-                ->first()
-            : null;
-
-        if (! $service) {
+        if (! $service || ! auth()->user()?->canPerformInTeam($service->team_id, 'servers.access')) {
             $this->dispatch(self::SESSION_FAILED_EVENT, message: self::NOT_ALLOWED_MESSAGE)->self();
 
             return;

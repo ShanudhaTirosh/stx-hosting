@@ -14,7 +14,7 @@ class AppList extends Component
     public string $appName = '';
     public string $gitRepo = '';
     public string $gitBranch = 'main';
-    public string $buildPack = 'nixpacks';
+    public string $buildPack = 'railpack';
     public ?string $gitAuthToken = null;
     public ?string $selectedTemplate = null;
     public ?int $selectedVariantId = null;
@@ -24,28 +24,28 @@ class AppList extends Component
             'name' => 'Discord Moderation & Utility Bot',
             'desc' => 'Production discord.js bot with slash commands, message handling, and auto-restart.',
             'repo' => 'https://github.com/ShanudhaTirosh/discord-bot-starter',
-            'buildpack' => 'nixpacks',
+            'buildpack' => 'railpack',
             'category' => 'Bots',
         ],
         'telegram-bot' => [
             'name' => 'Telegram Community Automation Bot',
             'desc' => 'High-performance Python aiogram bot with webhook support and state persistence.',
             'repo' => 'https://github.com/ShanudhaTirosh/telegram-bot-starter',
-            'buildpack' => 'nixpacks',
+            'buildpack' => 'railpack',
             'category' => 'Bots',
         ],
         'nextjs-app' => [
             'name' => 'Next.js 14 App Router Full-Stack',
             'desc' => 'SSR & Edge-ready React 18 web application template with Tailwind CSS styling.',
             'repo' => 'https://github.com/ShanudhaTirosh/nextjs-starter',
-            'buildpack' => 'nixpacks',
+            'buildpack' => 'railpack',
             'category' => 'Web Apps',
         ],
         'express-api' => [
             'name' => 'Express.js & TypeScript API Engine',
             'desc' => 'Lightweight Node.js microservice architecture with structured JSON logging.',
             'repo' => 'https://github.com/ShanudhaTirosh/express-api-starter',
-            'buildpack' => 'nixpacks',
+            'buildpack' => 'railpack',
             'category' => 'APIs',
         ],
     ];
@@ -69,17 +69,21 @@ class AppList extends Component
 
     public function deployApp(): void
     {
+        $team = currentTeam();
+        abort_unless($team, 403, 'No active team selected.');
+
+        $user = auth()->user();
+        abort_unless($user && $user->canPerformInTeam($team->id, 'deploy'), 403, 'You do not have permission to deploy applications for this team.');
+
         $this->validate([
             'appName' => 'required|string|min:3|max:64|regex:/^[a-zA-Z0-9-_]+$/',
             'gitRepo' => 'required|url',
             'gitBranch' => 'required|string|max:64',
-            'buildPack' => 'required|in:nixpacks,dockerfile,static',
+            'buildPack' => 'required|in:railpack,nixpacks,dockerfile,dockercompose,static',
             'selectedVariantId' => 'required|exists:product_variants,id',
             'gitAuthToken' => 'nullable|string|max:255',
         ]);
 
-        $team = currentTeam();
-        $user = auth()->user();
         $variant = ProductVariant::findOrFail($this->selectedVariantId);
 
         // Append token to private repository URL if provided

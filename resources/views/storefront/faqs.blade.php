@@ -18,28 +18,51 @@
     :breadcrumbs="$breadcrumbs"
     :faqs="$allFaqs"
 >
-    <div class="wrap" style="padding-top:2.5rem;padding-bottom:4rem">
+    <div class="wrap-narrow band">
         <nav aria-label="Breadcrumb" style="margin-bottom:1.5rem;font-size:0.875rem;color:var(--muted)">
-            <a href="{{ url('/') }}">Home</a> &rarr; <span>FAQ</span>
+            <a href="{{ url('/') }}">Home</a> &rarr; <span style="color:var(--ink);font-weight:600">FAQ</span>
         </nav>
 
-        <div class="pagehead">
+        <div class="pagehead" data-reveal>
             <div>
+                <span class="pill signal" style="margin-bottom:1rem">
+                    <span class="pill-dot"></span> Knowledge &amp; Answers
+                </span>
                 <h1>Questions and Answers</h1>
-                <p>Find answers to common questions about our platform, payments, and servers. Cannot find yours? <a href="{{ route('store.contact') }}">Contact our support team</a>.</p>
+                <p class="lead">Clear answers to common questions about payments, server provisioning, custom domains, and platform architecture. Need custom help? <a href="{{ route('store.contact') }}">Contact our engineering team</a>.</p>
             </div>
         </div>
 
-        <div class="prose" style="max-width:800px;margin-top:2.5rem">
+        <div style="margin-top:2.5rem" data-reveal>
             @foreach ($sections as $heading => $items)
-                <h2 style="margin-top:2.5rem;font-size:1.4rem">{{ $heading }}</h2>
-                @foreach ($items as [$q, $a])
-                    <details class="faq" style="background:var(--card);padding:1rem 1.25rem;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:0.75rem">
-                        <summary style="font-weight:600;cursor:pointer">{{ $q }}</summary>
-                        <p style="margin:0.75rem 0 0;color:var(--muted);line-height:1.6">{{ $a }}</p>
-                    </details>
-                @endforeach
+                <div style="margin: 2.5rem 0 1rem">
+                    <h2 style="font-size: 1.45rem; margin-bottom: 1rem;">{{ $heading }}</h2>
+                    <div class="accordion">
+                        @foreach ($items as [$q, $a])
+                            <div class="accordion-item">
+                                <button class="accordion-trigger" aria-expanded="false">
+                                    <span>{{ $q }}</span>
+                                    <svg class="accordion-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div class="accordion-content">
+                                    <p>{{ $a }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             @endforeach
+        </div>
+
+        <div class="card card-lift" style="margin-top:3.5rem;text-align:center;padding:2.5rem" data-reveal>
+            <h3>Have a question not answered here?</h3>
+            <p>Our infrastructure team is available on Discord, WhatsApp, and email.</p>
+            <div style="display:inline-flex;gap:1rem;margin-top:1rem">
+                <a href="{{ route('store.contact') }}" class="btn">Send a Message</a>
+                <a href="https://discord.gg/shanutechx" target="_blank" rel="noopener" class="btn ghost">Join Discord Community</a>
+            </div>
         </div>
     </div>
 </x-storefront.layout>

@@ -1,0 +1,91 @@
+name: CI Tests & Quality Gate
+
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+    branches: [main, next]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Composer Audit
+        run: composer audit --locked --no-interaction || true
+
+      - name: Root NPM Audit
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Discord Bot NPM Audit
+        run: cd discord-bot && npm audit --omit=dev --audit-level=high
+
+      - name: PayVerify Web NPM Audit
+        run: cd payverify/payverify-web && npm audit --omit=dev --audit-level=high
+
+      - name: Webmail UI NPM Audit
+        run: cd webmail-ui && npm audit --omit=dev --audit-level=high
+
+  subprojects:
+    name: Sub-project Test Suites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test Discord Bot
+        run: |
+          cd discord-bot
+          npm ci
+          npm test
+
+      - name: Test Webmail UI JS
+        run: |
+          cd webmail-ui
+          npm ci
+          npm run test:js
+
+  php-quality:
+    name: PHP Code Quality & Pest Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_pgsql, pgsql, redis, gd, zip
+          tools: composer:v2
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Pint Code Style Check
+        run: vendor/bin/pint --test
+
+      - name: Execute Pest Feature Tests
+        run: php artisan test --compact tests/Feature/Security tests/Feature/Commerce

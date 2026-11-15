@@ -106,31 +106,16 @@ BASH;
         $node = ClusterNode::where('enrollment_token', $validated['token'])->first();
 
         if (! $node) {
-            // Check if there is an unassigned node or create one
-            $node = ClusterNode::create([
-                'name' => $validated['name'] ?? 'worker-' . substr(md5(uniqid()), 0, 6),
-                'status' => 'ready',
-                'public_ip' => $request->ip() ?: '127.0.0.1',
-                'region' => $validated['region'] ?? 'default',
-                'cpu_cores' => $validated['cpu_cores'] ?? 2,
-                'total_ram_mb' => $validated['total_ram_mb'] ?? 4096,
-                'total_disk_gb' => $validated['total_disk_gb'] ?? 80,
-                'reserved_ram_mb' => 512,
-                'enrollment_token' => $validated['token'],
-                'last_heartbeat_at' => now(),
-            ]);
-
             return response()->json([
-                'status' => 'success',
-                'node_uuid' => $node->uuid,
-                'message' => "Node '{$node->name}' enrolled and ready.",
-            ]);
+                'status' => 'error',
+                'message' => 'Invalid or unrecognized cluster node enrollment token.',
+            ], 401);
         }
 
         $node->update([
             'name' => $validated['name'] ?: $node->name,
             'status' => 'ready',
-            'public_ip' => $request->ip() ?: $node->public_ip,
+            'public_ip' => client_ip($request) ?: '127.0.0.1',
             'region' => $validated['region'] ?: $node->region,
             'cpu_cores' => $validated['cpu_cores'] ?: $node->cpu_cores,
             'total_ram_mb' => $validated['total_ram_mb'] ?: $node->total_ram_mb,

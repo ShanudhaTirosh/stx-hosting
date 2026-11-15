@@ -19,12 +19,12 @@ class InvoicePolicy
             return true;
         }
 
-        return $user->teams->contains('id', $invoice->team_id);
+        return $user->canPerformInTeam($invoice->team_id, 'billing.view');
     }
 
     public function uploadProof(User $user, Invoice $invoice): bool
     {
-        if (!in_array($invoice->status, ['unpaid', 'payment_pending'])) {
+        if (! in_array($invoice->status, ['unpaid', 'payment_pending'])) {
             return false;
         }
 
@@ -32,7 +32,7 @@ class InvoicePolicy
             return true;
         }
 
-        return $user->teams->contains('id', $invoice->team_id);
+        return $user->canPerformInTeam($invoice->team_id, 'billing.manage');
     }
 
     public function approve(User $user, Invoice $invoice): bool

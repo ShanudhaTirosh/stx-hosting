@@ -32,6 +32,10 @@ class PayVerifyClient
 
     protected function http(): PendingRequest
     {
+        if (app()->isProduction() && ($this->apiKey === '' || $this->apiKey === 'dev_test_key')) {
+            throw new \RuntimeException('PAYVERIFY_API_KEY must be configured with a production secret key in production environment.');
+        }
+
         return Http::withHeaders([
             'X-API-Key' => $this->apiKey,
             'Accept' => 'application/json',

@@ -72,17 +72,13 @@ class VpsPanel extends Component
 
     private function service(): ServiceInstance
     {
-        $team = currentTeam();
-
-        $service = $team
-            ? ServiceInstance::where('uuid', $this->uuid)
-                ->where('team_id', $team->id)
-                ->where('service_type', 'vps')
-                ->where('status', 'active')
-                ->first()
-            : null;
+        $service = ServiceInstance::where('uuid', $this->uuid)
+            ->where('service_type', 'vps')
+            ->where('status', 'active')
+            ->first();
 
         abort_unless($service, 404);
+        abort_unless(auth()->user()?->canPerformInTeam($service->team_id, 'servers.access'), 403);
 
         return $service;
     }

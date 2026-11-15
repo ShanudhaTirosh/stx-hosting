@@ -23,56 +23,69 @@
     :breadcrumbs="$breadcrumbs"
     :plans="$planSchemas"
 >
-    <div class="wrap">
-        <nav aria-label="Breadcrumb" style="padding-top:1.5rem;font-size:0.875rem;color:var(--muted)">
-            <a href="{{ url('/') }}">Home</a> &rarr; <span>Email Hosting</span>
+    <div class="wrap band">
+        <nav aria-label="Breadcrumb" style="margin-bottom:1.5rem;font-size:0.875rem;color:var(--muted)">
+            <a href="{{ url('/') }}">Home</a> &rarr; <span style="color:var(--ink);font-weight:600">Email Hosting</span>
         </nav>
 
-        <div class="pagehead">
+        <div class="pagehead" data-reveal>
             <div>
-                <span style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--signal);font-weight:700">Enterprise Mail Infrastructure</span>
-                <h1 style="margin-top:0.35rem">Business Email Hosting for Your Own Domain.</h1>
-                <p>Run your corporate email on your custom domain. Includes modern pure Webmail, IMAP/SMTP for mobile and desktop, 2048-bit DKIM deliverability, and pooled team storage priced in {{ $currency }}.</p>
+                <span class="pill signal" style="margin-bottom:1rem">
+                    <span class="pill-dot"></span> Flat Domain Pricing &bull; No Per-User Seat Tax
+                </span>
+                <h1>Business Email Hosting on Your Custom Domain</h1>
+                <p class="lead">Run corporate mailboxes on your company domain with lightweight STX Webmail, full IMAP/SMTP client sync, 2048-bit DKIM deliverability, and pooled team storage priced honestly in {{ $currency }}.</p>
+            </div>
+            <div>
+                <div class="pill emerald">
+                    <span class="pill-dot"></span> 100% DKIM &bull; SPF &bull; DMARC Verified
+                </div>
             </div>
         </div>
 
-        {{-- 4 Plans Grid --}}
-        <section class="group" style="margin-top:2rem">
-            <h2 style="font-size:1.4rem;font-weight:700;margin-bottom:0.5rem">Choose your storage tier</h2>
-            <p class="blurb" style="margin-bottom:1.5rem">Storage is pooled across all your mailboxes. No daily send or receive quotas are enforced.</p>
+        <!-- 4 Plans Grid -->
+        <section style="margin: 3.5rem 0;" data-reveal>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.5rem">
+                <h2>Choose Your Storage Tier</h2>
+                <span style="font-size:0.9rem;color:var(--muted)">Storage is shared across all mailboxes on your domain</span>
+            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:1.5rem">
+            <div class="card-grid-4">
                 @foreach ($plans as $p)
                     @php
                         $priceCents = $currency === 'LKR' ? ($p['price_lkr_cents'] ?? ($p['price_cents'] * 315)) : $p['price_cents'];
                         $formattedPrice = \App\Support\Money::format((int) $priceCents, $currency);
                         $storageLabel = $p['storage_mb'] >= 1024 ? round($p['storage_mb'] / 1024, 1).' GB' : $p['storage_mb'].' MB';
+                        $isFeatured = strtolower($p['name']) === 'pro' || strtolower($p['name']) === 'basic';
                     @endphp
-                    <div style="background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1.5rem;display:flex;flex-direction:column;justify-content:space-between">
+                    <div class="plan-card {{ $isFeatured ? 'featured' : '' }} card-lift">
                         <div>
                             <div style="display:flex;justify-content:space-between;align-items:baseline">
-                                <h3 style="font-size:1.25rem;font-weight:700;margin:0">{{ $p['name'] }}</h3>
-                                <span style="font-size:1.1rem;font-weight:800;color:var(--signal)">{{ $formattedPrice }}<small style="font-size:0.75rem;font-weight:500;color:var(--muted)">/mo</small></span>
+                                <h3 class="plan-title">{{ $p['name'] }}</h3>
                             </div>
-                            <p style="font-size:0.85rem;color:var(--muted);margin:0.25rem 0 1rem 0">{{ $storageLabel }} shared mailbox storage</p>
+                            <p class="plan-desc">{{ $storageLabel }} shared mailbox storage for up to {{ $p['max_mailboxes'] }} accounts</p>
 
-                            <ul style="list-style:none;padding:0;margin:1rem 0;font-size:0.875rem;line-height:1.8;color:var(--ink);border-top:1px solid var(--line);padding-top:1rem">
-                                <li>✓ <strong>{{ $storageLabel }}</strong> pooled storage</li>
-                                <li>✓ Up to <strong>{{ $p['max_mailboxes'] }}</strong> user mailboxes</li>
-                                <li>✓ <strong>Unlimited</strong> daily send & receive</li>
-                                <li>✓ <strong>Custom domain</strong> (bring your own)</li>
-                                <li>✓ Modern pure <strong>Webmail UI</strong></li>
-                                <li>✓ <strong>IMAP / SMTP</strong> with TLS/SSL</li>
-                                <li>✓ Automated <strong>2048-bit DKIM</strong> &amp; SPF</li>
+                            <div class="plan-price">
+                                <span class="plan-price-num">{{ $formattedPrice }}</span>
+                                <span class="plan-price-term">/month</span>
+                            </div>
+
+                            <ul class="plan-specs">
+                                <li><span>Pooled Storage</span><strong>{{ $storageLabel }}</strong></li>
+                                <li><span>Max Mailboxes</span><strong>{{ $p['max_mailboxes'] }} Users</strong></li>
+                                <li><span>Daily Sends</span><strong>Unlimited</strong></li>
+                                <li><span>Webmail UI</span><strong>Included</strong></li>
+                                <li><span>IMAP / SMTP</span><strong>SSL / TLS</strong></li>
+                                <li><span>DKIM Key</span><strong>2048-bit RSA</strong></li>
                             </ul>
                         </div>
 
-                        <div style="margin-top:1.5rem;border-top:1px solid var(--line);padding-top:1rem">
+                        <div class="plan-cta">
                             <form action="{{ route('cart.add') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="variant" value="{{ $p['slug'] ?? 'mail-basic' }}">
                                 <input type="hidden" name="billing_type" value="monthly">
-                                <button type="submit" class="btn small" style="width:100%;text-align:center;display:block;cursor:pointer">
+                                <button type="submit" class="btn small full {{ $isFeatured ? 'signal' : 'ghost' }}">
                                     Order {{ $p['name'] }} &rarr;
                                 </button>
                             </form>
@@ -82,21 +95,32 @@
             </div>
         </section>
 
-        {{-- Deliverability & Features Grid --}}
-        <section class="band" style="margin-top:4rem;padding:3rem 0;border-top:1px solid var(--line)">
-            <h2 style="font-size:1.5rem;margin-bottom:1.5rem">Why STX Email Beats Per-User Licensing</h2>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.5rem">
-                <div style="background:var(--card);padding:1.5rem;border-radius:var(--radius);border:1px solid var(--line)">
-                    <h3 style="font-size:1.15rem;margin-bottom:0.5rem">💰 Pooled Team Storage</h3>
-                    <p style="font-size:0.9rem;color:var(--muted);margin:0;line-height:1.6">Never pay $6/user/month for inactive team members. A single flat pooled quota is shared across your whole domain.</p>
+        <!-- Why STX Email Beats Per-User Licensing -->
+        <section class="band soft" style="margin-top:4rem" data-reveal>
+            <div class="wrap">
+                <div class="band-header">
+                    <h2>Why Engineering Teams &amp; Agencies Switch to STX Mail</h2>
+                    <p>Designed around domain-level resource pooling rather than expensive per-user seat subscriptions.</p>
                 </div>
-                <div style="background:var(--card);padding:1.5rem;border-radius:var(--radius);border:1px solid var(--line)">
-                    <h3 style="font-size:1.15rem;margin-bottom:0.5rem">🛡️ Enterprise Anti-Spam &amp; DKIM</h3>
-                    <p style="font-size:0.9rem;color:var(--muted);margin:0;line-height:1.6">Automated 2048-bit cryptographic DKIM keys and SPF verification guarantee maximum deliverability into Gmail, Outlook, and Apple Mail.</p>
-                </div>
-                <div style="background:var(--card);padding:1.5rem;border-radius:var(--radius);border:1px solid var(--line)">
-                    <h3 style="font-size:1.15rem;margin-bottom:0.5rem">📱 Multi-Device IMAP / SMTP</h3>
-                    <p style="font-size:0.9rem;color:var(--muted);margin:0;line-height:1.6">Sync seamlessly with iPhone Mail, Android Gmail app, Thunderbird, or Outlook with SSL encryption on ports 993 and 587.</p>
+
+                <div class="card-grid-3">
+                    <div class="card card-lift">
+                        <div class="pill emerald" style="margin-bottom:1rem">Pooled Quota</div>
+                        <h3 style="font-size:1.25rem;margin-bottom:0.5rem">No Per-User Seat Tax</h3>
+                        <p style="margin:0;font-size:0.92rem;color:var(--muted)">Never pay $6–$12 per user every month for staff members who only read a few emails. One pooled storage tier covers your entire team.</p>
+                    </div>
+
+                    <div class="card card-lift">
+                        <div class="pill signal" style="margin-bottom:1rem">Deliverability</div>
+                        <h3 style="font-size:1.25rem;margin-bottom:0.5rem">2048-bit Cryptographic DKIM</h3>
+                        <p style="margin:0;font-size:0.92rem;color:var(--muted)">Automated DNS validation with strict SPF, 2048-bit DKIM keys, and DMARC policies ensures your emails land straight in inboxes, not spam folders.</p>
+                    </div>
+
+                    <div class="card card-lift">
+                        <div class="pill ink" style="margin-bottom:1rem">Cross-Platform</div>
+                        <h3 style="font-size:1.25rem;margin-bottom:0.5rem">Standard IMAP &amp; SMTP</h3>
+                        <p style="margin:0;font-size:0.92rem;color:var(--muted)">Native phone synchronization with Apple Mail, Android Gmail, Outlook, or Thunderbird over encrypted SSL ports (993 / 587).</p>
+                    </div>
                 </div>
             </div>
         </section>

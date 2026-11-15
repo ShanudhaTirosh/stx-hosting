@@ -8,6 +8,7 @@ use App\Models\Commerce\Monitor;
 use App\Models\Commerce\Product;
 use App\Models\Commerce\MailPlan;
 use App\Models\Commerce\MailAddon;
+use App\Models\TemplatePermission;
 use App\Services\Supabase\SupabaseClient;
 use App\Models\Team;
 use App\Services\Commerce\CartService;
@@ -64,24 +65,15 @@ class StorefrontController extends Controller
     public function emailHosting(CartService $cart)
     {
         $currency = $cart->currency();
-        $supabase = app(SupabaseClient::class);
 
-        try {
-            $plans = $supabase->from('mail_plans')->eq('is_active', true)->order('storage_mb')->get();
-            $addons = $supabase->from('mail_addons')->eq('is_active', true)->order('type')->get();
-        } catch (\Throwable $e) {
-            $plans = MailPlan::active()->orderBy('storage_mb')->get()->toArray();
-            $addons = MailAddon::active()->orderBy('type')->get()->toArray();
-        }
+        // F-04: Eloquent PostgreSQL is the authoritative single source of truth for commerce plans
+        $plans = Cache::remember('storefront_active_mail_plans', 3600, function () {
+            return MailPlan::active()->orderBy('storage_mb')->get();
+        });
 
-        if (empty($plans)) {
-            $plans = [
-                ['name' => 'Starter', 'storage_mb' => 500, 'max_mailboxes' => 3, 'price_cents' => 150, 'price_lkr_cents' => 48000],
-                ['name' => 'Basic', 'storage_mb' => 1024, 'max_mailboxes' => 5, 'price_cents' => 300, 'price_lkr_cents' => 95000],
-                ['name' => 'Pro', 'storage_mb' => 3072, 'max_mailboxes' => 15, 'price_cents' => 600, 'price_lkr_cents' => 190000],
-                ['name' => 'Business', 'storage_mb' => 5120, 'max_mailboxes' => 30, 'price_cents' => 1000, 'price_lkr_cents' => 320000],
-            ];
-        }
+        $addons = Cache::remember('storefront_active_mail_addons', 3600, function () {
+            return MailAddon::active()->orderBy('type')->get();
+        });
 
         return view('storefront.email-hosting', [
             'currency' => $currency,
@@ -107,25 +99,52 @@ class StorefrontController extends Controller
 
     public function templates()
     {
-        $templates = Cache::remember('storefront_active_templates_v2', 3600, function () {
+        $data = Cache::remember('storefront_active_templates_v4', 3600, function () {
+            $permissions = TemplatePermission::where('is_globally_enabled', true)
+                ->where('is_allowed', true)
+                ->get()
+                ->keyBy('template_name');
+
             $dir = base_path('templates/compose');
             if (! is_dir($dir)) {
-                return [];
+                return ['templates' => [], 'categories' => [], 'featured' => []];
             }
             $files = glob($dir.'/*.yaml') ?: [];
 
-            return collect($files)->map(function ($path) {
+            $templates = collect($files)->map(function ($path) use ($permissions) {
                 $slug = basename($path, '.yaml');
-                $name = ucwords(str_replace('-', ' ', $slug));
+                $perm = $permissions->get($slug);
+
+                if ($permissions->isNotEmpty() && ! $perm) {
+                    return null;
+                }
+
+                $name = $perm?->display_name ?: ucwords(str_replace('-', ' ', $slug));
+                $category = $perm?->category ?: 'App Stack';
+                $desc = $perm?->short_description ?: "Production Docker application stack for {$name} with automated Let's Encrypt SSL.";
+                $featured = $perm?->is_featured ?? false;
 
                 return [
                     'slug' => $slug,
                     'name' => $name,
+                    'category' => $category,
+                    'desc' => $desc,
+                    'featured' => $featured,
+                    'min_ram_mb' => $perm?->min_ram_mb ?: 512,
+                    'min_vcpu' => $perm?->min_vcpu ?: 1,
                 ];
-            })->values()->all();
+            })->filter()->values()->all();
+
+            $categories = collect($templates)->pluck('category')->unique()->values()->all();
+            $featured = collect($templates)->filter(fn ($t) => $t['featured'])->values()->all();
+            if (empty($featured)) {
+                $featured = array_slice($templates, 0, 8);
+            }
+
+            return compact('templates', 'categories', 'featured');
         });
 
-        return view('storefront.templates', compact('templates'));
+        return view('storefront.templates', $data);
     }
 
     public function sitemap()

@@ -126,5 +126,6 @@
     </main>
 
     <x-storefront.footer />
+    <script src="{{ asset('js/storefront.js') }}" defer></script>
 </body>
 </html>

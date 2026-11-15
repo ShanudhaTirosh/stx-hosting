@@ -184,3 +184,25 @@ The `coolify-docs-main/` directory contains the complete official Coolify docume
 5. **Troubleshooting & Error Signatures**:
    - Use the diagnostic runbooks in `coolify-docs-main/content/docs/troubleshoot/` for resolving 502 Bad Gateway, 504 Timeout, SSL/Let's Encrypt issues, Docker daemon errors, and SSH timeouts.
 
+---
+
+## 10. Security Invariants, Role Boundaries & Storefront Design System
+
+1. **Role Boundary Enforcement (`servers.access`, `billing.view`, `billing.manage`, `deploy`)**:
+   - Every mutating VPS action (`VpsTerminal`, `VpsPanel`), backup operation (`Backups`), and credentials reveal must enforce `$user->canPerformInTeam($resource->team_id, 'servers.access')`. Never allow `Role::VIEWER` or `Role::BILLING` to access shells, download raw backups, or reboot servers.
+   - Invoices and orders require `$user->canPerformInTeam($resource->team_id, 'billing.view')` to view and `billing.manage` to upload slips or cancel orders.
+   - Application deployments require `$user->canPerformInTeam($team->id, 'deploy')`.
+2. **Pessimistic Locking & Proof Idempotency**:
+   - `ProofStorageService::store` executes inside `DB::transaction` with row-level pessimistic lock (`Invoice::lockForUpdate()`) and PostgreSQL partial unique index `payment_proofs_active_invoice_unique` (`status IN ('verifying', 'pending_review')`).
+   - Image uploads must validate dimensions (`width * height <= 25,000,000`, `width <= 6000`, `height <= 6000`) before decoding to eliminate pixel-flood decompression bomb vulnerabilities.
+   - PDFs are either rasterized into clean PNG pixels or stripped of active scripts (`/JavaScript`, `/JS`, `/Launch`, `/EmbeddedFiles`).
+3. **Supabase Row-Level Security Rules**:
+   - `commercial_settings`: SELECT is restricted to whitelisted public keys (`currency`, `storefront_name`, `support_email`, etc.) unless `auth.is_admin()`. Never expose internal keys anonymously.
+   - `service_credentials`: SELECT requires `auth.has_team_role(si.team_id, ARRAY['owner', 'admin', 'developer']) OR auth.is_admin()`.
+   - `mail_domains` and `mail_mailboxes`: DELETE requires `auth.has_team_role(team_id, ARRAY['owner', 'admin']) OR auth.is_admin()`.
+4. **Storefront Frontend Standards & Motion Engine**:
+   - **No Generic AI Look**: Strict typography hierarchy with `Familjen Grotesk` (600/700) for display headings and `Instrument Sans` (400/500/600) for body copy. Restrained palette: Ink (`#0b2239`), Paper (`#f4f6f8`), Card (`#ffffff`), Signal (`#4a56e2`), Deep Teal (`#087a7d`), Emerald (`#059669`).
+   - **Motion Engine**: Smooth 60fps animations utilizing `IntersectionObserver` (`[data-reveal]`) and `requestAnimationFrame` price number interpolation (`animatePriceNumber`) with ease-out spring curves (`cubic-bezier(0.16, 1, 0.3, 1)`).
+   - **Accessibility & Reduced Motion**: All animations strictly obey `@media (prefers-reduced-motion: reduce)` by immediately rendering static states with 0ms transition durations. All interactive components maintain valid ARIA states (`aria-expanded`, `aria-label`).
+
+

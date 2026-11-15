@@ -165,13 +165,28 @@ class PaymentReviewService
 
     public function autoApprove(PaymentProof $proof, string $basis = 'ai_confidence'): Invoice
     {
-        $systemUser = User::firstWhere('id', 0) ?? User::where('email', 'like', '%admin%')->first() ?? $proof->user;
+        $systemUser = User::find(0)
+            ?? User::where('id', 0)->first()
+            ?? User::where('email', 'system@stx.internal')->first();
+
+        if (! $systemUser) {
+            $systemUser = User::forceCreate([
+                'id' => 0,
+                'name' => 'System Automation',
+                'email' => 'system@stx.internal',
+                'password' => bcrypt(Str::random(32)),
+            ]);
+        }
 
         $invoice = DB::transaction(function () use ($proof, $systemUser, $basis) {
             $proof = PaymentProof::lockForUpdate()->findOrFail($proof->id);
             $invoice = Invoice::with('order.items.pricingTier.productVariant.product')->lockForUpdate()->findOrFail($proof->invoice_id);
 
             if ($invoice->status === 'paid') {
+                return $invoice;
+            }
+
+            if (! in_array($proof->status, [PaymentProof::STATUS_VERIFYING, PaymentProof::STATUS_PENDING_REVIEW], true)) {
                 return $invoice;
             }
 
@@ -339,7 +354,7 @@ class PaymentReviewService
             'product_type' => self::ENTITLEMENT_TYPE[$category] ?? 'app_hosting',
             'status' => 'active',
             'granted_by' => $reviewer->id,
-            'expires_at' => now()->addDays($days * max(1, (int) $item->quantity)),
+            'expires_at' => now()->addDays($days),
             'metadata' => [
                 'order_uuid' => $invoice->order?->uuid,
                 'order_item_uuid' => $item->uuid,
@@ -399,7 +414,7 @@ class PaymentReviewService
             'target_type' => PaymentProof::class,
             'target_id' => $proof->id,
             'payload' => $payload,
-            'ip_address' => request()->ip(),
+            'ip_address' => function_exists('client_ip') ? client_ip(request()) : request()->ip(),
             'user_agent' => request()->userAgent(),
             'created_at' => now(),
         ]);

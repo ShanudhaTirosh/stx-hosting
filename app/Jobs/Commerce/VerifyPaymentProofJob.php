@@ -91,16 +91,25 @@ class VerifyPaymentProofJob implements ShouldQueue
 
         // 2b. Fast local duplicate detection via perceptual dHash
         if ($dhashService && $proof->dhash) {
-            $duplicate = $dhashService->findDuplicate($proof->dhash, $proof->id, maxDistance: 5);
+            $duplicate = $dhashService->findDuplicate($proof->dhash, $proof->id, maxDistance: 4);
             if ($duplicate) {
                 Log::warning("VerifyPaymentProofJob: Duplicate dHash detected for Proof #{$proof->id} matching Proof #{$duplicate->id}.");
                 $rejectionReason = 'Duplicate payment slip detected. This receipt was already submitted for another invoice.';
                 $proof->update([
                     'status' => PaymentProof::STATUS_REJECTED,
                     'rejection_reason' => $rejectionReason,
+                    'admin_notes' => "Duplicate dHash matched Proof #{$duplicate->id} (maxDistance <= 4)",
                     'discrepancies' => ['duplicate_proof'],
                 ]);
-                $reviewService->reject($proof, null, $rejectionReason);
+
+                $invoice->update(['status' => 'unpaid']);
+                $invoice->order?->update(['status' => 'pending']);
+
+                try {
+                    $invoice->user?->notify(new PaymentRejectedNotification($invoice, $rejectionReason));
+                } catch (\Throwable $e) {
+                    Log::warning("VerifyPaymentProofJob: Could not notify user of duplicate rejection: {$e->getMessage()}");
+                }
 
                 return;
             }
@@ -148,6 +157,14 @@ class VerifyPaymentProofJob implements ShouldQueue
         $discrepancies = $verdict['discrepancies'] ?? [];
         $dhash = $forensics['dhash'] ?? $proof->dhash;
 
+        // F-05: Customer overpayment support (accept deposits >= invoice amount; reject underpayments)
+        if ($extractedAmount !== null && $extractedAmount >= $invoice->total_cents) {
+            $discrepancies = array_values(array_filter($discrepancies, fn ($d) => $d !== 'amount_mismatch'));
+            $hasAmountMismatch = false;
+        } else {
+            $hasAmountMismatch = in_array('amount_mismatch', $discrepancies, true) || ($extractedAmount !== null && $extractedAmount < $invoice->total_cents);
+        }
+
         $proofUpdates = [
             'confidence_score' => $confidenceScore,
             'extracted_amount_cents' => $extractedAmount,
@@ -173,7 +190,6 @@ class VerifyPaymentProofJob implements ShouldQueue
         $isBankVerified = ! empty($result['is_approved']) || ($result['status'] ?? '') === 'APPROVED';
         $hasDuplicate = ! empty($forensics['duplicate_detected']) || in_array('duplicate_proof', $discrepancies, true);
         $hasWrongRecipient = in_array('wrong_recipient', $discrepancies, true);
-        $hasAmountMismatch = in_array('amount_mismatch', $discrepancies, true) || ($extractedAmount !== null && $extractedAmount < $invoice->total_cents);
 
         // CASE 1: BANK MATCH (Deterministic) OR HIGH-CONFIDENCE AI AUTO-APPROVAL
         $canAutoApprove = $isBankVerified || (
