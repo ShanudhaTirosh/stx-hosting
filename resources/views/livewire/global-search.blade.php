@@ -854,7 +854,7 @@
                         </header>
                         <div class="application-settings-section-body min-h-0 flex-1 overflow-y-auto"
                             style="-webkit-overflow-scrolling: touch;">
-                            <livewire:project.add-empty key="create-modal-project" />
+                            <livewire:project.add-empty key="create-modal-project" lazy />
                         </div>
                     </div>
                 </div>
@@ -897,7 +897,7 @@
                         </header>
                         <div class="application-settings-section-body min-h-0 flex-1 overflow-y-auto"
                             style="-webkit-overflow-scrolling: touch;">
-                            <livewire:team.create key="create-modal-team" />
+                            <livewire:team.create key="create-modal-team" lazy />
                         </div>
                     </div>
                 </div>
@@ -940,7 +940,7 @@
                         </header>
                         <div class="application-settings-section-body min-h-0 flex-1 overflow-y-auto"
                             style="-webkit-overflow-scrolling: touch;">
-                            <livewire:storage.create key="create-modal-storage" />
+                            <livewire:storage.create key="create-modal-storage" lazy />
                         </div>
                     </div>
                 </div>
@@ -983,7 +983,7 @@
                         </header>
                         <div class="application-settings-section-body min-h-0 flex-1 overflow-y-auto"
                             style="-webkit-overflow-scrolling: touch;">
-                            <livewire:security.private-key.create key="create-modal-private-key" />
+                            <livewire:security.private-key.create key="create-modal-private-key" lazy />
                         </div>
                     </div>
                 </div>
@@ -1026,7 +1026,7 @@
                         </header>
                         <div class="application-settings-section-body min-h-0 flex-1 overflow-y-auto"
                             style="-webkit-overflow-scrolling: touch;">
-                            <livewire:source.github.create key="create-modal-source" />
+                            <livewire:source.github.create key="create-modal-source" lazy />
                         </div>
                     </div>
                 </div>

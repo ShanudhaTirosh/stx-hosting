@@ -17,7 +17,7 @@ return [
 
     // PayVerify AI Slip-Verification API settings
     'payverify' => [
-        'base_url' => rtrim(env('PAYVERIFY_URL', 'http://localhost:8000/api/v1/external'), '/'),
+        'base_url' => rtrim(env('PAYVERIFY_URL', 'http://127.0.0.1:8080/api/v1/external'), '/'),
         'api_key' => env('PAYVERIFY_API_KEY', env('PV_EXTERNAL_API_KEY', 'dev_test_key')),
         'timeout_seconds' => (int) env('PAYVERIFY_TIMEOUT_SECONDS', 35),
         'auto_approve_enabled' => (bool) env('PAYVERIFY_AUTO_APPROVE', true),

@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Log;
 class PayVerifyClient
 {
     protected string $baseUrl;
+
     protected string $apiKey;
+
     protected int $timeout;
 
     public function __construct(
@@ -48,7 +50,7 @@ class PayVerifyClient
     public function health(): ?array
     {
         try {
-            $response = $this->http()->get("{$this->baseUrl}/health");
+            $response = $this->http()->timeout(3)->get("{$this->baseUrl}/health");
 
             return $response->successful() ? $response->json() : null;
         } catch (\Throwable $e) {
@@ -64,7 +66,7 @@ class PayVerifyClient
     public function systemStatus(): ?array
     {
         try {
-            $response = $this->http()->get("{$this->baseUrl}/system-status");
+            $response = $this->http()->timeout(3)->get("{$this->baseUrl}/system-status");
 
             return $response->successful() ? $response->json() : null;
         } catch (\Throwable $e) {
@@ -77,13 +79,13 @@ class PayVerifyClient
     /**
      * Submit payment proof for instant AI analysis, visual forensics, and deterministic matching.
      *
-     * @param string $invoiceNo Merchant invoice reference
-     * @param int $amountMinor Payment amount in minor units (cents)
-     * @param string $base64Proof Base64-encoded receipt image or PDF
-     * @param string $mime MIME type ('image/png', 'image/jpeg', etc.)
-     * @param string|null $filename Original filename
-     * @param array $customer Customer information (name, email, phone)
-     * @param array $payment Payment details (reference, channel, bank_name)
+     * @param  string  $invoiceNo  Merchant invoice reference
+     * @param  int  $amountMinor  Payment amount in minor units (cents)
+     * @param  string  $base64Proof  Base64-encoded receipt image or PDF
+     * @param  string  $mime  MIME type ('image/png', 'image/jpeg', etc.)
+     * @param  string|null  $filename  Original filename
+     * @param  array  $customer  Customer information (name, email, phone)
+     * @param  array  $payment  Payment details (reference, channel, bank_name)
      * @return array PayVerify verification response envelope
      */
     public function uploadAndReview(
@@ -234,4 +236,3 @@ class PayVerifyClient
         }
     }
 }
-
