@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Service Temporarily Unavailable — STX Cloud</title>
+  <style>
+    :root {
+      --ink: #0b2239;
+      --paper: #f4f6f8;
+      --card: #ffffff;
+      --signal: #4a56e2;
+      --text-muted: #5c6f84;
+      --border: #e2e8f0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      max-width: 32rem;
+      width: 100%;
+      box-shadow: 0 10px 25px -5px rgba(11, 34, 57, 0.05), 0 8px 10px -6px rgba(11, 34, 57, 0.02);
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      background: rgba(74, 86, 226, 0.08);
+      color: var(--signal);
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.25;
+      margin-bottom: 0.75rem;
+    }
+    p {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    @media (min-width: 480px) {
+      .actions {
+        flex-direction: row;
+        justify-content: center;
+      }
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      transition: all 0.15s ease-in-out;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--signal);
+      color: #ffffff;
+      border: 1px solid var(--signal);
+    }
+    .btn-primary:hover {
+      background: #3b46cf;
+      border-color: #3b46cf;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: var(--paper);
+    }
+    .meta {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="badge">Gateway Notice</div>
+    <h1>Service Temporarily Unavailable</h1>
+    <p>
+      The platform gateway is currently unable to reach the upstream service. This is usually transient due to a service restart, automated deployment, or heavy resource provisioning.
+    </p>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="window.location.reload()">Retry Connection</button>
+      <a class="btn btn-secondary" href="/status">Check System Status</a>
+    </div>
+    <div class="meta">
+      STX Enterprises Cloud Platform &bull; HTTP 502 / 504 Gateway Shield
+    </div>
+  </main>
+  <script>
+    // Auto-reload after 10 seconds
+    setTimeout(function() {
+      window.location.reload();
+    }, 10000);
+  </script>
+</body>
+</html>
