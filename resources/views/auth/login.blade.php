@@ -75,6 +75,8 @@
                     @endif
                 </div>
 
+                <x-turnstile />
+
                 <x-forms.button class="w-full justify-center" type="submit" isHighlighted>
                     {{ __('auth.login') }}
                 </x-forms.button>
@@ -83,30 +85,12 @@
             @if ($passkeys_available)
                 <x-auth.passkey-verify autofill />
             @endif
-
-            @if ($enabled_oauth_providers->isNotEmpty())
-                <div class="auth-divider"><span>Or continue with</span></div>
-                <div class="flex flex-col gap-2">
-                    @foreach ($enabled_oauth_providers as $provider_setting)
-                        <x-forms.button class="w-full justify-center" type="button"
-                            onclick="document.location.href='/auth/{{ $provider_setting->provider }}/redirect'">
-                            @if ($provider_setting->provider !== 'oidc')
-                                <img class="size-5 shrink-0 dark:invert"
-                                    src="{{ asset('svgs/'.$provider_setting->provider.'.svg') }}" alt="" aria-hidden="true">
-                            @endif
-                            {{ $provider_setting->loginLabel() }}
-                        </x-forms.button>
-                    @endforeach
-                </div>
-            @endif
         </div>
 
         <x-slot:footer>
             @if ($is_registration_enabled)
                 <span>New to STX Enterprises?</span>
                 <a href="/register" class="auth-text-link">{{ __('auth.register_now') }}</a>
-            @elseif ($can_register_with_oauth)
-                <span>{{ __('auth.register_with_oauth') }}</span>
             @else
                 <span>{{ __('auth.registration_disabled') }}</span>
             @endif

@@ -30,6 +30,8 @@
                     <p>Use at least 8 characters with uppercase, lowercase, number, and symbol.</p>
                 </div>
 
+                <x-turnstile />
+
                 <x-forms.button class="w-full justify-center" type="submit" isHighlighted>
                     {{ __('auth.reset_password') }}
                 </x-forms.button>

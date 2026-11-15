@@ -72,6 +72,12 @@ class Controller extends BaseController
 
     public function forgot_password(Request $request)
     {
+        $turnstile = app(\App\Services\Security\TurnstileService::class);
+        $turnstileToken = $request->input('cf-turnstile-response');
+        if ($turnstile->isEnabled() && ! $turnstile->verify($turnstileToken, $request->ip())) {
+            return back()->withErrors(['email' => __('The security check failed. Please refresh and try again.')]);
+        }
+
         if (is_transactional_emails_enabled()) {
             $arrayOfRequest = $request->only(Fortify::email());
             $request->merge([

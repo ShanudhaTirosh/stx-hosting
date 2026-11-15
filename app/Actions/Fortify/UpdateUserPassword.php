@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Services\Supabase\SupabaseAuthService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
@@ -29,7 +30,7 @@ class UpdateUserPassword implements UpdatesUserPasswords
         ])->save();
 
         if ($user->supabase_id) {
-            app(\App\Services\Supabase\SupabaseAuthService::class)->updateUserPassword($user->supabase_id, $input['password']);
+            app(SupabaseAuthService::class)->updateUserPassword($user->supabase_id, $input['password']);
         }
         auditLog('ui.user.password_changed', [
             'team_id' => $user->currentTeam()?->id,

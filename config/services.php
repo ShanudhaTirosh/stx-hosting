@@ -76,6 +76,16 @@ return [
     ],
 
     /*
+    | Cloudflare Turnstile bot verification configuration
+    */
+    'turnstile' => [
+        'enabled' => env('TURNSTILE_ENABLED', true),
+        'site_key' => env('TURNSTILE_SITE_KEY', ''),
+        'secret_key' => env('TURNSTILE_SECRET_KEY', ''),
+        'fail_closed' => env('TURNSTILE_FAIL_CLOSED', true),
+    ],
+
+    /*
     | Domain Connect (Cloudflare automatic DNS).
     | Template: resources/domain-connect/stxhosting.com.hosting.json
     | Publish public key TXT at {key_id}.{syncPubKeyDomain} and onboard with Cloudflare.

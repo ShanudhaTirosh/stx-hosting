@@ -58,6 +58,8 @@ $email = getOldOrLocal('email', 'test3@example.com');
                     <p>Use at least 8 characters with uppercase, lowercase, number, and symbol.</p>
                 </div>
 
+                <x-turnstile />
+
                 <x-forms.button class="w-full justify-center" type="submit" isHighlighted>
                     Create account
                 </x-forms.button>

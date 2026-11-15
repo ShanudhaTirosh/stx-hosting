@@ -21,6 +21,7 @@
                     @csrf
                     <x-forms.input required type="email" name="email" autocomplete="email" autofocus
                         label="{{ __('input.email') }}" />
+                    <x-turnstile />
                     <x-forms.button class="w-full justify-center" type="submit" isHighlighted>
                         {{ __('auth.forgot_password_send_email') }}
                     </x-forms.button>

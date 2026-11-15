@@ -5,6 +5,8 @@ namespace App\Actions\Fortify;
 use App\Jobs\SendVerificationEmailJob;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\Security\TurnstileService;
+use App\Services\Supabase\SupabaseAuthService;
 use App\Support\RootSetupWindow;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -38,13 +40,19 @@ class CreateNewUser implements CreatesNewUsers
 
         if (! User::query()->exists() && ! RootSetupWindow::isOpen()) {
             throw ValidationException::withMessages([
-                'email' => RootSetupWindow::isPending()
-                    ? 'STX Hosting has not finished starting. Wait a few seconds, then try again.'
-                    : 'The setup window for the root account is closed. Restart STX Hosting on the server (docker restart stx) to open it again.',
+                'email' => 'The setup window for the root account is closed. Restart STX Hosting on the server (docker restart stx) to open it again.',
             ]);
         }
 
         $this->ensureRegistrationIsNotRateLimited($input);
+
+        $turnstile = app(TurnstileService::class);
+        $turnstileToken = $input['cf-turnstile-response'] ?? request()->input('cf-turnstile-response');
+        if ($turnstile->isEnabled() && ! $turnstile->verify($turnstileToken)) {
+            throw ValidationException::withMessages([
+                'email' => __('The security check failed. Please refresh and try again.'),
+            ]);
+        }
 
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
@@ -59,7 +67,7 @@ class CreateNewUser implements CreatesNewUsers
         ])->validate();
 
         $supabaseId = null;
-        $supabaseAuth = app(\App\Services\Supabase\SupabaseAuthService::class);
+        $supabaseAuth = app(SupabaseAuthService::class);
         if ($supabaseAuth->isAuthEnabled()) {
             $supabaseResult = $supabaseAuth->signUp($input['email'], $input['password'], ['name' => $input['name']]);
             if (! $supabaseResult || ! isset($supabaseResult['user']['id'])) {

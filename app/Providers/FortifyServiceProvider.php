@@ -5,13 +5,15 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
-use App\Models\OauthSetting;
 use App\Models\User;
+use App\Services\Security\TurnstileService;
+use App\Services\Supabase\SupabaseAuthService;
 use App\Support\PasskeyRelyingParty;
 use App\Support\RootSetupWindow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
 
@@ -58,20 +60,6 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::loginView(function () {
             $settings = instanceSettings();
-            foreach (['google', 'github', 'discord'] as $prov) {
-                $cId = env(strtoupper($prov).'_CLIENT_ID');
-                $cSecret = env(strtoupper($prov).'_CLIENT_SECRET');
-                if (filled($cId) && filled($cSecret)) {
-                    $setting = OauthSetting::firstOrNew(['provider' => $prov]);
-                    if (! $setting->exists || ! $setting->enabled) {
-                        $setting->client_id = $cId;
-                        $setting->client_secret = $cSecret;
-                        $setting->enabled = true;
-                        $setting->save();
-                    }
-                }
-            }
-            $enabled_oauth_providers = OauthSetting::where('enabled', true)->get();
             $users = User::count();
             if ($users == 0 && $settings->isPasswordRegistrationAllowed()) {
                 // If there are no users and password registration is allowed, redirect to registration.
@@ -80,21 +68,25 @@ class FortifyServiceProvider extends ServiceProvider
 
             return view('auth.login', [
                 'is_registration_enabled' => $settings->isPasswordRegistrationAllowed(),
-                'can_register_with_oauth' => $enabled_oauth_providers->contains(
-                    fn (OauthSetting $oauthSetting) => $oauthSetting->couldBeEnabled() && $oauthSetting->allowsUserCreation()
-                ),
-                'enabled_oauth_providers' => $enabled_oauth_providers,
                 'passkeys_available' => PasskeyRelyingParty::isAvailable(),
             ]);
         });
 
         Fortify::authenticateUsing(function (Request $request) {
+            $turnstile = app(TurnstileService::class);
+            $turnstileToken = $request->input('cf-turnstile-response');
+            if ($turnstile->isEnabled() && ! $turnstile->verify($turnstileToken, $request->ip())) {
+                throw ValidationException::withMessages([
+                    'email' => __('The security check failed. Please refresh and try again.'),
+                ]);
+            }
+
             $email = strtolower(trim((string) $request->email));
             $password = (string) $request->password;
 
-            $supabaseAuth = app(\App\Services\Supabase\SupabaseAuthService::class);
+            $supabaseAuth = app(SupabaseAuthService::class);
 
-            // 1. Supabase Auth Verification (when enabled)
+            // 1. Supabase Auth Verification (Primary)
             if ($supabaseAuth->isAuthEnabled()) {
                 $supabaseResponse = $supabaseAuth->signInWithPassword($email, $password);
                 if ($supabaseResponse && isset($supabaseResponse['user']['id'])) {
@@ -119,6 +111,15 @@ class FortifyServiceProvider extends ServiceProvider
 
                     $user->updated_at = now();
                     $user->save();
+
+                    // Store Supabase session tokens
+                    if (isset($supabaseResponse['access_token'])) {
+                        session(['supabase_access_token' => $supabaseResponse['access_token']]);
+                        cookie()->queue(cookie('sb_access_token', $supabaseResponse['access_token'], 60, null, null, true, true, false, 'lax'));
+                    }
+                    if (isset($supabaseResponse['refresh_token'])) {
+                        session(['supabase_refresh_token' => $supabaseResponse['refresh_token']]);
+                    }
 
                     $team = $user->resolveStoredTeam();
                     if (! $team && $user->teams->isEmpty()) {
