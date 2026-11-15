@@ -157,12 +157,19 @@
                                         </div>
 
                                         {{-- Custom Specs JSON --}}
-                                        @if (!empty($variant->specs_json))
+                                        @if (!empty($variant->specs_json) && is_iterable($variant->specs_json))
                                             <div class="mt-2 text-[10.5px] text-neutral-500 dark:text-neutral-400 space-y-0.5">
                                                 @foreach ($variant->specs_json as $k => $v)
-                                                    <div class="flex items-center justify-between">
-                                                        <span class="capitalize text-neutral-400">{{ $k }}:</span>
-                                                        <span class="font-medium text-black dark:text-neutral-200">{{ $v }}</span>
+                                                    @php
+                                                        $displayVal = method_exists($this ?? null, 'formatSpecValue')
+                                                            ? $this->formatSpecValue($v)
+                                                            : (is_array($v)
+                                                                ? (array_is_list($v) ? implode(', ', array_map(fn($item) => is_scalar($item) ? (string) $item : json_encode($item), $v)) : (json_encode($v) ?: ''))
+                                                                : (is_bool($v) ? ($v ? 'Yes' : 'No') : (string) ($v ?? '—')));
+                                                    @endphp
+                                                    <div class="flex items-start justify-between gap-2">
+                                                        <span class="capitalize text-neutral-400 shrink-0">{{ str_replace('_', ' ', (string) $k) }}:</span>
+                                                        <span class="font-medium text-black dark:text-neutral-200 text-right break-words">{{ $displayVal }}</span>
                                                     </div>
                                                 @endforeach
                                             </div>
@@ -371,9 +378,16 @@
 
                         <div class="space-y-1">
                             @foreach ($specs as $k => $v)
+                                @php
+                                    $specVal = method_exists($this ?? null, 'formatSpecValue')
+                                        ? $this->formatSpecValue($v)
+                                        : (is_array($v)
+                                            ? (array_is_list($v) ? implode(', ', array_map(fn($item) => is_scalar($item) ? (string) $item : json_encode($item), $v)) : (json_encode($v) ?: ''))
+                                            : (is_bool($v) ? ($v ? 'Yes' : 'No') : (string) ($v ?? '—')));
+                                @endphp
                                 <div class="flex items-center justify-between px-2.5 py-1 rounded bg-neutral-100 dark:bg-white/[0.03] text-[11px] font-mono">
-                                    <span><strong class="text-neutral-600 dark:text-neutral-300">{{ $k }}:</strong> {{ $v }}</span>
-                                    <button wire:click.prevent="removeSpecItem('{{ $k }}')" class="text-neutral-400 hover:text-rose-500">
+                                    <span class="truncate mr-2"><strong class="text-neutral-600 dark:text-neutral-300">{{ $k }}:</strong> {{ $specVal }}</span>
+                                    <button wire:click.prevent="removeSpecItem('{{ $k }}')" class="text-neutral-400 hover:text-rose-500 shrink-0">
                                         &times;
                                     </button>
                                 </div>

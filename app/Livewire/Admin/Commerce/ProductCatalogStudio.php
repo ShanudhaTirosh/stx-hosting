@@ -207,6 +207,25 @@ class ProductCatalogStudio extends Component
         unset($this->specs[$key]);
     }
 
+    public function formatSpecValue(mixed $value): string
+    {
+        if (is_array($value)) {
+            return array_is_list($value)
+                ? implode(', ', array_map(fn ($item) => is_scalar($item) ? (string) $item : json_encode($item), $value))
+                : (json_encode($value) ?: '');
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'Yes' : 'No';
+        }
+
+        if ($value === null) {
+            return '—';
+        }
+
+        return (string) $value;
+    }
+
     public function saveVariant(): void
     {
         $this->validate([
