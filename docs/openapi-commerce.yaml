@@ -121,3 +121,11 @@ paths:
       responses:
         '200': { description: The file }
         '403': { description: Link missing, invalid or expired }
+  /invoices/proof/{uuid}:
+    get:
+      summary: View a proof file (alias for /payment-proofs/{uuid}/view)
+      parameters:
+        - { name: uuid, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: The file }
+        '403': { description: Link missing, invalid or expired }

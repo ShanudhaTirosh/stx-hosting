@@ -5,6 +5,11 @@ use App\Http\Controllers\Api\ApplicationsController;
 use App\Http\Controllers\Api\AuditEventsController;
 use App\Http\Controllers\Api\CloudInitScriptsController;
 use App\Http\Controllers\Api\CloudProviderTokensController;
+use App\Http\Controllers\Api\ClusterNodeRegistrationController;
+use App\Http\Controllers\Api\Commerce\OrderCheckoutController;
+use App\Http\Controllers\Api\Commerce\PaymentProofController;
+use App\Http\Controllers\Api\Commerce\ProductCatalogController;
+use App\Http\Controllers\Api\Commerce\StatusApiController;
 use App\Http\Controllers\Api\DatabasesController;
 use App\Http\Controllers\Api\DeployController;
 use App\Http\Controllers\Api\DestinationsController;
@@ -498,8 +503,29 @@ Route::group([
     'prefix' => 'v1',
 ], function () {
     Route::post('/sentinel/push', [SentinelController::class, 'push']);
-    Route::post('/cluster/nodes/register', [\App\Http\Controllers\Api\ClusterNodeRegistrationController::class, 'register']);
-    Route::post('/cluster/nodes/heartbeat', [\App\Http\Controllers\Api\ClusterNodeRegistrationController::class, 'heartbeat']);
+    Route::post('/cluster/nodes/register', [ClusterNodeRegistrationController::class, 'register']);
+    Route::post('/cluster/nodes/heartbeat', [ClusterNodeRegistrationController::class, 'heartbeat']);
+
+    // Commercial Storefront & Customer API (conforms to docs/openapi-commerce.yaml)
+    Route::get('/products', [ProductCatalogController::class, 'index'])->middleware('throttle:60,1');
+    Route::get('/products/{slug}', [ProductCatalogController::class, 'show'])->middleware('throttle:60,1');
+
+    Route::get('/status', [StatusApiController::class, 'index'])->middleware('throttle:60,1');
+    Route::get('/status/public', [StatusApiController::class, 'index'])->middleware('throttle:60,1');
+    Route::post('/status/subscribe', [StatusApiController::class, 'subscribe'])->middleware('throttle:10,1');
+
+    Route::post('/orders', [OrderCheckoutController::class, 'store'])
+        ->middleware(['auth:sanctum,web', 'throttle:30,1']);
+
+    Route::post('/invoices/{uuid}/proof', [PaymentProofController::class, 'store'])
+        ->middleware(['auth:sanctum,web', 'throttle:60,1'])
+        ->name('api.commercial.proof.upload');
+
+    Route::get('/payment-proofs/{uuid}/view', [PaymentProofController::class, 'viewFile'])
+        ->middleware(['throttle:60,1'])
+        ->name('api.commercial.proof.view');
+    Route::get('/invoices/proof/{uuid}', [PaymentProofController::class, 'viewFile'])
+        ->middleware(['throttle:60,1']);
 });
 
 Route::any('/{any}', function () {

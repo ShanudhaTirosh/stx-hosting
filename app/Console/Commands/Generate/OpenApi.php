@@ -18,7 +18,7 @@ class OpenApi extends Command
         echo "Generating OpenAPI documentation.\n";
         // https://github.com/OAI/OpenAPI-Specification/releases
         // swagger-php 6 leaves PHP warnings to PHP itself; with Xdebug each one carries a stack trace and exhausts memory.
-        $process = Process::env(['XDEBUG_MODE' => 'off'])->run([
+        $process = Process::env(['XDEBUG_MODE' => 'off'])->timeout(300)->run([
             './vendor/bin/openapi',
             'app',
             '-o',
