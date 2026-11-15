@@ -405,14 +405,20 @@ label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: .35r
 }
 @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
-/* Motion Reveal Classes */
+/* Motion Reveal Classes (Progressive Enhancement: visible by default for SSR/No-JS) */
 [data-reveal] {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.js-motion-active [data-reveal]:not(.revealed) {
     opacity: 0;
     transform: translateY(16px);
     transition: opacity 0.6s var(--ease-spring), transform 0.6s var(--ease-spring);
     will-change: opacity, transform;
 }
-[data-reveal].revealed {
+
+.js-motion-active [data-reveal].revealed {
     opacity: 1;
     transform: translateY(0);
 }

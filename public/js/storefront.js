@@ -41,13 +41,24 @@
      * Staggered Scroll-Triggered Reveals via IntersectionObserver
      */
     function initScrollReveals() {
+        const reveals = document.querySelectorAll('[data-reveal]');
+        if (!reveals.length) return;
+
         if (prefersReducedMotion) {
-            document.querySelectorAll('[data-reveal]').forEach(el => el.classList.add('revealed'));
+            reveals.forEach(el => el.classList.add('revealed'));
             return;
         }
 
-        const reveals = document.querySelectorAll('[data-reveal]');
-        if (!reveals.length) return;
+        // Arm motion reveals now that JS is running
+        document.documentElement.classList.add('js-motion-active');
+
+        // Immediately reveal elements that are already within the viewport on initial load
+        reveals.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                el.classList.add('revealed');
+            }
+        });
 
         const observer = new IntersectionObserver((entries, obs) => {
             entries.forEach(entry => {
@@ -64,11 +75,15 @@
                 }
             });
         }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -40px 0px'
+            threshold: 0.05,
+            rootMargin: '0px 0px 60px 0px'
         });
 
-        reveals.forEach(el => observer.observe(el));
+        reveals.forEach(el => {
+            if (!el.classList.contains('revealed')) {
+                observer.observe(el);
+            }
+        });
     }
 
     /**

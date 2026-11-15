@@ -65,7 +65,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/storefront.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/storefront.css') }}?v={{ @filemtime(public_path('css/storefront.css')) ?: time() }}">
 
     <!-- Schema.org JSON-LD Structured Data -->
     <x-storefront.schema-org 
@@ -126,6 +126,6 @@
     </main>
 
     <x-storefront.footer />
-    <script src="{{ asset('js/storefront.js') }}" defer></script>
+    <script src="{{ asset('js/storefront.js') }}?v={{ @filemtime(public_path('js/storefront.js')) ?: time() }}" defer></script>
 </body>
 </html>
