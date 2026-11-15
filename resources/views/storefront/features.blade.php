@@ -44,7 +44,7 @@
             <!-- Feature 2 -->
             <div class="card card-lift" data-reveal data-delay="80">
                 <div class="pill emerald" style="margin-bottom:1rem">Kernel Guard</div>
-                <h3 style="font-size:1.35rem;margin-bottom:0.75rem">Linux cgroups v2 Quota Isolation</h3>
+                <h3 style="font-size:1.35rem;margin-bottom:0.75rem">Linux cgroups Quota Isolation</h3>
                 <p style="color:var(--muted);line-height:1.6;font-size:0.94rem">Every container application and microservice is bounded by strict kernel-level cgroups (v2) memory and CPU limits. Run intensive production applications without risking host node stability.</p>
                 <ul style="margin:1.25rem 0 0;padding-left:1.25rem;font-size:0.88rem;color:var(--ink-light);line-height:1.8">
                     <li>Strict memory limits with automated OOM alerts</li>
@@ -80,7 +80,7 @@
             <!-- Feature 5 -->
             <div class="card card-lift" data-reveal data-delay="80">
                 <div class="pill amber" style="margin-bottom:1rem">AI Verification</div>
-                <h3 style="font-size:1.35rem;margin-bottom:0.75rem">PayVerify AI Verification</h3>
+                <h3 style="font-size:1.35rem;margin-bottom:0.75rem">PayVerify AI Payment Verification</h3>
                 <p style="color:var(--muted);line-height:1.6;font-size:0.94rem">Our payment verification engine uses Gemini 2.5 Flash multimodal vision and local perceptual dHash models to parse bank transfer receipts, check perceptual duplicate hashes, and match bank ledger transactions in minutes.</p>
                 <ul style="margin:1.25rem 0 0;padding-left:1.25rem;font-size:0.88rem;color:var(--ink-light);line-height:1.8">
                     <li>Pure-pixel re-encoding permanently purges webshells</li>

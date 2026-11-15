@@ -25,6 +25,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     InstanceSettings::forceCreate(['id' => 0]);
+    $this->seed(\Database\Seeders\HostingCatalogSeeder::class);
 
     $this->team = Team::factory()->create(['personal_team' => false]);
 
@@ -42,14 +43,16 @@ test('non-admin member cannot remove custom domains in portal', function () {
     $domain = CustomDomain::create([
         'team_id' => $this->team->id,
         'domain' => 'client-site.com',
-        'is_verified' => true,
+        'token' => 'dummy-token-1',
+        'verified_at' => now(),
     ]);
 
     $this->actingAs($this->member);
     session(['currentTeam' => $this->team]);
 
-    expect(fn () => Livewire::test(Domains::class)->call('remove', $domain->uuid))
-        ->toThrow(HttpException::class);
+    Livewire::test(Domains::class)
+        ->call('remove', $domain->uuid)
+        ->assertForbidden();
 
     expect(CustomDomain::where('id', $domain->id)->exists())->toBeTrue();
 });
@@ -58,7 +61,8 @@ test('team owner or admin can remove custom domains in portal', function () {
     $domain = CustomDomain::create([
         'team_id' => $this->team->id,
         'domain' => 'owner-site.com',
-        'is_verified' => true,
+        'token' => 'dummy-token-2',
+        'verified_at' => now(),
     ]);
 
     $this->actingAs($this->owner);
@@ -72,8 +76,11 @@ test('team owner or admin can remove custom domains in portal', function () {
 });
 
 test('non-admin member cannot mutate application in AppDetail component', function () {
+    $tier = \App\Models\Commerce\PricingTier::firstOrFail();
     $service = ServiceInstance::create([
         'team_id' => $this->team->id,
+        'user_id' => $this->owner->id,
+        'product_variant_id' => $tier->product_variant_id,
         'name' => 'client-app',
         'hostname' => 'client-app.stxapp.io',
         'service_type' => 'app',
@@ -89,19 +96,25 @@ test('non-admin member cannot mutate application in AppDetail component', functi
         ->assertOk();
 
     // Member cannot redeploy or restart
-    expect(fn () => Livewire::test(AppDetail::class, ['uuid' => $service->uuid])->call('redeploy'))
-        ->toThrow(HttpException::class);
+    Livewire::test(AppDetail::class, ['uuid' => $service->uuid])
+        ->call('redeploy')
+        ->assertForbidden();
 
-    expect(fn () => Livewire::test(AppDetail::class, ['uuid' => $service->uuid])->call('restart'))
-        ->toThrow(HttpException::class);
+    Livewire::test(AppDetail::class, ['uuid' => $service->uuid])
+        ->call('restart')
+        ->assertForbidden();
 
-    expect(fn () => Livewire::test(AppDetail::class, ['uuid' => $service->uuid])->call('removeDomain', 'client-app.com'))
-        ->toThrow(HttpException::class);
+    Livewire::test(AppDetail::class, ['uuid' => $service->uuid])
+        ->call('removeDomain', 'client-app.com')
+        ->assertForbidden();
 });
 
 test('team admin can redeploy and restart application in AppDetail component', function () {
+    $tier = \App\Models\Commerce\PricingTier::firstOrFail();
     $service = ServiceInstance::create([
         'team_id' => $this->team->id,
+        'user_id' => $this->owner->id,
+        'product_variant_id' => $tier->product_variant_id,
         'name' => 'admin-app',
         'hostname' => 'admin-app.stxapp.io',
         'service_type' => 'app',
@@ -144,8 +157,9 @@ test('non-admin member cannot delete mail domains or mailboxes in MailDashboard'
     $this->actingAs($this->member);
     session(['currentTeam' => $this->team]);
 
-    expect(fn () => Livewire::test(MailDashboard::class)->call('deleteDomain', (string) $domain->id, $wildduckMock))
-        ->toThrow(HttpException::class);
+    Livewire::test(MailDashboard::class)
+        ->call('deleteDomain', (string) $domain->id, $wildduckMock)
+        ->assertForbidden();
 
     expect(MailDomain::where('id', $domain->id)->exists())->toBeTrue();
 });

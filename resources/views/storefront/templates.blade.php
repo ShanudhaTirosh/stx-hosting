@@ -22,6 +22,14 @@
                 </span>
                 <h1>Curated 1-Click Application Templates</h1>
                 <p class="lead">Launch hardened open-source applications, headless backends, and databases on isolated Docker containers with automated Let's Encrypt SSL certificates.</p>
+                
+                <div style="margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center;">
+                    <span style="font-size: 0.88rem; font-weight: 600; color: var(--muted);">Popular Stacks:</span>
+                    <span class="pill signal">Next.js 15</span>
+                    <span class="pill emerald">Supabase BaaS</span>
+                    <span class="pill ink">WordPress</span>
+                    <span class="pill teal">Ghost Publishing</span>
+                </div>
             </div>
             <div>
                 <a href="{{ route('store.app-hosting') }}" class="btn">Deploy Custom Container</a>

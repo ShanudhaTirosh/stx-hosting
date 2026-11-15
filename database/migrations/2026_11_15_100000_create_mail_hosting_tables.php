@@ -14,6 +14,7 @@ return new class extends Migration
         if (! Schema::hasTable('mail_plans')) {
             Schema::create('mail_plans', function (Blueprint $table) {
                 $table->uuid('id')->primary();
+                $table->string('uuid')->nullable()->index();
                 $table->string('slug')->unique();
                 $table->string('name');
                 $table->integer('storage_mb');
@@ -30,6 +31,7 @@ return new class extends Migration
         if (! Schema::hasTable('mail_addons')) {
             Schema::create('mail_addons', function (Blueprint $table) {
                 $table->uuid('id')->primary();
+                $table->string('uuid')->nullable()->index();
                 $table->string('slug')->unique();
                 $table->string('name');
                 $table->string('type')->index(); // storage, mailbox, domain, feature
@@ -44,6 +46,7 @@ return new class extends Migration
         if (! Schema::hasTable('mail_subscriptions')) {
             Schema::create('mail_subscriptions', function (Blueprint $table) {
                 $table->uuid('id')->primary();
+                $table->string('uuid')->nullable()->index();
                 $table->foreignId('team_id')->constrained('teams')->cascadeOnDelete();
                 $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
                 $table->uuid('plan_id')->nullable()->index();
@@ -60,6 +63,7 @@ return new class extends Migration
         if (! Schema::hasTable('mail_domains')) {
             Schema::create('mail_domains', function (Blueprint $table) {
                 $table->uuid('id')->primary();
+                $table->string('uuid')->nullable()->index();
                 $table->uuid('subscription_id')->nullable()->index();
                 $table->foreignId('team_id')->constrained('teams')->cascadeOnDelete();
                 $table->string('domain')->unique();
@@ -78,6 +82,7 @@ return new class extends Migration
         if (! Schema::hasTable('mail_mailboxes')) {
             Schema::create('mail_mailboxes', function (Blueprint $table) {
                 $table->uuid('id')->primary();
+                $table->string('uuid')->nullable()->index();
                 $table->uuid('domain_id')->index();
                 $table->foreignId('team_id')->constrained('teams')->cascadeOnDelete();
                 $table->string('wildduck_user_id')->unique();
@@ -94,6 +99,7 @@ return new class extends Migration
         if (! Schema::hasTable('mail_aliases')) {
             Schema::create('mail_aliases', function (Blueprint $table) {
                 $table->uuid('id')->primary();
+                $table->string('uuid')->nullable()->index();
                 $table->uuid('mailbox_id')->index();
                 $table->string('alias_address')->unique();
                 $table->timestamps();

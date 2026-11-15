@@ -17,7 +17,11 @@
         <div>
             <h1 class="text-2xl font-bold text-white tracking-tight">Custom Domains</h1>
             <p class="text-xs text-neutral-400 mt-1">
-                Every app gets a free instant address@if ($appsDomain) like <span class="font-mono text-purple-400">your-app.{{ $appsDomain }}</span>@endif with automated wildcard HTTPS.
+                Every app gets a free instant address
+                @if ($appsDomain)
+                    like <span class="font-mono text-purple-400">your-app.{{ $appsDomain }}</span>
+                @endif
+                with automated wildcard HTTPS.
                 Add your own domain below for custom branding.
             </p>
         </div>
@@ -72,7 +76,7 @@
                     </div>
                 </div>
 
-                @unless ($domain->isSslActive())
+                @if (! $domain->isSslActive())
                     <!-- Plain-Language DNS Setup Instructions -->
                     <div class="bg-neutral-950 border border-neutral-800/80 rounded-lg p-4 space-y-3">
                         <div class="flex items-center justify-between">
@@ -113,10 +117,10 @@
                         <span>This domain is pointing to STX Hosting and is protected with an automatically renewing SSL certificate.</span>
                         <a href="https://{{ $domain->domain }}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:underline font-semibold flex items-center gap-1">
                             Visit Site
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            <svg class="w-3-h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         </a>
                     </div>
-                @endunless
+                @endif
             </div>
         @empty
             <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center space-y-2">

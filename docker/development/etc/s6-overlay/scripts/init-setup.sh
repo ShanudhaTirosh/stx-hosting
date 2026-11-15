@@ -26,11 +26,15 @@ prepare_bind_mount() {
 
 prepare_bind_mount
 
-echo "👉 init-setup: composer install..."
-# Run as root when needed so a root-owned bind mount cannot block vendor/
-# creation, then hand writable paths to www-data for PHP-FPM.
-export COMPOSER_PROCESS_TIMEOUT=0
-composer install --no-interaction
+if [ ! -f "vendor/autoload.php" ]; then
+    echo "👉 init-setup: composer install..."
+    # Run as root when needed so a root-owned bind mount cannot block vendor/
+    # creation, then hand writable paths to www-data for PHP-FPM.
+    export COMPOSER_PROCESS_TIMEOUT=0
+    composer install --no-interaction
+else
+    echo "👉 init-setup: vendor/autoload.php already exists, skipping composer install"
+fi
 
 echo "👉 init-setup: migrate..."
 php artisan migrate --step --force

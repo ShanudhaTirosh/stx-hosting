@@ -52,10 +52,14 @@
         // Arm motion reveals now that JS is running
         document.documentElement.classList.add('js-motion-active');
 
-        // Immediately reveal elements that are already within the viewport on initial load
+        // Immediately reveal all hero elements and anything near the viewport on load
         reveals.forEach(el => {
+            if (el.closest('.hero') || el.closest('.bar')) {
+                el.classList.add('revealed');
+                return;
+            }
             const rect = el.getBoundingClientRect();
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
+            if (rect.top < window.innerHeight + 150) {
                 el.classList.add('revealed');
             }
         });

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Status;
 
-use App\Http\Controllers\Controller;
 use App\Models\Commerce\StatusSubscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 class StatusSubscriptionController extends Controller
 {
