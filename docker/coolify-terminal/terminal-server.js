@@ -60,7 +60,6 @@ async function postToStxPlatform(path, headers, body = null) {
     });
 }
 const postToCoolify = postToStxPlatform;
-}
 
 function parseResponseData(contentType = '', responseText = '') {
     if (responseText === '') {
